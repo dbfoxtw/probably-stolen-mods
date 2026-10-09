@@ -71,7 +71,8 @@ MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods
 
 ## 相容性
 
-- 和 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280) 一起測過。
+- 和 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280) 一起測過。裝了繁中 mod 時，輸入框裡少數詞（例如「激活」「游客」）畫面上會顯示成它的用詞，存下來的仍是你打的字。
+- 在懸浮單的輸入框打字時，遊戲收不到鍵盤；滑鼠在懸浮單上時，遊戲收不到點擊和滾輪（免得打字觸發遊戲的快捷鍵、點穿到後面的物品）。這是在 Unity 讀按鍵的那一層攔下來的，所以這兩種時候，其他 mod 的快捷鍵和點擊也可能沒反應；按 Esc 結束編輯或把滑鼠移開就恢復。
 
 ## 從原始碼建置（開發者）
 
@@ -82,7 +83,7 @@ MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods
 1. 安裝 [MelonLoader](https://github.com/LavaGang/MelonLoader) 0.7.3，並啟動一次遊戲，讓它產生 `MelonLoader\Il2CppAssemblies`（編譯時要參考）。
 2. 關閉遊戲，執行 `install.bat`：建置後安裝到遊戲的 `Mods\`。移除用 `uninstall.bat`（待辦資料保留）。
    - 遊戲不在 Steam 預設位置時，加上 `--game "遊戲資料夾"`。
-   - 除錯模式：加上 `--debug`，log 每分鐘記錄打字時擋住遊戲輸入的統計。
+   - 除錯模式：加上 `--debug`，log 每分鐘記錄擋住遊戲輸入的統計，以及遊戲或其他 mod 查過哪些鍵（設定快捷鍵時的撞鍵警告用）。
 3. 只建置、不安裝：`python tools/install.py build`；打包玩家用的壓縮檔：`python tools/install.py package`。
 4. 離線測試（資料檔、清單規則、設定，不需要遊戲）：`dotnet run --project mod\verify`。
 
@@ -129,8 +130,11 @@ To update, just repeat step 3. Your lists and settings are kept.
 - The input method cursor and underline were only tested with Microsoft Bopomofo and Microsoft Pinyin; with other input methods, if the positions don't match, the game's usual cursor (at the end of the composition) is kept.
 - With the game in English, the game's English font is used, so Chinese characters typed into the list will be missing.
 
-**Compatibility:** tested together with the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod.
+**Compatibility**
 
-**Build from source** (developers only): install MelonLoader 0.7.3 and start the game once, then run `install.bat` (requires Python 3.10+ and the .NET SDK 8+; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log input-blocking statistics every minute). `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
+- Tested together with the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod. With it installed, a few words typed into the list are displayed using that mod's wording; what you typed is still what gets saved.
+- While you're typing in the panel, the game doesn't receive keyboard input, and while the mouse is over the panel, it doesn't receive clicks or the scroll wheel, so typing won't trigger the game's hotkeys and clicks won't go through to items behind the panel. Because this is blocked where Unity reads input, other mods' hotkeys and clicks may not respond at those moments either. Press Esc to finish editing, or move the mouse away, and everything works again.
+
+**Build from source** (developers only): install MelonLoader 0.7.3 and start the game once, then run `install.bat` (requires Python 3.10+ and the .NET SDK 8+; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log input-blocking statistics and the keys queried by the game or other mods every minute). `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this repository. The game's text, names, and assets belong to Questing Goose Studio.

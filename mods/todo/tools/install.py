@@ -2,11 +2,11 @@ r"""建置 mod 並安裝到遊戲（只用 Python 標準函式庫，不用另外
 
 事前準備：
 1. 安裝 MelonLoader 0.7.3，並啟動一次遊戲，讓它產生 MelonLoader\Il2CppAssemblies（編譯要參考這些組件）。
-2. .NET SDK 6 以上。
+2. .NET SDK 8 以上（mod 本體是 net6.0，只編 mod 的話 6 也可以；離線測試 mod/verify 是 net8.0）。
 
 用法：
   python tools/install.py build        編譯 mod（不動遊戲）
-  python tools/install.py install      編譯後複製到遊戲的 Mods\（--debug：放除錯標記檔，log 會記輸入攔截的統計）
+  python tools/install.py install      編譯後複製到遊戲的 Mods\（--debug：放除錯標記檔，log 會記輸入攔截的統計與遊戲或其他 mod 查過的鍵）
   python tools/install.py uninstall    移除 mod 的 dll；待辦資料 UserData\ProbablyStolenTodo\ 保留不刪
   python tools/install.py package      編譯後打包給玩家的 zip（build\ProbablyStolen-ToDoList-<版本>.zip，不動遊戲；--out 改輸出資料夾）
 都可加 --game "遊戲資料夾"（也可設環境變數 PS_GAME_DIR）。找遊戲資料夾的寫法照繁中 mod 的 public/tools/install.py。

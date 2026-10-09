@@ -53,7 +53,7 @@ namespace ProbablyStolenTodo
         }
 
         /// <summary>
-        /// Input.GetKeyDown(string) 的鍵名轉成 KeyCode（遊戲用它查 O、0、P、D）。只轉常見的：字母、數字、九宮格、F 鍵、幾個特殊鍵；
+        /// Input.GetKeyDown(string) 的鍵名轉成 KeyCode（遊戲有用到）。只轉常見的：字母、數字、九宮格、F 鍵、幾個特殊鍵；
         /// 其他的不記，撞鍵警告只是少抓到。
         /// </summary>
         static KeyCode FromName(string s)

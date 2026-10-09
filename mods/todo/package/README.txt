@@ -36,7 +36,9 @@ MelonLoader 本身要另外移除：刪除 version.dll、MelonLoader、Mods、Pl
   裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
 - 已知限制：中文輸入法組字時的游標與底線，只實測過微軟注音與微軟拼音，其他輸入法對不上時維持遊戲原本的游標；
   遊戲語言是英文時，打中文會缺字（用的是遊戲的英文字型）。
-- 相容性：和繁體中文化 mod 一起測過。
+- 相容性：和繁體中文化 mod 一起測過（裝了它時，輸入框裡少數詞畫面上會顯示成它的用詞，存下來的仍是你打的字）。
+  在懸浮單打字時遊戲收不到鍵盤、滑鼠在懸浮單上時遊戲收不到點擊和滾輪（免得觸發遊戲的快捷鍵、點穿到後面），
+  這兩種時候其他 mod 的快捷鍵和點擊也可能沒反應；按 Esc 結束編輯或把滑鼠移開就恢復。
 
 【授權】
 - 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-todo
@@ -86,7 +88,11 @@ Notes
 - Known limitations: the input method cursor and underline were only tested with Microsoft Bopomofo and Microsoft Pinyin;
   with other input methods, if the positions don't match, the game's usual cursor is kept.
   With the game in English, Chinese characters typed into the list will be missing (the game's English font is used).
-- Compatibility: tested together with the Traditional Chinese Translation mod.
+- Compatibility: tested together with the Traditional Chinese Translation mod (with it installed, a few words typed
+  into the list are displayed using that mod's wording; what you typed is still what gets saved).
+  While you're typing in the panel the game doesn't receive keyboard input, and while the mouse is over the panel
+  it doesn't receive clicks or the scroll wheel, so other mods' hotkeys and clicks may not respond at those moments
+  either. Press Esc to finish editing, or move the mouse away.
 
 License
 - This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-todo

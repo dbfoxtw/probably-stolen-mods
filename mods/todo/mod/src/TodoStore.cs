@@ -114,7 +114,7 @@ namespace ProbablyStolenTodo
         [JsonExtensionData] public Dictionary<string, JsonElement> Extra { get; set; }
     }
 
-    /// <summary>寫 log 的介面：遊戲裡接 MelonLogger，離線測試（mod/verify）接主控台。</summary>
+    /// <summary>寫 log 的介面：遊戲裡接 MelonLogger，離線測試（mod/verify）印到命令列。</summary>
     interface ILog
     {
         void Msg(string s);

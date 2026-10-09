@@ -1,7 +1,7 @@
 @echo off
 rem Build the mod from source and install it into the game (see README.md). Close the game first.
 rem Needs MelonLoader 0.7.3 (start the game once after installing it), .NET SDK 8+ and Python 3.10+.
-rem Add --debug for debug mode (the log records input-blocking statistics every minute).
+rem Add --debug for debug mode (every minute the log records input-blocking statistics and the keys queried by the game or other mods).
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"
