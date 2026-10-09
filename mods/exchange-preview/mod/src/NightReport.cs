@@ -25,6 +25,8 @@ namespace ProbablyStolenExchangePreview
     {
         /// <summary>紫色；格式照遊戲的 PlayerStore.AddNightLog（&lt;color=#hex&gt;…&lt;/color&gt;）。</summary>
         internal const string Purple = "6E3F78";
+        /// <summary>句尾 mod 標示的灰色：遊戲的 RenderHandler.ColorPalette.Gray，和垃圾桶提示的標示同色。</summary>
+        const string TagGray = "88948A";
 
         static Il2CppSystem.Action _early, _late, _loaded;
         static bool _capturing;
@@ -227,7 +229,7 @@ namespace ProbablyStolenExchangePreview
                 if (rec == null || string.IsNullOrEmpty(rec.ReportText) || !GameState.TryGetDay(out int day) || rec.ReportDay != day) return;
                 var logs = PlayerStore.instance?.nightLogs;
                 if (logs == null) return;
-                var line = $"<color=#{Purple}>{rec.ReportText}</color>";
+                var line = PreviewText.ReportLine(GameState.S, rec.ReportText, Purple, TagGray);
                 if (logs.Contains(line)) return;
                 var clean = ExchangeReader.Mechanic("mech_nightlog_storefront_clean", null);
                 int idx = clean == null ? -1 : logs.IndexOf(clean);

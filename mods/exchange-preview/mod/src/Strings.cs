@@ -22,9 +22,9 @@ namespace ProbablyStolenExchangePreview
         /// <summary>差一點：{0}＝還差幾個。</summary>
         public string Missing;
         /// <summary>
-        /// 「你被禁止使用地下交易所」：清單紅字用。遊戲的說明 rep_perk_BM_DISTRUSTED_desc 有三句
+        /// 「地下交易所不跟你交易」：清單紅字用。遊戲的說明 rep_perk_BM_DISTRUSTED_desc 有三句
         /// （不賣違禁品、禁止使用交易所、清潔費翻倍），整句放清單右下會凸出紙外（2026-10-09 實機）；提示讀不到遊戲字串時也用這句。
-        /// 用詞照遊戲那三句的中間一句。
+        /// 用 mod 自己的話、不照抄遊戲的句子：官方 mod 規定不准散布遊戲的字串表。
         /// </summary>
         public string BannedShort;
         /// <summary>{0}＝目前的黑市聲望、{1}＝門檻。</summary>
@@ -43,8 +43,8 @@ namespace ProbablyStolenExchangePreview
         /// <summary>同一行裡兩句之間（中文不用空白）。</summary>
         public string SentenceSep;
 
-        // ── 隨機產出與條件的分類（遊戲的交易所清單是圖示，沒有對應的字串） ──
-        public string RandomModule, RandomContraband, RandomMedical, RandomFood, RandomKeycard, Unknown;
+        // ── 隨機產出與條件的分類（遊戲的交易所清單多半是圖示，沒有對應的字串；有字串的「隨機合法商品」直接用遊戲的） ──
+        public string RandomModule, RandomMedical, RandomFood, RandomKeycard, Unknown;
         public string TagAmmo, TagModule, TagPoison, TagSeed;
 
         // ── 夜間報告（一晚合併成一行，紫色） ──
@@ -56,6 +56,12 @@ namespace ProbablyStolenExchangePreview
         public string ReportNothing, ReportNothingPlain;
         /// <summary>垃圾桶放不下、被遊戲銷毀的產出：{0}＝東西。</summary>
         public string ReportDestroyed;
+
+        // ── mod 標示（官方 mod 規定：mod 加的介面要看得出是 mod，玩家拿截圖回報時才不會找錯人） ──
+        /// <summary>垃圾桶提示的最後一行（灰色）。中文寫「mod」不寫「模組」：遊戲的「模組」是物品（隨機模組）。</summary>
+        public string TooltipTag;
+        /// <summary>夜間報告那行的句尾（小一號灰字）；英文前面要空一格。</summary>
+        public string ReportTag;
 
         // ── 垃圾桶標示（紙條上的字） ──
         public string IndNone, IndReady, IndSurplus, IndPickup, IndBanned;
@@ -77,7 +83,7 @@ namespace ProbablyStolenExchangePreview
             PartialIncluded = ", including {0} from incomplete trades",
             PurityFail = "total purity {0} is below {1}: taken, nothing given",
             Missing = "{0} more",
-            BannedShort = "You are barred from the Underground Exchange",
+            BannedShort = "The Underground Exchange won't trade with you",
             RepLine = "Blackmarket Reputation {0} (needs above {1})",
             SurplusLine = "Extra {0} will be cleared (one trade per night)",
             Arrow = " → ",
@@ -88,7 +94,6 @@ namespace ProbablyStolenExchangePreview
             Adjective = "{0} {1}",
             SentenceSep = " ",
             RandomModule = "random module",
-            RandomContraband = "random contraband",
             RandomMedical = "random medical supplies",
             RandomFood = "random food",
             RandomKeycard = "random keycard",
@@ -103,6 +108,8 @@ namespace ProbablyStolenExchangePreview
             ReportNothingPlain = "The Underground Exchange took {0} and left nothing.",
             // 清單可能是好幾件，英文避開單複數（is／are）
             ReportDestroyed = "The trash can was full. Destroyed: {0}.",
+            TooltipTag = "Exchange Preview (mod)",
+            ReportTag = " (Exchange Preview mod)",
             IndNone = "No deal",
             IndReady = "Ready",
             IndSurplus = "Too many",
@@ -124,7 +131,7 @@ namespace ProbablyStolenExchangePreview
             PartialIncluded = "（含差一点的{0}）",
             PurityFail = "纯度合计 {0}，不到 {1}，会被收走但换不到东西",
             Missing = "还差 {0} 个",
-            BannedShort = "你被禁止使用地下交易所",
+            BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市声望 {0}（需要高于 {1}）",
             SurplusLine = "多放的{0}会被清掉（每晚只换一次）",
             Arrow = " → ",
@@ -135,7 +142,6 @@ namespace ProbablyStolenExchangePreview
             Adjective = "{0}{1}",
             SentenceSep = "",
             RandomModule = "随机模组",
-            RandomContraband = "随机违禁品",
             RandomMedical = "随机医疗用品",
             RandomFood = "随机食物",
             RandomKeycard = "随机钥匙卡",
@@ -149,6 +155,8 @@ namespace ProbablyStolenExchangePreview
             ReportNothing = "地下交易所收走了{0}，但纯度不够，什么也没留下。",
             ReportNothingPlain = "地下交易所收走了{0}，什么也没留下。",
             ReportDestroyed = "垃圾桶放不下，{0}被销毁了。",
+            TooltipTag = "交易所预览（mod）",
+            ReportTag = "（交易所预览 mod）",
             IndNone = "无交易",
             IndReady = "可交易",
             IndSurplus = "多放了",
@@ -170,7 +178,7 @@ namespace ProbablyStolenExchangePreview
             PartialIncluded = "（含差一點的{0}）",
             PurityFail = "純度合計 {0}，不到 {1}，會被收走但換不到東西",
             Missing = "還差 {0} 個",
-            BannedShort = "你被禁止使用地下交易所",
+            BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市聲望 {0}（需要高於 {1}）",
             SurplusLine = "多放的{0}會被清掉（每晚只換一次）",
             Arrow = " → ",
@@ -181,7 +189,6 @@ namespace ProbablyStolenExchangePreview
             Adjective = "{0}{1}",
             SentenceSep = "",
             RandomModule = "隨機模組",
-            RandomContraband = "隨機違禁品",
             RandomMedical = "隨機醫療用品",
             RandomFood = "隨機食物",
             RandomKeycard = "隨機鑰匙卡",
@@ -195,6 +202,8 @@ namespace ProbablyStolenExchangePreview
             ReportNothing = "地下交易所收走了{0}，但純度不夠，什麼也沒留下。",
             ReportNothingPlain = "地下交易所收走了{0}，什麼也沒留下。",
             ReportDestroyed = "垃圾桶放不下，{0}被銷毀了。",
+            TooltipTag = "交易所預覽（mod）",
+            ReportTag = "（交易所預覽 mod）",
             IndNone = "無交易",
             IndReady = "可交易",
             IndSurplus = "多放了",

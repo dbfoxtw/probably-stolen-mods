@@ -7,6 +7,8 @@ Probably Stolen 交易所預覽 mod（Exchange Preview） v{version}
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
  或 https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues）。
+下面【功能】列的東西都是這個 mod 加的，不是遊戲本身的（提示最後一行、夜間報告那行句尾的灰字「交易所預覽」
+就是標示）；這些地方有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -68,6 +70,9 @@ The code was written by AI (Claude); the feature design and in-game testing were
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
  or https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues).
+Everything listed under Features is added by this mod, not the game (the tooltip's last line and the end of
+the night report line say "Exchange Preview" in gray). If something looks wrong there, please report it
+to this mod (links above), not to the game's developers.
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files

@@ -75,6 +75,8 @@ namespace ProbablyStolenExchangePreview
                 Result = result,
             };
             _cache = PreviewText.Tooltip(s, input);
+            // 最後一行標明是 mod 加的；RichTextBuilder 沒有字級可設、照字數換行，所以用同字級的灰色（Dim）
+            _cache.Add(new Line(s.TooltipTag, Tone.Dim));
             // 除錯 log 只在內容或狀態變了時寫，滑鼠停著不動不會一直洗版
             if (ExchangePreviewMod.Debug && key != _cacheKey) ExchangePreviewMod.Log.Msg("垃圾桶提示：" + string.Join(" / ", _cache));
             _cacheKey = key;

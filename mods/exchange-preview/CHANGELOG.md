@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v1.0.1（2026-10-09）
+
+對應遊戲版本：DEMO Version 049-REV5-L
+
+- 修正：提示裡夢塵 ×2 的產出寫成「隨機違禁品」，改成和交易所清單一樣的「隨機合法商品」；指揮鑰匙卡補上數量（隨機鑰匙卡 ×2）。
+- 提示的最後一行、夜間報告那行的句尾加上灰字「交易所預覽」，截圖時看得出是 mod 加的。
+- 被禁止使用時，交易所清單紅字的第一行改成「地下交易所不跟你交易」。
+
+**English**
+
+Supported game version: DEMO Version 049-REV5-L
+
+- Fixed: the tooltip said Vial of "Dream Dust" x2 gives "random contraband"; it now says "Random Legal Goods", like the Exchange Directive. The Command keycard trade now shows the count (random keycard x2).
+- The tooltip's last line and the end of the night report line now show "Exchange Preview" in gray, so screenshots make clear which parts come from the mod.
+- When you're banned, the first red line on the Exchange Directive now reads "The Underground Exchange won't trade with you".
+
 ## v1.0.0（2026-10-09）
 
 對應遊戲版本：DEMO Version 049-REV5-L

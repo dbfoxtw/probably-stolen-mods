@@ -60,8 +60,8 @@ namespace ProbablyStolenExchangePreview.Verify
         static SimBarter Smuggler() =>
             B("smuggler_barter", 10, "走私者暗格（改進）＋隨機附贈", new[] { ById("smuggler_bay") }.Concat(Repeat(() => ById("pink_injector"), 8)).ToArray());
         static SimBarter Immunivax() => B("immunivax_barter", 1, "免疫寧注射器", Repeat(() => ById("pink_injector"), 2));
-        static SimBarter DreamDust() => B(ExchangeSim.DreamDustBarterId, 2, "隨機違禁品", Repeat(() => ById("dream_dust"), 2));
-        static SimBarter ImprovedDreamDust() => B("improved_dream_dust_barter", 4, "隨機違禁品", Repeat(() => ById("dream_dust"), 4));
+        static SimBarter DreamDust() => B(ExchangeSim.DreamDustBarterId, 2, "隨機合法商品", Repeat(() => ById("dream_dust"), 2));
+        static SimBarter ImprovedDreamDust() => B("improved_dream_dust_barter", 4, "隨機醫療用品", Repeat(() => ById("dream_dust"), 4));
 
         static void Sim()
         {
@@ -206,8 +206,8 @@ namespace ProbablyStolenExchangePreview.Verify
 
             // 被禁用
             r = ExchangeSim.Run(new[] { I("ammo_a"), I("toxic", hazard: true) }, new List<SimBarter>());
-            lines = PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, BannedText = "你被禁止使用地下交易所", JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所|你被禁止使用地下交易所|黑市聲望 -97（需要高於 -40）|垃圾桶裡的 1 件會被清掉", "提示：被禁用");
+            lines = PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, BannedText = "（遊戲的說明）", JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所|（遊戲的說明）|黑市聲望 -97（需要高於 -40）|垃圾桶裡的 1 件會被清掉", "提示：被禁用");
             lines = PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, JanitorialOn = false, Result = r });
             Eq(lines.Count, 3, "提示：被禁用、沒用清潔服務時不說會被清掉");
             Eq(lines[1].Text, s.BannedShort, "提示：遊戲字串讀不到時用 mod 的說明");
@@ -246,6 +246,9 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(PreviewText.Report(s, new List<NightDeal>(), "黑市聲望") == null, "報告：沒成交就不加行");
             Eq(PreviewText.Report(Strings.For(Lang.En), new[] { new NightDeal { Outputs = { "Peat", "Peat" } } }, "Blackmarket Reputation"),
                 "The Underground Exchange left in the trash can: Peat x2.", "報告：英文");
+            Eq(PreviewText.ReportLine(s, "地下交易所：黑市聲望 +25。", "6E3F78", "88948A"),
+                "<color=#6E3F78>地下交易所：黑市聲望 +25。</color><size=80%><color=#88948A>（交易所預覽 mod）</color></size>", "報告：句尾加 mod 標示");
+            Check(PreviewText.ReportLine(Strings.For(Lang.En), "x", "a", "b").EndsWith("<color=#b> (Exchange Preview mod)</color></size>"), "報告：英文的標示前面空一格");
 
             // 多放的：放在差一點後面、「其餘」前面，「其餘」不再算多放的
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("ammo_c", "10毫米彈藥"), I("ammo_d", "10毫米彈藥"),
@@ -277,9 +280,9 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(PreviewText.Reminder(s, new string[0], new[] { "彈藥", "彈藥" }), "多放的彈藥 ×2 今晚會被清掉（每晚只換一次）", "提醒：只有多放的");
             Check(PreviewText.Reminder(s, new string[0], new string[0]) == null, "提醒：都沒有就是 null");
             Eq(PreviewText.BannedBlock(s, -97, -40, 16, 12),
-                "<size=16>你被禁止使用地下交易所</size>\n<size=12>黑市聲望 -97（需要高於 -40）</size>", "清單紅字：只用短句");
-            Check(PreviewText.BannedBlock(Strings.For(Lang.En), -97, -40, 16, 12).StartsWith("<size=16>You are barred from the Underground Exchange</size>"),
-                "清單紅字：英文照遊戲的用詞");
+                "<size=16>地下交易所不跟你交易</size>\n<size=12>黑市聲望 -97（需要高於 -40）</size>", "清單紅字：只用短句");
+            Check(PreviewText.BannedBlock(Strings.For(Lang.En), -97, -40, 16, 12).StartsWith("<size=16>The Underground Exchange won't trade with you</size>"),
+                "清單紅字：英文用 mod 自己的話");
         }
 
         /// <summary>三種語言的字串都填了，而且格式化不會丟例外（漏了 {0} 之類的）。</summary>

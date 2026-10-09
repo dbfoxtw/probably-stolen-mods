@@ -150,10 +150,10 @@ namespace ProbablyStolenExchangePreview
         {
             "filter_barter" => string.Format(s.Adjective, UI("ui_exchange_new", "New"), Item("water_filter")),
             "module_barter" => s.RandomModule,
-            "dream_dust_barter" => s.RandomContraband,
-            // 加強版夢塵給的是醫療類（奧克西莫注射器、血袋、常用藥品、藍色血袋、賽納普斯注射器、免疫寧注射器）
+            "dream_dust_barter" => UI("ui_exchange_random_legal_goods", "Random Legal Goods"),
             "improved_dream_dust_barter" => s.RandomMedical,
-            "commandKeycardBarter" => s.RandomKeycard,
+            // 給 2 張（遊戲的交易所清單寫「隨機 ×2」）
+            "commandKeycardBarter" => s.RandomKeycard + string.Format(s.Times, 2),
             "poison_barter" or "seed_barter" => Item("energy_credit"),
             "bullet_barter" => s.RandomFood,
             "smuggler_barter" => Item("smuggler_bay_mod"),

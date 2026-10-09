@@ -188,6 +188,13 @@ namespace ProbablyStolenExchangePreview
         }
 
         /// <summary>
+        /// 夜間報告插進遊戲 nightLogs 的那一行：紫色的內容＋句尾小一號灰字的 mod 標示。
+        /// 標示在顯示時才接上、不存進資料檔，所以舊版留下的紀錄重看時也有標示，語言跟著目前的設定。
+        /// </summary>
+        public static string ReportLine(Strings s, string text, string purple, string gray) =>
+            $"<color=#{purple}>{text}</color><size=80%><color=#{gray}>{s.ReportTag}</color></size>";
+
+        /// <summary>
         /// 清單右下的紅字：兩行，第二行小一號。用 TMP 的 rich text。
         /// 第一行一律用 mod 的短句（遊戲的說明有三句，太長；見 Strings.BannedShort）。
         /// </summary>
