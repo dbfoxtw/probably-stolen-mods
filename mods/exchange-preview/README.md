@@ -8,8 +8,6 @@
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs)的 Bugs 分頁）。
 
-下面「功能」列的東西都是這個 mod 加的，不是遊戲本身的（提示最後一行、夜間報告那行句尾的灰字「交易所預覽」就是標示）；這些地方有問題請回報給本 mod，不要回報給遊戲開發者。
-
 > A mod for *Probably Stolen* (Demo), built on MelonLoader: hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear. See [English](#english) below.
 
 ## 功能
@@ -115,8 +113,6 @@ MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods
 A mod for *Probably Stolen* (Demo) that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial, built on MelonLoader. Supported game version: DEMO Version 049-REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or this repository's [Releases](https://github.com/dbfoxtw/probably-stolen-exchange-preview/releases).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
-
-Everything listed under Features is added by this mod, not the game (the tooltip's last line and the end of the night report line say "Exchange Preview" in gray). If something looks wrong there, please report it here, not to the game's developers.
 
 **Features**
 
