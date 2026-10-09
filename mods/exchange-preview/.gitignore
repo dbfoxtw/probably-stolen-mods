@@ -1,0 +1,7 @@
+# 建置產物
+bin/
+obj/
+build/
+.vs/
+*.user
+__pycache__/
