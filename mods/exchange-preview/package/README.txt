@@ -2,11 +2,11 @@ Probably Stolen 交易所預覽 mod（Exchange Preview） v{version}
 ==========================================================
 
 滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -52,7 +52,7 @@ EndOfDayReminder（結束一天的提醒）、TrashNote（紙條）預設 true�
 - 相容性：和繁體中文化 mod、待辦清單 mod（To-Do List）一起測過。
 
 【授權】
-- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-exchange-preview
+- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/exchange-preview
 - MelonLoader（https://github.com/LavaGang/MelonLoader），Apache License 2.0
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
@@ -62,12 +62,12 @@ Probably Stolen Exchange Preview mod v{version}
 
 Hover over the trash can in your shop to see what the Underground Exchange will take and leave tonight,
 and what the Janitorial Service will clear. Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-exchange-preview/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -121,6 +121,6 @@ Notes
 - Compatibility: tested together with the Traditional Chinese Translation and To-Do List mods.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-exchange-preview
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/exchange-preview
 - MelonLoader (https://github.com/LavaGang/MelonLoader), Apache License 2.0
 - The game's text, names, and assets belong to Questing Goose Studio.

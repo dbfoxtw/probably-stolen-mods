@@ -4,7 +4,7 @@ using MelonLoader;
 using MelonLoader.Utils;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(ProbablyStolenCloseAllWindows.CloseAllWindowsMod), "Close All Windows", "1.0.0", "dbfoxtw")]
+[assembly: MelonInfo(typeof(ProbablyStolenCloseAllWindows.CloseAllWindowsMod), "Close All Windows", "1.0.1", "dbfoxtw")]
 [assembly: MelonGame("Questing Goose Studio", "Probably Stolen")]
 [assembly: HarmonyDontPatchAll] // 攔截在 OnInitializeMelon 裡逐一手動掛上，失敗的會寫進 log
 

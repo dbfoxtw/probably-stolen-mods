@@ -2,11 +2,11 @@
 
 *Probably Stolen*（Demo）的繁體中文（台灣用語）顯示 mod，使用 MelonLoader。非官方製作。
 
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
-下載：[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280)，或本 repo 的 [Releases](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/releases)。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
+下載：[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Traditional Chinese Translation 的最新版，標記 `zh-hant-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
-簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs)的 Bugs 分頁）。
+簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs)的 Bugs 分頁）。
 
 > Unofficial Traditional Chinese (Taiwan) display mod for *Probably Stolen* (Demo), built on MelonLoader. See [English](#english) below.
 
@@ -30,7 +30,7 @@
 
 **第二步：安裝這個 mod**
 
-1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/releases) 下載最新版的 `ProbablyStolen-ZhHant-<版本>.zip`（Assets 底下），或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) 下載。
+1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 找標題是 Traditional Chinese Translation 的最新版（標記 `zh-hant-v…`），下載 Assets 底下的 `ProbablyStolen-ZhHant-Demo-<版本>.zip`，或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) 下載。
 2. 關閉遊戲，把壓縮檔裡的 `Mods` 與 `UserData` 資料夾**解壓縮到遊戲資料夾**，資料夾合併即可。
 3. 開遊戲，在主選單右上角的語言選單選「Simplified Chinese」。裝了 mod 後，選單上會顯示「Traditional Chinese」。
 
@@ -48,9 +48,9 @@
 - **簡中缺翻的條目**：原版會顯示「Translation Error」，mod 會補上譯文；沒有譯文時改顯示遊戲的英文。
 - **簡中漏了佔位符的條目**：例如以物易物的「換取：」，原版後面不顯示物品。遊戲代入參數時，mod 改用補上佔位符的譯文。
 
-## 這個 repo 不含遊戲檔與字串表
+## 不含遊戲檔與字串表
 
-依遊戲社群的 mod 規範，這個 repo 與發布檔都不附遊戲的字串表或其他素材。`data/` 只有翻譯規則：
+依遊戲社群的 mod 規範，這個 mod 的原始碼與發布檔都不附遊戲的字串表或其他素材。`data/` 只有翻譯規則：
 
 | 檔案 | 內容 |
 |---|---|
@@ -58,7 +58,7 @@
 | `overrides.tsv` | 逐條修正：只存我們改動的片段與位置。自動轉換的結果和製作時不同（例如遊戲更新改了原文）時，這條修正會自動停用 |
 | `fills.tsv` | 簡中缺翻的條目：我們的譯文，或參照字串表裡另一條的譯文。沒有這個檔時，缺翻的條目改顯示遊戲的英文 |
 | `args.tsv` | 簡中漏了英文有的佔位符的少數條目（例如以物易物的「換取：」後面沒有物品）：補上佔位符的譯文，遊戲代入參數時改用 |
-| `hardcoded.tsv` | 寫死在遊戲程式裡、字串表沒有的少數英文（例如借據）的翻譯規則，只在中文模式套用。為了比對，規則裡保留了英文原句 |
+| `hardcoded.tsv` | 寫死在遊戲程式裡、字串表沒有的少數英文（例如顧客發現彈藥盒裝錯時的台詞）的翻譯規則，只在中文模式套用。為了比對，規則裡保留了英文原句 |
 | `tables.txt` | 要讀取的字串表名稱 |
 
 OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`）。
@@ -69,8 +69,10 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 
 需要 Windows、Python 3.10 以上、.NET SDK 6 以上。
 
+原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/zh-hant` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\zh-hant` 資料夾裡執行。
+
 1. 安裝 [MelonLoader](https://github.com/LavaGang/MelonLoader) 0.7.3，並啟動一次遊戲，讓它產生 `MelonLoader\Il2CppAssemblies`（編譯時要參考）。
-2. 關閉遊戲，執行 `install.bat`：建置後安裝到遊戲的 `Mods\` 與 `UserData\ZhHant\`。移除用 `uninstall.bat`。
+2. 關閉遊戲，在 `mods\zh-hant` 裡執行 `install.bat`：建置後安裝到遊戲的 `Mods\` 與 `UserData\ZhHant\`。移除用 `uninstall.bat`。
    - 遊戲不在 Steam 預設位置時，加上 `--game "遊戲資料夾"`。
    - 手寫字型：把支援繁體的 .ttf／.otf 放在 `fonts/handwritten.ttf`，或加上 `--font 字型檔`。
    - 除錯模式：加上 `--debug`，會記錄後備轉換（`UserData\ZhHant\misses.tsv`）、每分鐘統計，並做缺翻自我測試。
@@ -89,7 +91,7 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 
 ## 授權
 
-這個 repo 的程式碼與翻譯規則（`data/`）以 [MIT 授權](LICENSE)釋出。
+這個 mod（`mods/zh-hant` 資料夾）的程式碼與翻譯規則（`data/`）以 [MIT 授權](LICENSE)釋出。
 
 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio，不在授權範圍內。第三方元件：
 
@@ -99,9 +101,9 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 
 ## English
 
-An unofficial mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: DEMO Version 049-REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or this repository's [Releases](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/releases).
+An unofficial mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: DEMO Version 050REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Traditional Chinese Translation, tagged `zh-hant-v…`).
 
-The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it. This mod has not been thoroughly tested yet, so bug reports are welcome too, via [Issues](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs).
+The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it. This mod has not been thoroughly tested yet, so bug reports are welcome too, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs).
 
 **Install**
 
@@ -109,7 +111,7 @@ Find the game folder: in your Steam library, right-click Probably Stolen → Man
 
 1. Install MelonLoader 0.7.3 (once): from the [v0.7.3 release page](https://github.com/LavaGang/MelonLoader/releases/tag/v0.7.3), download **`MelonLoader.x64.zip`** (not x86, not the Installer) and **extract it into the game folder**, next to `Probably Stolen.exe`. You should now see `version.dll` and a `MelonLoader` folder there.
 2. Start the game once. MelonLoader opens a console window and spends a few minutes (up to ten) generating files; it needs an internet connection. Close the game after the main menu appears.
-3. Download the latest `ProbablyStolen-ZhHant-<version>.zip` from [Releases](https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
+3. Download `ProbablyStolen-ZhHant-Demo-<version>.zip` from the latest release titled Traditional Chinese Translation (tagged `zh-hant-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
 4. Start the game and choose "Simplified Chinese" in the language menu at the top right of the main menu. With the mod installed, it is shown as "Traditional Chinese".
 
 **Uninstall:** delete `Mods\ProbablyStolenZhHant.dll` and the `UserData\ZhHant` folder.
@@ -120,5 +122,5 @@ Find the game folder: in your Steam library, right-click Probably Stolen → Man
 - **No game files or string tables are included.** The mod reads the game's own Simplified Chinese string tables at runtime and converts each entry with OpenCC (s2tw), a glossary, and per-entry corrections. The corrections are stored only as changed fragments and positions. Entries missing from the Simplified Chinese table get our translation, or fall back to the game's English text. A few English lines hard-coded in the game (not in any string table) are kept verbatim in the rules (`hardcoded.tsv`) for matching.
 - The game is a Unity IL2CPP build; the mod hooks it through MelonLoader (Il2CppInterop, Harmony).
 - Handwritten text (signatures and notes) uses Yuji Syuku, a brush font close to the original, with the few missing Traditional Chinese glyphs added (SIL OFL 1.1).
-- Build from source (developers only): install MelonLoader 0.7.3, start the game once, then run `install.bat` (requires Python 3.10+ and the .NET SDK 6+).
-- License: MIT for the code and translation rules in this repository. The game's text, names, and assets belong to Questing Goose Studio.
+- Build from source (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods, install MelonLoader 0.7.3, start the game once, then run `install.bat` in `mods\zh-hant` (requires Python 3.10+ and the .NET SDK 6+).
+- License: MIT for the code and translation rules in this folder (`mods/zh-hant`). The game's text, names, and assets belong to Questing Goose Studio.

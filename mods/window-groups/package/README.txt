@@ -2,11 +2,11 @@ Probably Stolen 視窗群組 mod（Window Groups） v{version}
 ==========================================================
 
 把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位。最多 20 組。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-window-groups/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -92,7 +92,7 @@ Ctrl+1～9／Ctrl+Shift+1～9，10～20 預設空白（不使用）。
   其他 mod 用了同一個鍵時兩邊都會動作，請換一個鍵；其他會移動或縮放視窗的 mod 沒有測試過。
 
 【授權】
-- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-window-groups
+- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/window-groups
 - MelonLoader（https://github.com/LavaGang/MelonLoader），Apache License 2.0
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
@@ -102,12 +102,12 @@ Probably Stolen Window Groups mod v{version}
 
 Save the container and machine windows you have open, and where they are, as a group; press one key
 to bring them all back in place. Up to 20 groups. Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-window-groups/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -207,6 +207,6 @@ Notes
   haven't been tested.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-window-groups
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/window-groups
 - MelonLoader (https://github.com/LavaGang/MelonLoader), Apache License 2.0
 - The game's text, names, and assets belong to Questing Goose Studio.

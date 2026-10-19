@@ -2,7 +2,7 @@ r"""Probably Stolen 的 MelonLoader mod 共用的建置、安裝與打包（只�
 
 各 mod 的 tools/install.py 只寫自己的名稱、說明與特有的功能，其餘都呼叫這裡，改一處所有 mod 都跟上
 （例如正式版出了以後在 APP_IDS 加上它的 appid）。
-私人 monorepo 裡這個檔在根目錄的 tools/；公開 repo 裡和 install.py 放在同一個資料夾（同步公開 repo 時複製過去）。
+這個檔在 repo 根目錄的 tools/（私人 monorepo 與合併的公開 repo 都是），各 mod 的 tools/install.py 往上層找它。
 """
 from __future__ import annotations
 
@@ -20,6 +20,9 @@ from pathlib import Path
 APP_IDS = ["4349200"]
 EXE_NAME = "Probably Stolen.exe"
 GAME_DIR_EXAMPLE = r"D:\SteamLibrary\steamapps\common\Probably Stolen Demo"
+# 打包檔名標出對應的遊戲：給 Demo 用的 zip 加「Demo」（ProbablyStolen-ToDoList-Demo-1.0.1.zip），玩家在 Nexus 與
+# Releases 一眼看得出來。正式版（2026-10-28）以後的 zip 不加，那時再決定 Demo 與正式版的 mod 怎麼並存
+ZIP_EDITION = "Demo"
 
 
 def _steam_library_dirs() -> list[Path]:
@@ -136,6 +139,11 @@ def write_text_crlf(src: Path, dest: Path, version: str | None = None) -> None:
     dest.write_text(text, encoding="utf-8", newline="\r\n")
 
 
+def zip_name(base: str, version: str) -> str:
+    """打包檔名：<base>-Demo-<版本>.zip（ZIP_EDITION 是空字串時不加）。"""
+    return f"{base}-{ZIP_EDITION}-{version}.zip" if ZIP_EDITION else f"{base}-{version}.zip"
+
+
 def write_zip(stage: Path, out: Path) -> Path:
     """把 stage 底下的檔案壓成 out（解壓到遊戲資料夾即可），印出檔案清單。"""
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -168,7 +176,7 @@ class Mod:
     name: str             # csproj 與 dll 的名稱
     main_cs: str          # mod/src 底下有 MelonInfo（版本號）的檔
     data_dir: str         # 遊戲資料夾 UserData\ 底下的資料夾，和 mod 程式裡的一致
-    zip_name: str         # 打包檔名：<zip_name>-<版本>.zip
+    zip_name: str         # 打包檔名：<zip_name>-Demo-<版本>.zip（見 ZIP_EDITION）
     debug_note: str       # 除錯標記檔的內容（說明這個檔存在時 mod 會多記什麼）
     data_label: str = "資料"           # 訊息裡怎麼稱呼 data_dir 裡的東西
     pref_section: str | None = None    # MelonPreferences.cfg 的段落（有用 MelonPreferences 的 mod）
@@ -184,7 +192,7 @@ class Mod:
 
     @property
     def templates(self) -> Path:
-        """打包範本（package\\README.txt、LICENSE）：私人 repo 放在 public\\（只給公開 repo 的檔案），公開 repo 放在根目錄。"""
+        """打包範本（package\\README.txt、LICENSE）：私人 repo 放在 public\\（只給公開 repo 的檔案），公開 repo 放在 mod 的資料夾。"""
         return self.root / "public" if (self.root / "public").is_dir() else self.root
 
     def build(self, game: Path) -> None:
@@ -223,7 +231,7 @@ class Mod:
         data.mkdir(parents=True)
         write_text_crlf(self.templates / "package" / "README.txt", data / "README.txt", version)
         write_text_crlf(self.templates / "LICENSE", data / "LICENSE.txt")
-        return write_zip(stage, out_dir / f"{self.zip_name}-{version}.zip")
+        return write_zip(stage, out_dir / zip_name(self.zip_name, version))
 
 
 def main(mod: Mod) -> None:

@@ -2,11 +2,11 @@ Probably Stolen 一鍵關窗 mod（Close All Windows） v{version}
 ==========================================================
 
 按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-close-all-windows/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -56,7 +56,7 @@ CloseDocuments（文件，預設 false）、CloseOthers（其他 ESC 能關的�
   其他也會改視窗標題列或視窗行為的 mod，可能和鎖頭重疊或互相影響，沒有實測過。
 
 【授權】
-- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-close-all-windows
+- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/close-all-windows
 - MelonLoader（https://github.com/LavaGang/MelonLoader），Apache License 2.0
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
@@ -66,12 +66,12 @@ Probably Stolen Close All Windows mod v{version}
 
 Press one key to close all the container and machine windows in your shop,
 and lock the ones you want to keep open. Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-close-all-windows/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -133,6 +133,6 @@ Notes
   or interfere with it; not tested.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-close-all-windows
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/close-all-windows
 - MelonLoader (https://github.com/LavaGang/MelonLoader), Apache License 2.0
 - The game's text, names, and assets belong to Questing Goose Studio.

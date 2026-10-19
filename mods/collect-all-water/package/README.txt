@@ -2,11 +2,11 @@ Probably Stolen 一鍵收水 mod（Collect All Water） v{version}
 ==========================================================
 
 水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/735?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-collect-all-water/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -54,7 +54,7 @@ CollectHighQualityWater（優質水，預設 false）、CollectPureWater（純�
 - 相容性：其他也會改右鍵選單的 mod，可能和這個 mod 互相影響，沒有測試過。
 
 【授權】
-- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-collect-all-water
+- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/collect-all-water
 - MelonLoader（https://github.com/LavaGang/MelonLoader），Apache License 2.0
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
@@ -64,12 +64,12 @@ Probably Stolen Collect All Water mod v{version}
 
 Adds "Collect Ghostwater" to the right-click menu of water containers: one click fills the container
 from all the Moisture Farms in your shop. Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/735?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-collect-all-water/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -131,6 +131,6 @@ Notes
 - Compatibility: other mods that also change the right-click menu may interfere with this one; not tested.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-collect-all-water
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/collect-all-water
 - MelonLoader (https://github.com/LavaGang/MelonLoader), Apache License 2.0
 - The game's text, names, and assets belong to Questing Goose Studio.

@@ -1,5 +1,14 @@
 # 版本紀錄
 
+## v1.1.6（2026-10-19）
+
+對應遊戲版本：DEMO Version 050REV5-L
+
+- 翻譯：遊戲這版新增的文字（水產養殖等）都會轉成繁體，並潤成台灣用語，例如大卡、滑鼠、物品欄。
+- 借據與顧客拒絕買水的台詞，遊戲這版改成自己翻譯（放進字串表），mod 不再另外補譯。
+- 原始碼搬到合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods)（`mods/zh-hant`）。
+- 壓縮檔名加上 Demo（`ProbablyStolen-ZhHant-Demo-1.1.6.zip`）。
+
 ## v1.1.5（2026-10-08）
 
 對應遊戲版本：DEMO Version 049-REV5-L

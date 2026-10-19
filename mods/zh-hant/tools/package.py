@@ -48,7 +48,7 @@ def assemble(data: Path, dll: Path, font: Path | None, font_license: Path | None
         shutil.copy2(font_license, z / "handwritten-font-LICENSE.txt")
     modkit.write_text_crlf(HERE / "package" / "README.txt", z / "README.txt", version)
     modkit.write_text_crlf(HERE / "LICENSE", z / "LICENSE.txt")
-    return modkit.write_zip(stage, out_dir / f"ProbablyStolen-ZhHant-{version}.zip")
+    return modkit.write_zip(stage, out_dir / modkit.zip_name("ProbablyStolen-ZhHant", version))
 
 
 def main() -> None:

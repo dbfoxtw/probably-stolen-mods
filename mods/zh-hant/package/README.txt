@@ -2,12 +2,12 @@ Probably Stolen 繁體中文化 mod（非官方） v{version}
 ==================================================
 
 把遊戲內建的簡體中文，在顯示時轉成繁體中文（台灣用語）。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。
 這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/280?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -36,7 +36,7 @@ MelonLoader 本身要另外移除：刪除 version.dll、MelonLoader、Mods、Pl
 
 【授權與致謝】
 - 本 mod：MIT 授權（LICENSE.txt）。
-  原始碼：https://github.com/dbfoxtw/probably-stolen-demo-zh-hant
+  原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/zh-hant
 - 簡繁轉換字典：OpenCC（https://github.com/BYVoid/OpenCC），Apache License 2.0（opencc\LICENSE）
 - 手寫字型：佑字 肅（Yuji Syuku，片岡佑之，https://github.com/Kinutafontfactory/Yuji）的補字版
   Yuji Syuku ZhHant，SIL Open Font License 1.1（handwritten-font-LICENSE.txt）
@@ -48,12 +48,12 @@ Probably Stolen Traditional Chinese mod (unofficial) v{version}
 --------------------------------------------------------------
 
 Shows the game's Simplified Chinese text in Traditional Chinese (Taiwan). Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it.
 This mod has not been thoroughly tested yet. Bug reports are welcome too
 (https://www.nexusmods.com/probablystolen/mods/280?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-demo-zh-hant/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -80,7 +80,7 @@ Notes
   Text not displayed through TextMeshPro is left as is.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-demo-zh-hant
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/zh-hant
 - OpenCC dictionaries: Apache License 2.0 (opencc\LICENSE)
 - Handwritten font: Yuji Syuku ZhHant, a modified Yuji Syuku (Kataoka Yuji, https://github.com/Kinutafontfactory/Yuji)
   with added Traditional Chinese glyphs. SIL Open Font License 1.1 (handwritten-font-LICENSE.txt)

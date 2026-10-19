@@ -1,0 +1,5 @@
+# 各 mod 的建置產物由它資料夾裡的 .gitignore 管；這裡是根目錄的
+# （mod 的 tools/install.py 載入根目錄的 tools/modkit.py 時，Python 會在 tools/ 建快取）
+__pycache__/
+.vs/
+.venv/

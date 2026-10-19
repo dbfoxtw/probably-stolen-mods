@@ -144,7 +144,7 @@ def license_text(ofl: Path) -> str:
     if not sep:
         raise SystemExit(f"{ofl} 看起來不是 OFL 授權檔")
     note = ("\nThis is a modified version (\"Yuji Syuku ZhHant\") made for the Probably Stolen Demo\n"
-            "Traditional Chinese mod (https://github.com/dbfoxtw/probably-stolen-demo-zh-hant):\n"
+            "Traditional Chinese mod (https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/zh-hant):\n"
             "four Traditional Chinese glyphs (你喔嗎汙) were composed from the font's own glyphs,\n"
             "and the ellipsis (…) was respaced. The modified version is also licensed under the\n"
             "SIL Open Font License, Version 1.1.\n\n\n")

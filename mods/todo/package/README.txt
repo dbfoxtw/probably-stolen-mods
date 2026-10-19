@@ -2,11 +2,11 @@ Probably Stolen 待辦清單 mod（To-Do List） v{version}
 ==================================================
 
 在店鋪畫面顯示一張懸浮單，記待辦和筆記。非官方製作。
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/488?tab=bugs
- 或 https://github.com/dbfoxtw/probably-stolen-todo/issues）。
+ 或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
@@ -41,7 +41,7 @@ MelonLoader 本身要另外移除：刪除 version.dll、MelonLoader、Mods、Pl
   這兩種時候其他 mod 的快捷鍵和點擊也可能沒反應；按 Esc 結束編輯或把滑鼠移開就恢復。
 
 【授權】
-- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-todo
+- 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/todo
 - MelonLoader（https://github.com/LavaGang/MelonLoader），Apache License 2.0
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
@@ -50,12 +50,12 @@ Probably Stolen To-Do List mod v{version}
 -----------------------------------------
 
 A floating panel on the shop screen for your to-dos and notes. Unofficial.
-Supported game version: DEMO Version 049-REV5-L
+Supported game version: DEMO Version 050REV5-L
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
 (https://www.nexusmods.com/probablystolen/mods/488?tab=bugs
- or https://github.com/dbfoxtw/probably-stolen-todo/issues).
+ or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -95,6 +95,6 @@ Notes
   either. Press Esc to finish editing, or move the mouse away.
 
 License
-- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-todo
+- This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/todo
 - MelonLoader (https://github.com/LavaGang/MelonLoader), Apache License 2.0
 - The game's text, names, and assets belong to Questing Goose Studio.

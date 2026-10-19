@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v1.0.1（2026-10-19）
+
+對應遊戲版本：DEMO Version 050REV5-L
+
+- 實機確認可以在 Demo 050REV5-L 使用（程式沒有改變）。
+- 原始碼搬到合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods)（`mods/todo`）。
+- 壓縮檔名加上 Demo（`ProbablyStolen-ToDoList-Demo-1.0.1.zip`）。
+
+**English**
+
+Supported game version: DEMO Version 050REV5-L
+
+- Tested in game on Demo 050REV5-L (no code changes).
+- The source code moved to the combined repository [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) (`mods/todo`).
+- The zip file name now includes Demo (`ProbablyStolen-ToDoList-Demo-1.0.1.zip`).
+
 ## v1.0.0（2026-10-07）
 
 對應遊戲版本：DEMO Version 049-REV5-L

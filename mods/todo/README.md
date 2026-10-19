@@ -2,11 +2,11 @@
 
 *Probably Stolen*（Demo）的待辦清單 mod：在店鋪畫面顯示一張懸浮單，記待辦和筆記。使用 MelonLoader，非官方製作。
 
-對應遊戲版本：DEMO Version 049-REV5-L
+對應遊戲版本：DEMO Version 050REV5-L
 
-下載：[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488)，或本 repo 的 [Releases](https://github.com/dbfoxtw/probably-stolen-todo/releases)。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
+下載：[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 To-Do List 的最新版，標記 `todo-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
-程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-todo/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs)的 Bugs 分頁）。
+程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs)的 Bugs 分頁）。
 
 > A to-do list mod for *Probably Stolen* (Demo), built on MelonLoader: a floating panel on the shop screen for your to-dos and notes. See [English](#english) below.
 
@@ -38,7 +38,7 @@
 
 **第二步：安裝這個 mod**
 
-1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-todo/releases) 下載最新版的 `ProbablyStolen-ToDoList-<版本>.zip`（Assets 底下），或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) 下載。
+1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 找標題是 To-Do List 的最新版（標記 `todo-v…`），下載 Assets 底下的 `ProbablyStolen-ToDoList-Demo-<版本>.zip`，或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) 下載。
 2. 關閉遊戲，把壓縮檔裡的 `Mods` 與 `UserData` 資料夾**解壓縮到遊戲資料夾**，資料夾合併即可。
 3. 開遊戲、進到店鋪畫面，就會看到懸浮單。
 
@@ -80,8 +80,10 @@ MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods
 
 需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上。
 
+原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/todo` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\todo` 資料夾裡執行。
+
 1. 安裝 [MelonLoader](https://github.com/LavaGang/MelonLoader) 0.7.3，並啟動一次遊戲，讓它產生 `MelonLoader\Il2CppAssemblies`（編譯時要參考）。
-2. 關閉遊戲，執行 `install.bat`：建置後安裝到遊戲的 `Mods\`。移除用 `uninstall.bat`（待辦資料保留）。
+2. 關閉遊戲，在 `mods\todo` 裡執行 `install.bat`：建置後安裝到遊戲的 `Mods\`。移除用 `uninstall.bat`（待辦資料保留）。
    - 遊戲不在 Steam 預設位置時，加上 `--game "遊戲資料夾"`。
    - 除錯模式：加上 `--debug`，log 每分鐘記錄擋住遊戲輸入的統計，以及遊戲或其他 mod 查過哪些鍵（設定快捷鍵時的撞鍵警告用）。
 3. 只建置、不安裝：`python tools/install.py build`；打包玩家用的壓縮檔：`python tools/install.py package`。
@@ -89,15 +91,15 @@ MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods
 
 ## 授權
 
-這個 repo 的程式碼以 [MIT 授權](LICENSE)釋出。
+這個 mod（`mods/todo` 資料夾）的程式碼以 [MIT 授權](LICENSE)釋出。
 
 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio，不在授權範圍內。MelonLoader：Apache License 2.0；Harmony：MIT（執行時由 MelonLoader 提供，不隨本 mod 散布）。
 
 ## English
 
-A to-do list for *Probably Stolen* (Demo): a floating panel on the shop screen for your to-dos and notes. Unofficial, built on MelonLoader. Supported game version: DEMO Version 049-REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or this repository's [Releases](https://github.com/dbfoxtw/probably-stolen-todo/releases).
+A to-do list for *Probably Stolen* (Demo): a floating panel on the shop screen for your to-dos and notes. Unofficial, built on MelonLoader. Supported game version: DEMO Version 050REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled To-Do List, tagged `todo-v…`).
 
-The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-todo/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs).
+The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs).
 
 **Features**
 
@@ -116,7 +118,7 @@ Find the game folder: in your Steam library, right-click Probably Stolen → Man
 
 1. Install MelonLoader 0.7.3 (once; skip this if you already have it for another mod): from the [v0.7.3 release page](https://github.com/LavaGang/MelonLoader/releases/tag/v0.7.3), download **`MelonLoader.x64.zip`** (not x86, not the Installer) and **extract it into the game folder**, next to `Probably Stolen.exe`. You should now see `version.dll` and a `MelonLoader` folder there.
 2. Start the game once. MelonLoader opens a console window and spends a few minutes (up to ten) generating files; it needs an internet connection. Close the game after the main menu appears.
-3. Download the latest `ProbablyStolen-ToDoList-<version>.zip` from [Releases](https://github.com/dbfoxtw/probably-stolen-todo/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
+3. Download `ProbablyStolen-ToDoList-Demo-<version>.zip` from the latest release titled To-Do List (tagged `todo-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
 4. Start the game and go to the shop screen; the panel appears there.
 
 To update, just repeat step 3. Your lists and settings are kept.
@@ -135,6 +137,6 @@ To update, just repeat step 3. Your lists and settings are kept.
 - Tested together with the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod. With it installed, a few words typed into the list are displayed using that mod's wording; what you typed is still what gets saved.
 - While you're typing in the panel, the game doesn't receive keyboard input, and while the mouse is over the panel, it doesn't receive clicks or the scroll wheel, so typing won't trigger the game's hotkeys and clicks won't go through to items behind the panel. Because this is blocked where Unity reads input, other mods' hotkeys and clicks may not respond at those moments either. Press Esc to finish editing, or move the mouse away, and everything works again.
 
-**Build from source** (developers only): install MelonLoader 0.7.3 and start the game once, then run `install.bat` (requires Python 3.10+ and the .NET SDK 8+; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log input-blocking statistics and the keys queried by the game or other mods every minute). `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods, install MelonLoader 0.7.3 and start the game once, then run `install.bat` in `mods\todo` (requires Python 3.10+ and the .NET SDK 8+; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log input-blocking statistics and the keys queried by the game or other mods every minute). `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
 
-**License:** MIT for the code in this repository. The game's text, names, and assets belong to Questing Goose Studio.
+**License:** MIT for the code in this folder (`mods/todo`). The game's text, names, and assets belong to Questing Goose Studio.

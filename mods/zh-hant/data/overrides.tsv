@@ -241,6 +241,7 @@ Dialogue	dialog_janitor_ue_8	fe5ad8106be5bc13	17	19	換
 Dialogue	dialog_lun_visit_right_item	ac46a2d64d8efac4	0	4	這個可以
 Dialogue	dialog_appraisal_board_decline_1	53ebaaf19e612776	0	3	可惜了	5	15	看人一向很準的
 Dialogue	dialog_loan_shark_intro_9	626be4ef87885a9d	7	8	息會	9	9	微	11	24	點
+Dialogue	dialog_morning_mob_4	eeb335c269d6c67c	2	3	那傢伙
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -291,6 +292,10 @@ Item	item_surgery_tool_name	5ef62f301ffb7fb7	6	8	組
 Item	item_postit_name	42820b4e9544d0b0	1	2	利貼
 Item	item_shampoo_name	df646f862a0d3dbf	5	8	沐浴乳
 Item	item_toolbox_desc	2bfe8c7b6adc4cf8	22	23	對	24	26	格子
+Item	item_gutterflow_pellet_desc	a43652b31e79c8d6	1	2	製
+Item	item_sturgeon_desc	86b16f3989567822	32	33	
+Item	item_graft_tilapia_flavor	8fb55a41e1f59675	49	53	敷在	55	55	上
+Item	item_graft_tilapia_roe_flavor	9fbf16acbeea1836	26	28	護人員
 MainMenu	credit_ack	6897086dc7b23030	2	3	感
 MainMenu	option_note	09fd54c28bcb1129	9	11	支援	13	16	螢幕	28	29	執
 MainMenu	option_apply	95514e5a7ff65783	0	1	套
@@ -386,6 +391,9 @@ Mechanic	mech_gun_tag_special3	31845fe277b425e8	2	2	插	3	4
 Mechanic	response_afterhours_select_backpack	c884c828f00dc83d	0	1		2	2	擇
 Mechanic	request_bm_evidence_desc	c51699dbc5a9e0a9	32	32	趕	33	33	它落回	42	48	手中	50	51	，先把	52	56	弄到手
 Mechanic	mech_calendar_keyword_payment	5d3ba34cc66cea45	0	2	房貸
+Mechanic	note_georgio_iou_title	46794c01b7cc6ef3	1	2	據
+Mechanic	note_georgio_iou_sign	01ca6cc26d8b5394	0	1	——
+Mechanic	aquaculture_status_gravid	f7516ef9d3ebf1a5	0	1	懷
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
 NewGame	gunsmith_body	7078053844be4136	76	77	透	78	79	為
 NewGame	welcome_main	0fd371dc48b73daf	121	123	申請房	124	125	
@@ -492,6 +500,10 @@ NetworkUpgrade	network_MARKETPLACE_REQUESTS_desc	dcbfa98fa3d18f5d	42	44	一般
 NetworkUpgrade	network_JACKSON1_desc	01b72f99880d558b	50	52	隨時	55	56	販
 NetworkUpgrade	network_JACKSON2_desc	1f9d2f8a7af4d254	50	52	隨時	58	59	販
 NetworkUpgrade	network_LANDLORD_GRACE_desc	f3ffbd7b3aafd9b0	10	11	：	14	16	漏繳	19	19	房	20	23		26	29	
+NetworkUpgrade	network_GUN_PERMIT_I_title	e25c0e97718f22c2	2	4	武器
+NetworkUpgrade	network_GUN_PERMIT_II_title	640f454930c004c8	2	4	武器
+NetworkUpgrade	network_GUN_PERMIT_III_title	0144146bf1034949	2	4	武器
+NetworkUpgrade	network_GUN_PERMIT_III_desc	ed8517e520d129c8	33	35	武器
 PhoneDialogue	ashish_intro2	c2d4074dc13efbd3	10	12		13	14	上幫
 PhoneDialogue	caulson_ready	d834812018a8b86b	0	1	好	9	11		14	14	給你
 PhoneDialogue	wild2	e2615f4bef50ae19	0	3	有什麼	4	8	為	9	9	效勞的
@@ -514,3 +526,5 @@ ClientName	name_shopping_mercenary	c28dcc8a196fe58c	5	6
 Interactable	door_crackdown	b7db093738a3ad07	2	4	
 Tutorial	tuto_shutter	6f46d6e64652fbbd
 Tutorial	tuto_display_case	55e8094ab7f37e79
+Tutorial	tuto_drag_select	63c8d3264f083bbf	2	2	滑	3	4		6	7		8	9	曳	11	11	以	12	13	取
+Tutorial	tuto_sort_menu	cb237bb862e33a4b	0	7	在物品欄	10	11	上按右鍵	13	13	以

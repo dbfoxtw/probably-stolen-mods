@@ -2,7 +2,7 @@ using System.IO;
 using MelonLoader;
 using MelonLoader.Utils;
 
-[assembly: MelonInfo(typeof(ProbablyStolenCollectAllWater.CollectAllWaterMod), "Collect All Water", "1.0.0", "dbfoxtw")]
+[assembly: MelonInfo(typeof(ProbablyStolenCollectAllWater.CollectAllWaterMod), "Collect All Water", "1.0.1", "dbfoxtw")]
 [assembly: MelonGame("Questing Goose Studio", "Probably Stolen")]
 [assembly: HarmonyDontPatchAll] // 攔截在 OnInitializeMelon 裡逐一手動掛上，失敗的會寫進 log
 
