@@ -1,0 +1,8 @@
+bin/
+obj/
+build/
+.vs/
+*.user
+.venv/
+__pycache__/
+logs/

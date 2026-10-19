@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 離線測試資料檔的對應與封存、清單的規則（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\src\TodoStore.cs" Link="TodoStore.cs" />
+    <Compile Include="..\src\TodoList.cs" Link="TodoList.cs" />
+    <Compile Include="..\src\IconShapes.cs" Link="IconShapes.cs" />
+    <Compile Include="..\src\SaveGate.cs" Link="SaveGate.cs" />
+    <Compile Include="..\src\Hotkey.cs" Link="Hotkey.cs" />
+    <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+  </ItemGroup>
+
+</Project>
