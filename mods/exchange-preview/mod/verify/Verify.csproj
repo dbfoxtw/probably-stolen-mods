@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 離線測試：模擬交換的規則、提示與夜間報告的文字、資料檔（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- SimItem.Handle 只在遊戲裡指派（放 GameItem），離線測試用不到 -->
+    <NoWarn>CS0649</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\src\ExchangeSim.cs" Link="ExchangeSim.cs" />
+    <Compile Include="..\src\PreviewText.cs" Link="PreviewText.cs" />
+    <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+    <Compile Include="..\src\SlotStore.cs" Link="SlotStore.cs" />
+    <Compile Include="..\src\IndicatorLogic.cs" Link="IndicatorLogic.cs" />
+  </ItemGroup>
+
+</Project>
