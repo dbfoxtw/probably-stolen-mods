@@ -22,6 +22,8 @@ namespace ProbablyStolenZhHant
         readonly HashSet<string> _keyPrefixes = new HashSet<string>(StringComparer.Ordinal);
         readonly List<Template> _templates = new List<Template>();
         readonly List<Template> _plainTemplates = new List<Template>(); // 字面沒有簡體專用字的樣板，見 ConvertCore
+        // 單位改成英文時，字面沒有簡體專用字、只因為單位才和譯文不同的樣板（「耗水率：{0}毫升/天」）：佔位符要是數字才套，見 TryUnits
+        readonly List<Template> _unitTemplates = new List<Template>();
         // 沒有簡體專用字、譯文卻不同的短詞（例如聲望特性的狀態標籤、某些職稱）：不用轉的文字裡也要換掉，見 ReplacePlainPhrases
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _plainPhrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _phrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
@@ -74,31 +76,51 @@ namespace ProbablyStolenZhHant
             var outChars = new HashSet<char>();
             var outText = new StringBuilder(); // 全部譯文，用來確認短詞不會出現在已轉好的文字裡
             var byKey = new Dictionary<string, string>(); // 「表/key」→ 譯文，給 hardcoded.tsv 的參照用
+            // 單位改成英文時，另外記下三個開關都開時的整句對照與全部譯文：短詞表照它建，只差在單位的條目（原文和譯文本來一樣）
+            // 不會變成短詞，玩家打的字裡有同樣的詞也不會被換（整句查表照樣換）；樣板也靠它分出只因為單位才收進來的。
+            // 單位都用中文時就是 _exact 與 outText 本身
+            bool split = !tr.Units.AllChinese;
+            var zhExact = split ? new Dictionary<string, string>(StringComparer.Ordinal) : c._exact;
+            var zhText = split ? new StringBuilder() : outText;
             void Add(string s, string d)
             {
                 if (s == d && s.Length > 0 && s.Length <= MaxSpeaker) c._unchanged.Add(s);
                 if (string.IsNullOrEmpty(s) || s == d) return;
                 if (!c._exact.TryAdd(s, d) && c._exact[s] != d) c.Conflicts++;
             }
+            void AddZh(string s, string d)
+            {
+                if (split && !string.IsNullOrEmpty(s) && s != d) zhExact.TryAdd(s, d);
+            }
             foreach (var (table, key, src) in entries)
             {
                 if (string.IsNullOrEmpty(src)) continue;
-                var dst = tr.Translate(table, key, src);
+                var dst = tr.Translate(table, key, src, out var zhDst);
                 byKey[table + "/" + key] = dst;
                 c.EntryCount++;
                 foreach (var ch in dst) outChars.Add(ch);
                 outText.Append(dst).Append('\n');
                 Add(src, dst);
                 Add(StripAnimTags(src), StripAnimTags(dst));
+                if (split)
+                {
+                    zhText.Append(zhDst).Append('\n');
+                    AddZh(src, zhDst);
+                    AddZh(StripAnimTags(src), StripAnimTags(zhDst));
+                }
             }
             foreach (var f in tr.Fills.Values)
             {
                 foreach (var ch in f) outChars.Add(ch);
                 outText.Append(f).Append('\n');
             }
-            var allOut = outText.ToString();
+            if (split)
+                foreach (var f in tr.ChineseFillValues) zhText.Append(f).Append('\n');
+            var zhOut = zhText.ToString();
             Add("简体中文", "繁體中文"); // 語言選單（寫死在程式裡）
             Add("Simplified Chinese", "Traditional Chinese"); // 主選單右上角的語言下拉選單
+            AddZh("简体中文", "繁體中文");
+            AddZh("Simplified Chinese", "Traditional Chinese");
 
             // 簡體專用字：單獨轉換會變、而且沒出現在任何譯文裡；含這些字的字串才需要轉換
             for (int ch = 0; ch <= char.MaxValue; ch++)
@@ -114,13 +136,16 @@ namespace ProbablyStolenZhHant
                 int end = k.IndexOf('{', a);
                 if (end < 0) end = k.Length;
                 for (int n = 1; n <= PrefixLen && a + n <= end; n++) c._keyPrefixes.Add(k.Substring(a, n));
-                // 短詞（名稱、狀態等）：整句查不到時用來分詞，處理遊戲自己拼接的字串
+            }
+            // 短詞（名稱、狀態等）：整句查不到時用來分詞，處理遊戲自己拼接的字串。照三個開關都開時的內容建（見上面 zhExact）
+            foreach (var kv in zhExact)
+            {
                 if (kv.Key.Length >= 2 && kv.Key.Length <= 12 && !PhraseExclude.IsMatch(kv.Key))
                 {
                     // 「退出」「配置」「支付」這類原文也是正常的繁中詞、會出現在別的譯文裡，換掉會誤傷，所以只收譯文裡沒出現過的。
                     // 含簡體字的字串分詞時也一樣：行事曆上的某個短詞有專用譯文，同一個詞出現在別的句子裡時不能跟著換掉
                     bool plain = !c.NeedsConversion(kv.Key);
-                    if (plain && allOut.IndexOf(kv.Key, StringComparison.Ordinal) >= 0) continue;
+                    if (plain && zhOut.IndexOf(kv.Key, StringComparison.Ordinal) >= 0) continue;
                     AddByFirstChar(c._phrases, kv.Key, kv.Value);
                     c.PhraseCount++;
                     if (plain)
@@ -144,6 +169,8 @@ namespace ProbablyStolenZhHant
                         if (!byKey.TryGetValue(repl.Substring(1), out var r)) continue;
                         repl = r.Replace("$", "$$");
                     }
+                    // 單位改成英文時，替換文字的「$1千卡」換成「$1kcal」（參照的譯文在 Translator 已經換過）
+                    else repl = tr.Units.Apply(repl);
                     c._hardcoded.Add((p[0], new Regex(p[1], RegexOptions.CultureInvariant), repl));
                 }
             foreach (var d in new[] { c._phrases, c._plainPhrases })
@@ -157,7 +184,18 @@ namespace ProbablyStolenZhHant
             // 字面沒有簡體專用字、套用後字面卻會變的樣板（例如含「下周」「槽位」，套用後變成「下週」「欄位」）另外列出，
             // 不用轉的字串也要比對。只收字面會變的，所以單邊的樣板套上去也只是換掉那個詞，不怕寬鬆
             foreach (var t in c._templates)
-                if (!c.NeedsConversion(t.Literal) && !t.KeepsLiteral) c._plainTemplates.Add(t);
+            {
+                if (c.NeedsConversion(t.Literal) || t.KeepsLiteral) continue;
+                c._plainTemplates.Add(t);
+                // 三個開關都開時不會在這份清單裡的（原文和譯文本來一樣，例如「需要{0}毫升水」），是只因為單位改成英文才收進來的：
+                // 佔位符什麼都吃，玩家打的「需要去超市買2000毫升水」也會對上，所以只在佔位符是遊戲代入的數字時才套。
+                // 單位都用中文時不會有這種樣板、清單是空的，轉換和沒有開關時完全一樣
+                if (split && !(zhExact.TryGetValue(t.Source, out var zd) && Template.TryCreate(t.Source, zd, out var zt) && !zt.KeepsLiteral))
+                {
+                    t.NumbersOnly = true;
+                    c._unitTemplates.Add(t);
+                }
+            }
             return c;
         }
 
@@ -178,31 +216,48 @@ namespace ProbablyStolenZhHant
             long t0 = Stopwatch.GetTimestamp();
             try
             {
-                if (_exact.TryGetValue(s, out var r)) { ExactHits++; return r; }
-                if ((r = TrySpeaker(s)) != null) { ExactHits++; return r; }
-                if (ChineseActive && _hardcoded.Count > 0 && ApplyHardcoded(s) is string h) { HardcodedHits++; return h; }
-                if (!NeedsConversion(s))
-                {
-                    // 樣板的字面沒有簡體專用字、填入的又是數字時，整句也沒有（例如房東說下週租金那句），仍要套樣板
-                    foreach (var t in _plainTemplates)
-                        if ((r = t.Apply(s, Convert)) != null) { TemplateHits++; return r; }
-                    if ((r = ReplacePlainPhrases(s)) != null) { FallbackHits++; return r; }
-                    Skipped++;
-                    return s;
-                }
-                if (_cache.TryGetValue(s, out r)) { CacheHits++; return r; }
-                r = LookupFlexible(s, templates: false);
-                if (r != null) ExactHits++;
-                else if ((r = TryTemplates(s)) != null || (r = TryInner(s)) != null) TemplateHits++;
-                else
-                {
-                    r = ConvertComposite(s);
-                    FallbackHits++;
-                }
-                _cache[s] = r;
+                var r = ConvertSimplified(s);
+                // 寫死英文的規則最後才套：說明框把物品名稱、說明（簡中）和寫死的英文拼成一整段，
+                // 先套規則再直接傳回的話，同一段的簡中就沒轉到（Demo 050 的肉類熱量、模組鎖住提示）。
+                // 轉換只動簡中，英文原樣留著，規則照樣比對得到，代入句子裡的物品名稱也已經是繁體
+                if (ChineseActive && _hardcoded.Count > 0 && ApplyHardcoded(r) is string h) { HardcodedHits++; return h; }
                 return r;
             }
             finally { Ticks += Stopwatch.GetTimestamp() - t0; }
+        }
+
+        /// <summary>簡中轉繁中（不含寫死英文的規則）。</summary>
+        string ConvertSimplified(string s)
+        {
+            if (_exact.TryGetValue(s, out var r)) { ExactHits++; return r; }
+            if ((r = TrySpeaker(s)) != null) { ExactHits++; return r; }
+            if (!NeedsConversion(s))
+            {
+                // 樣板的字面沒有簡體專用字、填入的又是數字時，整句也沒有（例如房東說下週租金那句），仍要套樣板
+                foreach (var t in _plainTemplates)
+                    if ((r = t.Apply(s, Convert)) != null) { TemplateHits++; return r; }
+                // 單位改成英文時：「耗水率：100毫升/天」這種沒有簡體字的句子可能和別的行拼在一起、或前面有空白，
+                // 整句的樣板對不上，逐段查（ConvertComposite 也會換短詞；佔位符一樣要是數字）
+                if (_unitTemplates.Count > 0 && _tr.Units.HasEnglishUnit(s))
+                {
+                    r = ConvertComposite(s);
+                    if (r != s) { TemplateHits++; return r; }
+                }
+                if ((r = ReplacePlainPhrases(s)) != null) { FallbackHits++; return r; }
+                Skipped++;
+                return s;
+            }
+            if (_cache.TryGetValue(s, out r)) { CacheHits++; return r; }
+            r = LookupFlexible(s, templates: false);
+            if (r != null) ExactHits++;
+            else if ((r = TryTemplates(s)) != null || (r = TryInner(s)) != null) TemplateHits++;
+            else
+            {
+                r = ConvertComposite(s);
+                FallbackHits++;
+            }
+            _cache[s] = r;
+            return r;
         }
 
         /// <summary>套用寫死英文的翻譯規則；沒有任何規則生效時傳回 null。</summary>
@@ -265,7 +320,8 @@ namespace ProbablyStolenZhHant
                 if (!NeedsConversion(tokens[units[u]]))
                 {
                     // 沒有簡體專用字的片段：整句查得到，或含有譯文不同的短詞（例如聲望特性標題的狀態標籤）
-                    var ex = LookupFlexible(tokens[units[u]], templates: false) ?? ReplacePlainPhrases(tokens[units[u]]);
+                    // 單位改成英文時另外查只差在單位的樣板（說明框裡的「耗水率：100毫升/天」）
+                    var ex = LookupFlexible(tokens[units[u]], templates: false) ?? TryUnits(tokens[units[u]]) ?? ReplacePlainPhrases(tokens[units[u]]);
                     if (ex != null) tokens[units[u]] = ex;
                     continue;
                 }
@@ -330,11 +386,37 @@ namespace ProbablyStolenZhHant
         {
             if (line.Length == 0 || !NeedsConversion(line)) return line;
             // 先查所有整句對照的變體，再查樣板：寬鬆的樣板（開頭或結尾就是佔位符）可能先吃到這行，把沒對上的部分丟給逐字轉換
-            var r = LookupFlexible(line, templates: false) ?? LookupFlexible(line, templates: true);
+            var r = LookupFlexible(line, templates: false) ?? LookupFlexible(line, templates: true) ?? TryJoined(line);
             if (r != null) return r;
             r = Fallback(line);
             Misses[line] = r;
             return r;
+        }
+
+        // 遊戲把兩段字串表的文字接成一行時用的分隔符號（兩個半形空格）
+        const string JoinSep = "  ";
+
+        /// <summary>
+        /// 遊戲把兩段字串表的文字用兩個半形空格接成同一行：魚的提示「年龄：3天（50克）  肉类：54千卡」是年齡
+        /// （husbandry_tooltip_age）＋「  」＋肉量（mech_feed_dispenser_meat），AquacultureHelper.CreateFishTooltip 接好才交給提示框。
+        /// 整行對不上整句與樣板，走後備轉換會套不到逐條修正，單位改成英文時也換不到。所以照分隔符號切開、每段各自查整句與
+        /// 前後都有固定文字的樣板（單位改成英文時再查只差在單位的樣板），每段都查得到才採用；有一段查不到就傳回 null、照舊走後備轉換，
+        /// 玩家打的字裡剛好有兩個空格也不會被拆開亂套。空白的段落（分隔符號在頭尾、或連著三個以上空格）原樣留著。
+        /// </summary>
+        string TryJoined(string line)
+        {
+            if (line.IndexOf(JoinSep, StringComparison.Ordinal) < 0) return null;
+            var parts = line.Split(new[] { JoinSep }, StringSplitOptions.None);
+            int found = 0;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i].Trim().Length == 0) continue;
+                var r = LookupFlexible(parts[i], templates: false) ?? LookupFlexible(parts[i], templates: true, anchored: true) ?? TryUnits(parts[i]);
+                if (r == null) return null;
+                parts[i] = r;
+                found++;
+            }
+            return found >= 2 ? string.Join(JoinSep, parts) : null;
         }
 
         const string SpeakerSep = ": ";
@@ -382,11 +464,25 @@ namespace ProbablyStolenZhHant
         /// （例如新聞結尾、說明框裡用方括號包住的標籤）。空白差異用「去空白」的對照表比對，
         /// 因為原文本身也可能以空白開頭結尾。查到就把原本的前後綴接回去。
         /// </summary>
-        string LookupFlexible(string line, bool templates, bool anchored = false)
-        {
-            Func<string, string> find = templates
+        string LookupFlexible(string line, bool templates, bool anchored = false) =>
+            LookupFlexible(line, templates
                 ? x => TryTemplates(x, anchored)
-                : s => _exact.TryGetValue(s, out var v) ? v : _exactTrim.TryGetValue(s, out v) ? v : null;
+                : s => _exact.TryGetValue(s, out var v) ? v : _exactTrim.TryGetValue(s, out v) ? v : null);
+
+        /// <summary>單位改成英文時，只差在單位的樣板（_unitTemplates，佔位符要是數字）；同樣去掉前後空白、符號、括號再查。沒有就傳回 null。</summary>
+        string TryUnits(string line)
+        {
+            if (_unitTemplates.Count == 0 || !_tr.Units.HasEnglishUnit(line)) return null;
+            return LookupFlexible(line, x =>
+            {
+                foreach (var t in _unitTemplates)
+                    if (t.Apply(x, Convert) is string r) return r;
+                return null;
+            });
+        }
+
+        string LookupFlexible(string line, Func<string, string> find)
+        {
             var r = find(line);
             if (r != null) return r;
             foreach (var set in TrimLevels)
@@ -434,7 +530,11 @@ namespace ProbablyStolenZhHant
             return sb?.Append(s, gap, s.Length - gap).ToString();
         }
 
-        /// <summary>後備轉換：標記原樣保留；其餘用短詞分詞，詞以外的部分用 OpenCC 轉換再套術語表。</summary>
+        /// <summary>
+        /// 後備轉換：標記原樣保留；其餘用短詞分詞，詞以外的部分用 OpenCC 轉換再套術語表。
+        /// 這裡可能是玩家打的字：不論單位的開關都不套「kJ→千焦」（Translator.ConvertFallback），也不換任何單位；
+        /// 短詞表照三個開關都開時的內容建，只差在單位的條目不在裡面。
+        /// </summary>
         public string Fallback(string s)
         {
             var parts = Markup.Split(s);
@@ -454,12 +554,12 @@ namespace ProbablyStolenZhHant
             {
                 var hit = LongestMatch(_phrases, s, i);
                 if (hit.Key == null) { i++; continue; }
-                sb.Append(_tr.ConvertPlain(s.Substring(gap, i - gap)));
+                sb.Append(_tr.ConvertFallback(s.Substring(gap, i - gap)));
                 sb.Append(hit.Value);
                 i += hit.Key.Length;
                 gap = i;
             }
-            sb.Append(_tr.ConvertPlain(s.Substring(gap)));
+            sb.Append(_tr.ConvertFallback(s.Substring(gap)));
         }
 
         static KeyValuePair<string, string> LongestMatch(Dictionary<char, List<KeyValuePair<string, string>>> dict, string s, int i)
@@ -508,8 +608,11 @@ namespace ProbablyStolenZhHant
             readonly string _prefix, _suffix;
             readonly string[] _names;   // 原文中各佔位符的文字，例如 "{0}"
             readonly string _target;
+            public readonly string Source;  // 原文（整句對照的 key）
             public readonly string Literal; // 原文去掉佔位符後的字面部分
             public int LiteralLength => Literal.Length;
+            /// <summary>佔位符的內容要是數字才套（只因為單位改成英文才收進來的樣板，見 Build）。</summary>
+            public bool NumbersOnly;
             /// <summary>譯文去掉佔位符後和原文字面相同：套用只會轉換佔位符的內容。</summary>
             public bool KeepsLiteral
             {
@@ -522,10 +625,10 @@ namespace ProbablyStolenZhHant
             }
             public bool Anchored => _prefix.Length > 0 && _suffix.Length > 0;
 
-            Template(Regex re, string prefix, string suffix, string[] names, string target, string literal)
+            Template(Regex re, string prefix, string suffix, string[] names, string target, string source, string literal)
             {
                 _re = re; _prefix = prefix; _suffix = suffix; _names = names; _target = target;
-                Literal = literal;
+                Source = source; Literal = literal;
             }
 
             public static bool TryCreate(string src, string dst, out Template t)
@@ -551,9 +654,16 @@ namespace ProbablyStolenZhHant
                 pattern.Append('$');
                 string prefix = parts[0], suffix = parts[parts.Length - 1];
                 t = new Template(new Regex(pattern.ToString(), RegexOptions.Singleline | RegexOptions.CultureInvariant),
-                                 prefix, suffix, names.ToArray(), dst, literal.ToString());
+                                 prefix, suffix, names.ToArray(), dst, src, literal.ToString());
                 return true;
             }
+
+            static readonly Regex RichTag = new Regex(@"<[^<>]*>", RegexOptions.Compiled);
+            // 遊戲代入的數字（整數、小數、千分位、正負號）；耗水、水量都是遊戲直接代入的 Int32
+            static readonly Regex Number = new Regex(@"^[+\-]?[0-9]+(?:[.,][0-9]+)*$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+            /// <summary>佔位符的內容去掉 rich text 標籤後是不是數字（遊戲可能用 &lt;color&gt; 包住數字）。</summary>
+            static bool IsNumber(string s) => Number.IsMatch(s.IndexOf('<') < 0 ? s : RichTag.Replace(s, ""));
 
             public string Apply(string s, Func<string, string> convert)
             {
@@ -562,7 +672,7 @@ namespace ProbablyStolenZhHant
                 if (!m.Success) return null;
                 // 佔位符是名字、數字等，不會跨行；跨行代表把別段拼接的文字也吃進來了
                 for (int i = 1; i < m.Groups.Count; i++)
-                    if (m.Groups[i].Value.IndexOf('\n') >= 0) return null;
+                    if (m.Groups[i].Value.IndexOf('\n') >= 0 || (NumbersOnly && !IsNumber(m.Groups[i].Value))) return null;
                 var r = _target;
                 for (int i = 0; i < _names.Length; i++)
                     r = r.Replace(_names[i], convert(m.Groups[i + 1].Value));

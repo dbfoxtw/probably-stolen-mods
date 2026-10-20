@@ -34,11 +34,28 @@
 2. 關閉遊戲，把壓縮檔裡的 `Mods` 與 `UserData` 資料夾**解壓縮到遊戲資料夾**，資料夾合併即可。
 3. 開遊戲，在主選單右上角的語言選單選「Simplified Chinese」。裝了 mod 後，選單上會顯示「Traditional Chinese」。
 
-更新 mod 時，只要重做第二步（解壓覆蓋）。
+更新 mod 時，只要重做第二步（解壓覆蓋）。設定會保留。
+
+## 單位用英文
+
+遊戲文字裡的單位，mod 預設顯示成中文（克、毫升、公升、微升、千卡、千焦）。想看英文（g、ml、L、uL、kcal、kJ）的話：
+
+1. 裝好 mod 後先開一次遊戲（到主選單就可以），再關閉遊戲。遊戲資料夾的 `UserData\MelonPreferences.cfg` 裡會多出 `[ZhHant]` 段落。
+2. 在遊戲關著的時候，用記事本打開 `UserData\MelonPreferences.cfg`，找到 `[ZhHant]`，把想改成英文的那一行從 `true` 改成 `false`，存檔。
+3. 開遊戲就會生效。改了設定一定要重開遊戲。
+
+| 設定 | 預設 | 改成 false 時 |
+|---|---|---|
+| `ChineseWeightUnit` | true | 重量：克 → g |
+| `ChineseVolumeUnit` | true | 容量：毫升 → ml、公升 → L、微升 → uL |
+| `ChineseEnergyUnit` | true | 能量：千卡 → kcal、千焦 → kJ（食物熱量和電量一起換） |
+
+- 遊戲程式裡寫死、原版簡中也是英文的單位，只有 mod 翻成中文的這幾處開關才管得到：食物熱量、飼料分配器、電池電量、水容器與還沒發酵的酒瓶的存量、水質掃描器的容量。其他寫死的單位照舊顯示英文。
+- 只換遊戲的文字：其他 mod 顯示的字、你自己打的字（例如待辦清單）裡的單位不會被換。
 
 ## 移除
 
-刪除遊戲資料夾裡的 `Mods\ProbablyStolenZhHant.dll` 與 `UserData\ZhHant` 資料夾，就回到原版簡中，存檔可以直接沿用。MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods`、`Plugins`、`UserData`、`UserLibs`。
+刪除遊戲資料夾裡的 `Mods\ProbablyStolenZhHant.dll` 與 `UserData\ZhHant` 資料夾，就回到原版簡中，存檔可以直接沿用。要清乾淨的話，再刪掉 `UserData\MelonPreferences.cfg` 裡的 `[ZhHant]` 段落。MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods`、`Plugins`、`UserData`、`UserLibs`。
 
 ## 運作方式
 
@@ -114,7 +131,9 @@ Find the game folder: in your Steam library, right-click Probably Stolen → Man
 3. Download `ProbablyStolen-ZhHant-Demo-<version>.zip` from the latest release titled Traditional Chinese Translation (tagged `zh-hant-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
 4. Start the game and choose "Simplified Chinese" in the language menu at the top right of the main menu. With the mod installed, it is shown as "Traditional Chinese".
 
-**Uninstall:** delete `Mods\ProbablyStolenZhHant.dll` and the `UserData\ZhHant` folder.
+**Units in English:** units in the game's text are shown in Chinese by default (克, 毫升, 公升, 微升, 千卡, 千焦). After the first launch with the mod, `UserData\MelonPreferences.cfg` has a `[ZhHant]` section; with the game closed, set `ChineseWeightUnit` (g), `ChineseVolumeUnit` (ml, L and uL) or `ChineseEnergyUnit` (kcal and kJ) to `false`, then start the game again. Changes take effect only after a restart. Units hard-coded in English in the game itself (also English in the original Simplified Chinese) follow these settings only where the mod translates them into Chinese: food calories, the feed dispenser, battery charge, the amount in water containers and unfermented Wine Bottles, and the volumes on the AquaScan. Other hard-coded units stay in English. Only the game's own text is changed; units in text you type yourself are left as is.
+
+**Uninstall:** delete `Mods\ProbablyStolenZhHant.dll` and the `UserData\ZhHant` folder (and, to remove everything, the `[ZhHant]` section in `UserData\MelonPreferences.cfg`).
 
 **Known conflicts:** other translation mods, and mods that change TextMeshPro text or fonts. Simplified Chinese text from other mods is also converted automatically, without per-line proofreading; text not displayed through TextMeshPro is left as is. Enhanced Trade Display v1.2.0 is confirmed compatible (from v1.1.4 of this mod; earlier versions made the trade panel text jitter).
 

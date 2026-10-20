@@ -20,10 +20,17 @@ Probably Stolen 繁體中文化 mod（非官方） v{version}
    等主選單出現後，關閉遊戲。
 3. 把這個壓縮檔裡的 Mods 與 UserData 資料夾，解壓縮到遊戲資料夾，資料夾合併即可。
 4. 開遊戲，在主選單右上角的語言選單選「Simplified Chinese」。裝了 mod 後，選單上會顯示「Traditional Chinese」。
-更新 mod 時，只要重做第 3 步（解壓覆蓋）。
+更新 mod 時，只要重做第 3 步（解壓覆蓋）。設定會保留。
+
+【單位用英文】
+單位預設顯示中文（克、毫升、公升、微升、千卡、千焦）。想看英文（g、ml、L、uL、kcal、kJ）的話：
+裝好 mod 後先開一次遊戲再關閉，用記事本打開遊戲資料夾的 UserData\MelonPreferences.cfg，在 [ZhHant] 段落把
+ChineseWeightUnit（重量）、ChineseVolumeUnit（容量）、ChineseEnergyUnit（食物熱量與電量）改成 false，存檔後重開遊戲。
+遊戲程式裡寫死、原版就是英文的單位，mod 沒翻成中文的照舊顯示英文。詳見原始碼頁的 README。
 
 【移除】
 刪除遊戲資料夾裡的 Mods\ProbablyStolenZhHant.dll 與 UserData\ZhHant 資料夾。
+要清乾淨的話，再刪掉 UserData\MelonPreferences.cfg 裡的 [ZhHant] 段落。
 MelonLoader 本身要另外移除：刪除 version.dll、MelonLoader、Mods、Plugins、UserData、UserLibs。
 
 【說明】
@@ -68,10 +75,19 @@ Find the game folder: Steam library → right-click the game → Manage → Brow
    merging with the existing folders.
 4. Start the game and choose "Simplified Chinese" in the language menu at the top right of the main menu.
    With the mod installed, the menu shows it as "Traditional Chinese".
-To update the mod, just repeat step 3.
+To update the mod, just repeat step 3. Your settings are kept.
+
+Units in English
+Units are shown in Chinese by default (克, 毫升, 公升, 微升, 千卡, 千焦). To show g, ml, L, uL, kcal and kJ
+instead: start the game once with the mod and close it, open UserData\MelonPreferences.cfg in the game folder
+with Notepad, and in the [ZhHant] section set ChineseWeightUnit (weight), ChineseVolumeUnit (volume) or
+ChineseEnergyUnit (food calories and power) to false. Save and start the game again. Units hard-coded in
+English in the game itself that the mod does not translate stay in English. See the README on the source page
+for details.
 
 Uninstall
 Delete Mods\ProbablyStolenZhHant.dll and the UserData\ZhHant folder.
+To remove everything, also delete the [ZhHant] section in UserData\MelonPreferences.cfg.
 
 Notes
 - Display-only: game files, string tables, and saves are never modified. Saves work with or without the mod.

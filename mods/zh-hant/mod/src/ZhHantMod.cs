@@ -15,7 +15,7 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-[assembly: MelonInfo(typeof(ProbablyStolenZhHant.ZhHantMod), "Probably Stolen 繁體中文", "1.1.6", "dbfoxtw")]
+[assembly: MelonInfo(typeof(ProbablyStolenZhHant.ZhHantMod), "Probably Stolen 繁體中文", "1.1.7", "dbfoxtw")]
 [assembly: MelonGame("Questing Goose Studio", "Probably Stolen")]
 [assembly: HarmonyDontPatchAll] // 轉換資料載入後才手動掛上攔截
 
@@ -41,8 +41,12 @@ namespace ProbablyStolenZhHant
             Log = LoggerInstance;
             _dataDir = Path.Combine(MelonEnvironment.UserDataDirectory, "ZhHant");
             _debug = File.Exists(Path.Combine(_dataDir, "debug"));
+            // 單位的中英文：對照表在啟動時建好，只讀這一次（改設定檔要重開遊戲）
+            Settings.Init();
+            var units = Settings.Units;
+            Log.Msg($"單位（MelonPreferences.cfg 的 [ZhHant]）：{Settings.Describe()} → {units.Describe()}");
             var sw = Stopwatch.StartNew();
-            Tr = Translator.Load(_dataDir);
+            Tr = Translator.Load(_dataDir, units);
             // 字串表載入前先用暫用轉換器（只有 OpenCC＋術語表），並記下轉過的字，載入後重新轉換
             Conv = TextConverter.Build(Tr, Array.Empty<(string, string, string)>(), Path.Combine(_dataDir, "hardcoded.tsv"));
             Conv.Produced = new Dictionary<string, string>(StringComparer.Ordinal);

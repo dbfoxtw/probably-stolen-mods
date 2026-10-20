@@ -8,7 +8,7 @@ r"""從原始碼建置 mod 並安裝到遊戲。
 用法：
   python tools/install.py build        產生資料並編譯 mod（不動遊戲）
   python tools/install.py install      建置後複製到遊戲的 Mods\ 與 UserData\ZhHant\
-  python tools/install.py uninstall    移除 mod（MelonLoader 本身不動）
+  python tools/install.py uninstall    移除 mod（MelonLoader 本身不動；MelonPreferences.cfg 的 [ZhHant] 設定保留）
 都可加 --game "遊戲資料夾"；install 可加 --font 手寫字型.ttf（支援繁體的手寫字型，取代遊戲的簡體手寫字型），
 以及 --debug（記錄後備轉換到 UserData\ZhHant\misses.tsv、每分鐘統計、缺翻自我測試）。
 找遊戲資料夾、編譯的做法在共用的 modkit.py（Probably Stolen 的 mod 都用同一份），這裡只寫翻譯資料與字型的安裝。
@@ -71,7 +71,9 @@ def uninstall(game: Path) -> None:
     modkit.require_game_closed()
     (game / "Mods" / DLL.name).unlink(missing_ok=True)
     shutil.rmtree(game / "UserData" / "ZhHant", ignore_errors=True)
-    print("已移除 mod（MelonLoader 本身仍在；要完全移除請刪除 version.dll、MelonLoader、Mods、Plugins、UserData、UserLibs）。")
+    # 設定（單位的中英文）在 MelonLoader 共用的 MelonPreferences.cfg，不替玩家改那個檔，照共用 modkit.Mod.uninstall 的說法提醒
+    print(f"已移除 mod。設定沒有刪除，要完全清掉請自己刪除 {game}\\UserData\\MelonPreferences.cfg 裡的 [ZhHant] 段落"
+          "（MelonLoader 本身仍在；要完全移除請刪除 version.dll、MelonLoader、Mods、Plugins、UserData、UserLibs）。")
 
 
 def main() -> None:
