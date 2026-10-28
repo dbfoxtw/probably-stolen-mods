@@ -64,6 +64,8 @@ namespace ProbablyStolenCloseAllWindows
             "_Commissary", "_WildUpgrade", "_ReputationPanel", "_RecorderPanel", "_MarketplaceRquestPC",
             "_InspectionUI", "_LabelerPanel", "_LabelerBluePanel", "_WaterScannerPanel", "_ChemScannerPanel",
             "_WaterTestingStripPanel", "_PlantAnalyser", "_EndOfDayPanel",
+            // 正式版的平板（交易）、議價、營業結束改用官方 UI 框架做，執行時建的根物件叫這些名字
+            "NegotiationTablet", "BargainPanel", "EndOfDayTablet",
         };
 
         /// <summary>CanvasPaperUI 底下不是視窗的東西：營業結束時的全畫面遮罩（跟著營業結束一起關）。</summary>

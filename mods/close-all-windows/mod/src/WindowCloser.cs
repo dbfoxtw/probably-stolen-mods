@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Il2Cpp;
 using UnityEngine;
 
 namespace ProbablyStolenCloseAllWindows
@@ -50,13 +49,13 @@ namespace ProbablyStolenCloseAllWindows
 
             // 2. 紙張面板：文件物品打開的算「文件」，其他算「其他」；其他 mod 的視窗下面另外處理
             var modRoots = GameWindows.ModWindowRoots();
-            var home = ui?.paperUICanvasObject?.transform;
+            var home = ui != null && ui.paperUICanvasObject != null ? ui.paperUICanvasObject.transform : null;
             foreach (var go in GameWindows.OpenPanels())
             {
                 if (modRoots.Contains(go.GetInstanceID())) continue;
                 var cat = Rules.PanelCategory(go.name, DocumentTracker.IsDocument(go));
                 bool close = Rules.ShouldClose(cat, false, scope);
-                log?.AppendLine($"  面板 {go.name} {cat}{(home != null && go.transform.parent != null && go.transform.parent.Pointer != home.Pointer ? " 停靠中" : "")} 焦點={Stamp(go)} → {(close ? "關" : "不關")}");
+                log?.AppendLine($"  面板 {go.name} {cat}{(home != null && go.transform.parent != null && go.transform.parent != home ? " 停靠中" : "")} 焦點={Stamp(go)} → {(close ? "關" : "不關")}");
                 if (close) Try($"面板 {go.name}", () => GameWindows.ClosePanel(go));
             }
 
@@ -68,11 +67,19 @@ namespace ProbablyStolenCloseAllWindows
                 Try("營業結束", () => eod.CloseUI());
             }
 
+            // Wild 的人脈網：正式版改成官方 UI 框架的視窗（沒設 closeOnEscape，下面的其他 mod 視窗抓不到），ESC 會關它
+            if (WildNetworkUI.IsOpen)
+            {
+                log?.AppendLine($"  Wild 的人脈網 → {(scope.Others ? "關" : "不關")}");
+                if (scope.Others) Try("Wild 的人脈網", WildNetworkUI.Close);
+            }
+
             // 3. 其他 mod 用官方介面框架做、允許 ESC 關的視窗
             foreach (var mw in GameWindows.ModWindows())
             {
                 log?.AppendLine($"  其他 mod 的視窗 {mw.id}（{mw.layerId}） → {(scope.Others ? "關" : "不關")}");
-                if (scope.Others) Try($"其他 mod 的視窗 {mw.id}", () => mw.Close());
+                // 關之前再看一次還開著沒：前一個視窗的 onClose 可能連帶關了它，Close() 重複叫會再跑一次它的 onClose（2026-10-29 審查發現）
+                if (scope.Others && mw.IsAlive && mw.IsVisible) Try($"其他 mod 的視窗 {mw.id}", () => mw.Close());
             }
 
             if (log != null)

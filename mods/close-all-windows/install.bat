@@ -1,7 +1,8 @@
 @echo off
-rem Build the mod from source and install it into the game (see README.md). Close the game first.
-rem Needs MelonLoader 0.7.3 (start the game once after installing it), .NET SDK 8+ and Python 3.10+.
-rem Add --debug for debug mode (the log lists the open windows and panels each time you press the key, and what the padlocks and Esc did).
+rem Build the mod from source and install it into the game's Mods\dbfoxtw.close-all-windows folder (see README.md). Close the game first.
+rem Needs .NET SDK 8+ and Python 3.10+. MelonLoader is not needed (official mod format).
+rem First install: enable the mod in the game's mod manager, then restart the game.
+rem Add --debug for debug mode (Player.log in the save folder lists the open windows and panels each time you press the key, and what the padlocks and Esc did).
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

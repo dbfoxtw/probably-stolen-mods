@@ -1,0 +1,9 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized). Format: key,value
+key_close_all,Close all windows
+key_close_all_tip,"Closes container and machine windows at once (documents and everything else Esc can close too, if turned on in the mod settings). Locked windows stay open."
+cfg_containers,Close container and machine windows
+cfg_containers_tip,"Close the windows of containers and machines, except locked ones (click the lock left of a window's close button to lock it). Set the key in Options > Key Binds (default: Backspace)."
+cfg_documents,Close documents
+cfg_documents_tip,"Also close papers opened from Document items (newspaper, notes, guides, business cards…)."
+cfg_others,Close everything else Esc can close
+cfg_others_tip,"Also close everything else Esc can close: calendar, tablet, phone, scanners, End the Day, Wild's Network, and other mods' windows that close on Esc (not the pause menu or Options)."

@@ -1,5 +1,6 @@
 @echo off
-rem Remove the mod dll from the game (its data in UserData\CloseAllWindows is kept).
+rem Remove the mod from the game (deletes Mods\dbfoxtw.close-all-windows). Close the game first.
+rem Its settings and data (ModConfigs\dbfoxtw.close-all-windows.json and ModData\dbfoxtw_close-all-windows in the save folder: your key and locks) are kept.
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

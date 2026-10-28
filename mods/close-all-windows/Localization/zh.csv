@@ -1,0 +1,9 @@
+# 本模组设置与按键绑定的标签和说明（ModHelper.GetLocalized）。格式：key,值
+key_close_all,一键关闭所有窗口
+key_close_all_tip,一次关闭容器和机器的窗口（在模组设置里打开的话，文档和其他能用Esc关闭的也一起关）。上锁的窗口不会关。
+cfg_containers,关闭容器和机器的窗口
+cfg_containers_tip,关闭容器和机器的窗口，上锁的除外（点击窗口关闭按钮左边的锁即可上锁）。按键在“选项 → 按键绑定”里设置（默认 Backspace）。
+cfg_documents,关闭文档
+cfg_documents_tip,也关闭“文档”类物品打开的纸张（报纸、便条、指南、名片……）。
+cfg_others,关闭其他所有能用Esc关闭的
+cfg_others_tip,也关闭其他所有能用Esc关闭的：日历、平板、电话、扫描仪、结束营业、王尔德的人脉网络，以及其他模组允许用Esc关闭的窗口（暂停菜单和选项除外）。

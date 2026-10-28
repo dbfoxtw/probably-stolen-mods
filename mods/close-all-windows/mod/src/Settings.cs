@@ -1,144 +1,125 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using MelonLoader;
-using MelonLoader.Utils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace ProbablyStolenCloseAllWindows
 {
     /// <summary>
-    /// 設定：MelonLoader 標準的 UserData\MelonPreferences.cfg 的 [CloseAllWindows] 段落，
-    /// 不做遊戲內設定視窗（有裝 Mod Manager 的話也能在遊戲裡改）。每個開關上面的註解就是 description。
-    /// 改了設定檔，回主選單再讀檔（進店鋪畫面時重讀）就生效。
+    /// 設定：
+    /// - 三組範圍的開關放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.close-all-windows.json，主選單的模組管理畫面裡
+    ///   有這個 mod 的設定視窗）。每次用到時才讀值，玩家按套用就生效，不用重開遊戲（不標 requiresRestart）。
+    /// - 一鍵關閉的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
+    ///   ModData\dbfoxtw_close-all-windows\settings.json（{"key": "Backspace"}，KeyCode 名稱，人看得懂）。
+    ///   不放 ModConfig：放了 mod 設定視窗會多一格同一個值的文字欄。
+    /// 標籤與說明在 mod 的 Localization\en.csv、zh.csv（ModHelper.GetLocalized；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
+    /// Demo 時 MelonPreferences.cfg 的 [CloseAllWindows] 不搬過來（讀它要宣告檔案權限）。
     /// </summary>
     static class Settings
     {
         internal const KeyCode DefaultKey = KeyCode.Backspace;
-
-        static MelonPreferences_Category _cat;
-        static MelonPreferences_Entry<string> _key;
-        static MelonPreferences_Entry<bool> _containers, _documents, _others;
-        static DateTime _cfgStamp;
-        static string _parsedFrom;
-        static KeyCode _parsed = DefaultKey;
-
-        static string CfgPath => Path.Combine(MelonEnvironment.UserDataDirectory, "MelonPreferences.cfg");
-
+        /// <summary>按鍵存在 ModData 裡的檔名。</summary>
+        internal const string KeyFile = "settings.json";
         /// <summary>
-        /// 一鍵關閉的按鍵。預設 Backspace：遊戲與熱門 mod 都沒用、離 Delete（遊戲的丟垃圾）很遠。
-        /// 設定檔寫錯（不是 KeyCode 名稱、是滑鼠鍵）就用預設；設成 Delete 或 Esc 照用但警告。都只在值改變時記一次 log。
+        /// 設定視窗裡的段落標題。遊戲直接顯示這個字串（不經過翻譯），段落又只能在 Init 時定（那時 mod 的 Localization 還沒載入），
+        /// 所以用 mod 的英文名稱。段落不存進設定檔（ModConfigs 只存 key 與值）。
         /// </summary>
-        internal static KeyCode Key
-        {
-            get
-            {
-                var s = (_key?.Value ?? "").Trim();
-                if (s == _parsedFrom) return _parsed;
-                _parsedFrom = s;
-                // 只收名稱（「Backspace」「F9」），不收數字：Enum.TryParse 會把「12345」這種沒定義的值也收下
-                if (s.Length > 0 && !char.IsDigit(s[0]) && Enum.TryParse(s, true, out KeyCode k) && Enum.IsDefined(typeof(KeyCode), k)
-                    && k != KeyCode.None && !(k >= KeyCode.Mouse0 && k <= KeyCode.Mouse6))
-                {
-                    _parsed = k;
-                    if (k == KeyCode.Delete) CloseAllWindowsMod.Log.Warning("按鍵設成 Delete：遊戲本身的 Delete 會把滑鼠指著的物品丟進垃圾桶，按下時兩件事會一起發生");
-                    if (k == KeyCode.Escape) CloseAllWindowsMod.Log.Warning("按鍵設成 Escape：遊戲的 ESC 也會同時關一個視窗或打開暫停選單");
-                }
-                else
-                {
-                    _parsed = DefaultKey;
-                    CloseAllWindowsMod.Log.Warning($"設定檔的 Key「{s}」不是可以用的 Unity KeyCode 名稱（滑鼠鍵也不行），改用 {DefaultKey}");
-                }
-                return _parsed;
-            }
-        }
+        const string Section = "Close All Windows";
 
-        internal static Scope Scope => new Scope(_containers?.Value ?? true, _documents?.Value ?? false, _others?.Value ?? false);
+        static ConfigEntry<bool> _containers, _documents, _others;
+        static KeyCode _key = DefaultKey;
+        /// <summary>settings.json 裡讀到的其他欄位（新版 mod 加的），寫回時保留。</summary>
+        static JObject _keyJson;
+
+        /// <summary>一鍵關閉的按鍵。None＝玩家沒綁鍵（一鍵關閉不動作）。</summary>
+        internal static KeyCode Key => _key;
+
+        /// <summary>三組範圍。攔截在 Init 之前就掛上了，還沒讀設定時用預設值（箱子機器開、文件關、其他關）。</summary>
+        internal static Scope Scope => new Scope(_containers == null || _containers.Value,
+                                                 _documents != null && _documents.Value,
+                                                 _others != null && _others.Value);
+
+        static string L(string key) => ModHelper.GetLocalized(CloseAllWindowsMod.ModId, key);
 
         internal static void Init()
         {
-            _cat = MelonPreferences.CreateCategory("CloseAllWindows", "Close All Windows");
-            _key = _cat.CreateEntry("Key", DefaultKey.ToString(), "Key",
-                "Key that closes the windows below (a Unity KeyCode name, e.g. Backspace, F9, Z) / 一鍵關閉的按鍵（Unity 的 KeyCode 名稱，例如 Backspace、F9、Z）");
-            _containers = _cat.CreateEntry("CloseContainers", true, "Close container and machine windows",
-                "Close the windows of containers and machines (storage, bags, boxes, fridge, furnace…), except locked ones / 關閉箱子、機器的視窗（儲藏區、背包、箱子、冰箱、熔爐…），鎖住的不關");
-            _documents = _cat.CreateEntry("CloseDocuments", false, "Close documents",
-                "Also close papers opened from Document items (newspaper, notes, guides, business cards…) / 也關閉「文件」類物品打開的紙張（報紙、便條、指南、名片…）");
-            _others = _cat.CreateEntry("CloseOthers", false, "Close everything else Esc can close",
-                "Also close everything else Esc can close: calendar, tablet, phone, scanners, End of Day, and other mods' windows that close on Esc (not the pause menu or options) / 也關閉其他所有 ESC 能關的：日曆、平板、電話、掃描器、營業結束，以及其他 mod 允許 ESC 關的視窗（暫停選單與選項除外）");
-            _cfgStamp = Stamp();
-        }
-
-        static DateTime Stamp()
-        {
-            try { return File.Exists(CfgPath) ? File.GetLastWriteTimeUtc(CfgPath) : DateTime.MinValue; }
-            catch { return DateTime.MinValue; }
+            var cfg = ModConfig.For(CloseAllWindowsMod.ModId);
+            _containers = cfg.Define("CloseContainers", true, Section, () => L("cfg_containers"), () => L("cfg_containers_tip"));
+            _documents = cfg.Define("CloseDocuments", false, Section, () => L("cfg_documents"), () => L("cfg_documents_tip"));
+            _others = cfg.Define("CloseOthers", false, Section, () => L("cfg_others"), () => L("cfg_others_tip"));
+            LoadKey();
         }
 
         /// <summary>
-        /// 設定檔改過才重讀，而且**只讀自己的段落**（照自訂立繪 mod）：MelonLoader 的 Category.LoadFromFile 其實會把同一個 cfg 裡
-        /// 每個 mod 的設定都用磁碟上的值蓋掉，別的 mod 在記憶體裡改了還沒存的會被打回去。
+        /// 讀 settings.json 的按鍵。ReadModDataFileText 只靠 Application.persistentDataPath，Init 時就能用。
+        /// 沒有檔案用預設；壞掉、不是 KeyCode 名稱或不是鍵盤鍵也用預設並警告一次（讀的時候不改檔；下次在選項按套用時寫回成目前的鍵）。
         /// </summary>
-        internal static void ReloadIfFileChanged()
+        static void LoadKey()
         {
-            var stamp = Stamp();
-            if (stamp == _cfgStamp) return;
-            _cfgStamp = stamp;
+            string text;
+            try { text = ModHelper.ReadModDataFileText(CloseAllWindowsMod.ModId, KeyFile); }
+            catch (Exception e)
+            {
+                CloseAllWindowsMod.Log.Warning($"讀不了 {KeyFile}（{e.Message}），按鍵用預設的 {DefaultKey}");
+                return;
+            }
+            if (text == null) return;
             try
             {
-                var values = ReadOwnSection(File.ReadAllLines(CfgPath));
-                if (values.TryGetValue("Key", out var s) && TryString(s, out var key)) _key.Value = key;
-                if (values.TryGetValue("CloseContainers", out s) && TryBool(s, out var b)) _containers.Value = b;
-                if (values.TryGetValue("CloseDocuments", out s) && TryBool(s, out b)) _documents.Value = b;
-                if (values.TryGetValue("CloseOthers", out s) && TryBool(s, out b)) _others.Value = b;
+                _keyJson = JsonConvert.DeserializeObject<JObject>(text);
+                var s = (string)_keyJson?["key"];
+                if (TryParseKey(s, out var k)) _key = k;
+                else CloseAllWindowsMod.Log.Warning($"{KeyFile} 的 key「{s}」不是可以用的鍵盤鍵名稱，改用 {DefaultKey}");
             }
-            catch (Exception e) { CloseAllWindowsMod.Log.Warning($"重讀設定檔失敗：{e.Message}"); }
-        }
-
-        /// <summary>[CloseAllWindows] 段落裡的 key = value（值是原始文字，還沒解析）。</summary>
-        static Dictionary<string, string> ReadOwnSection(string[] lines)
-        {
-            var values = new Dictionary<string, string>(StringComparer.Ordinal);
-            var inSection = false;
-            foreach (var raw in lines)
+            catch (Exception e)
             {
-                var line = raw.Trim().TrimStart('﻿');
-                if (line.StartsWith("["))
-                {
-                    inSection = line == "[CloseAllWindows]";
-                    continue;
-                }
-                if (!inSection || line.Length == 0 || line.StartsWith("#")) continue;
-                var eq = line.IndexOf('=');
-                if (eq > 0) values[line.Substring(0, eq).Trim()] = line.Substring(eq + 1).Trim();
+                _keyJson = null;
+                CloseAllWindowsMod.Log.Warning($"{KeyFile} 讀不了（{e.Message}），按鍵用預設的 {DefaultKey}");
             }
-            return values;
         }
 
-        /// <summary>TOML 字串：基本字串（雙引號，跳脫規則和 JSON 相同）或字面字串（單引號，不跳脫）。</summary>
-        static bool TryString(string v, out string s)
+        /// <summary>
+        /// KeyCode 名稱 → 鍵。只收名稱（「Backspace」「F9」），不收數字：Enum.TryParse 會把「12345」這種沒定義的值也收下。
+        /// 只收鍵盤鍵（KeyCode 裡排在 Mouse0 前面的）與 None（不綁鍵）；滑鼠鍵、搖桿鍵不收（遊戲的按鍵綁定也只擷取鍵盤鍵）。
+        /// </summary>
+        static bool TryParseKey(string s, out KeyCode key)
         {
-            s = null;
-            if (v.Length >= 2 && v[0] == '\'' && v.IndexOf('\'', 1) > 0) { s = v.Substring(1, v.IndexOf('\'', 1) - 1); return true; }
-            if (v.Length >= 2 && v[0] == '"')
+            key = DefaultKey;
+            s = (s ?? "").Trim();
+            if (s.Length == 0 || char.IsDigit(s[0]) || s[0] == '-') return false;
+            if (!Enum.TryParse(s, true, out KeyCode k) || !Enum.IsDefined(typeof(KeyCode), k)) return false;
+            if (k != KeyCode.None && k >= KeyCode.Mouse0) return false;
+            key = k;
+            return true;
+        }
+
+        /// <summary>選項按套用時（遊戲每次按套用都會對每一列叫 setter，沒改這一列也會叫）：記下鍵並寫回 settings.json；寫檔失敗只警告（這次遊戲照樣用新的鍵）。</summary>
+        static void SetKey(KeyCode k)
+        {
+            _key = k;
+            try
             {
-                // 去掉行尾註解：找到結束的引號（略過跳脫的）為止
-                for (var i = 1; i < v.Length; i++)
-                {
-                    if (v[i] == '\\') { i++; continue; }
-                    if (v[i] == '"') { s = JsonSerializer.Deserialize<string>(v.Substring(0, i + 1)); return true; }
-                }
+                var json = _keyJson ?? new JObject();
+                json["key"] = k.ToString();
+                _keyJson = json;
+                ModHelper.WriteModDataFileText(CloseAllWindowsMod.ModId, KeyFile, json.ToString(Formatting.Indented));
+                CloseAllWindowsMod.DebugLog($"按鍵改成 {k}");
             }
-            return false;
+            catch (Exception e) { CloseAllWindowsMod.Log.Warning($"寫入 {CloseAllWindowsMod.DataFolder}\\{KeyFile} 失敗（重開遊戲後會變回原本的鍵）：{e.Message}"); }
         }
 
-        static bool TryBool(string v, out bool b)
+        /// <summary>
+        /// 加進遊戲「選項 → 按鍵綁定」那一區的最後一列。Esc 與和別列重複的鍵（例如丟垃圾的 Delete）遊戲自己會擋，
+        /// 所以 Demo 時對 Delete、Escape 的警告拿掉了。
+        /// 先叫 GameOptionRegistry.EnsureVanilla：遊戲自己的選項分區要到第一次打開選項視窗才登記，OnEnable 是遊戲一啟動就叫，
+        /// 不先登記的話「按鍵綁定」會被我們先建出來、排在所有分區最前面，遊戲的按鍵也會排在我們這列後面（2026-10-29 審查發現）。
+        /// 遊戲的標籤與取值都是函式，啟動時登記不會讀到還沒準備好的東西。
+        /// </summary>
+        internal static void AddKeyBind()
         {
-            b = false;
-            var word = v.Split('#')[0].Trim();
-            if (word == "true") { b = true; return true; }
-            return word == "false";
+            GameOptionRegistry.EnsureVanilla();
+            ModHelper.AddGameOptionKeyBind(CloseAllWindowsMod.ModId, ModHelper.OPTION_SECTION_KEYBIND, "close_all",
+                () => L("key_close_all"), () => _key, SetKey, () => L("key_close_all_tip"));
         }
 
         internal static string Describe() => $"按鍵={Key}、{Scope}";
