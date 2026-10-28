@@ -26,10 +26,18 @@ namespace ProbablyStolenZhHant
 
         public int EntryCount => _norm.Count + _phrases.Count + _chars.Count + _twPhrases.Count + _twChars.Count;
 
-        public static OpenCC Load(string dir)
+        /// <summary>
+        /// read：相對路徑（以 / 分隔）→ 檔案內容，檔案不存在時傳回 null。遊戲裡是 ModHelper.ReadModFileText（mod 資料夾），
+        /// 離線驗證是 File.ReadAllText。mod 的 DLL 不能直接用 System.IO.File：遊戲的掃描會把它當成要宣告「讀寫檔案」的權限。
+        /// </summary>
+        public static OpenCC Load(Func<string, string> read, string dir)
         {
             var cc = new OpenCC();
-            string P(string name) => Path.Combine(dir, name);
+            string P(string name)
+            {
+                var path = dir + "/" + name;
+                return read(path) ?? throw new InvalidDataException($"找不到 OpenCC 字典 {path}");
+            }
             cc._norm.Load(P("CJK_Compatibility_Ideographs.txt"));
             cc._phrases.Load(P("STPhrases.txt")); // 聯集：同一個詞兩邊都有時，先載入的優先
             cc._phrases.Load(P("STPhrases_GeneratedFromRegionalPhrases.txt"));
@@ -37,6 +45,15 @@ namespace ProbablyStolenZhHant
             cc._twPhrases.Load(P("TWVariantsPhrases.txt"));
             cc._twChars.Load(P("TWVariants.txt"));
             return cc;
+        }
+
+        /// <summary>文字檔的每一行（切法同 File.ReadAllLines：CRLF、LF、CR 都算換行，最後的空行不算）；text 為 null 時沒有任何行。</summary>
+        public static IEnumerable<string> Lines(string text)
+        {
+            if (text == null) yield break;
+            using (var r = new StringReader(text))
+                for (var line = r.ReadLine(); line != null; line = r.ReadLine())
+                    yield return line;
         }
 
         public string Convert(string s)
@@ -152,9 +169,9 @@ namespace ProbablyStolenZhHant
 
             public int Count => _map.Count;
 
-            public void Load(string path)
+            public void Load(string text)
             {
-                foreach (var line in File.ReadLines(path, Encoding.UTF8))
+                foreach (var line in Lines(text))
                 {
                     int tab = line.IndexOf('\t');
                     if (tab <= 0) continue;
@@ -166,7 +183,8 @@ namespace ProbablyStolenZhHant
             void Add(string key, string value)
             {
                 if (key.Length > 63) throw new InvalidDataException($"OpenCC 字典的詞太長：{key}");
-                if (!_map.TryAdd(key, value)) return;
+                if (_map.ContainsKey(key)) return; // 先載入的優先（.NET Framework 沒有 TryAdd）
+                _map[key] = value;
                 _lengths.TryGetValue(key[0], out var mask);
                 _lengths[key[0]] = mask | (1UL << key.Length);
             }

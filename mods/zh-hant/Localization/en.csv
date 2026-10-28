@@ -1,0 +1,7 @@
+# Labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value
+cfg_weight,Chinese weight unit
+cfg_weight_tip,"On: Chinese (克). Off: English (g), e.g. a fish's age （120克） becomes （120g）. Restart the game after changing."
+cfg_volume,Chinese volume units
+cfg_volume_tip,"On: Chinese (毫升, 公升, 微升). Off: English (ml, L, uL), e.g. a seed's 耗水率：100毫升/天 becomes 耗水率：100ml/天. Restart the game after changing."
+cfg_energy,Chinese energy units
+cfg_energy_tip,"Food calories and power. On: Chinese (千卡, 千焦). Off: English (kcal, kJ). Restart the game after changing."

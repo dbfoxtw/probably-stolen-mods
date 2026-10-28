@@ -1,0 +1,7 @@
+# 這個 mod 的設定視窗的標籤與說明（ModHelper.GetLocalized；遊戲的中文語系代碼是 zh）。格式：key,值
+cfg_weight,重量單位用中文
+cfg_weight_tip,開啟：中文（克）；關閉：英文（g），例如魚的年齡「（120克）」→「（120g）」。改完要重開遊戲。
+cfg_volume,容量單位用中文
+cfg_volume_tip,開啟：中文（毫升、公升、微升）；關閉：英文（ml、L、uL），例如種子的「耗水率：100毫升/天」→「耗水率：100ml/天」。改完要重開遊戲。
+cfg_energy,能量單位用中文
+cfg_energy_tip,食物熱量與電量。開啟：中文（千卡、千焦）；關閉：英文（kcal、kJ）。改完要重開遊戲。

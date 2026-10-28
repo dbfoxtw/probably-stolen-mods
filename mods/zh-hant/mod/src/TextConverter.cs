@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -68,9 +67,9 @@ namespace ProbablyStolenZhHant
 
         /// <summary>
         /// 由字串表的條目（表、key、簡中原文）建立對照；entries 依表名排序、表內依 key 的順序。
-        /// 同一句原文有兩種譯文時，保留第一個（同 tools/export_mod_data.py）。hardcodedPath 可為 null。
+        /// 同一句原文有兩種譯文時，保留第一個（同 tools/export_mod_data.py）。hardcoded 是 hardcoded.tsv 的內容，可為 null（不套寫死英文的規則）。
         /// </summary>
-        public static TextConverter Build(Translator tr, IEnumerable<(string table, string key, string src)> entries, string hardcodedPath)
+        public static TextConverter Build(Translator tr, IEnumerable<(string table, string key, string src)> entries, string hardcoded)
         {
             var c = new TextConverter(tr);
             var outChars = new HashSet<char>();
@@ -86,11 +85,11 @@ namespace ProbablyStolenZhHant
             {
                 if (s == d && s.Length > 0 && s.Length <= MaxSpeaker) c._unchanged.Add(s);
                 if (string.IsNullOrEmpty(s) || s == d) return;
-                if (!c._exact.TryAdd(s, d) && c._exact[s] != d) c.Conflicts++;
+                if (!TryAdd(c._exact, s, d) && c._exact[s] != d) c.Conflicts++;
             }
             void AddZh(string s, string d)
             {
-                if (split && !string.IsNullOrEmpty(s) && s != d) zhExact.TryAdd(s, d);
+                if (split && !string.IsNullOrEmpty(s) && s != d) TryAdd(zhExact, s, d);
             }
             foreach (var (table, key, src) in entries)
             {
@@ -155,24 +154,23 @@ namespace ProbablyStolenZhHant
                     }
                 }
             }
-            if (hardcodedPath != null && File.Exists(hardcodedPath))
-                foreach (var line in File.ReadAllLines(hardcodedPath, Encoding.UTF8))
+            foreach (var line in OpenCC.Lines(hardcoded))
+            {
+                if (line.Trim().Length == 0 || line.TrimStart().StartsWith("#")) continue;
+                var p = line.Split('\t');
+                if (p.Length < 3 || p[0].Length == 0) continue;
+                var repl = p[2];
+                // 「=表/key」：替換成字串表那一條的譯文（譯名和遊戲其他地方一致，公開的檔案也不用寫出遊戲原文）；
+                // 字串表還沒載入（暫用轉換器）或找不到這條時先略過
+                if (repl.StartsWith("="))
                 {
-                    if (line.Trim().Length == 0 || line.TrimStart().StartsWith("#")) continue;
-                    var p = line.Split('\t');
-                    if (p.Length < 3 || p[0].Length == 0) continue;
-                    var repl = p[2];
-                    // 「=表/key」：替換成字串表那一條的譯文（譯名和遊戲其他地方一致，公開的檔案也不用寫出遊戲原文）；
-                    // 字串表還沒載入（暫用轉換器）或找不到這條時先略過
-                    if (repl.StartsWith("="))
-                    {
-                        if (!byKey.TryGetValue(repl.Substring(1), out var r)) continue;
-                        repl = r.Replace("$", "$$");
-                    }
-                    // 單位改成英文時，替換文字的「$1千卡」換成「$1kcal」（參照的譯文在 Translator 已經換過）
-                    else repl = tr.Units.Apply(repl);
-                    c._hardcoded.Add((p[0], new Regex(p[1], RegexOptions.CultureInvariant), repl));
+                    if (!byKey.TryGetValue(repl.Substring(1), out var r)) continue;
+                    repl = r.Replace("$", "$$");
                 }
+                // 單位改成英文時，替換文字的「$1千卡」換成「$1kcal」（參照的譯文在 Translator 已經換過）
+                else repl = tr.Units.Apply(repl);
+                c._hardcoded.Add((p[0], new Regex(p[1], RegexOptions.CultureInvariant), repl));
+            }
             foreach (var d in new[] { c._phrases, c._plainPhrases })
                 foreach (var list in d.Values)
                     list.Sort((a, b) => b.Key.Length.CompareTo(a.Key.Length)); // 長詞優先
@@ -571,28 +569,37 @@ namespace ProbablyStolenZhHant
             return default;
         }
 
+        /// <summary>沒有這個 key 才加（遊戲的 Mono 是 .NET Framework 4.x，Dictionary 沒有 TryAdd）。</summary>
+        static bool TryAdd(Dictionary<string, string> d, string key, string value)
+        {
+            if (d.ContainsKey(key)) return false;
+            d[key] = value;
+            return true;
+        }
+
         static void AddByFirstChar(Dictionary<char, List<KeyValuePair<string, string>>> d, string s, string v)
         {
             if (!d.TryGetValue(s[0], out var list)) d[s[0]] = list = new List<KeyValuePair<string, string>>();
             list.Add(new KeyValuePair<string, string>(s, v));
         }
 
-        public void LoadMisses(string path)
+        /// <summary>讀回之前記下的後備轉換（misses.tsv 的內容，可為 null）。讀寫檔案由呼叫端做（遊戲裡透過 ModHelper 的 ModData）。</summary>
+        public void LoadMisses(string text)
         {
-            if (!File.Exists(path)) return;
-            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            foreach (var line in OpenCC.Lines(text))
             {
                 int tab = line.IndexOf('\t');
                 if (tab > 0) Misses[line.Substring(0, tab).Replace("⏎", "\n")] = line.Substring(tab + 1).Replace("⏎", "\n");
             }
         }
 
-        public void WriteMisses(string path)
+        /// <summary>misses.tsv 的內容（一行一段：原文⇥轉換結果，換行寫成 ⏎）。</summary>
+        public string MissesText()
         {
             var sb = new StringBuilder();
             foreach (var kv in Misses)
                 sb.Append(kv.Key.Replace("\n", "⏎")).Append('\t').Append(kv.Value.Replace("\n", "⏎")).Append('\n');
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
+            return sb.ToString();
         }
 
         public string Stats()

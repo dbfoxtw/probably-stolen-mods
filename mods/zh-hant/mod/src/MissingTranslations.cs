@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Il2CppInterop.Runtime;
-using MelonLoader;
+using HarmonyLib;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
-using Il2CppObject = Il2CppSystem.Object;
-using Il2CppList = Il2CppSystem.Collections.Generic.IList<Il2CppSystem.Object>;
-using Il2CppCollection = Il2CppSystem.Collections.Generic.ICollection<Il2CppSystem.Object>;
 
 namespace ProbablyStolenZhHant
 {
@@ -25,14 +21,15 @@ namespace ProbablyStolenZhHant
         static Dictionary<string, string> WithArgs = new Dictionary<string, string>(StringComparer.Ordinal); // "表/key" → 補上佔位符的譯文
         static HashSet<string> WithArgsSources = new HashSet<string>(StringComparer.Ordinal);
         static readonly HashSet<string> Logged = new HashSet<string>(StringComparer.Ordinal);
-        static MelonLogger.Instance _log;
-        static bool _inFallback, _errorLogged;
+        static ModLog _log;
+        static bool _ready, _inFallback, _errorLogged;
         internal static bool SkipFills; // 自我測試用：強制走英文備援
         internal static int FillHits, EnglishHits, ArgHits;
 
-        internal static void Init(Translator tr, MelonLogger.Instance log)
+        internal static void Init(Translator tr, ModLog log)
         {
             _log = log;
+            _ready = true;
             Fills = tr.Fills;
             WithArgs = tr.WithArgs; // 讀字串表時才填入（逐條修正生效的才算）
             WithArgsSources = tr.WithArgsSources;
@@ -40,11 +37,24 @@ namespace ProbablyStolenZhHant
 
         internal static int Count => Fills.Count;
 
-        /// <summary>Harmony postfix（參數名稱需與原方法相同）。</summary>
-        internal static void GeneratePostfix(StringTable table, StringTableEntry entry, TableReference tableReference,
-            TableEntryReference tableEntryReference, Locale locale, Il2CppList arguments, ref string __result)
+        /// <summary>
+        /// 遊戲在 Init 之前就 PatchAll（翻譯資料還沒讀），Init 之前直接放行；不然缺翻的條目會在補譯文讀進來之前就改用英文。
+        /// GenerateLocalizedString 只有這一個多載（Unity.Localization，遊戲自帶），用屬性指定；
+        /// 遊戲更新拿掉它時 PatchAll 會失敗、整個 mod 不能啟用，check 的「官方掃描」會先在離線時找出來。
+        /// </summary>
+        [HarmonyPatch(typeof(LocalizedStringDatabase), "GenerateLocalizedString")]
+        static class GeneratePatch
         {
-            if (_inFallback) return;
+            static void Postfix(StringTable table, StringTableEntry entry, TableReference tableReference,
+                TableEntryReference tableEntryReference, Locale locale, IList<object> arguments, ref string __result) =>
+                GeneratePostfix(table, entry, tableReference, tableEntryReference, locale, arguments, ref __result);
+        }
+
+        /// <summary>產生字串之後（參數都還在）：缺翻補譯文或改用英文、原文漏了佔位符時補上並代入。</summary>
+        static void GeneratePostfix(StringTable table, StringTableEntry entry, TableReference tableReference,
+            TableEntryReference tableEntryReference, Locale locale, IList<object> arguments, ref string __result)
+        {
+            if (!_ready || _inFallback) return;
             try
             {
                 var value = entry != null ? entry.Value : null;
@@ -105,10 +115,10 @@ namespace ProbablyStolenZhHant
 
         static readonly string[] NoArgs = new string[0];
 
-        static IReadOnlyList<string> ToStrings(Il2CppList args)
+        static IReadOnlyList<string> ToStrings(IList<object> args)
         {
             if (args == null) return NoArgs;
-            int n = args.Cast<Il2CppCollection>().Count;
+            int n = args.Count;
             if (n == 0) return NoArgs;
             var r = new string[n];
             for (int i = 0; i < n; i++)
@@ -121,7 +131,7 @@ namespace ProbablyStolenZhHant
 
         static void LogOnce(string name, string msg)
         {
-            if (Logged.Add(name)) _log?.Msg(msg);
+            if (Logged.Add(name)) _log?.Log(msg);
         }
 
         /// <summary>啟動時故意要幾條缺翻的字串，把結果寫進 log，不用在遊戲裡找這些對話。</summary>
@@ -142,12 +152,12 @@ namespace ProbablyStolenZhHant
             {
                 try
                 {
-                    var list = new Il2CppSystem.Collections.Generic.List<Il2CppObject>();
-                    if (c.arg != null) list.Add(new Il2CppObject(IL2CPP.ManagedStringToIl2Cpp(c.arg)));
+                    var list = new List<object>();
+                    if (c.arg != null) list.Add(c.arg);
                     Logged.Remove(c.table + "/" + c.key);
                     SkipFills = c.skipFills;
-                    var s = db.GetLocalizedString(c.table, c.key, list.Cast<Il2CppList>(), zh, FallbackBehavior.UseProjectSettings);
-                    _log.Msg($"自我測試［{c.note}］{c.table}/{c.key} → {s}");
+                    var s = db.GetLocalizedString(c.table, c.key, list, zh, FallbackBehavior.UseProjectSettings);
+                    _log.Log($"自我測試［{c.note}］{c.table}/{c.key} → {s}");
                 }
                 catch (Exception e) { _log.Error($"自我測試失敗 {c.table}/{c.key}：{e.Message}"); }
                 finally { SkipFills = false; }

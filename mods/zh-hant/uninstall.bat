@@ -1,5 +1,5 @@
 @echo off
-rem Remove the mod (MelonLoader itself is left alone).
+rem Remove the mod folder Mods\dbfoxtw.zh-hant in the game folder (its settings and ModData are kept).
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte,
 rem and non-ASCII text (UTF-8 or Big5) can break the parser.
 setlocal

@@ -24,7 +24,7 @@ namespace ProbablyStolenZhHant
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _fallbackTerms = new Dictionary<char, List<KeyValuePair<string, string>>>();
         readonly Units _units;
 
-        /// <summary>單位用中文還是英文（MelonPreferences.cfg 的設定）；TextConverter 讀寫死英文規則時也用它。</summary>
+        /// <summary>單位用中文還是英文（mod 的設定，見 Settings）；TextConverter 讀寫死英文規則時也用它。</summary>
         public Units Units => _units;
         readonly Dictionary<string, (string hash, (int start, int end, string text)[] ops)> _overrides =
             new Dictionary<string, (string, (int, int, string)[])>(StringComparer.Ordinal);
@@ -64,12 +64,15 @@ namespace ProbablyStolenZhHant
 
         Translator(OpenCC cc, Units units) { _cc = cc; _units = units ?? Units.Chinese; }
 
-        /// <summary>units 為 null 時單位都用中文。</summary>
-        public static Translator Load(string dir, Units units = null)
+        /// <summary>
+        /// read：資料夾裡的相對路徑 → 檔案內容，檔案不存在時傳回 null（見 OpenCC.Load）。units 為 null 時單位都用中文。
+        /// </summary>
+        public static Translator Load(Func<string, string> read, Units units = null)
         {
-            var t = new Translator(OpenCC.Load(Path.Combine(dir, "opencc")), units);
+            string Required(string name) => read(name) ?? throw new InvalidDataException($"找不到翻譯資料 {name}");
+            var t = new Translator(OpenCC.Load(read, "opencc"), units);
             var terms = new Dictionary<string, string>(StringComparer.Ordinal); // 同一個詞列了兩次時，後面的優先（同 Python）
-            foreach (var line in File.ReadAllLines(Path.Combine(dir, "terms.tsv"), Encoding.UTF8))
+            foreach (var line in OpenCC.Lines(Required("terms.tsv")))
             {
                 if (line.Trim().Length == 0 || line.TrimStart().StartsWith("#")) continue;
                 var p = line.Split('\t');
@@ -90,7 +93,7 @@ namespace ProbablyStolenZhHant
             }
 
             // 表<Tab>key<Tab>自動轉換結果的 SHA-256 前 16 碼<Tab>(起點<Tab>終點<Tab>替換文字)…
-            foreach (var line in File.ReadAllLines(Path.Combine(dir, "overrides.tsv"), Encoding.UTF8))
+            foreach (var line in OpenCC.Lines(Required("overrides.tsv")))
             {
                 if (line.Length == 0 || line[0] == '#') continue;
                 var p = line.Split('\t');
@@ -102,35 +105,31 @@ namespace ProbablyStolenZhHant
             }
             // 表<Tab>key<Tab>譯文<Tab>參照（可以沒有這個檔：缺翻時改用遊戲的英文）
             // 有參照時譯文留空，用字串表裡那條（表/key）的譯文，讀字串表時才填入
-            var fills = Path.Combine(dir, "fills.tsv");
-            if (File.Exists(fills))
-                foreach (var line in File.ReadAllLines(fills, Encoding.UTF8))
+            foreach (var line in OpenCC.Lines(read("fills.tsv")))
+            {
+                if (line.Length == 0 || line[0] == '#') continue;
+                var p = line.Split('\t');
+                if (p.Length < 3) continue;
+                var name = p[0] + "/" + p[1];
+                if (p.Length >= 4 && p[3].Length > 0)
                 {
-                    if (line.Length == 0 || line[0] == '#') continue;
-                    var p = line.Split('\t');
-                    if (p.Length < 3) continue;
-                    var name = p[0] + "/" + p[1];
-                    if (p.Length >= 4 && p[3].Length > 0)
-                    {
-                        if (!t._fillRefs.TryGetValue(p[3], out var list)) t._fillRefs[p[3]] = list = new List<string>();
-                        list.Add(name);
-                    }
-                    else
-                    {
-                        var text = Unescape(p[2]);
-                        t.Fills[name] = t._units.Apply(text);
-                        if (!t._units.AllChinese) t._chineseFills[name] = text;
-                    }
+                    if (!t._fillRefs.TryGetValue(p[3], out var list)) t._fillRefs[p[3]] = list = new List<string>();
+                    list.Add(name);
                 }
+                else
+                {
+                    var text = Unescape(p[2]);
+                    t.Fills[name] = t._units.Apply(text);
+                    if (!t._units.AllChinese) t._chineseFills[name] = text;
+                }
+            }
             // 表<Tab>key<Tab>補上佔位符的譯文（可以沒有這個檔：這幾條就照原文，不代入參數）
-            var args = Path.Combine(dir, "args.tsv");
-            if (File.Exists(args))
-                foreach (var line in File.ReadAllLines(args, Encoding.UTF8))
-                {
-                    if (line.Length == 0 || line[0] == '#') continue;
-                    var p = line.Split('\t');
-                    if (p.Length >= 3) t._args[p[0] + "/" + p[1]] = t._units.Apply(Unescape(p[2]));
-                }
+            foreach (var line in OpenCC.Lines(read("args.tsv")))
+            {
+                if (line.Length == 0 || line[0] == '#') continue;
+                var p = line.Split('\t');
+                if (p.Length >= 3) t._args[p[0] + "/" + p[1]] = t._units.Apply(Unescape(p[2]));
+            }
             return t;
         }
 

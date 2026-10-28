@@ -1,4 +1,4 @@
-r"""組出 mod 要安裝到遊戲 UserData\ZhHant\ 的資料：翻譯規則（data/）加上 OpenCC s2tw 字典。
+r"""組出 mod 要放進 mod 資料夾的 data\（<遊戲>\Mods\dbfoxtw.zh-hant\data\）的資料：翻譯規則（data/）加上 OpenCC s2tw 字典。
 
 翻譯規則不含遊戲原文（見 data/ 各檔開頭的說明），mod 在遊戲裡讀簡中字串表、逐條即時翻譯。
 OpenCC 字典取自 Python 套件 OpenCC（pip install OpenCC==1.4.2）附的 .ocd2，用套件內的 opencc_dict 轉成文字檔。

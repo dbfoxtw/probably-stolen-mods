@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace ProbablyStolenZhHant
 {
     /// <summary>
-    /// 單位用中文還是英文（MelonPreferences.cfg 的 [ZhHant]，照單位的種類分三個開關，預設都是中文）。
+    /// 單位用中文還是英文（mod 的設定，見 Settings；照單位的種類分三個開關，預設都是中文）。
     /// 只換遊戲的文字：字串表的譯文（Translator 翻好每一條之後）與寫死英文規則的替換文字（TextConverter 讀 hardcoded.tsv 時），
     /// 不對畫面上任意的文字做取代，玩家自己打的字（例如待辦清單）不會被動到。
     /// 只換數字或佔位符後面（中間可以隔一個空格）的單位，「巧克力」的「克」才不會變成 g。

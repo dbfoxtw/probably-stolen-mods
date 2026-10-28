@@ -1,5 +1,6 @@
 @echo off
-rem Build the mod from source and install it (needs MelonLoader 0.7.3 and one game start first; see README.md).
+rem Build the mod from source and install it into Mods\dbfoxtw.zh-hant in the game folder (official mod format,
+rem no MelonLoader needed; needs .NET SDK 8 and Python 3.10+; see README.md).
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte,
 rem and non-ASCII text (UTF-8 or Big5) can break the parser.
 setlocal
