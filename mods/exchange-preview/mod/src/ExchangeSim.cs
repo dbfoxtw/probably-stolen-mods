@@ -39,8 +39,10 @@ namespace ProbablyStolenExchangePreview
         public List<SimItem> Taken;
         /// <summary>收走了卻什麼都不給（夢塵兩瓶純度合計不到 60）。</summary>
         public bool NoOutput;
-        /// <summary>夢塵的純度合計（其他交換是 0）。</summary>
+        /// <summary>夢塵 ×2 的純度合計：每瓶截成整數再加總（其他交換是 0）。</summary>
         public int PuritySum;
+        /// <summary>加強版夢塵（促銷，四瓶）的平均純度：不截整數（其他交換是 0）。</summary>
+        public double PurityAverage;
         /// <summary>
         /// 多放的：符合這筆的條件、但每晚只成交一次所以沒被收走、今晚會被清掉的東西。
         /// 是 SimResult.Cleared 的一部分。
@@ -74,13 +76,29 @@ namespace ProbablyStolenExchangePreview
     /// - 每個條件依序在垃圾桶裡找第一個還沒被這筆挑走、而且符合條件的東西（ExchangeBarter.GetRequiredItems）。
     /// - 全部條件都配到就成交，那幾件被收走（Accept 立刻銷毀），後面的交換看不到它們。
     /// - 剩下的除了危險廢棄物都會被清潔服務清掉；其中符合某筆成交的條件、又不是差一點那筆配到的，是「多放的」。
+    /// - 夢塵的兩筆另外算純度（產出看純度，見 ExchangeList 的 DreamDustBarter、ImprovedDreamDustRewards）。
     /// 遊戲用 List.Sort（introsort），但 16 筆以下是插入排序、相同優先序不換順序；交換最多 14 筆，所以用穩定排序就和遊戲一致。
     /// </summary>
     static class ExchangeSim
     {
         /// <summary>夢塵交換：兩瓶純度合計不到這個數就什麼都不給（ExchangeList 的 DreamDustBarter lambda）。</summary>
         public const int DreamDustMinPurity = 60;
+        /// <summary>夢塵交換：純度合計到這個數以上，掉落較好。</summary>
+        public const int DreamDustBetterPurity = 120;
         public const string DreamDustBarterId = "dream_dust_barter";
+        public const string ImprovedDreamDustBarterId = "improved_dream_dust_barter";
+        /// <summary>
+        /// 加強版夢塵：四瓶平均純度的分級門檻（ExchangeList.ImprovedDreamDustRewards，平均 &gt;= 門檻就進那一級；不到 30 也有東西）。
+        /// </summary>
+        public static readonly int[] ImprovedDreamDustTiers = { 30, 45, 60, 80, 90, 99 };
+
+        /// <summary>加強版夢塵的下一級門檻；已經是最高級（99 以上）回傳 null。判斷用原始的 double，不先截整數。</summary>
+        public static int? NextImprovedTier(double average)
+        {
+            foreach (var t in ImprovedDreamDustTiers)
+                if (average < t) return t;
+            return null;
+        }
 
         public static SimResult Run(IList<SimItem> trash, IEnumerable<SimBarter> barters)
         {
@@ -114,6 +132,11 @@ namespace ProbablyStolenExchangePreview
                         // 遊戲把每瓶的純度（double）截成整數再加總
                         a.PuritySum = taken.Sum(x => (int)x.Purity);
                         a.NoOutput = a.PuritySum < DreamDustMinPurity;
+                    }
+                    else if (b.Id == ImprovedDreamDustBarterId && taken.Count > 0)
+                    {
+                        // 遊戲把每瓶的純度（double）照收走的順序加總，再除以瓶數，不截整數；每一級都有東西，不會收走卻不給
+                        a.PurityAverage = taken.Sum(x => x.Purity) / taken.Count;
                     }
                     result.Accepted.Add(a);
                     foreach (var t in taken) remaining.Remove(t);

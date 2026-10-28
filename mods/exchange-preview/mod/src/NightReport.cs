@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
-using Il2Cpp;
-using Il2CppInterop.Runtime;
-using MelonLoader;
 
 namespace ProbablyStolenExchangePreview
 {
@@ -20,6 +16,7 @@ namespace ProbablyStolenExchangePreview
     /// - ModHook.OnHandlingNightlyServicesLate：清潔服務跑完了，組成報告那一行；放完後新出現的編號就是交易所換來的，記進 mod 自己的資料檔。
     /// 早上（StartOfDayUIManager.InitPanel 之前）：把那一行插進遊戲的 nightLogs，接在「店面已被打掃乾淨」後面。
     /// 遊戲在存檔「之後」才顯示報告，顯示完自己清空 nightLogs，所以那一行不會進存檔；讀檔重看報告時從資料檔補回。
+    /// 攔截在 Patches.cs；ModHook 的事件在 Init 時訂閱（Subscribe）、結束遊戲時取消。
     /// </summary>
     static class NightReport
     {
@@ -28,8 +25,7 @@ namespace ProbablyStolenExchangePreview
         /// <summary>句尾 mod 標示的灰色：遊戲的 RenderHandler.ColorPalette.Gray，和垃圾桶提示的標示同色。</summary>
         const string TagGray = "88948A";
 
-        static Il2CppSystem.Action _early, _late, _loaded;
-        static bool _capturing;
+        static bool _capturing, _subscribed;
         static List<NightDeal> _deals = new List<NightDeal>();
         static readonly List<(NightDeal deal, GameItem item, string name)> _outputs = new List<(NightDeal, GameItem, string)>();
         static NightDeal _cur;
@@ -39,39 +35,41 @@ namespace ProbablyStolenExchangePreview
         /// <summary>TransferBuffer 之前垃圾桶裡已有的物品編號（null＝沒攔到 TransferBuffer）。</summary>
         static HashSet<int> _beforeTransfer;
         static bool _inTransfer;
-        /// <summary>放不進垃圾桶、被 DestroyIfUnplaced 銷毀的產出（數量還大於 0 的）。</summary>
-        static readonly HashSet<IntPtr> _destroyed = new HashSet<IntPtr>();
+        /// <summary>放不進垃圾桶、被 DestroyIfUnplaced 銷毀的產出（數量還大於 0 的）。GameItem 沒有覆寫 Equals，比的是物件本身。</summary>
+        static readonly HashSet<GameItem> _destroyed = new HashSet<GameItem>();
 
-        internal static void Install(HarmonyLib.Harmony h, MelonLogger.Instance log)
+        /// <summary>訂閱 ModHook 的夜間服務與讀檔事件（Init 時）。</summary>
+        internal static void Subscribe()
         {
-            bool a = Patcher.Patch(h, log, AccessTools.Method(typeof(ExchangeBarter), nameof(ExchangeBarter.Accept)), typeof(NightReport), nameof(AcceptPrefix), nameof(AcceptPostfix));
-            bool b = Patcher.Patch(h, log, AccessTools.Method(typeof(StartOfDayUIManager), nameof(StartOfDayUIManager.InitPanel)), typeof(NightReport), nameof(InitPanelPrefix));
-            bool c = Patcher.Patch(h, log, AccessTools.Method(typeof(ExchangeManager), nameof(ExchangeManager.TransferBuffer)), typeof(NightReport), nameof(TransferPrefix), nameof(TransferPostfix));
-            bool d = Patcher.Patch(h, log, AccessTools.Method(typeof(GraphUtils), nameof(GraphUtils.DestroyIfUnplaced)), typeof(NightReport), nameof(DestroyIfUnplacedPrefix));
-            log.Msg($"夜間報告：攔截 TransferBuffer {(c ? "成功" : "失敗")}、DestroyIfUnplaced {(d ? "成功" : "失敗")}");
-            try
-            {
-                _early = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(OnNightEarly));
-                _late = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(OnNightLate));
-                _loaded = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(OnGameLoaded));
-                ModHook.add_OnHandlingNightlyServicesEarly(_early);
-                ModHook.add_OnHandlingNightlyServicesLate(_late);
-                ModHook.add_OnGameLoadedLate(_loaded);
-                log.Msg($"夜間報告：攔截 ExchangeBarter.Accept {(a ? "成功" : "失敗")}、StartOfDayUIManager.InitPanel {(b ? "成功" : "失敗")}；已訂閱夜間服務與讀檔事件");
-            }
-            catch (Exception e) { log.Warning($"訂閱 ModHook 的夜間服務事件失敗，夜間報告與提醒不會運作：{e.Message}"); }
+            if (_subscribed) return;
+            ModHook.OnHandlingNightlyServicesEarly += OnNightEarly;
+            ModHook.OnHandlingNightlyServicesLate += OnNightLate;
+            ModHook.OnGameLoadedLate += OnGameLoaded;
+            _subscribed = true;
         }
 
-        // ── 以下都由遊戲（IL2CPP）那邊呼叫，例外不能丟回去 ──
+        /// <summary>取消訂閱（結束遊戲時的 OnDisable）。</summary>
+        internal static void Unsubscribe()
+        {
+            if (!_subscribed) return;
+            ModHook.OnHandlingNightlyServicesEarly -= OnNightEarly;
+            ModHook.OnHandlingNightlyServicesLate -= OnNightLate;
+            ModHook.OnGameLoadedLate -= OnGameLoaded;
+            _subscribed = false;
+        }
+
+        // ── 以下都由遊戲那邊呼叫（事件與攔截），例外不能丟回去 ──
 
         static void OnGameLoaded()
         {
+            if (!ExchangePreviewMod.Ready) return;
             try { ExchangePreviewMod.OnGameLoaded(); }
             catch (Exception e) { ExchangePreviewMod.Log.Error($"讀檔後的處理出錯：{e}"); }
         }
 
         static void OnNightEarly()
         {
+            if (!ExchangePreviewMod.Ready) return;
             try
             {
                 _capturing = true;
@@ -93,32 +91,32 @@ namespace ProbablyStolenExchangePreview
             catch (Exception e) { ExchangePreviewMod.Log.Error($"夜間服務開始時出錯：{e}"); }
         }
 
-        static void AcceptPrefix(ExchangeBarter __instance)
+        internal static void AcceptPrefix(ExchangeBarter barter)
         {
             try
             {
-                if (!_capturing || __instance == null) return;
-                var em = PlayerStore.instance?.exchangeManager;
+                if (!_capturing || barter == null) return;
+                var em = PlayerStore.HasInstance ? PlayerStore.Instance.exchangeManager : null;
                 _bufBefore = em?.itemsBuffer?.Count ?? 0;
                 _repBefore = StoreReputation.GetBMFaction()?.GetReputationExact() ?? 0;
                 var taken = new List<string>();
-                var req = __instance.GetRequiredItems(); // 唯讀：和 Accept 等一下要收走的是同一批
+                var req = barter.GetRequiredItems(); // 唯讀：和 Accept 等一下要收走的是同一批
                 if (req != null)
                     for (int i = 0; i < req.Count; i++)
                         if (req[i] != null) taken.Add(ExchangeReader.Name(req[i]));
-                _cur = new NightDeal { BarterId = __instance.identifier ?? "", Taken = taken };
+                _cur = new NightDeal { BarterId = barter.identifier ?? "", Taken = taken };
             }
             catch (Exception e) { _cur = null; ExchangePreviewMod.Log.Error($"記錄交換（Accept 前）出錯：{e}"); }
         }
 
-        static void AcceptPostfix(ExchangeBarter __instance)
+        internal static void AcceptPostfix()
         {
             try
             {
                 if (_cur == null) return;
                 var deal = _cur;
                 _cur = null;
-                var buf = PlayerStore.instance?.exchangeManager?.itemsBuffer;
+                var buf = PlayerStore.HasInstance ? PlayerStore.Instance.exchangeManager?.itemsBuffer : null;
                 int added = 0;
                 if (buf != null)
                     for (int i = _bufBefore; i < buf.Count; i++)
@@ -137,7 +135,7 @@ namespace ProbablyStolenExchangePreview
             catch (Exception e) { ExchangePreviewMod.Log.Error($"記錄交換（Accept 後）出錯：{e}"); }
         }
 
-        static void TransferPrefix()
+        internal static void TransferPrefix()
         {
             try
             {
@@ -149,21 +147,22 @@ namespace ProbablyStolenExchangePreview
             catch (Exception e) { _beforeTransfer = null; ExchangePreviewMod.Log.Error($"記錄垃圾桶（放進產出前）出錯：{e}"); }
         }
 
-        static void TransferPostfix() => _inTransfer = false;
+        internal static void TransferPostfix() => _inTransfer = false;
 
         /// <summary>DestroyIfUnplaced：已經放進容器的直接回傳；數量還大於 0、又沒地方放的才銷毀（數量 0＝整疊都疊進別的東西了）。</summary>
-        static void DestroyIfUnplacedPrefix(GameItem __0)
+        internal static void DestroyIfUnplacedPrefix(GameItem item)
         {
             try
             {
-                if (!_inTransfer || __0 == null) return;
-                if (__0.unitCount > 0) _destroyed.Add(__0.Pointer);
+                if (!_inTransfer || item == null) return;
+                if (item.unitCount > 0) _destroyed.Add(item);
             }
             catch (Exception e) { ExchangePreviewMod.Log.Error($"記錄被銷毀的產出出錯：{e}"); }
         }
 
         static void OnNightLate()
         {
+            if (!ExchangePreviewMod.Ready) return;
             try
             {
                 if (!_capturing) return;
@@ -177,7 +176,7 @@ namespace ProbablyStolenExchangePreview
                     return;
                 }
                 var trash = ExchangeReader.TrashItems() ?? new List<GameItem>();
-                var inTrash = new HashSet<IntPtr>(trash.Select(t => t.Pointer));
+                var inTrash = new HashSet<GameItem>(trash);
                 // 被清潔服務清掉的、白天拿出來過的（記在記憶體裡），不再追蹤；這時才寫進資料檔，和遊戲接下來的存檔對得上
                 rec.KeepOnly(new HashSet<int>(trash.Select(t => t.uniqueId)));
                 rec.Tracked.RemoveAll(t => ExchangePreviewMod.TakenOut.Contains(t.Id));
@@ -185,7 +184,7 @@ namespace ProbablyStolenExchangePreview
                 foreach (var (deal, item, name) in _outputs)
                 {
                     // 在垃圾桶裡＝放進去了；不在、但沒被銷毀＝疊到垃圾桶裡同種東西上了，也算放進去
-                    bool lost = !inTrash.Contains(item.Pointer) && (_destroyed.Contains(item.Pointer) || _beforeTransfer == null && item.unitCount > 0);
+                    bool lost = !inTrash.Contains(item) && (_destroyed.Contains(item) || _beforeTransfer == null && item.unitCount > 0);
                     if (lost) deal.Destroyed.Add(name);
                     else deal.Outputs.Add(name);
                 }
@@ -193,7 +192,7 @@ namespace ProbablyStolenExchangePreview
                 // 沒攔到 TransferBuffer 時退而求其次：產出本身還在垃圾桶裡的
                 var fresh = _beforeTransfer != null
                     ? trash.Where(t => !_beforeTransfer.Contains(t.uniqueId))
-                    : _outputs.Select(o => o.item).Where(it => inTrash.Contains(it.Pointer));
+                    : _outputs.Select(o => o.item).Where(it => inTrash.Contains(it));
                 foreach (var it in fresh)
                 {
                     int id = it.uniqueId;
@@ -220,14 +219,14 @@ namespace ProbablyStolenExchangePreview
             catch (Exception e) { ExchangePreviewMod.Log.Error($"夜間服務跑完時出錯：{e}"); }
         }
 
-        static void InitPanelPrefix()
+        internal static void InitPanelPrefix()
         {
             try
             {
                 if (!Settings.NightReport) return;
                 var rec = ExchangePreviewMod.CurrentRecord();
                 if (rec == null || string.IsNullOrEmpty(rec.ReportText) || !GameState.TryGetDay(out int day) || rec.ReportDay != day) return;
-                var logs = PlayerStore.instance?.nightLogs;
+                var logs = PlayerStore.HasInstance ? PlayerStore.Instance.nightLogs : null;
                 if (logs == null) return;
                 var line = PreviewText.ReportLine(GameState.S, rec.ReportText, Purple, TagGray);
                 if (logs.Contains(line)) return;

@@ -1,5 +1,25 @@
 # 版本紀錄（Changelog）
 
+## v2.0.0（2026-10-29）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+
+- 支援正式版：改成遊戲官方的 mod 格式，不需要 MelonLoader。裝在遊戲資料夾的 `Mods\dbfoxtw.exchange-preview\`，在主選單的模組畫面啟用。不需要任何權限，啟用時不會跳出權限確認。
+- 新增夢塵的純度提示：夢塵的交換會成交時，產出後面寫出純度和下一級的門檻，例如「（純度合計 85，120 以上更好）」；促銷交易的四瓶夢塵在正式版改成看平均純度，例如「（平均純度 72，80 以上更好）」。只寫門檻，不列每一級會給什麼。
+- 設定移到模組畫面裡這個 mod 的設定視窗，按套用就生效。紀錄改存在存檔資料夾的 `ModData\dbfoxtw_exchange-preview\`。Demo 版在 `MelonPreferences.cfg` 的設定與 `UserData\ExchangePreview\` 的紀錄不會搬過來，設定回到預設值。
+- 結束一天的提醒跟著正式版新的結束一天畫面，放在清潔服務那一列下面。
+- Demo 版（v1.0.2）在正式版不能用；這一版起不再支援 Demo。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100)
+
+- Full release support: now uses the game's official mod format; MelonLoader is not needed. It goes in `Mods\dbfoxtw.exchange-preview\` in the game folder and is enabled on the Mods screen of the main menu. No permissions are needed, so there is no permission prompt when you enable it.
+- New Dream Dust purity hint: when a Dream Dust trade will go through, the purity and the next threshold follow the reward, e.g. "(total purity 85, 120+ is better)"; the four-vial promotional exchange now uses the average purity in the full release, e.g. "(average purity 72, 80+ is better)". Only the thresholds are shown, not what each tier gives.
+- Settings moved to this mod's settings window on the Mods screen and apply as soon as you press Apply. Records are now kept in `ModData\dbfoxtw_exchange-preview\` in the save folder. Settings in the Demo's `MelonPreferences.cfg` and records in `UserData\ExchangePreview\` are not carried over; the settings start from the defaults.
+- The end of day reminder follows the full release's new End of Day screen and sits under the Janitorial Service row.
+- The Demo version (v1.0.2) does not work on the full release; Demo support ends with this version.
+
 ## v1.0.2（2026-10-19）
 
 對應遊戲版本：DEMO Version 050REV5-L

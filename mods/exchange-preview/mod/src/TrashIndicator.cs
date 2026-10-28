@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Il2Cpp;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -147,7 +145,8 @@ namespace ProbablyStolenExchangePreview
                     ready = IndicatorLogic.AnyReady(result);
                     surplus = IndicatorLogic.AnySurplus(result);
                 }
-                var next = IndicatorLogic.Decide(st.Unlocked, st.Distrusted, pickup, ready, surplus);
+                // 清潔服務還沒開放時和交易所沒開放一樣不顯示：那幾天根本不會交換，亮「可交易」會誤導（2026-10-29 使用者決定）
+                var next = IndicatorLogic.Decide(st.Unlocked && !st.JanitorialLocked, st.Distrusted, pickup, ready, surplus);
                 if (next != _state && ExchangePreviewMod.Debug) ExchangePreviewMod.Log.Msg($"垃圾桶標示：{_state} → {next}");
                 _state = next;
             }
@@ -163,21 +162,24 @@ namespace ProbablyStolenExchangePreview
         {
             var sb = new StringBuilder();
             sb.Append(lang).Append(st.Unlocked).Append(st.Distrusted).Append(ExchangePreviewMod.TakenOut.Count).Append('|');
-            foreach (var it in trash) sb.Append(it.Pointer.ToInt64()).Append(',');
+            TrashTooltip.AppendItems(sb, trash);
             return sb.ToString();
         }
 
         /// <summary>
-        /// 垃圾桶的圖：EmporiumEntry.Instance.trashcan（GameItemElement）的 background 節點（0x2F8）的 Image。
+        /// 垃圾桶的圖：EmporiumEntry.Instance.trashcan（GameItemElement）的 background 節點的 Image。
         /// 遊戲的建構子把物品圖設在 background.image（inner 是空節點；fakeBackground 是同一張圖的複本），
         /// 換圖（SpriteHelper.UpdateTrashcanSprite → SetSpriteAndShape）只換 sprite、不重建節點（審查時讀 ISIL 確認）。
         /// 名稱檢查（trashcan＋數字）當驗證；不對時才在底下找名稱相符、正在顯示的 Image。
         /// </summary>
         static Image FindTrashImage()
         {
-            var el = EmporiumEntry.Instance?.trashcan?.TryCast<GameItemElement>();
+            var entry = EmporiumEntry.Instance; // MonoBehaviour：用 == null（含已銷毀），不用 ?.
+            if (entry == null) return null;
+            var el = entry.trashcan as GameItemElement; // GameItem 是一般的 C# 類別，as 沒問題
             if (el == null) return null;
-            var bg = el.background?.image;
+            var node = el.background;
+            var bg = node != null ? node.image : null;
             if (IsTrashSprite(bg)) return bg;
             Transform t = el.handler != null ? el.handler.transform : el.rectTransform;
             if (t == null) return null;
@@ -256,7 +258,7 @@ namespace ProbablyStolenExchangePreview
             _builtLed = led;
             _builtLang = lang;
             if (ExchangePreviewMod.Debug)
-                ExchangePreviewMod.Log.Msg($"垃圾桶標示：建立 紙條={note} LED={led}，圖 {sp?.name}（{sw}×{sh}）框 {r} pivot {pivot} 保持比例={_trashImage.preserveAspect} 畫出範圍 {drawn} 縮放 {_trashImage.transform.lossyScale}");
+                ExchangePreviewMod.Log.Msg($"垃圾桶標示：建立 紙條={note} LED={led}，圖 {(sp != null ? sp.name : null)}（{sw}×{sh}）框 {r} pivot {pivot} 保持比例={_trashImage.preserveAspect} 畫出範圍 {drawn} 縮放 {_trashImage.transform.lossyScale}");
             return true;
         }
 
@@ -340,7 +342,7 @@ namespace ProbablyStolenExchangePreview
             var p = IndicatorLogic.Paper;
             var tape = IndicatorLogic.Tape;
             int w = t.Width, h = t.Height;
-            var px = new Il2CppStructArray<Color32>(w * h);
+            var px = new Color32[w * h];
             var edge = new Color32(180, 165, 120, 255);
             var shadow = new Color32(20, 30, 30, 110);
             var tapeC = new Color32(235, 235, 220, 150);
@@ -371,7 +373,7 @@ namespace ProbablyStolenExchangePreview
         {
             if (_white != null) return _white;
             var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            var px = new Il2CppStructArray<Color32>(1);
+            var px = new Color32[1];
             px[0] = new Color32(255, 255, 255, 255);
             tex.SetPixels32(px);
             tex.Apply(false, true);

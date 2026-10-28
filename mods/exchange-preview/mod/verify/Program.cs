@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -8,8 +7,8 @@ using System.Text;
 namespace ProbablyStolenExchangePreview.Verify
 {
     /// <summary>
-    /// 離線測試（不用開遊戲）：模擬交換的規則、提示與夜間報告的文字、三種語言的字串、資料檔。
-    /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
+    /// 離線測試（不用開遊戲）：模擬交換的規則、夢塵的純度提示、提示與夜間報告的文字、
+    /// 三種語言的字串、資料檔。任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
     {
@@ -31,9 +30,8 @@ namespace ProbablyStolenExchangePreview.Verify
             Text();
             StringsComplete();
             Indicator();
-            var dir = Path.Combine(Path.GetTempPath(), "ExchangePreview-verify-" + Guid.NewGuid().ToString("N"));
-            try { Store(dir); }
-            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+            Purity();
+            Store();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -107,7 +105,7 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(new[] { I("dream_dust", purity: 30), I("dream_dust", purity: 30) }, new[] { DreamDust() });
             Check(!r.Accepted[0].NoOutput, "純度合計 60：照常給");
             r = ExchangeSim.Run(new[] { I("dream_dust", purity: 99), I("dream_dust", purity: 99), I("dream_dust", purity: 99), I("dream_dust", purity: 99) }, new[] { ImprovedDreamDust() });
-            Check(!r.Accepted[0].NoOutput, "加強版夢塵沒有純度門檻");
+            Check(!r.Accepted[0].NoOutput, "加強版夢塵：每一級都有東西，不會收走卻不給");
 
             // 7. 危險廢棄物不會被清掉
             r = ExchangeSim.Run(new[] { I("toxic", hazard: true), I("newspaper") }, new[] { Bullet() });
@@ -203,6 +201,10 @@ namespace ProbablyStolenExchangePreview.Verify
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|今晚沒有使用清潔服務，不會交換|10毫米彈藥 ×2 → 隨機食物", "提示：今晚沒用清潔服務");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim", "提示：今晚沒用清潔服務的顏色");
+            // 清潔服務還沒開放（正式版 Fence 開局的第 1～9 天）：警告換一句，其餘照「沒用」灰色預覽
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, JanitorialLocked = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|還沒有清潔服務，不會交換|10毫米彈藥 ×2 → 隨機食物", "提示：清潔服務還沒開放");
+            Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim", "提示：清潔服務還沒開放的顏色");
 
             // 被禁用
             r = ExchangeSim.Run(new[] { I("ammo_a"), I("toxic", hazard: true) }, new List<SimBarter>());
@@ -301,6 +303,23 @@ namespace ProbablyStolenExchangePreview.Verify
                 }
             Check(!Strings.For(Lang.ZhHant).Header.Any(c => "们这时会过还说个里么为后对没换获见"
                 .Contains(c)), "繁中字串沒有簡體字（繁中 mod 才不會再轉）");
+            // 這次新加的句子（純度、設定視窗）：繁中沒有簡體字、簡中沒有繁體字
+            var hant = Strings.For(Lang.ZhHant);
+            var hans = Strings.For(Lang.ZhHans);
+            var newFields = typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance)
+                .Where(f => f.FieldType == typeof(string) && (f.Name.StartsWith("Purity") || f.Name.StartsWith("Cfg"))).ToList();
+            Check(newFields.Count == 17, $"純度與設定的字串有 17 個（實際 {newFields.Count}）");
+            const string simplifiedOnly = "们这会过还说个里么为后对没换获见纯级标显红声间报写进结画洁东贴纸条灯盖状闪开单";
+            const string traditionalOnly = "們這會過還說個裡麼為後對沒換獲見純級標顯紅聲間報寫進結畫潔東貼紙條燈蓋狀閃開單";
+            foreach (var f in newFields)
+            {
+                var t = (string)f.GetValue(hant);
+                var c = t.FirstOrDefault(simplifiedOnly.Contains);
+                Check(c == default(char), $"ZhHant.{f.Name} 有簡體字「{c}」：{t}");
+                var h = (string)f.GetValue(hans);
+                c = h.FirstOrDefault(traditionalOnly.Contains);
+                Check(c == default(char), $"ZhHans.{f.Name} 有繁體字「{c}」：{h}");
+            }
         }
 
         /// <summary>垃圾桶標示：狀態優先順序、可交易的定義、設定值、文字、位置換算。</summary>
@@ -356,14 +375,88 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(Math.Abs(d.y0 - 0.5f) < 1e-5 && Math.Abs(d.y1 - 1f) < 1e-5 && d.x0 == 0 && d.x1 == 1, "保持比例、框比圖高、pivot 在上：圖貼上面");
         }
 
-        static void Store(string dir)
+        /// <summary>
+        /// 夢塵的純度提示：常駐兩瓶看每瓶截整數後的合計（120 以上掉落較好），
+        /// 促銷四瓶看不截整數的平均（門檻 30、45、60、80、90、99，&gt;=）。只寫門檻、不列每一級給什麼。
+        /// </summary>
+        static void Purity()
+        {
+            var s = Strings.For(Lang.ZhHant);
+            var en = Strings.For(Lang.En);
+            var hans = Strings.For(Lang.ZhHans);
+
+            // 下一級的門檻：判斷用原始的 double
+            var cases = new (double avg, int? next)[]
+            {
+                (0, 30), (29.99, 30), (30, 45), (44.999, 45), (45, 60), (59.75, 60), (60, 80), (79.99, 80),
+                (80, 90), (89.9, 90), (90, 99), (98.999, 99), (99, null), (100, null),
+            };
+            foreach (var (avg, next) in cases)
+                Eq(ExchangeSim.NextImprovedTier(avg), next, $"加強版夢塵：平均 {avg} 的下一級");
+
+            // 加強版：模擬算出平均（不截整數）
+            SimResult Improved(params double[] p) =>
+                ExchangeSim.Run(p.Select(x => I("dream_dust", "一小瓶「夢塵」", purity: x)).ToList(), new[] { ImprovedDreamDust() });
+            var r = Improved(70.5, 70.5, 70.5, 70.4);
+            Check(Math.Abs(r.Accepted[0].PurityAverage - 70.475) < 1e-9, $"加強版夢塵：平均不截整數（實際 {r.Accepted[0].PurityAverage}）");
+            Eq(r.Accepted[0].PuritySum, 0, "加強版夢塵：不算合計");
+            // 每瓶 29.9：截整數的話平均 29，不截是 29.9，都還不到 30
+            Eq(PreviewText.PurityNote(s, Improved(29.9, 29.9, 29.9, 29.9).Accepted[0]), "（平均純度 29，30 以上更好）", "加強版：不到 30");
+            // 平均剛好 30（29.5 與 30.5 混著；截整數再平均的話只有 29.5）：已經是第二級
+            Eq(PreviewText.PurityNote(s, Improved(29.5, 30.5, 29.5, 30.5).Accepted[0]), "（平均純度 30，45 以上更好）", "加強版：剛好 30");
+            Eq(PreviewText.PurityNote(s, Improved(72, 72, 72, 72).Accepted[0]), "（平均純度 72，80 以上更好）", "加強版：72");
+            // 79.75 捨去成 79：不會顯示成「80，80 以上更好」
+            Eq(PreviewText.PurityNote(s, Improved(79.75, 79.75, 79.75, 79.75).Accepted[0]), "（平均純度 79，80 以上更好）", "加強版：79.75 捨去小數");
+            Eq(PreviewText.PurityNote(s, Improved(80, 80, 80, 80).Accepted[0]), "（平均純度 80，90 以上更好）", "加強版：剛好 80");
+            Eq(PreviewText.PurityNote(s, Improved(89.9, 90, 90, 90).Accepted[0]), "（平均純度 89，90 以上更好）", "加強版：差一點到 90");
+            Eq(PreviewText.PurityNote(s, Improved(90, 90, 90, 90).Accepted[0]), "（平均純度 90，99 以上更好）", "加強版：剛好 90");
+            Eq(PreviewText.PurityNote(s, Improved(98.9, 99, 99, 99).Accepted[0]), "（平均純度 98，99 以上更好）", "加強版：差一點到 99");
+            Eq(PreviewText.PurityNote(s, Improved(99, 99, 99, 99).Accepted[0]), "（平均純度 99，最高級）", "加強版：剛好 99 是最高級");
+            Eq(PreviewText.PurityNote(s, Improved(100, 100, 98, 100).Accepted[0]), "（平均純度 99，最高級）", "加強版：平均 99.5");
+            Eq(PreviewText.PurityNote(en, Improved(72, 72, 72, 72).Accepted[0]), " (average purity 72, 80+ is better)", "加強版：英文");
+            Eq(PreviewText.PurityNote(en, Improved(99, 99, 99, 99).Accepted[0]), " (average purity 99, top tier)", "加強版：英文最高級");
+            Eq(PreviewText.PurityNote(hans, Improved(72, 72, 72, 72).Accepted[0]), "（平均纯度 72，80 以上更好）", "加強版：簡中");
+
+            // 常駐兩瓶：每瓶截整數再加總；不到 60 另有警告（不加純度提示）
+            SimResult Regular(params double[] p) =>
+                ExchangeSim.Run(p.Select(x => I("dream_dust", "一小瓶「夢塵」", purity: x)).ToList(), new[] { DreamDust() });
+            Eq(PreviewText.PurityNote(s, Regular(29.9, 30.9).Accepted[0]), "", "常駐：合計 59 收走不給，不加純度提示");
+            Eq(PreviewText.PurityNote(s, Regular(30, 30).Accepted[0]), "（純度合計 60，120 以上更好）", "常駐：剛好 60");
+            Eq(PreviewText.PurityNote(s, Regular(42.7, 42.9).Accepted[0]), "（純度合計 84，120 以上更好）", "常駐：每瓶截整數");
+            Eq(PreviewText.PurityNote(s, Regular(59.9, 60.9).Accepted[0]), "（純度合計 119，120 以上更好）", "常駐：119（59.9＋60.9 截成 59＋60）");
+            Eq(PreviewText.PurityNote(s, Regular(60, 60).Accepted[0]), "（純度合計 120，最高級）", "常駐：剛好 120 是最高級");
+            Eq(PreviewText.PurityNote(s, Regular(65, 65).Accepted[0]), "（純度合計 130，最高級）", "常駐：130");
+            Eq(PreviewText.PurityNote(en, Regular(42, 43).Accepted[0]), " (total purity 85, 120+ is better)", "常駐：英文");
+            Eq(PreviewText.PurityNote(hans, Regular(65, 65).Accepted[0]), "（纯度合计 130，最高级）", "常駐：簡中最高級");
+
+            // 其他交換不加
+            r = ExchangeSim.Run(new[] { I("ammo_a"), I("ammo_b") }, new[] { Bullet() });
+            Eq(PreviewText.PurityNote(s, r.Accepted[0]), "", "其他交換不加純度提示");
+
+            // 整行：接在產出後面；差一點那行不加
+            r = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("dream_dust", "一小瓶「夢塵」", purity: 72)).ToList(), new[] { DreamDust(), ImprovedDreamDust() });
+            var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)),
+                "地下交易所・今晚|一小瓶「夢塵」 ×4 → 隨機醫療用品（平均純度 72，80 以上更好）|dream_dust 1/2（還差 1 個 → 隨機合法商品）|其餘 1 件會被清掉（含差一點的一小瓶「夢塵」）",
+                "提示：加強版夢塵的整行，差一點的常駐不加");
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = Regular(42.7, 42.9) });
+            Eq(lines[1].Text, "一小瓶「夢塵」 ×2 → 隨機合法商品（純度合計 84，120 以上更好）", "提示：常駐夢塵的整行");
+            Eq(lines[1].Tone, Tone.Good, "提示：常駐夢塵會成交是綠色");
+            lines = PreviewText.Tooltip(en, new PreviewInput { JanitorialOn = true, Result = Improved(99, 99, 99, 99) });
+            Eq(lines[1].Text, "一小瓶「夢塵」 x4 → 隨機醫療用品 (average purity 99, top tier)", "提示：英文的整行（名稱與產出是測試用的）");
+        }
+
+        /// <summary>資料檔：用記憶體裡的「檔案」測（遊戲裡是 ModHelper 的 ModData）。</summary>
+        static void Store()
         {
             var warns = new List<string>();
-            var store = new SlotStore(dir, warns.Add);
+            var files = new Dictionary<string, string>();
+            var store = new SlotStore(n => files.TryGetValue(n, out var t) ? t : null, (n, t) => files[n] = t, warns.Add);
 
             // 沒有檔案：新的一份
             var r = store.Load(3, "run-a");
             Check(r.Slot == 3 && r.RunId == "run-a" && r.Tracked.Count == 0 && r.ReportDay == null, "沒有檔案時給新的一份");
+            Eq(SlotStore.FileName(3), "slot_3.json", "檔名");
 
             // 存了再讀回來
             r.ReportDay = 42;
@@ -372,8 +465,13 @@ namespace ProbablyStolenExchangePreview.Verify
             store.Save(r);
             var back = store.Load(3, "run-a");
             Check(back.ReportDay == 42 && back.ReportText == r.ReportText && back.Tracked.Count == 1 && back.Tracked[0].Id == 25354, "存了再讀回來一樣");
-            Check(File.ReadAllText(store.PathOf(3), Encoding.UTF8).Contains("治安部物資箱"), "資料檔裡的中文照原樣寫");
-            Check(!File.Exists(store.PathOf(3) + ".tmp"), "暫存檔換掉之後不留下");
+            Check(files["slot_3.json"].Contains("治安部物資箱"), "資料檔裡的中文照原樣寫");
+            Check(files["slot_3.json"].Contains("\"runId\": \"run-a\"") && files["slot_3.json"].Contains("\"tracked\""), "欄位名稱照舊（runId、tracked）");
+            Check(!files["slot_3.json"].Contains("Extra"), "沒有多寫 Extra 欄位");
+
+            // 沒有報告時不寫 reportDay（null 不寫）
+            store.Save(new SlotRecord { Slot = 4, RunId = "x" });
+            Check(!files["slot_4.json"].Contains("reportDay"), "沒有報告時不寫 reportDay");
 
             // 同一槽開了新遊戲：重來
             var other = store.Load(3, "run-b");
@@ -391,15 +489,23 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(back.Tracked.Count == 1 && back.Tracked[0].Id == 2, "只留還在垃圾桶裡的");
 
             // 不認得的欄位原樣保留（新版 mod 加的欄位，用舊版時不丟）
-            File.WriteAllText(store.PathOf(5), "{\"version\":1,\"slot\":5,\"runId\":\"r\",\"future\":{\"x\":1},\"tracked\":[]}", Encoding.UTF8);
+            files["slot_5.json"] = "{\"version\":1,\"slot\":5,\"runId\":\"r\",\"future\":{\"x\":1},\"tracked\":[]}";
             var ext = store.Load(5, "r");
             store.Save(ext);
-            Check(File.ReadAllText(store.PathOf(5)).Contains("\"future\""), "不認得的欄位存回去");
+            Check(files["slot_5.json"].Contains("\"future\""), "不認得的欄位存回去");
 
-            // 壞掉的檔：重來，原檔備份成 .bad
-            File.WriteAllText(store.PathOf(7), "{ 這不是 JSON", Encoding.UTF8);
+            // tracked 是 null：當成空的
+            files["slot_6.json"] = "{\"version\":1,\"slot\":6,\"runId\":\"r\",\"tracked\":null}";
+            Check(store.Load(6, "r").Tracked.Count == 0, "tracked 是 null：當成空的");
+
+            // 壞掉的檔：重來，原內容備份成 .bad
+            files["slot_7.json"] = "{ 這不是 JSON";
             var bad = store.Load(7, "r");
-            Check(bad.Tracked.Count == 0 && File.Exists(store.PathOf(7) + ".bad") && warns.Count == 1, "壞檔：重來、備份、警告");
+            Check(bad.Tracked.Count == 0 && files.TryGetValue("slot_7.json.bad", out var b) && b == "{ 這不是 JSON" && warns.Count == 1, "壞檔：重來、備份、警告");
+
+            // 讀檔本身失敗：重來、警告，不丟例外
+            var broken = new SlotStore(_ => throw new InvalidOperationException("讀不到"), (_, _) => { }, warns.Add);
+            Check(broken.Load(1, "r").Tracked.Count == 0 && warns.Count == 2, "讀檔失敗：重來、警告");
         }
     }
 }

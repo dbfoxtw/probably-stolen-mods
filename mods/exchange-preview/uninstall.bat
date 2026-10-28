@@ -1,5 +1,6 @@
 @echo off
-rem Remove the mod dll from the game (its data in UserData\ExchangePreview is kept).
+rem Remove the mod from the game (deletes Mods\dbfoxtw.exchange-preview). Close the game first.
+rem Its settings and data (ModConfigs\dbfoxtw.exchange-preview.json and ModData\dbfoxtw_exchange-preview in the save folder) are kept.
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

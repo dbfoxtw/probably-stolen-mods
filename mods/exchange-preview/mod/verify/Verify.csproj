@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：模擬交換的規則、提示與夜間報告的文字、資料檔（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：模擬交換的規則、提示與夜間報告的文字、資料檔（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -17,6 +17,11 @@
     <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
     <Compile Include="..\src\SlotStore.cs" Link="SlotStore.cs" />
     <Compile Include="..\src\IndicatorLogic.cs" Link="IndicatorLogic.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SlotStore 用的 JSON：mod 在遊戲裡用遊戲自帶的 Newtonsoft.Json（組件版本 13.0.0.0），這裡用同一個大版本的 NuGet 套件 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>

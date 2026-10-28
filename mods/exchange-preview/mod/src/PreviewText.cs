@@ -25,6 +25,8 @@ namespace ProbablyStolenExchangePreview
         public string BannedText;
         /// <summary>今晚有用清潔服務（已解鎖而且有勾）。</summary>
         public bool JanitorialOn;
+        /// <summary>清潔服務還沒開放（ExchangeState.JanitorialLocked）：警告改成「還沒有清潔服務」，玩家才不會去平板找勾選。</summary>
+        public bool JanitorialLocked;
         public SimResult Result;
     }
 
@@ -75,7 +77,7 @@ namespace ProbablyStolenExchangePreview
             }
 
             lines.Add(new Line(s.Header, Tone.Header));
-            if (!p.JanitorialOn) lines.Add(new Line(s.NoJanitorial, Tone.Warn));
+            if (!p.JanitorialOn) lines.Add(new Line(p.JanitorialLocked ? s.NoJanitorialService : s.NoJanitorial, Tone.Warn));
             if (r == null) return lines;
             // 今晚沒用清潔服務：照樣列出預覽，但用灰色（不會發生）
             var good = p.JanitorialOn ? Tone.Good : Tone.Dim;
@@ -88,7 +90,7 @@ namespace ProbablyStolenExchangePreview
                 if (a.NoOutput)
                     lines.Add(new Line(taken + s.Colon + string.Format(s.PurityFail, a.PuritySum, ExchangeSim.DreamDustMinPurity), warn));
                 else
-                    lines.Add(new Line(taken + s.Arrow + a.Barter.Output, good));
+                    lines.Add(new Line(taken + s.Arrow + a.Barter.Output + PurityNote(s, a), good));
             }
             if (r.Accepted.Count == 0) lines.Add(new Line(s.Nothing, p.JanitorialOn ? Tone.Normal : Tone.Dim));
 
@@ -112,6 +114,30 @@ namespace ProbablyStolenExchangePreview
                 lines.Add(new Line(text, Tone.Warn));
             }
             return lines;
+        }
+
+        /// <summary>
+        /// 夢塵會成交時接在產出後面的純度與下一級的門檻，例如「（平均純度 72，80 以上更好）」；
+        /// 已經是最高級寫「最高級」。只寫門檻、不列每一級會給什麼。其他交換、收走卻不給的（純度不夠另有一句）回傳空字串。
+        /// 加強版的平均顯示時捨去小數：門檻都是整數，捨去後一定比下一級的門檻小，不會出現「平均純度 80，80 以上更好」
+        /// （四捨五入的話 79.6 會顯示成 80）；判斷級數用原始的 double。
+        /// </summary>
+        public static string PurityNote(Strings s, SimAccepted a)
+        {
+            if (a == null || a.NoOutput) return "";
+            if (a.Barter.Id == ExchangeSim.DreamDustBarterId)
+                return string.Format(s.Paren, a.PuritySum >= ExchangeSim.DreamDustBetterPurity
+                    ? string.Format(s.PuritySumMax, a.PuritySum)
+                    : string.Format(s.PuritySumNext, a.PuritySum, ExchangeSim.DreamDustBetterPurity));
+            if (a.Barter.Id == ExchangeSim.ImprovedDreamDustBarterId)
+            {
+                int shown = (int)Math.Floor(a.PurityAverage);
+                var next = ExchangeSim.NextImprovedTier(a.PurityAverage);
+                return string.Format(s.Paren, next == null
+                    ? string.Format(s.PurityAvgMax, shown)
+                    : string.Format(s.PurityAvgNext, shown, next.Value));
+            }
+            return "";
         }
 
         /// <summary>

@@ -13,12 +13,19 @@ namespace ProbablyStolenExchangePreview
         /// <summary>標題：交易所開放時「地下交易所・今晚」；被禁用時不加「今晚」。</summary>
         public string Header, HeaderPlain;
         public string NoJanitorial, Nothing;
+        /// <summary>清潔服務還沒開放（正式版 Fence 開局的第 1～9 天）：和「今晚沒用」分開，免得玩家去平板找勾選。</summary>
+        public string NoJanitorialService;
         /// <summary>{0}＝件數。</summary>
         public string OthersCleared, AllCleared;
         /// <summary>接在上面那句後面：{0}＝差一點的那幾筆配到的東西（它們也會被清掉）。</summary>
         public string PartialIncluded;
         /// <summary>夢塵純度不夠：{0}＝純度合計、{1}＝門檻。</summary>
         public string PurityFail;
+        /// <summary>
+        /// 夢塵會成交時接在產出後面的純度（只寫門檻、不列每一級給什麼，和遊戲的交易所清單一樣籠統）。
+        /// 常駐的兩瓶看合計（Sum）、促銷的四瓶看平均（Avg）。Next：{0}＝純度、{1}＝下一級的門檻；Max：{0}＝純度（已經是最高級）。
+        /// </summary>
+        public string PuritySumNext, PuritySumMax, PurityAvgNext, PurityAvgMax;
         /// <summary>差一點：{0}＝還差幾個。</summary>
         public string Missing;
         /// <summary>
@@ -72,16 +79,25 @@ namespace ProbablyStolenExchangePreview
         /// <summary>多放的：{0}＝東西。上面已經有交易所換來的那行時用 Also（「也會」）。</summary>
         public string ReminderSurplus, ReminderSurplusAlso;
 
+        // ── 遊戲的 mod 設定視窗（ModConfig）：每個開關的標籤與說明（滑鼠移到 i 圖示上顯示） ──
+        public string CfgTooltip, CfgTooltipTip, CfgListWarning, CfgListWarningTip, CfgNightReport, CfgNightReportTip,
+            CfgReminder, CfgReminderTip, CfgNote, CfgNoteTip, CfgLed, CfgLedTip;
+
         static readonly Strings En = new Strings
         {
             Header = "Underground Exchange · tonight",
             HeaderPlain = "Underground Exchange",
             NoJanitorial = "Janitorial Service is off tonight: no exchange",
+            NoJanitorialService = "No Janitorial Service yet: no exchange",
             Nothing = "Nothing to exchange",
             OthersCleared = "{0} other item(s) will be cleared",
             AllCleared = "The {0} item(s) in the trash can will be cleared",
             PartialIncluded = ", including {0} from incomplete trades",
             PurityFail = "total purity {0} is below {1}: taken, nothing given",
+            PuritySumNext = "total purity {0}, {1}+ is better",
+            PuritySumMax = "total purity {0}, top tier",
+            PurityAvgNext = "average purity {0}, {1}+ is better",
+            PurityAvgMax = "average purity {0}, top tier",
             Missing = "{0} more",
             BannedShort = "The Underground Exchange won't trade with you",
             RepLine = "Blackmarket Reputation {0} (needs above {1})",
@@ -118,6 +134,18 @@ namespace ProbablyStolenExchangePreview
             Reminder = "Exchange items left in the trash can will be cleared tonight: {0}",
             ReminderSurplus = "Extra {0} will be cleared tonight (one trade per night)",
             ReminderSurplusAlso = "Extra {0} will also be cleared tonight (one trade per night)",
+            CfgTooltip = "Trash can tooltip",
+            CfgTooltipTip = "Hover over the trash can to see what the Underground Exchange will take and leave tonight",
+            CfgListWarning = "Exchange list warning",
+            CfgListWarningTip = "Red text on the Exchange Directive when you are banned for low Blackmarket Reputation",
+            CfgNightReport = "Night report",
+            CfgNightReportTip = "Add a line to the night report saying what the Exchange left in the trash can (never written into your save)",
+            CfgReminder = "End of day reminder",
+            CfgReminderTip = "On the End of Day screen, warn when the Janitorial Service will clear items from the Exchange still in the trash can, or extra items beyond one trade per night",
+            CfgNote = "Trash can note",
+            CfgNoteTip = "A sticky note on the trash can in the store showing the exchange status; can be on together with the lid light",
+            CfgLed = "Trash can light",
+            CfgLedTip = "The light on the trash can lid shows the exchange status by color and blinks when items from the Exchange are waiting to be picked up; can be on together with the note",
         };
 
         static readonly Strings ZhHans = new Strings
@@ -125,11 +153,16 @@ namespace ProbablyStolenExchangePreview
             Header = "地下交易所・今晚",
             HeaderPlain = "地下交易所",
             NoJanitorial = "今晚没有使用清洁服务，不会交换",
+            NoJanitorialService = "还没有清洁服务，不会交换",
             Nothing = "没有可换的",
             OthersCleared = "其余 {0} 件会被清掉",
             AllCleared = "垃圾桶里的 {0} 件会被清掉",
             PartialIncluded = "（含差一点的{0}）",
             PurityFail = "纯度合计 {0}，不到 {1}，会被收走但换不到东西",
+            PuritySumNext = "纯度合计 {0}，{1} 以上更好",
+            PuritySumMax = "纯度合计 {0}，最高级",
+            PurityAvgNext = "平均纯度 {0}，{1} 以上更好",
+            PurityAvgMax = "平均纯度 {0}，最高级",
             Missing = "还差 {0} 个",
             BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市声望 {0}（需要高于 {1}）",
@@ -165,6 +198,18 @@ namespace ProbablyStolenExchangePreview
             Reminder = "交易所换来的{0}还在垃圾桶里，今晚会被清掉",
             ReminderSurplus = "多放的{0}今晚会被清掉（每晚只换一次）",
             ReminderSurplusAlso = "多放的{0}今晚也会被清掉（每晚只换一次）",
+            CfgTooltip = "垃圾桶提示",
+            CfgTooltipTip = "鼠标移到垃圾桶时，显示今晚地下交易所会收走什么、换成什么",
+            CfgListWarning = "清单红字",
+            CfgListWarningTip = "黑市声望太低被禁止使用时，在地下交易所清单右下角用红字显示",
+            CfgNightReport = "夜间报告",
+            CfgNightReportTip = "夜间报告加一行，写出交易所在垃圾桶里留下了什么（不会写进存档）",
+            CfgReminder = "结束一天的提醒",
+            CfgReminderTip = "结束一天的画面，清洁服务会清掉还在垃圾桶里的交易所换来的东西、或多放的东西（每晚只换一次）时提醒",
+            CfgNote = "垃圾桶纸条",
+            CfgNoteTip = "在店里的垃圾桶上贴纸条，显示交易状态；可以和盖子上的灯同时开",
+            CfgLed = "垃圾桶的灯",
+            CfgLedTip = "垃圾桶盖子上的灯按交易状态变色，交易所换来的东西待收货时会闪；可以和纸条同时开",
         };
 
         static readonly Strings ZhHant = new Strings
@@ -172,11 +217,16 @@ namespace ProbablyStolenExchangePreview
             Header = "地下交易所・今晚",
             HeaderPlain = "地下交易所",
             NoJanitorial = "今晚沒有使用清潔服務，不會交換",
+            NoJanitorialService = "還沒有清潔服務，不會交換",
             Nothing = "沒有可換的",
             OthersCleared = "其餘 {0} 件會被清掉",
             AllCleared = "垃圾桶裡的 {0} 件會被清掉",
             PartialIncluded = "（含差一點的{0}）",
             PurityFail = "純度合計 {0}，不到 {1}，會被收走但換不到東西",
+            PuritySumNext = "純度合計 {0}，{1} 以上更好",
+            PuritySumMax = "純度合計 {0}，最高級",
+            PurityAvgNext = "平均純度 {0}，{1} 以上更好",
+            PurityAvgMax = "平均純度 {0}，最高級",
             Missing = "還差 {0} 個",
             BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市聲望 {0}（需要高於 {1}）",
@@ -212,6 +262,18 @@ namespace ProbablyStolenExchangePreview
             Reminder = "交易所換來的{0}還在垃圾桶裡，今晚會被清掉",
             ReminderSurplus = "多放的{0}今晚會被清掉（每晚只換一次）",
             ReminderSurplusAlso = "多放的{0}今晚也會被清掉（每晚只換一次）",
+            CfgTooltip = "垃圾桶提示",
+            CfgTooltipTip = "滑鼠移到垃圾桶時，顯示今晚地下交易所會收走什麼、換成什麼",
+            CfgListWarning = "清單紅字",
+            CfgListWarningTip = "黑市聲望太低被禁止使用時，在地下交易所清單右下角用紅字顯示",
+            CfgNightReport = "夜間報告",
+            CfgNightReportTip = "夜間報告加一行，寫出交易所在垃圾桶裡留下了什麼（不會寫進存檔）",
+            CfgReminder = "結束一天的提醒",
+            CfgReminderTip = "結束一天的畫面，清潔服務會清掉還在垃圾桶裡的交易所換來的東西、或多放的東西（每晚只換一次）時提醒",
+            CfgNote = "垃圾桶紙條",
+            CfgNoteTip = "在店裡的垃圾桶上貼紙條，顯示交易狀態；可以和蓋子上的燈同時開",
+            CfgLed = "垃圾桶的燈",
+            CfgLedTip = "垃圾桶蓋子上的燈依交易狀態變色，交易所換來的東西待收貨時會閃；可以和紙條同時開",
         };
 
         internal static Strings For(Lang lang) => lang switch

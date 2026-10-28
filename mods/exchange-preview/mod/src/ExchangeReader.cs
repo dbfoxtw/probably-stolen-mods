@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
-using Il2Cpp;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace ProbablyStolenExchangePreview
 {
     /// <summary>交易所與清潔服務今晚的狀態（只讀遊戲記憶體）。</summary>
     sealed class ExchangeState
     {
-        /// <summary>遊戲還沒載入店鋪（PlayerStore 或 ExchangeManager 不在）。</summary>
+        /// <summary>遊戲已經載入店鋪（PlayerStore 與 ExchangeManager 都在）。</summary>
         public bool Ready;
         public bool Unlocked, Distrusted, JanitorialOn;
+        /// <summary>
+        /// 清潔服務還沒開放（第 10 天清道夫來介紹，或新遊戲勾「跳過開場」才開放）。正式版的 Fence 開局一開始就解鎖交易所，
+        /// 第 1～9 天交易所「開放」卻不會交換（HandleJanitorial 整段跳過）；Demo 沒有這種組合（交易所第 25 天才開）。
+        /// </summary>
+        public bool JanitorialLocked;
         public int Rep, Threshold;
     }
 
@@ -29,7 +32,7 @@ namespace ProbablyStolenExchangePreview
         internal static ExchangeState ReadState()
         {
             var st = new ExchangeState();
-            var em = PlayerStore.instance?.exchangeManager;
+            var em = Exchange();
             if (em == null) return st;
             st.Ready = true;
             st.Unlocked = em.isExchangeUnlocked;
@@ -40,8 +43,12 @@ namespace ProbablyStolenExchangePreview
             // PlayerStore.HandleJanitorial：沒解鎖整段跳過；有解鎖但沒勾只累積垃圾。兩者都不交換、不清垃圾桶
             var jan = StoreService.GetJanitorialService();
             st.JanitorialOn = jan != null && jan.unlocked && jan.isUsing;
+            st.JanitorialLocked = jan == null || !jan.unlocked;
             return st;
         }
+
+        /// <summary>遊戲的交易所；還沒有 PlayerStore（主選單）時回傳 null，不讓 PlayerStore.Instance 順手建一個新的。</summary>
+        static ExchangeManager Exchange() => PlayerStore.HasInstance ? PlayerStore.Instance.exchangeManager : null;
 
         /// <summary>
         /// 垃圾桶裡的東西：GraphUtils.FindAllChildrenType&lt;GameItem&gt;(垃圾桶)，和 ExchangeBarter.GetRequiredItems、
@@ -49,9 +56,11 @@ namespace ProbablyStolenExchangePreview
         /// </summary>
         internal static List<GameItem> TrashItems()
         {
-            var can = EmporiumEntry.Instance?.trashcan;
+            var entry = EmporiumEntry.Instance; // MonoBehaviour：用 == null（含已銷毀），不用 ?.
+            if (entry == null) return null;
+            var can = entry.trashcan;
             if (can == null) return null;
-            var list = GraphUtils.FindAllChildrenType<GameItem>(can.Cast<GraphNodeStorage>(), null, null);
+            var list = GraphUtils.FindAllChildrenType<GameItem>(can, null, null);
             var result = new List<GameItem>();
             if (list == null) return result;
             for (int i = 0; i < list.Count; i++)
@@ -78,7 +87,7 @@ namespace ProbablyStolenExchangePreview
             Id = item.identifier ?? "",
             Name = name ? Name(item) : "",
             Hazardous = GeneralHelper.IsHazardousWaste(item),
-            // 純度只有夢塵交換會看（兩瓶合計不到 60 什麼都不給）
+            // 純度只有夢塵的兩筆交換會看（常駐的兩瓶看合計、促銷的四瓶看平均）
             Purity = item.identifier == DreamDustId ? ChemicalProductHelper.GetPurity(item) : 0,
             Handle = item,
         };
@@ -91,7 +100,7 @@ namespace ProbablyStolenExchangePreview
         internal static List<SimBarter> Barters(Strings s, bool text = true)
         {
             var result = new List<SimBarter>();
-            var em = PlayerStore.instance?.exchangeManager;
+            var em = Exchange();
             if (em == null) return result;
             var active = em.activeBarter;
             if (active != null)
@@ -151,6 +160,7 @@ namespace ProbablyStolenExchangePreview
             "filter_barter" => string.Format(s.Adjective, UI("ui_exchange_new", "New"), Item("water_filter")),
             "module_barter" => s.RandomModule,
             "dream_dust_barter" => UI("ui_exchange_random_legal_goods", "Random Legal Goods"),
+            // 產出照四瓶的平均純度分級，提示另外在後面寫平均純度與下一級的門檻（PreviewText.PurityNote）
             "improved_dream_dust_barter" => s.RandomMedical,
             // 給 2 張（遊戲的交易所清單寫「隨機 ×2」）
             "commandKeycardBarter" => s.RandomKeycard + string.Format(s.Times, 2),
@@ -171,14 +181,14 @@ namespace ProbablyStolenExchangePreview
         internal static string Item(string id)
         {
             var key = $"item_{id}_name";
-            return Loc(key, () => LocHelper.GetLocalizedItem(key, (Il2CppReferenceArray<Il2CppSystem.Object>)null), id);
+            return Loc(key, () => LocHelper.GetLocalizedItem(key), id);
         }
 
-        internal static string UI(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedUI(key, (Il2CppReferenceArray<Il2CppSystem.Object>)null), fallback);
+        internal static string UI(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedUI(key), fallback);
 
-        internal static string Mechanic(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedMechanic(key, (Il2CppReferenceArray<Il2CppSystem.Object>)null), fallback);
+        internal static string Mechanic(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedMechanic(key), fallback);
 
-        internal static string RepPerk(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedRepPerkTable(key, (Il2CppReferenceArray<Il2CppSystem.Object>)null), fallback);
+        internal static string RepPerk(string key, string fallback) => Loc(key, () => LocHelper.GetLocalizedRepPerkTable(key), fallback);
 
         static string Loc(string key, Func<string> get, string fallback)
         {

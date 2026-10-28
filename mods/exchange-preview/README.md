@@ -1,14 +1,14 @@
 # Probably Stolen 交易所預覽 mod（Exchange Preview）
 
-*Probably Stolen*（Demo）的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。使用 MelonLoader，非官方製作。
+*Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：DEMO Version 050REV5-L
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
 
-下載：[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
+下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* (Demo), built on MelonLoader: hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear. See [English](#english) below.
+> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear. See [English](#english) below.
 
 ## 功能
 
@@ -16,6 +16,7 @@
 
 - **垃圾桶提示**：滑鼠移到垃圾桶上，原本的提示後面多一段「地下交易所・今晚」：
   - 會成交的：收走什麼 → 換到什麼（隨機的產出寫類別，例如「隨機食物」）。
+  - 夢塵的純度：夢塵的交換會成交時，產出後面寫出純度和下一級的門檻，例如「（純度合計 85，120 以上更好）」；促銷交易的四瓶夢塵看平均純度，例如「（平均純度 72，80 以上更好）」。只寫門檻，不列每一級會給什麼。
   - 差一點的：例如「濾水器 1/3（還差 2 個 → 全新濾水器）」。
   - 多放的：每種交換每晚只換一次，多放的會被清掉。
   - 其餘會被清掉的件數；夢塵純度不夠（收走了卻換不到東西）的警告；今晚沒有勾清潔服務時的提醒。
@@ -27,16 +28,18 @@
 
 ## 設定
 
-設定在遊戲資料夾的 `UserData\MelonPreferences.cfg` 的 `[ExchangePreview]` 段落（裝好後第一次開遊戲才會出現），每個開關上面有中英文說明。改完回主選單再讀檔就生效。
+在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，每個開關旁邊的 i 有說明。按套用就生效，不用重開遊戲。設定存在存檔資料夾的 `ModConfigs\dbfoxtw.exchange-preview.json`。
 
 | 設定 | 預設 | 內容 |
 |---|---|---|
-| `TrashTooltip` | true | 垃圾桶提示 |
-| `ExchangeListWarning` | true | 被禁止使用時，交易所清單的紅字 |
-| `NightReport` | true | 夜間報告那一行 |
-| `EndOfDayReminder` | true | 結束一天的提醒 |
-| `TrashNote` | true | 垃圾桶上的紙條 |
-| `TrashLed` | false | 垃圾桶蓋子上的燈（待收貨時會閃；可以和紙條同時開） |
+| 垃圾桶提示（`TrashTooltip`） | 開 | 垃圾桶提示 |
+| 清單紅字（`ExchangeListWarning`） | 開 | 被禁止使用時，交易所清單的紅字 |
+| 夜間報告（`NightReport`） | 開 | 夜間報告那一行 |
+| 結束一天的提醒（`EndOfDayReminder`） | 開 | 結束一天的提醒 |
+| 垃圾桶紙條（`TrashNote`） | 開 | 垃圾桶上的紙條 |
+| 垃圾桶的燈（`TrashLed`） | 關 | 垃圾桶蓋子上的燈（待收貨時會閃；可以和紙條同時開） |
+
+Demo 版在 `MelonPreferences.cfg` 的設定不會搬過來，正式版第一次用時是預設值。
 
 ## 語言
 
@@ -45,74 +48,69 @@
 
 ## 安裝
 
-要先裝 MelonLoader（讓遊戲能載入 mod 的工具），再裝這個 mod。MelonLoader 只要裝一次，已經為其他 mod 裝過就跳過第一步。
+這是遊戲官方格式的 mod，不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+
+**從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Exchange Preview」、照提示重開遊戲。更新由 Steam 自動處理。
+
+**手動安裝（Nexus 或 GitHub 的壓縮檔）**：
 
 **找到遊戲資料夾**：Steam 遊戲庫 → 在 Probably Stolen 上按右鍵 → 管理 → 瀏覽本機檔案。開啟的資料夾裡有 `Probably Stolen.exe`，以下說的「遊戲資料夾」都是這裡。
 
-**第一步：安裝 MelonLoader 0.7.3**
+1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 找標題是 Exchange Preview 的最新版（標記 `exchange-preview-v…`），下載 Assets 底下的 `ProbablyStolen-ExchangePreview-<版本>.zip`，或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) 下載。
+2. 關閉遊戲，把壓縮檔裡的 `dbfoxtw.exchange-preview` 資料夾**解壓縮到遊戲資料夾的 `Mods` 資料夾裡**（解壓後是 `Mods\dbfoxtw.exchange-preview\manifest.xml`）。
+3. 開遊戲，在主選單的「Mods」（模組）畫面啟用「Exchange Preview」，再重開遊戲。
+4. 讀檔進到店鋪畫面。交易所解鎖後，垃圾桶上會出現紙條，滑鼠移上去就看得到預覽。
 
-1. 到 [MelonLoader v0.7.3 的下載頁](https://github.com/LavaGang/MelonLoader/releases/tag/v0.7.3)，在 Assets 底下下載 **`MelonLoader.x64.zip`**（不是 x86，也不是 Installer）。
-2. 把 `MelonLoader.x64.zip` 的內容**解壓縮到遊戲資料夾**（和 `Probably Stolen.exe` 同一層）。解壓後，遊戲資料夾裡會多出 `version.dll` 與 `MelonLoader` 資料夾。
-3. 啟動一次遊戲。第一次會先出現 MelonLoader 的黑色視窗，花幾分鐘到十分鐘產生必要的檔案（需要連網）。等主選單出現後，關閉遊戲。
+更新 mod 時：關閉遊戲，刪掉舊的 `Mods\dbfoxtw.exchange-preview` 資料夾，再重做第 2 步（舊版留下的檔可能讓遊戲不能啟用 mod）。設定和資料都會保留。
 
-**第二步：安裝這個 mod**
-
-1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 找標題是 Exchange Preview 的最新版（標記 `exchange-preview-v…`），下載 Assets 底下的 `ProbablyStolen-ExchangePreview-Demo-<版本>.zip`，或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) 下載。
-2. 關閉遊戲，把壓縮檔裡的 `Mods` 與 `UserData` 資料夾**解壓縮到遊戲資料夾**，資料夾合併即可。
-3. 開遊戲、讀檔進到店鋪畫面。交易所解鎖後，垃圾桶上會出現紙條，滑鼠移上去就看得到預覽。
-
-更新 mod 時，只要重做第二步（解壓覆蓋），設定和資料都會保留。
+Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 ## 移除
 
-- **只移除 mod**：刪除遊戲資料夾裡的 `Mods\ProbablyStolenExchangePreview.dll`。
-- **清乾淨**：再刪除 `UserData\ExchangePreview` 資料夾，以及 `UserData\MelonPreferences.cfg` 裡的 `[ExchangePreview]` 段落。
-
-MelonLoader 本身要另外移除：刪除 `version.dll`、`MelonLoader`、`Mods`、`Plugins`、`UserData`、`UserLibs`。
+關閉遊戲，刪除遊戲資料夾裡的 `Mods\dbfoxtw.exchange-preview` 資料夾（或在 Mods 畫面停用；從工作坊訂閱的就取消訂閱）。要清乾淨的話，再刪掉存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）裡的 `ModConfigs\dbfoxtw.exchange-preview.json` 與 `ModData\dbfoxtw_exchange-preview` 資料夾（如果有）。
 
 ## 存檔
 
-**不讀寫遊戲的存檔檔案**。夜間報告那一行是在遊戲存檔之後、報告顯示前一刻才加上去的，不會寫進存檔。mod 自己的小紀錄存在遊戲資料夾的 `UserData\ExchangePreview\`：
+**不讀寫遊戲的存檔檔案**。夜間報告那一行是在遊戲存檔之後、報告顯示前一刻才加上去的，不會寫進存檔。mod 自己的小紀錄存在存檔資料夾的 `ModData\dbfoxtw_exchange-preview\`：
 
 | 檔案 | 內容 |
 |---|---|
 | `slot_<N>.json` | 第 N 個存檔槽：讀檔重看早上的報告時補回那一行；記下交易所換來的東西，結束一天時才知道要提醒哪些 |
 
-這份紀錄不會跟著 Steam 雲端同步。換了電腦沒有這份紀錄，只是讀檔重看的報告少那一行、之前換來的東西不再提醒，不影響遊戲。
+這份紀錄不會跟著 Steam 雲端同步。換了電腦沒有這份紀錄，只是讀檔重看的報告少那一行、之前換來的東西不再提醒，不影響遊戲。Demo 版在 `UserData\ExchangePreview\` 的紀錄不會搬過來。
 
 ## 已知限制
 
-- 對應 Demo 版。正式版如果改了交換清單，新的交換會顯示「？」，要等 mod 更新。
+- 遊戲之後如果改了交換清單，新的交換會顯示「？」，要等 mod 更新。
 - 隨機的產出只寫類別（隨機食物、隨機模組…），實際拿到哪一件由遊戲當晚決定。
 
 ## 相容性
 
-- 和 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)、[待辦清單 mod（To-Do List）](https://www.nexusmods.com/probablystolen/mods/488)一起測過。
+- 繁體中文介面要靠 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)（見上面「語言」）。
 
 ## 從原始碼建置（開發者）
 
 一般玩家請看上面的「安裝」，不需要建置。
 
-需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上。
+需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。
 
 原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/exchange-preview` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\exchange-preview` 資料夾裡執行。
 
-1. 安裝 [MelonLoader](https://github.com/LavaGang/MelonLoader) 0.7.3，並啟動一次遊戲，讓它產生 `MelonLoader\Il2CppAssemblies`（編譯時要參考）。
-2. 關閉遊戲，在 `mods\exchange-preview` 裡執行 `install.bat`：建置後安裝到遊戲的 `Mods\`。移除用 `uninstall.bat`（資料保留）。
+1. 關閉遊戲，執行 `install.bat`：建置後安裝到遊戲的 `Mods\dbfoxtw.exchange-preview\`（第一次要在 Mods 畫面啟用、重開遊戲）。移除用 `uninstall.bat`（設定與資料保留）。
    - 遊戲不在 Steam 預設位置時，加上 `--game "遊戲資料夾"`。
-   - 除錯模式：加上 `--debug`，log 會記每晚交換的預測與實際結果。
-3. 只建置、不安裝：`python tools/install.py build`；打包玩家用的壓縮檔：`python tools/install.py package`。
-4. 離線測試（交換規則的模擬、文字、資料檔，不需要遊戲）：`dotnet run --project mod\verify`。
+   - 除錯模式：加上 `--debug`，存檔資料夾的 `Player.log` 會記每晚交換的預測與實際結果。
+2. 只建置、不安裝：`python tools/install.py build`；打包玩家用的壓縮檔：`python tools/install.py package`（壓縮檔最上層是 `dbfoxtw.exchange-preview` 資料夾，Nexus 與 Steam 工作坊用同一包）。
+3. 離線測試（交換規則的模擬、文字、資料檔，不需要遊戲）：`dotnet run --project mod\verify`。
 
 ## 授權
 
 這個 mod（`mods/exchange-preview` 資料夾）的程式碼以 [MIT 授權](LICENSE)釋出。
 
-遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio，不在授權範圍內。MelonLoader：Apache License 2.0；Harmony：MIT（執行時由 MelonLoader 提供，不隨本 mod 散布）。
+遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio，不在授權範圍內。Harmony（MIT）由遊戲提供，不隨本 mod 散布。
 
 ## English
 
-A mod for *Probably Stolen* (Demo) that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial, built on MelonLoader. Supported game version: DEMO Version 050REV5-L. Download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
+A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
 
@@ -122,6 +120,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 
 - **Trash can tooltip**: hover over the trash can and an "Underground Exchange · tonight" section is added to its tooltip:
   - Trades that will go through: what is taken → what you get (random rewards are named by category, e.g. "random food").
+  - Dream Dust purity: when a Dream Dust trade will go through, the purity and the next threshold follow the reward, e.g. "(total purity 85, 120+ is better)"; the four-vial promotional exchange uses the average purity, e.g. "(average purity 72, 80+ is better)". Only the thresholds are shown, not what each tier gives.
   - Almost there: e.g. "Water Filter 1/3 (2 more → New Water Filter)".
   - Extras: each trade happens only once per night, so extra items get cleared.
   - How many other items will be cleared; a warning when Dream Dust purity is too low (taken, nothing given); a reminder when the Janitorial Service is off tonight.
@@ -131,41 +130,45 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 - **When you're banned**: if your Blackmarket Reputation is too low to use the Exchange, the tooltip and the bottom-right of the Exchange Directive show your reputation and the threshold in red.
 - Nothing is shown until the Exchange is unlocked (introduced by the janitor), so there are no spoilers.
 
-**Settings** are in the `[ExchangePreview]` section of `UserData\MelonPreferences.cfg` in the game folder (it appears after the first launch with the mod), each with a description. Return to the main menu and load your save to apply changes.
+**Settings** are in this mod's settings window on the Mods screen of the main menu (the i next to each option explains it). Changes apply as soon as you press Apply; no restart needed. They are saved in `ModConfigs\dbfoxtw.exchange-preview.json` in the save folder. Settings from the Demo's `MelonPreferences.cfg` are not carried over.
 
 | Setting | Default | What it does |
 |---|---|---|
-| `TrashTooltip` | true | Trash can tooltip |
-| `ExchangeListWarning` | true | Red text on the Exchange Directive when you're banned |
-| `NightReport` | true | The line in the night report |
-| `EndOfDayReminder` | true | End of day reminder |
-| `TrashNote` | true | Sticky note on the trash can |
-| `TrashLed` | false | The light on the trash can lid (blinks for Pick up; can be on together with the note) |
+| Trash can tooltip (`TrashTooltip`) | on | Trash can tooltip |
+| Exchange list warning (`ExchangeListWarning`) | on | Red text on the Exchange Directive when you're banned |
+| Night report (`NightReport`) | on | The line in the night report |
+| End of day reminder (`EndOfDayReminder`) | on | End of day reminder |
+| Trash can note (`TrashNote`) | on | Sticky note on the trash can |
+| Trash can light (`TrashLed`) | off | The light on the trash can lid (blinks for Pick up; can be on together with the note) |
 
 **Languages:** the UI follows the game's language: English or Simplified Chinese; the game's other languages get the English UI. For a Traditional Chinese UI, install the unofficial [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
 
 **Install**
 
-Find the game folder: in your Steam library, right-click Probably Stolen → Manage → Browse local files. It contains `Probably Stolen.exe`.
+This mod uses the game's official mod format; MelonLoader is not needed. No permissions are needed, so there is no permission prompt when you enable it.
 
-1. Install MelonLoader 0.7.3 (once; skip this if you already have it for another mod): from the [v0.7.3 release page](https://github.com/LavaGang/MelonLoader/releases/tag/v0.7.3), download **`MelonLoader.x64.zip`** (not x86, not the Installer) and **extract it into the game folder**, next to `Probably Stolen.exe`. You should now see `version.dll` and a `MelonLoader` folder there.
-2. Start the game once. MelonLoader opens a console window and spends a few minutes (up to ten) generating files; it needs an internet connection. Close the game after the main menu appears.
-3. Download `ProbablyStolen-ExchangePreview-Demo-<version>.zip` from the latest release titled Exchange Preview (tagged `exchange-preview-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509), and extract its `Mods` and `UserData` folders into the game folder, merging with the existing folders.
-4. Start the game and load your save. Once the Exchange is unlocked, a note appears on the trash can; hover over it for the preview.
+From the Steam Workshop: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), start the game, enable "Exchange Preview" on the Mods screen of the main menu, and restart as prompted. Steam keeps it updated.
 
-To update, just repeat step 3. Your settings and data are kept.
+Manual install (zip from Nexus or GitHub): find the game folder (in your Steam library, right-click Probably Stolen → Manage → Browse local files; it contains `Probably Stolen.exe`).
 
-**Uninstall:** delete `Mods\ProbablyStolenExchangePreview.dll`. To remove everything, also delete the `UserData\ExchangePreview` folder and the `[ExchangePreview]` section in `UserData\MelonPreferences.cfg`.
+1. Download `ProbablyStolen-ExchangePreview-<version>.zip` from the latest release titled Exchange Preview (tagged `exchange-preview-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509).
+2. Close the game and extract the `dbfoxtw.exchange-preview` folder **into the `Mods` folder in the game folder** (you should get `Mods\dbfoxtw.exchange-preview\manifest.xml`).
+3. Start the game, enable "Exchange Preview" on the Mods screen of the main menu, and restart the game.
+4. Load your save. Once the Exchange is unlocked, a note appears on the trash can; hover over it for the preview.
 
-**Your save files are never read or written.** The night report line is added after the game has saved, right before the report is shown, so it never goes into your save. The mod keeps a small record per save slot in `UserData\ExchangePreview\slot_<N>.json` in the game folder, to show that line again when you reload and to know which items came from the Exchange. It is not synced by Steam Cloud; without it (e.g. on another PC) a reloaded report just lacks that line and earlier Exchange items are no longer reminded about. Nothing in the game is affected.
+To update: close the game, delete the old `Mods\dbfoxtw.exchange-preview` folder, and repeat step 2 (files left over from an old version can stop the game from enabling the mod). Your settings and data are kept. The Demo version (v1.0.2 and earlier, MelonLoader) does not work on the full release.
+
+**Uninstall:** close the game and delete the `Mods\dbfoxtw.exchange-preview` folder (or disable it on the Mods screen; unsubscribe if you got it from the Workshop). To remove everything, also delete `ModConfigs\dbfoxtw.exchange-preview.json` and the `ModData\dbfoxtw_exchange-preview` folder in `%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`.
+
+**Your save files are never read or written.** The night report line is added after the game has saved, right before the report is shown, so it never goes into your save. The mod keeps a small record per save slot in `ModData\dbfoxtw_exchange-preview\slot_<N>.json` in the save folder, to show that line again when you reload and to know which items came from the Exchange. It is not synced by Steam Cloud; without it (e.g. on another PC) a reloaded report just lacks that line and earlier Exchange items are no longer reminded about. Nothing in the game is affected. Records from the Demo (`UserData\ExchangePreview\`) are not carried over.
 
 **Known limitations**
 
-- Made for the Demo. If the full game changes the exchange list, new trades show "?" until the mod is updated.
+- If a later game update changes the exchange list, new trades show "?" until the mod is updated.
 - Random rewards are named by category only (random food, random module…); the actual item is decided by the game that night.
 
-**Compatibility:** tested together with the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) and [To-Do List](https://www.nexusmods.com/probablystolen/mods/488) mods.
+**Compatibility:** a Traditional Chinese UI needs the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod (see Languages).
 
-**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods, install MelonLoader 0.7.3 and start the game once, then run `install.bat` in `mods\exchange-preview` (requires Python 3.10+ and the .NET SDK 8+; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log each night's predicted and actual exchanges). `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\exchange-preview` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the full release of the game, whose `Probably Stolen_Data\Managed` is referenced read-only; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log each night's predicted and actual exchanges to `Player.log` in the save folder). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.exchange-preview` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this folder (`mods/exchange-preview`). The game's text, names, and assets belong to Questing Goose Studio.

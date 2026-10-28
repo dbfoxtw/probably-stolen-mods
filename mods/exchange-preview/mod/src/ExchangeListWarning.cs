@@ -1,8 +1,5 @@
 using System;
-using HarmonyLib;
-using Il2Cpp;
-using Il2CppTMPro;
-using MelonLoader;
+using TMPro;
 using UnityEngine;
 
 namespace ProbablyStolenExchangePreview
@@ -13,6 +10,7 @@ namespace ProbablyStolenExchangePreview
     /// 清單面板（_ExchangePanel，666×930）的配置是 2026-10-09 讀場景查的：清單內容寬 500 置中，
     /// 簽名「S主席」在 (-25,-376) 字級 16、「地下交易所管理局」在 (62,-395) 字級 12。
     /// 第一行用 mod 的短句（遊戲的說明有三句，整句會凸出紙外；2026-10-09 實機），太長時在簽名右邊的空間裡換行。
+    /// 掛在 ExchangeUIManager.OpenPanel 之後（攔截在 Patches.cs）。位置照 Demo 時量的數字，正式版的清單面板要實機再看。
     /// </summary>
     static class ExchangeListWarning
     {
@@ -34,21 +32,17 @@ namespace ProbablyStolenExchangePreview
         const float SameRowSlack = 10f;
         static readonly Color Red = new Color(0x9C / 255f, 0x37 / 255f, 0x38 / 255f); // 遊戲夜間報告的暗紅 9c3738
 
-        internal static void Install(HarmonyLib.Harmony h, MelonLogger.Instance log)
+        // 由遊戲那邊呼叫（攔截），例外不能丟回去
+        internal static void OnOpenPanel(ExchangeUIManager ui)
         {
-            bool ok = Patcher.Patch(h, log, AccessTools.Method(typeof(ExchangeUIManager), nameof(ExchangeUIManager.OpenPanel)), typeof(ExchangeListWarning), null, nameof(OpenPanelPostfix));
-            log.Msg($"清單紅字：攔截 ExchangeUIManager.OpenPanel {(ok ? "成功" : "失敗")}");
-        }
-
-        static void OpenPanelPostfix(ExchangeUIManager __instance)
-        {
-            try { Refresh(__instance); }
+            try { Refresh(ui); }
             catch (Exception e) { ExchangePreviewMod.Log.Error($"清單紅字出錯：{e}"); }
         }
 
         static void Refresh(ExchangeUIManager ui)
         {
-            var panel = ui?.panel;
+            if (ui == null) return; // MonoBehaviour：用 == null（含已銷毀），不用 ?.
+            var panel = ui.panel;
             if (panel == null) return;
             var existing = panel.transform.Find(ObjectName);
             var st = ExchangeReader.ReadState();
