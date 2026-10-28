@@ -1,0 +1,4 @@
+# Button text and the labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value ({0} = water name, {1} = ml)
+button,Collect {0} ({1}ml)
+cfg_collect,Collect {0}
+cfg_collect_tip,"Show ""Collect {0}"" in the right-click menu of water containers. It pours the water from every Moisture Farm in your shop that makes {0} (as shown in its tooltip) into the container, fullest first, until the container is full. Moisture Farms placed in the Vending Fountain are left alone."

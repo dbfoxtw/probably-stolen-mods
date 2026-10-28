@@ -1,23 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Il2Cpp;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using UnityEngine.Localization.Settings;
 
 namespace ProbablyStolenCollectAllWater
 {
     /// <summary>
     /// 找集水器、算水量、收水。只讀遊戲記憶體裡的物品、呼叫遊戲自己手動倒水用的方法，不碰存檔檔案
     /// （水量本來就記在物品上，結果和玩家自己一台一台倒一樣）。
+    /// GameItem、GameSlotInventory 不是 Unity 物件（一般的 C# 類別），可以用 ?.；EmporiumEntry 是 MonoBehaviour，用 == null 判斷。
     /// </summary>
     static class WaterSources
     {
         /// <summary>水分收集器（集水器）的物品識別值。損壞的另有識別值，不算。</summary>
         const string FarmId = "moisture_farm";
         const string LiquidTag = "LIQUID_CONTAINER_TAG";
-
         const string CapacityTag = "LIQUID_CONTAINER_CAPACITY";
+        /// <summary>集水器的容器格（遊戲的 CanRunTonight、販賣噴泉的 GetWaterSource 都用 MachineHelper.GetSlot(集水器, 2)）。</summary>
+        const int FarmContainerSlot = 2;
 
         /// <summary>一台集水器裡放的容器與它現在的水量（份數，見 Rules.PartsPerMl）。</summary>
         internal sealed class Farm
@@ -38,7 +37,7 @@ namespace ProbablyStolenCollectAllWater
 
         /// <summary>
         /// 右鍵的物品能不能當收水的容器：自己的水容器，不是排水口、水龍頭（它們也掛著液體容器的標記，
-        /// 拖水桶上去是倒掉／裝自來水）。
+        /// 拖水桶上去是倒掉／裝自來水）。正式版新的水槽、RAS 水槽照這個規則自然也算。放在販賣噴泉裡的水容器也算（可以補貨）。
         /// </summary>
         internal static bool IsTarget(GameItem item) =>
             item != null && GeneralHelper.IsItemOwned(item) && IsWaterContainer(item)
@@ -58,14 +57,15 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 店裡所有自己的集水器，照滑鼠提示顯示的產水品質分組。target 放在某台集水器裡時，那台不算水源。
+        /// 店裡所有自己的集水器，照滑鼠提示顯示的產水品質分組。target 放在某台集水器裡時，那台不算水源；
+        /// 放在販賣噴泉裡的集水器也不算（玩家放進去賣的水不倒走，括號的水量也不算它們）。
         /// 損壞的集水器滑鼠提示不顯示水質，不算。除錯模式把每一步記進 log（0.1.0 前兩次實機測試都一台也沒找到，要看卡在哪）。
         /// </summary>
         internal static Dictionary<string, List<Farm>> Scan(GameItem target)
         {
             var result = new Dictionary<string, List<Farm>>(StringComparer.Ordinal);
             var debug = CollectAllWaterMod.Debug ? new List<string>() : null;
-            var all = AllItems(debug);
+            var all = AllItems(debug, out var inFountain);
             int farms = 0;
             foreach (var item in all)
             {
@@ -74,10 +74,11 @@ namespace ProbablyStolenCollectAllWater
                 void Skip(string why) => debug?.Add($"#{farms} {why}");
                 if (!GeneralHelper.IsItemOwned(item)) { Skip("不是自己的"); continue; }
                 if (item.IsTag("BROKEN_MACHINE_TAG")) { Skip("損壞"); continue; }
+                if (inFountain.Contains(item)) { Skip("在販賣噴泉裡"); continue; }
                 var container = ContainerOf(item, debug);
                 if (container == null) { Skip("沒有水容器"); continue; }
                 if (!GeneralHelper.IsItemOwned(container)) { Skip($"容器 {container.identifier} 不是自己的"); continue; }
-                if (target != null && container.Pointer == target.Pointer) { Skip("容器就是右鍵的那個"); continue; }
+                if (ReferenceEquals(container, target)) { Skip("容器就是右鍵的那個"); continue; }
                 var grade = MachineMoistureFarm.GetOutputQuality(item);
                 if (string.IsNullOrEmpty(grade)) { Skip("讀不到水質"); continue; }
                 long parts = PartsOf(container);
@@ -95,45 +96,48 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 店裡自己的全部物品：PlayerStore.FindAllItem(isOwn: true)，店鋪過夜（PlayerStore.EndNight）、冰箱、警報器都用它，
-        /// 從店裡的幾個區域（EmporiumEntry 的格子、櫃台等）往下找所有子物品（會往箱子裡面找）。
-        /// （0.1.0 前三次實機測試用的 GameMaster 的 raidManager、shipManager.ship 在店鋪畫面都是 null，一台都沒找到。）
+        /// 店裡自己的全部物品：EmporiumEntry.Instance.GetAllOwnedItems()，遊戲自己數集水器（MachineMoistureFarm.CountRunningFarms）
+        /// 用的就是它，從店裡的各區域（格子、櫃台、展示櫃、販賣噴泉、夜間地點…）往下找所有子物品（會往箱子裡面找）。會有重複，去重。
+        /// 不用 PlayerStore：正式版的 instance 是私有的，公開的 Instance 在沒有實例時會順手建一個。
+        /// inFountain：販賣噴泉（vendingFountainElement）裡的物品，噴泉還沒建時是空的（不排除）。
         /// </summary>
-        static List<GameItem> AllItems(List<string> debug)
+        static List<GameItem> AllItems(List<string> debug, out HashSet<GameItem> inFountain)
         {
             var items = new List<GameItem>();
-            var store = PlayerStore.instance; // 讀靜態欄位，不用 Instance 屬性：屬性可能在沒有實例時順手建一個（照一鍵關窗的 GameState）
-            if (store == null) { debug?.Add("PlayerStore.instance 是 null"); return items; }
-            var list = store.FindAllItem(true);
-            if (list == null) { debug?.Add("FindAllItem 回傳 null"); return items; }
-            var seen = new HashSet<IntPtr>();
-            for (int i = 0; i < list.Count; i++)
-            {
-                var it = list[i];
-                if (it != null && seen.Add(it.Pointer)) items.Add(it);
-            }
-            debug?.Add($"店裡的物品 {list.Count} 件（不重複 {items.Count}）");
+            inFountain = new HashSet<GameItem>();
+            var entry = EmporiumEntry.Instance;
+            if (entry == null) { debug?.Add("EmporiumEntry.Instance 是 null"); return items; }
+            var list = entry.GetAllOwnedItems();
+            if (list == null) { debug?.Add("GetAllOwnedItems 回傳 null"); return items; }
+            var seen = new HashSet<GameItem>();
+            foreach (var it in list)
+                if (it != null && seen.Add(it)) items.Add(it);
+            var fountain = entry.vendingFountainElement;
+            if (fountain != null)
+                foreach (var it in GraphUtils.FindAllChildrenType<GameItem>(fountain))
+                    if (it != null) inFountain.Add(it);
+            debug?.Add($"店裡的物品 {list.Count} 件（不重複 {items.Count}）、販賣噴泉裡 {inFountain.Count} 件");
             return items;
         }
 
         /// <summary>
-        /// 集水器裡的容器。集水器的視窗只有電源、容器、模組、說明四種格子，容器格只收液體容器，其他格子放不進液體容器，
-        /// 所以子物品裡的液體容器就是容器格裡那個。放的是發酵中或釀好的酒瓶就當沒有（不拿酒當水源）。
+        /// 集水器容器格裡的容器，照遊戲自己的拿法（CanRunTonight、VendingFountainHelper.GetWaterSource）：視窗建好了才拿
+        /// MachineHelper.GetSlot(集水器, 2) 的 childItem。GetSlot 裡面是強制轉型，遊戲改了格子的排法會丟例外，當作沒有容器。
+        /// 放的不是水容器（發酵中或釀好的酒瓶）也當沒有（不拿酒當水源）。
         /// </summary>
         static GameItem ContainerOf(GameItem farm, List<string> debug)
         {
-            var children = farm.FindAllChildItems();
-            if (children == null) { debug?.Add("子物品 null"); return null; }
-            var names = new List<string>();
-            for (int i = 0; i < children.Count; i++)
+            if (farm.contentWindow == null) { debug?.Add("視窗還沒建"); return null; }
+            GameItem c;
+            try { c = (MachineHelper.GetSlot(farm, FarmContainerSlot) as GameSlotInventory)?.childItem; }
+            catch (Exception e)
             {
-                var c = children[i];
-                if (c == null || c.Pointer == farm.Pointer) continue;
-                names.Add(c.identifier);
-                if (c.IsTag(LiquidTag)) return IsWaterContainer(c) ? c : null;
+                debug?.Add($"讀不到容器格（{e.GetType().Name}: {e.Message}）");
+                return null;
             }
-            debug?.Add($"子物品 {children.Count} 件（{string.Join(",", names)}）");
-            return null;
+            if (c == null) return null;
+            if (!c.IsTag(LiquidTag) || !IsWaterContainer(c)) { debug?.Add($"容器格裡的 {c.identifier} 不是水容器"); return null; }
+            return c;
         }
 
         /// <summary>這種集水器的水加起來幾毫升：先加份數再換算（Rules.PartsPerMl）。</summary>
@@ -179,22 +183,11 @@ namespace ProbablyStolenCollectAllWater
         {
             try
             {
-                var s = LocHelper.GetLocalizedMechanic(grade.NameKey, new Il2CppReferenceArray<Il2CppSystem.Object>(0));
+                var s = LocHelper.GetLocalizedMechanic(grade.NameKey);
                 if (!string.IsNullOrWhiteSpace(s) && s != grade.NameKey && !s.Contains("Translation Error")) return s;
             }
             catch (Exception e) { CollectAllWaterMod.DebugLog($"查不到「{grade.NameKey}」的名稱：{e.Message}"); }
             return grade.Id;
-        }
-
-        /// <summary>遊戲語言是不是中文（按鈕的動詞用中文還是英文）。</summary>
-        internal static bool Chinese()
-        {
-            try
-            {
-                var locale = LocalizationSettings.SelectedLocale;
-                return locale != null && Rules.IsChinese(locale.Identifier.Code);
-            }
-            catch { return false; }
         }
     }
 }

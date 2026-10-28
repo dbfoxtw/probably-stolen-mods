@@ -1,5 +1,6 @@
 @echo off
-rem Remove the mod dll from the game (its folder UserData\CollectAllWater is kept).
+rem Remove the mod from the game (deletes Mods\dbfoxtw.collect-all-water). Close the game first.
+rem The settings (ModConfigs\dbfoxtw.collect-all-water.json in the save folder) are kept.
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

@@ -1,33 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 照待辦清單 mod 的寫法：引用遊戲資料夾裡 MelonLoader 產生的組件，不附進 dll。
-       編譯前要先裝好 MelonLoader 並啟動過一次遊戲（會產生 MelonLoader\Il2CppAssemblies）。
-       遊戲不在預設位置時：dotnet build -p:GameDir="遊戲資料夾" -->
+  <!-- 官方格式的 mod（正式版 1.0 起，遊戲自己的 mod 載入器載入，不需要 MelonLoader；照繁中 mod）。
+       編譯時參考正式版遊戲的 Probably Stolen_Data\Managed（Mono 組件，只讀、不附進 mod）。
+       遊戲不在預設位置時：dotnet build -p:GameDir="遊戲資料夾"
+       目標框架 net48：遊戲是 Unity 2021.3 的 Mono（.NET 4.x），輸出的組件只參考 mscorlib、System、System.Core 與 Managed 裡的組件；
+       遊戲的掃描會拒絕參考了 Managed 以外組件的 mod（monorepo 根目錄 tools/modscan 離線確認）。
+       遊戲語言與 mod 自己的文字交給 ModHelper／LocHelper，所以不參考 Unity.Localization。 -->
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <AssemblyName>ProbablyStolenCollectAllWater</AssemblyName>
     <RootNamespace>ProbablyStolenCollectAllWater</RootNamespace>
+    <!-- 版本號只放這裡：組件版本、manifest.xml 的 ModVersion、打包檔名都從這裡來（tools/modkit.py 的 csproj_version） -->
+    <Version>2.0.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <GameDir Condition="'$(GameDir)' == ''">D:\SteamLibrary\steamapps\common\Probably Stolen Demo</GameDir>
-    <MelonDir>$(GameDir)\MelonLoader</MelonDir>
+    <GameDir Condition="'$(GameDir)' == ''">D:\SteamLibrary\steamapps\common\Probably Stolen</GameDir>
+    <ManagedDir>$(GameDir)\Probably Stolen_Data\Managed</ManagedDir>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="verify/**" />
-    <Reference Include="$(MelonDir)\net6\MelonLoader.dll" Private="false" />
-    <Reference Include="$(MelonDir)\net6\0Harmony.dll" Private="false" />
-    <Reference Include="$(MelonDir)\net6\Il2CppInterop.Runtime.dll" Private="false" />
-    <Reference Include="$(MelonDir)\net6\Il2CppInterop.Common.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\Il2Cppmscorlib.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\UnityEngine.CoreModule.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\Unity.Localization.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\Unity.ResourceManager.dll" Private="false" />
-    <Reference Include="$(MelonDir)\Il2CppAssemblies\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\0Harmony.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.InputLegacyModule.dll" Private="false" />
   </ItemGroup>
 
 </Project>

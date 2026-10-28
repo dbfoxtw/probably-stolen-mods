@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：四種水的設定、按鈕文字、能不能收、收的順序、讀設定檔（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：四種水的設定、按鈕文字、能不能收、收的順序、Localization 的 CSV（不用開遊戲、不參考遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
