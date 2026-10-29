@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ProbablyStolenWindowTabs
 {
@@ -16,18 +13,18 @@ namespace ProbablyStolenWindowTabs
     sealed class TabGroup
     {
         /// <summary>物品編號（GameItem.uniqueId；遊戲自己記視窗位置也用它，讀檔後不變），照分頁的順序。固定設施是負數。</summary>
-        [JsonPropertyName("members")] public List<int> Members { get; set; } = new List<int>();
+        [JsonProperty("members")] public List<int> Members { get; set; } = new List<int>();
         /// <summary>目前那頁的編號（整組關著時是上次看的那頁）。</summary>
-        [JsonPropertyName("active")] public int Active { get; set; }
+        [JsonProperty("active")] public int Active { get; set; }
         /// <summary>這組上次的位置：目前那頁視窗的 anchoredPosition（和遊戲自己記的位置同一種座標）。</summary>
-        [JsonPropertyName("x")] public float X { get; set; }
-        [JsonPropertyName("y")] public float Y { get; set; }
+        [JsonProperty("x")] public float X { get; set; }
+        [JsonProperty("y")] public float Y { get; set; }
         /// <summary>
         /// 分頁名稱的編號：物品編號 → 編號與拿到編號時的名字（Rules.Number 分配）。沒有編號的分頁不在裡面，
         /// 全組都沒有時是 null（不寫進檔案）。舊版 mod 的檔案沒有這欄，第一次分配照分頁順序補，結果和舊版照位置編的一樣。
         /// </summary>
-        [JsonPropertyName("numbers")] public Dictionary<int, TabNumber> Numbers { get; set; }
-        [JsonExtensionData] public Dictionary<string, JsonElement> Extra { get; set; }
+        [JsonProperty("numbers")] public Dictionary<int, TabNumber> Numbers { get; set; }
+        [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
 
         public bool Contains(int id) => Members.Contains(id);
 
@@ -66,9 +63,9 @@ namespace ProbablyStolenWindowTabs
     /// <summary>一個分頁的編號與拿到編號時的名字（名字變了就當作沒有編號，重新拿）。</summary>
     sealed class TabNumber
     {
-        [JsonPropertyName("n")] public int N { get; set; }
-        [JsonPropertyName("name")] public string Name { get; set; }
-        [JsonExtensionData] public Dictionary<string, JsonElement> Extra { get; set; }
+        [JsonProperty("n")] public int N { get; set; }
+        [JsonProperty("name")] public string Name { get; set; }
+        [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
     }
 
     /// <summary>從一組拿走分頁後，那一組要怎麼收拾（給 TabRecord.Merge／Detach 的呼叫者照著開關視窗）。</summary>
@@ -98,12 +95,12 @@ namespace ProbablyStolenWindowTabs
         /// 新版讀到沒有這欄的舊檔照分頁順序補（Rules.Number），兩邊都不用看版本。
         /// </summary>
         public const int CurrentVersion = 1;
-        [JsonPropertyName("version")] public int Version { get; set; } = CurrentVersion;
-        [JsonPropertyName("slot")] public int Slot { get; set; }
-        [JsonPropertyName("runId")] public string RunId { get; set; } = "";
-        [JsonPropertyName("groups")] public List<TabGroup> Groups { get; set; } = new List<TabGroup>();
+        [JsonProperty("version")] public int Version { get; set; } = CurrentVersion;
+        [JsonProperty("slot")] public int Slot { get; set; }
+        [JsonProperty("runId")] public string RunId { get; set; } = "";
+        [JsonProperty("groups")] public List<TabGroup> Groups { get; set; } = new List<TabGroup>();
         /// <summary>不認得的欄位原樣保留（新版 mod 加的欄位，換回舊版時不丟）。</summary>
-        [JsonExtensionData] public Dictionary<string, JsonElement> Extra { get; set; }
+        [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
 
         /// <summary>這個編號在哪一組（不在任何一組回傳 null）。0＝還沒發編號，不可能在組裡。</summary>
         public TabGroup Find(int id)
@@ -288,36 +285,54 @@ namespace ProbablyStolenWindowTabs
         }
     }
 
-    /// <summary>UserData\WindowTabs\slot_&lt;N&gt;.json 的讀寫（照視窗群組的 GroupStore）。</summary>
+    /// <summary>
+    /// slot_&lt;N&gt;.json 的讀寫（照一鍵關窗的 LockStore）。檔案放在哪裡由呼叫端給的兩個函式決定：遊戲裡是 ModHelper 的 ModData
+    /// （存檔資料夾的 ModData\dbfoxtw_window-tabs\），離線測試是記憶體。不自己開檔：遊戲的掃描會要求宣告檔案權限，
+    /// 玩家啟用時跳警告。JSON 用遊戲自帶的 Newtonsoft.Json（Mono 版沒有 System.Text.Json）；格式和 Demo 版（System.Text.Json 寫的）一樣，
+    /// 欄位名稱靠 JsonProperty 對上，中文照原樣寫（Newtonsoft 預設不跳脫非 ASCII 的字）。
+    /// </summary>
     sealed class TabStore
     {
-        static readonly JsonSerializerOptions Json = new JsonSerializerOptions
+        static readonly JsonSerializerSettings Json = new JsonSerializerSettings
         {
-            WriteIndented = true,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore,
+            // 不認得的欄位（JsonExtensionData 的 JToken）裡含時間的 ISO 日期字串，預設會被讀成 DateTime、寫回去變成另一種寫法
+            // （"2026-10-29T00:00:00.000Z" → "2026-10-29T00:00:00Z"，帶時區的換成本機時區），不算「原樣保留」：一律當字串讀
+            DateParseHandling = DateParseHandling.None,
         };
 
-        readonly string _dir;
+        readonly Func<string, string> _read;
+        readonly Action<string, string> _write;
         readonly Action<string> _warn;
 
-        public TabStore(string dir, Action<string> warn)
+        /// <param name="read">讀檔：檔名 → 內容，沒有這個檔回傳 null。</param>
+        /// <param name="write">寫檔：檔名、內容。</param>
+        public TabStore(Func<string, string> read, Action<string, string> write, Action<string> warn)
         {
-            _dir = dir;
+            _read = read;
+            _write = write;
             _warn = warn ?? (_ => { });
         }
 
-        public string PathOf(int slot) => Path.Combine(_dir, $"slot_{slot}.json");
+        public static string FileName(int slot) => $"slot_{slot}.json";
 
-        /// <summary>讀第 slot 槽；沒有檔案、壞掉（備份成 .bad）或是別場遊戲的，回傳一份新的。順手清掉不合理的組。</summary>
+        /// <summary>讀第 slot 槽；沒有檔案、壞掉（內容另存成 .bad 保留）或是別場遊戲的，回傳一份新的。順手清掉不合理的組。</summary>
         public TabRecord Load(int slot, string runId)
         {
-            var path = PathOf(slot);
+            var name = FileName(slot);
             var fresh = new TabRecord { Slot = slot, RunId = runId ?? "" };
-            if (!File.Exists(path)) return fresh;
+            string text;
+            try { text = _read(name); }
+            catch (Exception e)
+            {
+                _warn($"{name} 讀不了（{e.Message}），改用新的一份");
+                return fresh;
+            }
+            if (text == null) return fresh;
             try
             {
-                var r = JsonSerializer.Deserialize<TabRecord>(File.ReadAllText(path, Encoding.UTF8), Json);
+                var r = JsonConvert.DeserializeObject<TabRecord>(text, Json);
                 if (r == null) throw new JsonException("內容是 null");
                 if (r.RunId != (runId ?? "")) return fresh; // 同一槽開了新遊戲
                 r.Slot = slot;
@@ -326,9 +341,9 @@ namespace ProbablyStolenWindowTabs
             }
             catch (Exception e)
             {
-                var bad = path + ".bad";
-                try { File.Copy(path, bad, true); } catch { /* 備份失敗也照樣重來 */ }
-                _warn($"{Path.GetFileName(path)} 讀不了（{e.Message}），改用新的一份；原檔備份成 {Path.GetFileName(bad)}");
+                var bad = name + ".bad";
+                try { _write(bad, text); } catch { /* 備份失敗也照樣重來 */ }
+                _warn($"{name} 讀不了（{e.Message}），改用新的一份；原內容備份成 {bad}");
                 return fresh;
             }
         }
@@ -364,14 +379,10 @@ namespace ProbablyStolenWindowTabs
             r.Groups.RemoveAll(g => g == null || g.Members.Count < 2);
         }
 
-        /// <summary>先寫暫存檔再換掉，寫到一半當掉也不會留下壞檔。</summary>
-        public void Save(TabRecord r)
-        {
-            Directory.CreateDirectory(_dir);
-            var path = PathOf(r.Slot);
-            var tmp = path + ".tmp";
-            File.WriteAllText(tmp, JsonSerializer.Serialize(r, Json), new UTF8Encoding(false));
-            File.Move(tmp, path, true);
-        }
+        /// <summary>
+        /// 整份寫回。ModHelper 只有整檔寫入（沒有先寫暫存檔再換名的做法），寫到一半當掉的話下次讀到壞檔，
+        /// Load 會備份成 .bad 再重來：丟的只是分頁組，重新拖一次就好，不影響遊戲。
+        /// </summary>
+        public void Save(TabRecord r) => _write(FileName(r.Slot), JsonConvert.SerializeObject(r, Json));
     }
 }

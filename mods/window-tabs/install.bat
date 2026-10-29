@@ -1,7 +1,8 @@
 @echo off
-rem Build the mod from source and install it into the game (see README.md). Close the game first.
-rem Needs MelonLoader 0.7.3 (start the game once after installing it), .NET SDK 8+ and Python 3.10+.
-rem Add --debug for debug mode (the log records every merge, split and tab switch).
+rem Build the mod from source and install it into the game's Mods\dbfoxtw.window-tabs folder (see README.md). Close the game first.
+rem Needs .NET SDK 8+ and Python 3.10+. MelonLoader is not needed (official mod format).
+rem First install: enable the mod on the Mods screen of the game's main menu, then restart the game.
+rem Add --debug for debug mode (Player.log in the save folder records every merge, split and tab switch).
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

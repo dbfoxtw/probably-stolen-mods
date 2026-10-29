@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：合併、拆開、重排、分頁名稱、分頁條的排法、資料檔（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：合併、拆開、重排、分頁名稱、分頁條的排法、資料檔（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,6 +12,12 @@
   <ItemGroup>
     <Compile Include="..\src\TabStore.cs" Link="TabStore.cs" />
     <Compile Include="..\src\Rules.cs" Link="Rules.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TabStore 用的 JSON：mod 在遊戲裡用遊戲自帶的 Newtonsoft.Json（組件版本 13.0.0.0），這裡用同一個大版本的 NuGet 套件。
+         Demo 版（1.0.0）與更早的 0.1.0 用 System.Text.Json 寫檔，測試裡模擬舊版讀寫時直接用 .NET 內建的 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>

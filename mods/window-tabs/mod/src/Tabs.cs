@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Il2Cpp;
-using Il2CppInterop.Runtime;
-using MelonLoader;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace ProbablyStolenWindowTabs
 {
     /// <summary>
-    /// 分頁的主邏輯：每幀（OnLateUpdate，遊戲與別的 mod 都開關完視窗之後）
+    /// 分頁的主邏輯：每幀（WindowTabsRunner.LateUpdate，遊戲與別的 mod 都開關完視窗之後）
     /// 1. 整理：一組只留一個開著的視窗、新打開的擺到這組的位置；
     /// 2. 滑鼠：點分頁切頁、拖分頁重排／移到別組／拖出來、拖視窗到別的標題列合併、拖著物品停在分頁上切頁；
     /// 3. 畫分頁條（TabStrip）。
@@ -21,10 +18,9 @@ namespace ProbablyStolenWindowTabs
     {
         static TabStore _store;
         static TabRecord _rec;
-        /// <summary>ModHook 的委派要一直握著，免得被回收。</summary>
-        static Il2CppSystem.Action _loaded;
 
-        static readonly Dictionary<IntPtr, TabStrip> _strips = new Dictionary<IntPtr, TabStrip>();
+        /// <summary>視窗 → 它的分頁條（PixelWindow 是一般的 C# 類別、沒有覆寫 Equals，比的是參考）。</summary>
+        static readonly Dictionary<PixelWindow, TabStrip> _strips = new Dictionary<PixelWindow, TabStrip>();
         /// <summary>上一幀開著的分頁組成員（判斷「新打開的」）。</summary>
         static HashSet<int> _prevVisible = new HashSet<int>();
         /// <summary>店裡的物品與名稱（每 2 秒或有動作時重抓；FindAllItem 會往箱子裡找，不要每幀叫）。</summary>
@@ -53,7 +49,7 @@ namespace ProbablyStolenWindowTabs
         static Vector2 _pressWindowPos;
         static PixelWindow _dragWindow;
         /// <summary>這次拖曳時店裡自己的物品（只有店裡的箱子能組分頁，照視窗群組只存店裡的）。</summary>
-        static HashSet<IntPtr> _own;
+        static HashSet<GameItem> _own;
 
         /// <summary>放開時的去處：哪個視窗、插在它顯示的分頁的第幾個前面（預告分頁也畫在那裡）。</summary>
         sealed class Target
@@ -75,25 +71,15 @@ namespace ProbablyStolenWindowTabs
         static string _dragLabel;
         /// <summary>預告分頁的名稱（放開後會拿到的名稱＋編號）與它是替哪個目標算的（目標換了才重算）。</summary>
         static string _previewLabel;
-        static IntPtr _previewWindow;
+        static PixelWindow _previewWindow;
         static bool _previewOwn;
 
         static int _hoverId;
         static float _hoverSince;
         static PointerEventData _ped;
-        static Il2CppSystem.Collections.Generic.List<RaycastResult> _hits;
+        static readonly List<RaycastResult> _hits = new List<RaycastResult>();
 
-        internal static void Init(string dir) => _store = new TabStore(dir, w => WindowTabsMod.Log.Warning(w));
-
-        internal static void Install(MelonLogger.Instance log)
-        {
-            try
-            {
-                _loaded = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(OnGameLoaded));
-                ModHook.add_OnGameLoadedLate(_loaded);
-            }
-            catch (Exception e) { log.Warning($"訂閱讀檔事件失敗，讀檔後不會清掉沒存到的編號：{e.Message}"); }
-        }
+        internal static void Init(TabStore store) => _store = store;
 
         /// <summary>離開店鋪畫面：視窗都會重建，分頁條的對照表與這場遊戲的資料一起丟掉。</summary>
         internal static void Reset()
@@ -111,8 +97,11 @@ namespace ProbablyStolenWindowTabs
             _wasHeld = false;
         }
 
-        /// <summary>遊戲讀完存檔（ModHook.OnGameLoadedLate）：重讀這場遊戲的分頁組，丟掉編號大於物品編號計數器的（Rules.IsStale）。</summary>
-        static void OnGameLoaded()
+        /// <summary>
+        /// 遊戲讀完存檔（ModHook.OnGameLoadedLate，WindowTabsMod.Init 訂閱）：重讀這場遊戲的分頁組，
+        /// 丟掉編號大於物品編號計數器的（Rules.IsStale）。
+        /// </summary>
+        internal static void OnGameLoaded()
         {
             try
             {
@@ -120,7 +109,7 @@ namespace ProbablyStolenWindowTabs
                 _items = null;
                 _itemsAt = -100f;
                 var r = Record();
-                var ps = PlayerStore.instance;
+                var ps = GameState.Store();
                 if (r == null || ps == null) return;
                 int n = r.PruneStale(ps.currentUniqueId);
                 if (n == 0) return;
@@ -145,7 +134,7 @@ namespace ProbablyStolenWindowTabs
         {
             _dirty = false;
             try { _store.Save(r); }
-            catch (Exception e) { WindowTabsMod.Log.Warning($"寫入 {_store.PathOf(r.Slot)} 失敗：{e.Message}"); }
+            catch (Exception e) { WindowTabsMod.Log.Warning($"寫入 {WindowTabsMod.DataFolder}\\{TabStore.FileName(r.Slot)} 失敗：{e.Message}"); }
         }
 
         static string Describe(TabGroup g) =>
@@ -228,7 +217,7 @@ namespace ProbablyStolenWindowTabs
             return windows;
         }
 
-        /// <summary>每幀呼叫（WindowTabsMod.OnLateUpdate）。</summary>
+        /// <summary>每幀呼叫（WindowTabsMod.LateTick，在店鋪畫面時）。</summary>
         internal static void Tick()
         {
             bool held = Input.GetMouseButton(0);
@@ -338,7 +327,7 @@ namespace ProbablyStolenWindowTabs
                     }
                     if (g.Active != keep) { g.Active = keep; _dirty = true; }
                 }
-                else if (held && (_mode == Mode.PressWindow || _mode == Mode.DragWindow) && _dragWindow != null && _dragWindow.Pointer == w.Pointer)
+                else if (held && (_mode == Mode.PressWindow || _mode == Mode.DragWindow) && _dragWindow != null && ReferenceEquals(_dragWindow, w))
                     SetGroupPos(g, cur); // 玩家正在拖這組
             }
         }
@@ -417,7 +406,7 @@ namespace ProbablyStolenWindowTabs
                     // _own 可能是 null（PlayerStore 還沒好、FindAllItem 丟例外）：字串只在除錯模式算，算的時候也不能丟例外
                     // （丟了這次拖曳會被取消，而且佔掉 LogOnce 的名額）
                     if (WindowTabsMod.Debug)
-                        WindowTabsMod.DebugLog($"開始拖視窗「{_dragLabel}」（店裡的物品 {_own?.Count ?? 0} 個，它{(di != null && _own != null && _own.Contains(di.Pointer) ? "在" : "不在")}裡面）");
+                        WindowTabsMod.DebugLog($"開始拖視窗「{_dragLabel}」（店裡的物品 {_own?.Count ?? 0} 個，它{(di != null && _own != null && _own.Contains(di) ? "在" : "不在")}裡面）");
                     break;
                 case Mode.DragWindow:
                     if (_dragWindow == null || !_dragWindow.IsVisible()) { WindowTabsMod.DebugLog("拖著的視窗不見了，取消"); EndDrag(); break; }
@@ -462,9 +451,16 @@ namespace ProbablyStolenWindowTabs
             int idx = _pressStrip.Spec?.Ids.IndexOf(_pressId) ?? -1;
             _dragLabel = idx >= 0 ? _pressStrip.Spec.Labels[idx] : Name(_pressId);
             DestroyGhost(); // 上一次的影子還在（不該發生）：先收掉，不然它的擋板沒人拿得到
+            // 建影子與擋板之前再把視窗拉到最上面一次：影子、擋板放在被拖分頁所在的根畫布，要和視窗在同一個畫布。
+            // 正式版 ToFront 會把開著的可移動視窗搬到浮動畫布（UIFamilyLayer），紙張面板被拉到前面時（PaperPanelFocusStamp
+            // → BringPanelsToFront）又搬回 windowUICanvas。按下分頁到開始拖的那幾幀若剛好被搬回去（推測的情境，機率很低），
+            // 影子與擋板會建在 windowUICanvas，拖曳中別的視窗又被搬上浮動畫布時就蓋在擋板上面，遊戲看得穿
+            try { _pressStrip.Window.ToFront(false); }
+            catch (Exception e) { LogOnce("開始拖分頁時把視窗拉到最上面", e); }
             try
             {
-                _ghost = GhostTab.Create(_pressStrip.TabObject(idx)); // 影子照被拖的分頁的樣子做（寬度是它在分頁條上的實際寬度）
+                // 影子照被拖的分頁的樣子做（寬度是它在分頁條上的實際寬度，不接住標題列）；只剩外框時的虛線照這個視窗的配色
+                _ghost = GhostTab.Create(_pressStrip, idx);
                 _ghost?.Move(mouse);
                 // 剛開始拖時滑鼠還在自己的分頁條上（只畫外框），下一幀 DragTab 找到目標後再決定，免得閃一幀實心的
                 _ghost?.SetOnStrip(true);
@@ -485,7 +481,7 @@ namespace ProbablyStolenWindowTabs
             _own = null;
             _dragLabel = null;
             _previewLabel = null;
-            _previewWindow = IntPtr.Zero;
+            _previewWindow = null;
             DestroyGhost();
         }
 
@@ -495,9 +491,9 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         static void UpdatePreviewLabel(TabRecord r)
         {
-            if (_target == null) { _previewWindow = IntPtr.Zero; _previewLabel = null; return; }
-            if (_target.Window.Pointer == _previewWindow && _target.Own == _previewOwn) return;
-            _previewWindow = _target.Window.Pointer;
+            if (_target == null) { _previewWindow = null; _previewLabel = null; return; }
+            if (ReferenceEquals(_target.Window, _previewWindow) && _target.Own == _previewOwn) return;
+            _previewWindow = _target.Window;
             _previewOwn = _target.Own;
             _previewLabel = _target.Own ? _dragLabel : PreviewLabel(r, _target);
         }
@@ -556,8 +552,7 @@ namespace ProbablyStolenWindowTabs
         {
             var es = EventSystem.current;
             if (es == null) return (null, -1);
-            if (_ped == null || _ped.Pointer == IntPtr.Zero) _ped = new PointerEventData(es);
-            _hits ??= new Il2CppSystem.Collections.Generic.List<RaycastResult>();
+            if (_ped == null) _ped = new PointerEventData(es);
             _ped.position = mouse;
             _hits.Clear();
             es.RaycastAll(_ped, _hits);
@@ -577,7 +572,7 @@ namespace ProbablyStolenWindowTabs
                 if (go == null) continue;
                 var t = go.transform;
                 if ((temp != null && t.IsChildOf(temp)) || (overlay != null && t.IsChildOf(overlay))) continue;
-                return TabStrip.ByGameObject.TryGetValue(go.Pointer, out var hit) ? hit : (null, -1);
+                return TabStrip.ByGameObject.TryGetValue(go.GetInstanceID(), out var hit) ? hit : (null, -1);
             }
             return (null, -1);
         }
@@ -596,14 +591,14 @@ namespace ProbablyStolenWindowTabs
             if (!tabDrag)
             {
                 var di = GameWindows.OwnerItem(dragged);
-                if (di == null || !_own.Contains(di.Pointer)) { _why = "拖的視窗不是店裡自己的物品"; return null; }
+                if (di == null || !_own.Contains(di)) { _why = "拖的視窗不是店裡自己的物品"; return null; }
             }
             foreach (var w in windows.Where(w => w.IsVisible()).OrderByDescending(w => w.focusStamp))
             {
-                bool self = w.Pointer == dragged.Pointer;
+                bool self = ReferenceEquals(w, dragged);
                 if (self && !tabDrag) continue; // 拖著的視窗蓋在最上面，看它底下
-                _strips.TryGetValue(w.Pointer, out var strip);
-                var cam = GameWindows.CameraOf(w); // 分頁條、外框、標題列都在同一個畫布：每個視窗只找一次相機
+                _strips.TryGetValue(w, out var strip);
+                var cam = GameWindows.CameraOf(w); // 分頁條、視窗、標題列都在同一個畫布：每個視窗只找一次相機
                 // 滑鼠在不在分頁條上，照原本的排法判斷（ContainsBase）：被拖的那頁移過去、預告分頁擠進來後範圍可能變，
                 // 只用畫出來的會每幀反覆。自己的分頁條另外有容忍範圍；別人的分頁條原本的範圍一定算，預告多出來的那塊也算
                 // （畫出來的範圍，Contains）：多出來的只造成遲滯（進去了就留著），不會來回
@@ -611,12 +606,12 @@ namespace ProbablyStolenWindowTabs
                     (self ? strip.ContainsBase(mouse, cam, true) : strip.ContainsBase(mouse, cam, false) || strip.Contains(mouse, cam));
                 if (!overStrip)
                 {
-                    // 拖曳中每幀對每個視窗都跑：先看外框（一次換算），在外框裡才算標題列（標題列在外框裡面，要換算好幾個部件）
+                    // 拖曳中每幀對每個視窗都跑：先看整塊的範圍，在範圍裡才算標題列（標題列在範圍裡面）
                     if (!GameWindows.Contains(w, mouse, cam)) continue;
                     if (!GameWindows.IsOverTitle(w, mouse, cam))
                     {
                         if (WindowTabsMod.Debug)
-                            _why = $"滑鼠在「{GameWindows.Title(w)}」{ScreenRect(GameWindows.Frame(w))} 的內容區"; // 不帶滑鼠座標：狀態變了才記，帶了會每幀都記
+                            _why = $"滑鼠在「{GameWindows.Title(w)}」{ScreenRect(GameWindows.ScreenFrame(w, cam))} 的內容區"; // 不帶滑鼠座標：狀態變了才記，帶了會每幀都記
                         return null;
                     }
                 }
@@ -628,7 +623,7 @@ namespace ProbablyStolenWindowTabs
                 }
                 if (_own == null) { _why = "沒有店裡物品的清單"; return null; }
                 var item = GameWindows.OwnerItem(w);
-                if (item == null || !_own.Contains(item.Pointer)) { _why = $"「{GameWindows.Title(w)}」不是店裡自己的物品"; return null; }
+                if (item == null || !_own.Contains(item)) { _why = $"「{GameWindows.Title(w)}」不是店裡自己的物品"; return null; }
                 int count = strip != null && strip.Spec != null ? strip.Spec.Ids.Count : 1;
                 // 分頁條上：插在滑鼠的位置；標題列：加在最後
                 int at = overStrip ? strip.InsertIndexAt(mouse) : count;
@@ -638,12 +633,9 @@ namespace ProbablyStolenWindowTabs
             return null;
         }
 
-        /// <summary>除錯 log 用：RectTransform 在螢幕上的範圍（左下～右上，像素）。</summary>
-        static string ScreenRect(RectTransform rt)
-        {
-            var r = GameWindows.ScreenRect(rt);
-            return r == null ? "（沒有）" : $"({r.Value.xMin:0},{r.Value.yMin:0})~({r.Value.xMax:0},{r.Value.yMax:0})";
-        }
+        /// <summary>除錯 log 用：螢幕上的範圍（左下～右上，像素）。</summary>
+        static string ScreenRect(Rect? r) =>
+            r == null ? "（沒有）" : $"({r.Value.xMin:0},{r.Value.yMin:0})~({r.Value.xMax:0},{r.Value.yMax:0})";
 
         /// <summary>
         /// 目標的「插在第 At 個前面」換成「插在哪個編號前面」（null＝最後）。目標在組裡時看它顯示的分頁；
@@ -651,7 +643,7 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         static int? InsertBefore(TabRecord r, Target t, int idT)
         {
-            _strips.TryGetValue(t.Window.Pointer, out var strip);
+            _strips.TryGetValue(t.Window, out var strip);
             var shown = r.Find(idT) != null && strip?.Spec != null ? strip.Spec.Ids : new List<int> { idT };
             return t.At >= 0 && t.At < shown.Count ? shown[t.At] : (int?)null;
         }
@@ -681,7 +673,7 @@ namespace ProbablyStolenWindowTabs
                 WindowTabsMod.DebugLog($"切到 {Name(toId)}：打不開（可能是上鎖的容器）");
                 return false;
             }
-            if (item.contentWindow.Pointer != current.Pointer) GameWindows.Close(current);
+            if (!ReferenceEquals(item.contentWindow, current)) GameWindows.Close(current);
             g.Active = toId;
             Persist(r);
             WindowTabsMod.DebugLog($"切到 {Name(toId)}");
@@ -707,15 +699,9 @@ namespace ProbablyStolenWindowTabs
             _hoverSince = float.MaxValue; // 切過去後不再重複觸發；滑鼠移開再回來才會再算
             var g = r.Find(id);
             if (g == null || g.Active == id) return;
-            var dragged = DraggedItem();
-            if (dragged != null && Items().TryGetValue(id, out var item) && item.Pointer == dragged.Pointer) return;
+            var dragged = GameWindows.DraggedItem();
+            if (dragged != null && Items().TryGetValue(id, out var item) && ReferenceEquals(item, dragged)) return;
             Switch(r, g, strip.Window, id);
-        }
-
-        static GameItem DraggedItem()
-        {
-            try { return ItemMouseDragHandler.current?.GetCurrentItem(); }
-            catch { return null; }
         }
 
         /// <summary>
@@ -908,7 +894,7 @@ namespace ProbablyStolenWindowTabs
 
         static void UpdateStrips(TabRecord r, Dictionary<int, PixelWindow> byId, Dictionary<int, GameItem> items)
         {
-            var shown = new HashSet<IntPtr>();
+            var shown = new HashSet<PixelWindow>();
             foreach (var g in r.Groups)
             {
                 int visibleId = g.Members.FirstOrDefault(byId.ContainsKey);
@@ -924,10 +910,10 @@ namespace ProbablyStolenWindowTabs
                 ApplyDragState(spec, w);
                 if (spec.Ids.Count < 2 && spec.PreviewAt < 0) continue; // 只剩一頁：不畫
                 ShowStrip(r, g, w, spec);
-                shown.Add(w.Pointer);
+                shown.Add(w);
             }
             // 拖到還沒有組的獨立視窗上：畫一條只有它自己＋預告分頁的分頁條
-            if (_target != null && !_target.Own && !shown.Contains(_target.Window.Pointer) && _target.Window.IsVisible())
+            if (_target != null && !_target.Own && !shown.Contains(_target.Window) && _target.Window.IsVisible())
             {
                 var w = _target.Window;
                 var spec = new StripSpec();
@@ -937,7 +923,7 @@ namespace ProbablyStolenWindowTabs
                 spec.Active = 0;
                 ApplyDragState(spec, w);
                 ShowStrip(r, null, w, spec);
-                shown.Add(w.Pointer);
+                shown.Add(w);
             }
             foreach (var kv in _strips.ToList())
             {
@@ -956,15 +942,15 @@ namespace ProbablyStolenWindowTabs
         static void ApplyDragState(StripSpec spec, PixelWindow w)
         {
             bool own = _target != null && _target.Own;
-            if (_target != null && !own && _target.Window.Pointer == w.Pointer)
+            if (_target != null && !own && ReferenceEquals(_target.Window, w))
             {
                 spec.PreviewAt = Math.Max(0, Math.Min(_target.At, spec.Ids.Count));
                 spec.PreviewLabel = _previewLabel ?? _dragLabel;
             }
-            if (_mode == Mode.DragTab && _pressStrip != null && _pressStrip.WindowPtr == w.Pointer)
+            if (_mode == Mode.DragTab && _pressStrip != null && ReferenceEquals(_pressStrip.Window, w))
             {
                 int from = spec.Ids.IndexOf(_pressId);
-                if (own && from >= 0 && _target.Window.Pointer == w.Pointer)
+                if (own && from >= 0 && ReferenceEquals(_target.Window, w))
                 {
                     int activeId = spec.Active >= 0 && spec.Active < spec.Ids.Count ? spec.Ids[spec.Active] : 0;
                     int to = Math.Max(0, Math.Min(_target.At, spec.Ids.Count - 1));
@@ -985,11 +971,11 @@ namespace ProbablyStolenWindowTabs
             try
             {
                 // 建分頁條也放在 try 裡：丟例外時不要一路丟到 Tick 的 catch（每幀中斷畫分頁條、不更新上一幀開著的、不寫檔）
-                if (!_strips.TryGetValue(w.Pointer, out var strip) || !strip.Alive)
+                if (!_strips.TryGetValue(w, out var strip) || !strip.Alive)
                 {
                     strip = TabStrip.Create(w);
                     if (strip == null) return;
-                    _strips[w.Pointer] = strip;
+                    _strips[w] = strip;
                     if (WindowTabsMod.Debug) WindowTabsMod.DebugLog($"建分頁條：{TabStrip.Describe(w)}");
                 }
                 strip.Show(spec);

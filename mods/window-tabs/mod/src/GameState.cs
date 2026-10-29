@@ -1,5 +1,5 @@
 using System;
-using Il2Cpp;
+using TMPro;
 using UnityEngine.Localization.Settings;
 
 namespace ProbablyStolenWindowTabs
@@ -12,24 +12,27 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 目前這場遊戲：PlayerStore.saveSlotId 與 runID（每開一場新遊戲產生一個 GUID）。
-        /// 讀靜態欄位 instance，不用 Instance 屬性：屬性可能在沒有實例時順手建一個新的。
+        /// 先看 HasInstance：Instance 屬性在沒有實例時會順手建一個新的。
         /// </summary>
         internal static bool TryGetRun(out int slot, out string runId)
         {
             slot = -1;
             runId = null;
-            var ps = PlayerStore.instance;
-            if (ps == null) return false;
+            if (!PlayerStore.HasInstance) return false;
+            var ps = PlayerStore.Instance;
             slot = ps.saveSlotId;
             runId = ps.runID;
             return !string.IsNullOrEmpty(runId);
         }
 
+        /// <summary>目前的 PlayerStore；還沒有實例時回傳 null（不叫 Instance 屬性：它會建一個新的）。</summary>
+        internal static PlayerStore Store() => PlayerStore.HasInstance ? PlayerStore.Instance : null;
+
         /// <summary>
-        /// 遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色；中文是 NotoSansSC 動態字型），寫法照待辦清單、交易所預覽 mod。
-        /// 自己建的 TMP 用它，中文才不會缺字。
+        /// 遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色；中文是 NotoSansSC 動態字型），寫法照待辦清單、交易所預覽 mod；
+        /// 和遊戲建文字節點時（TreeNodeRender.InstantiateText 的 ApplyLocaleFont）同一個挑法。自己建的 TMP 用它，中文才不會缺字。
         /// </summary>
-        internal static Il2CppTMPro.TMP_FontAsset FindFont()
+        internal static TMP_FontAsset FindFont()
         {
             try
             {
@@ -45,7 +48,7 @@ namespace ProbablyStolenWindowTabs
                 }
             }
             catch (Exception e) { WindowTabsMod.DebugLog($"取得遊戲字型失敗，改用 TMP 預設字型：{e.Message}"); }
-            return Il2CppTMPro.TMP_Settings.defaultFontAsset;
+            return TMP_Settings.defaultFontAsset;
         }
     }
 }

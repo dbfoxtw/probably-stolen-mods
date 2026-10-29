@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace ProbablyStolenWindowTabs.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：合併、拆開、重排、分頁名稱的編號跟著箱子與預告分頁的名稱、
-    /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、讀檔後失效的編號、資料檔（含編號、舊版格式）。
+    /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、讀檔後失效的編號、
+    /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -39,9 +40,9 @@ namespace ProbablyStolenWindowTabs.Verify
             LiftedReorderTest();
             PositionTest();
             StaleTest();
-            var dir = Path.Combine(Path.GetTempPath(), "WindowTabs-verify-" + Guid.NewGuid().ToString("N"));
-            try { StoreTest(dir); }
-            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+            StoreTest();
+            DemoFileTest();
+            DateStringTest();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -316,8 +317,8 @@ namespace ProbablyStolenWindowTabs.Verify
             // 編號裡不認得的欄位：別的分頁的分配變了，沒變的那幾個照樣留著（沿用原本的物件）
             r = Named(new[] { (1, "箱"), (2, "箱"), (3, "箱") });
             g = r.Groups[0];
-            var extra = new Dictionary<string, System.Text.Json.JsonElement> { ["color"] = System.Text.Json.JsonDocument.Parse("\"red\"").RootElement };
-            var hidden = new Dictionary<string, System.Text.Json.JsonElement> { ["color"] = System.Text.Json.JsonDocument.Parse("\"blue\"").RootElement };
+            var extra = new Dictionary<string, JToken> { ["color"] = new JValue("red") };
+            var hidden = new Dictionary<string, JToken> { ["color"] = new JValue("blue") };
             g.Numbers = new Dictionary<int, TabNumber>
             {
                 [1] = new TabNumber { N = 1, Name = "箱", Extra = extra },
@@ -615,50 +616,71 @@ namespace ProbablyStolenWindowTabs.Verify
             Eq(r.Groups[0].Active, 4, "目前那頁失效時改成留下的");
         }
 
-        static void StoreTest(string dir)
+        /// <summary>代替 ModHelper 的 ModData：檔名 → 內容（沒有的檔讀到 null，照 ReadModDataFileText）。</summary>
+        sealed class MemoryFiles
+        {
+            public readonly Dictionary<string, string> Files = new Dictionary<string, string>();
+            public string Read(string name) => Files.TryGetValue(name, out var t) ? t : null;
+            public void Write(string name, string text) => Files[name] = text ?? "";
+        }
+
+        static TabStore NewStore(MemoryFiles files, List<string> warnings) => new TabStore(files.Read, files.Write, w => warnings.Add(w));
+
+        static void StoreTest()
         {
             var warnings = new List<string>();
-            var store = new TabStore(dir, w => warnings.Add(w));
-            var path = store.PathOf(2);
+            var files = new MemoryFiles();
+            var store = NewStore(files, warnings);
+            var path = TabStore.FileName(2);
+            Eq(path, "slot_2.json", "檔名");
 
             Eq(store.Load(2, "run-a").Groups.Count, 0, "沒有檔案時是空的");
 
             var r = store.Load(2, "run-a");
             r.Merge(new[] { 5 }, 5, 4, null, 12.5f, -30f, out _);
             store.Save(r);
-            Check(File.Exists(path) && !File.Exists(path + ".tmp"), "寫進 slot_2.json、沒留下暫存檔");
+            Check(files.Files.ContainsKey(path) && files.Files.Count == 1, "寫進 slot_2.json（整檔寫入，沒有暫存檔）");
             var back = store.Load(2, "run-a");
             Eq(back.Groups.Count, 1, "讀回來一組");
             Seq(back.Groups[0].Members, new[] { 4, 5 }, "讀回來的順序");
             Eq((back.Groups[0].Active, back.Groups[0].X, back.Groups[0].Y), (5, 12.5f, -30f), "目前那頁與位置");
             Eq(store.Load(2, "run-b").Groups.Count, 0, "別場遊戲的不算");
+            Check(files.Files[path].Contains("\"runId\": \"run-a\""), "別場遊戲讀的時候不改檔案");
 
             // 手改壞的資料整理成合理的樣子
-            File.WriteAllText(path,
+            files.Files[path] =
                 "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"future\":1,\"groups\":[" +
                 "{\"members\":[1,0,2,1],\"active\":9,\"x\":0,\"y\":0,\"color\":\"red\"}," +
                 "{\"members\":[2,3],\"active\":3}," +
-                "{\"members\":[7]},null]}",
-                new UTF8Encoding(false));
+                "{\"members\":[7]},null]}";
             var fixedUp = store.Load(2, "run-a");
             Eq(fixedUp.Groups.Count, 1, "重複的編號只留在第一組、不到兩頁的組拿掉");
             Seq(fixedUp.Groups[0].Members, new[] { 1, 2 }, "去掉 0 與重複");
             Eq(fixedUp.Groups[0].Active, 1, "目前那頁不在組裡時改成第一頁");
             store.Save(fixedUp);
-            var text = File.ReadAllText(path, Encoding.UTF8);
+            var text = files.Files[path];
             Check(text.Contains("future") && text.Contains("color"), "不認得的欄位（最外層與組裡）寫回去還在");
 
-            // 壞掉的檔：改用新的、備份成 .bad、警告
-            File.WriteAllText(path, "{ not json", new UTF8Encoding(false));
+            // 壞掉的檔：改用新的、原內容另存成 .bad、警告
+            const string broken = "{ not json";
+            files.Files[path] = broken;
             warnings.Clear();
             Eq(store.Load(2, "run-a").Groups.Count, 0, "壞掉的檔改用新的一份");
-            Check(File.Exists(path + ".bad"), "壞掉的檔備份成 .bad");
+            Check(files.Read(path + ".bad") == broken, "壞掉的檔的原內容備份成 .bad");
             Eq(warnings.Count, 1, "壞掉時警告一次");
-            File.WriteAllText(path, "null", new UTF8Encoding(false));
+            Check(warnings.Count == 1 && warnings[0].Contains(".bad"), "警告裡寫了備份的檔名");
+            Check(files.Read(path) == broken, "壞掉的檔本身不動（下次存檔才蓋掉）");
+            files.Files[path] = "null";
             Eq(store.Load(2, "run-a").Groups.Count, 0, "內容是 null 也改用新的一份");
 
+            // 讀檔函式丟例外（ModHelper 讀不了）：警告、用新的一份
+            var throwing = new TabStore(_ => throw new InvalidOperationException("讀不了"), files.Write, w => warnings.Add(w));
+            warnings.Clear();
+            Eq(throwing.Load(2, "run-a").Groups.Count, 0, "讀檔丟例外時用新的一份");
+            Eq(warnings.Count, 1, "讀檔丟例外時警告一次");
+
             // 分頁名稱的編號：寫進去讀回來還在；組裡沒有的、不合理的拿掉；編號裡不認得的欄位保留
-            File.Delete(path);
+            files.Files.Remove(path);
             r = store.Load(2, "run-a");
             r.Groups.Add(new TabGroup { Members = new List<int> { 4, 5, 6 }, Active = 4 });
             r.Groups[0].Numbers = new Dictionary<int, TabNumber>
@@ -667,39 +689,193 @@ namespace ProbablyStolenWindowTabs.Verify
                 [6] = new TabNumber { N = 3, Name = "儲藏區" },
             };
             store.Save(r);
-            text = File.ReadAllText(path, Encoding.UTF8);
+            text = files.Files[path];
             Check(text.Contains("\"numbers\"") && text.Contains("儲藏區"), "編號寫進檔案（中文不跳脫）");
             back = store.Load(2, "run-a");
             var nums = back.Groups[0].Numbers;
             Check(nums != null && nums.Count == 2 && nums[4].N == 1 && nums[6].N == 3 && nums[6].Name == "儲藏區", "編號讀回來還在");
-            File.WriteAllText(path,
+            files.Files[path] =
                 "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"groups\":[" +
-                "{\"members\":[4,5],\"active\":4,\"numbers\":{\"4\":{\"n\":2,\"name\":\"箱\",\"color\":\"red\"},\"9\":{\"n\":1,\"name\":\"箱\"},\"5\":{\"n\":0,\"name\":\"箱\"}}}]}",
-                new UTF8Encoding(false));
+                "{\"members\":[4,5],\"active\":4,\"numbers\":{\"4\":{\"n\":2,\"name\":\"箱\",\"color\":\"red\"},\"9\":{\"n\":1,\"name\":\"箱\"},\"5\":{\"n\":0,\"name\":\"箱\"}}}]}";
             back = store.Load(2, "run-a");
             nums = back.Groups[0].Numbers;
             Check(nums != null && nums.Count == 1 && nums[4].N == 2, "組裡沒有的（9）、不合理的（0 號）編號拿掉");
             store.Save(back);
-            Check(File.ReadAllText(path, Encoding.UTF8).Contains("color"), "編號裡不認得的欄位寫回去還在");
+            Check(files.Files[path].Contains("color"), "編號裡不認得的欄位寫回去還在");
 
             // 舊版的檔（沒有編號）：讀得進來、沒有編號資料、寫回去也不多一個空的欄位
-            File.WriteAllText(path, "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"groups\":[{\"members\":[4,5],\"active\":4,\"x\":1,\"y\":2}]}",
-                new UTF8Encoding(false));
+            files.Files[path] = "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"groups\":[{\"members\":[4,5],\"active\":4,\"x\":1,\"y\":2}]}";
             back = store.Load(2, "run-a");
             Check(back.Groups.Count == 1 && back.Groups[0].Numbers == null, "舊版的檔讀得進來、沒有編號");
             store.Save(back);
-            Check(!File.ReadAllText(path, Encoding.UTF8).Contains("numbers"), "沒有編號時不寫這欄");
+            Check(!files.Files[path].Contains("numbers"), "沒有編號時不寫這欄");
 
             // 舊版 mod（0.1.0，沒有 numbers 這欄）讀新檔：當成不認得的欄位原樣留著，寫回去還在
             r = store.Load(2, "run-a");
             r.Groups[0].Numbers = new Dictionary<int, TabNumber> { [4] = new TabNumber { N = 2, Name = "箱" } };
             store.Save(r);
             var opts = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-            var old = System.Text.Json.JsonSerializer.Deserialize<OldRecord>(File.ReadAllText(path, Encoding.UTF8), opts);
+            var old = System.Text.Json.JsonSerializer.Deserialize<OldRecord>(files.Files[path], opts);
             Check(old != null && old.Groups.Count == 1 && old.Groups[0].Members.SequenceEqual(new[] { 4, 5 }), "舊版讀得懂新檔的組");
-            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(old, opts), new UTF8Encoding(false));
+            files.Files[path] = System.Text.Json.JsonSerializer.Serialize(old, opts);
             back = store.Load(2, "run-a");
             Check(back.Groups[0].Numbers != null && back.Groups[0].Numbers[4].N == 2, "舊版寫回去，新版讀到的編號還在");
+        }
+
+        /// <summary>
+        /// Demo 版（1.0.0，MelonLoader）用 System.Text.Json 寫出來的檔（照的格式：縮排、中文不跳脫、
+        /// 位置是整數或小數、numbers 的鍵是字串、各層都可能有不認得的欄位）。玩家自己把 Demo 的檔搬過來、或新版 mod 加了欄位時，
+        /// 正式版（Newtonsoft）照樣讀得懂、寫回去欄位不丟；System.Text.Json 也讀得懂 Newtonsoft 寫的。
+        /// </summary>
+        static void DemoFileTest()
+        {
+            const string demo = @"{
+  ""version"": 1,
+  ""slot"": 9,
+  ""runId"": ""5f0c2a7e-1d2b-4c3a-9e8f-0a1b2c3d4e5f"",
+  ""groups"": [
+    {
+      ""members"": [
+        123,
+        456,
+        -102
+      ],
+      ""active"": 456,
+      ""x"": -210,
+      ""y"": 140.5,
+      ""numbers"": {
+        ""123"": {
+          ""n"": 1,
+          ""name"": ""儲藏區"",
+          ""tint"": ""#ff0000""
+        },
+        ""456"": {
+          ""n"": 2,
+          ""name"": ""儲藏區""
+        }
+      },
+      ""pinned"": true
+    },
+    {
+      ""members"": [
+        7,
+        8
+      ],
+      ""active"": 7,
+      ""x"": 0,
+      ""y"": 0
+    }
+  ],
+  ""future"": {
+    ""list"": [
+      1,
+      2
+    ],
+    ""note"": ""中文""
+  }
+}";
+            var warnings = new List<string>();
+            var files = new MemoryFiles();
+            files.Files[TabStore.FileName(9)] = demo;
+            var store = NewStore(files, warnings);
+            var r = store.Load(9, "5f0c2a7e-1d2b-4c3a-9e8f-0a1b2c3d4e5f");
+            Eq(warnings.Count, 0, "Demo 版的檔：讀的時候沒有警告");
+            Eq(r.Groups.Count, 2, "Demo 版的檔：兩組都在");
+            var g = r.Groups[0];
+            Seq(g.Members, new[] { 123, 456, -102 }, "Demo 版的檔：分頁順序（含固定設施的負數）");
+            Eq((g.Active, g.X, g.Y), (456, -210f, 140.5f), "Demo 版的檔：目前那頁與位置（整數、小數都讀得懂）");
+            Check(g.Numbers != null && g.Numbers.Count == 2 && g.Numbers[123].N == 1 && g.Numbers[456].N == 2 && g.Numbers[456].Name == "儲藏區",
+                "Demo 版的檔：分頁名稱的編號");
+            Check(g.Numbers[123].Extra != null && (string)g.Numbers[123].Extra["tint"] == "#ff0000", "Demo 版的檔：編號裡不認得的欄位讀進來");
+            Check(g.Extra != null && (bool)g.Extra["pinned"], "Demo 版的檔：組裡不認得的欄位讀進來");
+            Check(r.Extra != null && r.Extra.ContainsKey("future"), "Demo 版的檔：最外層不認得的欄位讀進來");
+            Check(r.Groups[1].Numbers == null, "Demo 版的檔：沒有編號的組是 null");
+
+            store.Save(r);
+            var text = files.Files[TabStore.FileName(9)];
+            Check(text.Contains("儲藏區") && text.Contains("\"note\": \"中文\""), "寫回去：中文照原樣、不跳脫");
+            Check(text.Contains("\"tint\"") && text.Contains("\"pinned\"") && text.Contains("\"future\""), "寫回去：各層不認得的欄位都還在");
+            Check(!text.Contains("\"Extra\"") && !text.Contains("\"Members\""), "寫回去：欄位名稱照原本的小寫（沒有用 C# 的名稱）");
+            Check(text.Contains("\n  \"groups\": ["), "寫回去：照樣縮排（玩家打開看得懂）");
+
+            // 寫回去的再讀一次（Newtonsoft 自己讀自己）：內容不變
+            var again = store.Load(9, "5f0c2a7e-1d2b-4c3a-9e8f-0a1b2c3d4e5f");
+            Check(again.Groups.Count == 2 && again.Groups[0].Members.SequenceEqual(new[] { 123, 456, -102 }) && again.Groups[0].Active == 456
+                  && again.Groups[0].X == -210f && again.Groups[0].Y == 140.5f && again.Groups[0].Numbers[456].N == 2,
+                "寫回去再讀：組、位置、編號都一樣");
+            var future = again.Extra["future"] as JObject;
+            Check(future != null && (string)future["note"] == "中文" && future["list"] is JArray list && list.Count == 2,
+                "寫回去再讀：最外層不認得的欄位內容（物件、陣列）一樣");
+
+            // System.Text.Json（Demo 版的寫法）也讀得懂 Newtonsoft 寫的
+            var stj = System.Text.Json.JsonSerializer.Deserialize<OldRecord>(text);
+            Check(stj != null && stj.Slot == 9 && stj.Groups.Count == 2 && stj.Groups[0].Members.SequenceEqual(new[] { 123, 456, -102 }) && stj.Groups[0].X == -210f,
+                "System.Text.Json 讀得懂寫回去的檔");
+
+            // 同一槽開了新遊戲（runId 不同）：新的一份、不警告
+            warnings.Clear();
+            var other = store.Load(9, "another-run");
+            Check(other.Groups.Count == 0 && other.RunId == "another-run" && other.Slot == 9, "別場遊戲：新的一份（槽位、runId 是現在的）");
+            Eq(warnings.Count, 0, "別場遊戲：不警告");
+            Check(!files.Files.ContainsKey(TabStore.FileName(9) + ".bad"), "別場遊戲：不當成壞檔");
+        }
+
+        /// <summary>
+        /// 不認得的欄位裡像日期的字串：Newtonsoft 預設會把含時間的 ISO 日期讀成 DateTime、寫回去格式變了
+        /// （小數秒的寫法、時區換成本機的），TabStore 設了 DateParseHandling.None，最外層、每組、每個編號裡都要原樣寫回去。
+        /// 三個值都挑了預設會被改掉的寫法（拿掉 DateParseHandling.None 時這裡會失敗，2026-10-29 試過）；
+        /// 只有日期的（"2026-10-29"）Newtonsoft 本來就不當日期，一起放著確認。
+        /// </summary>
+        static void DateStringTest()
+        {
+            const string withDates = @"{
+  ""version"": 1,
+  ""slot"": 3,
+  ""runId"": ""run-d"",
+  ""seen"": ""2026-10-29T00:00:00.000Z"",
+  ""day"": ""2026-10-29"",
+  ""groups"": [
+    {
+      ""members"": [
+        4,
+        5
+      ],
+      ""active"": 4,
+      ""x"": 0,
+      ""y"": 0,
+      ""seen"": ""2026-10-28T12:34:56.100"",
+      ""numbers"": {
+        ""4"": {
+          ""n"": 1,
+          ""name"": ""箱"",
+          ""seen"": ""2026-10-27T01:02:03-05:00""
+        },
+        ""5"": {
+          ""n"": 2,
+          ""name"": ""箱""
+        }
+      }
+    }
+  ]
+}";
+            var warnings = new List<string>();
+            var files = new MemoryFiles();
+            var path = TabStore.FileName(3);
+            files.Files[path] = withDates;
+            var store = NewStore(files, warnings);
+            var r = store.Load(3, "run-d");
+            Eq(warnings.Count, 0, "像日期的字串：讀的時候沒有警告");
+            Check(r.Extra != null && r.Extra["seen"].Type == JTokenType.String, "像日期的字串：最外層讀進來還是字串");
+            Check(r.Groups.Count == 1 && r.Groups[0].Extra != null && r.Groups[0].Extra["seen"].Type == JTokenType.String,
+                "像日期的字串：組裡讀進來還是字串");
+            Check(r.Groups.Count == 1 && r.Groups[0].Numbers != null && r.Groups[0].Numbers[4].Extra != null
+                  && r.Groups[0].Numbers[4].Extra["seen"].Type == JTokenType.String, "像日期的字串：編號裡讀進來還是字串");
+            store.Save(r);
+            var text = files.Files[path];
+            Check(text.Contains("\"seen\": \"2026-10-29T00:00:00.000Z\"") && text.Contains("\"day\": \"2026-10-29\""),
+                "像日期的字串：最外層寫回去完全一樣");
+            Check(text.Contains("\"seen\": \"2026-10-28T12:34:56.100\""), "像日期的字串：組裡寫回去完全一樣");
+            Check(text.Contains("\"seen\": \"2026-10-27T01:02:03-05:00\""), "像日期的字串：編號裡寫回去完全一樣");
         }
 
         /// <summary>舊版 mod（0.1.0）的資料檔格式：沒有 numbers，不認得的欄位用 JsonExtensionData 留著。</summary>

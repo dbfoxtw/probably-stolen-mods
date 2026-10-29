@@ -1,5 +1,6 @@
 @echo off
-rem Remove the mod dll from the game (its data in UserData\WindowTabs is kept).
+rem Remove the mod from the game (deletes Mods\dbfoxtw.window-tabs). Close the game first.
+rem Its data (ModData\dbfoxtw_window-tabs in the save folder: your tab groups) is kept.
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"
