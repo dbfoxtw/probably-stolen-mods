@@ -1,5 +1,5 @@
 using System;
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -20,7 +20,11 @@ namespace ProbablyStolenWindowGroups
         static readonly Color Back = new Color(20 / 255f, 16 / 255f, 22 / 255f, 190 / 255f);
         static readonly Color Cream = new Color(240 / 255f, 234 / 255f, 214 / 255f, 1f);
 
+        /// <summary>蓋在遊戲所有介面（遊戲最高的是 CustomUIManager 的 overlay 900）與待辦清單的懸浮單（32000）上面。</summary>
+        const int SortingOrder = 32100;
+
         static GameObject _root;
+        static Canvas _canvas;
         static RectTransform _panel;
         static TextMeshProUGUI _text;
         static CanvasGroup _group;
@@ -34,11 +38,17 @@ namespace ProbablyStolenWindowGroups
                 Ensure();
                 var font = GameState.FindFont(); // 每次重挑：玩家可能在選項換了語言
                 if (font != null && _text.font != font) _text.font = font;
-                _text.text = message;
-                var size = _text.GetPreferredValues(message);
-                _panel.sizeDelta = new Vector2(Mathf.Ceil(size.x) + PadX * 2, Mathf.Ceil(size.y) + PadY * 2);
+                // 遊戲建 FloatingWindowCanvas 時把已經存在的 overlay Canvas 的 sortingOrder 各加 1（UIFamilyLayer.EnsureCanvas，
+                // 每次進店鋪畫面一次）；這個 Canvas 不隨場景銷毀，每次顯示時設回來，免得一直往上加
+                _canvas.sortingOrder = SortingOrder;
+                // 先打開再設字、量字（同一幀裡，畫面上看不到大小不對的那一下）：量的時候元件是啟用的，和平常顯示時一樣
                 _group.alpha = 1f;
                 _root.SetActive(true);
+                // 先設 text 再量元件自己的字（不帶字串的 GetPreferredValues）：繁中 mod 在 text 的 setter 就把簡中轉成繁中，
+                // 量傳進去的原字串會和顯示的不同。不換行，寬高都照轉換後的字
+                _text.text = message;
+                var size = _text.GetPreferredValues();
+                _panel.sizeDelta = new Vector2(Mathf.Ceil(size.x) + PadX * 2, Mathf.Ceil(size.y) + PadY * 2);
                 _shownAt = Time.unscaledTime;
             }
             catch (Exception e)
@@ -70,9 +80,9 @@ namespace ProbablyStolenWindowGroups
             _root = new GameObject("WindowGroups_Toast");
             _root.layer = 5; // UI
             Object.DontDestroyOnLoad(_root); // 建一次就好，離開店鋪畫面時只是藏起來
-            var canvas = _root.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 32100; // 蓋在遊戲所有介面（與待辦清單的懸浮單）上面
+            _canvas = _root.AddComponent<Canvas>();
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.sortingOrder = SortingOrder;
             var scaler = _root.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：按鍵的寫法與比對、群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、提示文字（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：按鍵的寫法與比對、遊戲也用的鍵、群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、提示與設定的文字（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -14,6 +14,11 @@
     <Compile Include="..\src\GroupStore.cs" Link="GroupStore.cs" />
     <Compile Include="..\src\Rules.cs" Link="Rules.cs" />
     <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- GroupStore 用的 JSON：mod 在遊戲裡用遊戲自帶的 Newtonsoft.Json（組件版本 13.0.0.0），這裡用同一個大版本的 NuGet 套件（照一鍵關窗） -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>

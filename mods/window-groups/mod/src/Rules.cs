@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ProbablyStolenWindowGroups
 {
-    /// <summary>不碰 Unity 的規則：群組數量、預設按鍵、叫出時關哪些、讀檔後丟哪些編號。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>
@@ -11,7 +11,7 @@ namespace ProbablyStolenWindowGroups
         /// </summary>
         internal const int GroupCount = 20;
 
-        /// <summary>設定檔裡的名稱：Group3Recall、Group3Save。</summary>
+        /// <summary>設定的名稱（ModConfig 的 key，沿用 Demo 的 MelonPreferences 項目名）：Group3Recall、Group3Save。</summary>
         internal static string EntryName(int group, bool save) => $"Group{group}{(save ? "Save" : "Recall")}";
 
         /// <summary>
@@ -35,23 +35,65 @@ namespace ProbablyStolenWindowGroups
             }
         }
 
+        /// <summary>遊戲操作提示的按鍵綁定 id（KeyBindHelper.CONTROL_HINTS）：群組的鍵和它同一個主要的鍵時 mod 會擋。</summary>
+        internal const string ControlHintsId = "control_hints";
+        /// <summary>遊戲工具箱 1～9 的按鍵綁定 id 開頭（toolbox_slot_1～9）：群組的鍵成立時 mod 整個擋掉工具箱快捷鍵。</summary>
+        internal const string ToolboxSlotPrefix = "toolbox_slot_";
+
+        /// <summary>
+        /// 這一幀成立的群組按鍵要不要讓遊戲的操作提示讓開：主要的鍵（KeyCode 名稱）等於操作提示目前綁的鍵。
+        /// 正式版的操作提示改成按鍵綁定（預設 O，Demo 時的 0 不再觸發），玩家可以改鍵，所以照目前綁的鍵比，不寫死。
+        /// controlHintsKey 是 KeyBindHelper.Get("control_hints") 的名稱；None（玩家沒綁）或空的時沒有要讓的。
+        /// </summary>
+        internal static bool BlocksControlHints(string mainKey, string controlHintsKey) =>
+            !string.IsNullOrEmpty(mainKey) && !string.IsNullOrEmpty(controlHintsKey) && controlHintsKey != "None" &&
+            string.Equals(mainKey, controlHintsKey, System.StringComparison.Ordinal);
+
+        /// <summary>遊戲按鍵綁定的 id → 給 log 看的用途（KeyBindHelper 的預設清單）。不在這裡的 id 照 id 寫。</summary>
+        static readonly Dictionary<string, string> BindingUse = new Dictionary<string, string>
+        {
+            ["rotate_cw"] = "旋轉物品",
+            ["rotate_ccw"] = "反方向旋轉物品",
+            ["flip_item"] = "翻轉物品",
+            ["reset_orientation"] = "把物品轉回原本的方向",
+            ["trash_item"] = "把滑鼠指著的物品丟進垃圾桶",
+            ["sort_menu"] = "打開排序選單",
+            ["quick_move_inventory"] = "快速轉移物品（搭滑鼠）",
+            ["quick_move_showcase"] = "快速轉移物品（搭滑鼠）",
+            ["quick_move_storage"] = "快速轉移物品（搭滑鼠）",
+            ["pin_mode"] = "進入圖釘模式",
+            ["open_options"] = "打開選項",
+            ["advance_dialogue"] = "推進對話",
+        };
+
         /// <summary>
         /// 遊戲自己不看修飾鍵就讀的鍵 → 遊戲拿它做什麼。玩家把群組設成這些鍵時
-        /// 警告：按下時遊戲的功能也會動作。上排數字（工具箱）與 0、O（操作提示）mod 會擋，不在這裡。
+        /// 警告：按下時遊戲的功能也會動作。來源有兩種：
+        /// - 遊戲的按鍵綁定（gameBindings：KeyBindHelper.Bindings 每個 id 與目前綁的 KeyCode 名稱，玩家可以改）。
+        ///   工具箱（toolbox_slot_*）與操作提示（control_hints）mod 會擋，不算。
+        /// - 遊戲寫死的：Escape（遊戲保留、不能綁）、T（切換滑鼠平滑）、小鍵盤數字（PhoneUIManager 的電話撥號）。
+        /// 只在 log 警告，照用（照一鍵關窗 Demo 時對 Delete、Esc 的做法）。純函式：遊戲的綁定由呼叫的人傳進來，離線測試直接測。
         /// </summary>
-        internal static string GameKeyUse(string keyCode)
+        internal static string GameKeyUse(string keyCode, IEnumerable<(string id, string key)> gameBindings)
         {
+            if (string.IsNullOrEmpty(keyCode)) return null;
+            var uses = new List<string>();
             switch (keyCode)
             {
-                case "Delete": return "遊戲用它把滑鼠指著的物品丟進垃圾桶";
-                case "Escape": return "遊戲用它關視窗、打開暫停選單";
-                case "Space": return "遊戲用它推進對話";
-                case "P": return "遊戲用它打開選項";
-                case "T": return "遊戲用它切換滑鼠平滑";
+                case "Escape": uses.Add("遊戲用它關視窗、打開暫停選單"); break;
+                case "T": uses.Add("遊戲用它切換滑鼠平滑"); break;
             }
-            if (keyCode != null && keyCode.Length == 7 && keyCode.StartsWith("Keypad", System.StringComparison.Ordinal) && char.IsDigit(keyCode[6]))
-                return "遊戲用小鍵盤的數字撥電話";
-            return null;
+            if (keyCode.Length == 7 && keyCode.StartsWith("Keypad", System.StringComparison.Ordinal) && char.IsDigit(keyCode[6]))
+                uses.Add("遊戲用小鍵盤的數字撥電話");
+            if (gameBindings != null)
+                foreach (var (id, key) in gameBindings)
+                {
+                    if (string.IsNullOrEmpty(id) || id == ControlHintsId || id.StartsWith(ToolboxSlotPrefix, System.StringComparison.Ordinal)) continue;
+                    if (!string.Equals(key, keyCode, System.StringComparison.Ordinal)) continue;
+                    var what = BindingUse.TryGetValue(id, out var u) ? u : $"按鍵綁定 {id} 的功能";
+                    uses.Add($"遊戲用它{what}（選項的按鍵綁定 {id}）");
+                }
+            return uses.Count == 0 ? null : string.Join("；", uses);
         }
 
         /// <summary>

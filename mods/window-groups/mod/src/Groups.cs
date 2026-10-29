@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Il2Cpp;
-using Il2CppInterop.Runtime;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using MelonLoader;
-using MelonLoader.Utils;
 using UnityEngine;
 
 namespace ProbablyStolenWindowGroups
@@ -16,41 +11,32 @@ namespace ProbablyStolenWindowGroups
     /// </summary>
     static class Groups
     {
+        /// <summary>箱子「打開過」的標籤（正式版的 OpenContentAction 新增的一步；ContainerHelper、LouToyBoxHelper 會看）。</summary>
+        const string TrackOpenedTag = "TRACK_OPENED_TAG", OpenedTag = "OPENED_TAG";
+
         static GroupStore _store;
         static GroupRecord _rec;
-        /// <summary>ModHook 的委派要一直握著，免得被回收。</summary>
-        static Il2CppSystem.Action _loaded;
 
-        internal static void Init(string dir) => _store = new GroupStore(dir, w => WindowGroupsMod.Log.Warning(w));
-
-        internal static void Install(MelonLogger.Instance log)
-        {
-            try
-            {
-                _loaded = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(new Action(OnGameLoaded));
-                ModHook.add_OnGameLoadedLate(_loaded);
-            }
-            catch (Exception e) { log.Warning($"訂閱讀檔事件失敗，讀檔後不會清掉沒存到的編號：{e.Message}"); }
-        }
+        internal static void Init(GroupStore store) => _store = store;
 
         /// <summary>離開店鋪畫面：這場遊戲的資料丟掉，下次用到再讀。</summary>
         internal static void Reset() => _rec = null;
 
         /// <summary>
-        /// 遊戲讀完存檔（ModHook.OnGameLoadedLate）：重讀這場遊戲的群組，丟掉編號大於物品編號計數器的（Rules.IsStale）。
-        /// 只在這裡丟：讀檔完成前計數器可能還是上一場遊戲的值。
+        /// 遊戲讀完存檔（ModHook.OnGameLoadedLate，在 PlayerStore.LoadGame 結尾）：重讀這場遊戲的群組，丟掉編號大於
+        /// 物品編號計數器的（Rules.IsStale）。只在這裡丟：讀檔完成前計數器可能還是上一場遊戲的值。
         /// </summary>
-        static void OnGameLoaded()
+        internal static void OnGameLoaded()
         {
+            if (!WindowGroupsMod.Ready) return;
             try
             {
                 _rec = null;
                 var r = Record();
-                var ps = PlayerStore.instance;
-                if (r == null || ps == null) return;
-                int n = r.PruneStale(ps.currentUniqueId);
+                if (r == null || !GameState.TryGetUniqueIdCounter(out int counter)) return;
+                int n = r.PruneStale(counter);
                 if (n == 0) return;
-                WindowGroupsMod.DebugLog($"讀檔：丟掉群組裡 {n} 個存檔裡還沒有的編號（計數器 {ps.currentUniqueId}）");
+                WindowGroupsMod.DebugLog($"讀檔：丟掉群組裡 {n} 個存檔裡還沒有的編號（計數器 {counter}）");
                 Persist(r);
             }
             catch (Exception e) { WindowGroupsMod.Log.Error($"讀檔後整理群組出錯：{e}"); }
@@ -70,10 +56,11 @@ namespace ProbablyStolenWindowGroups
             return _rec;
         }
 
+        /// <summary>寫回；寫檔失敗只警告（這次遊戲裡的群組照樣在記憶體裡）。</summary>
         static void Persist(GroupRecord r)
         {
             try { _store.Save(r); }
-            catch (Exception e) { WindowGroupsMod.Log.Warning($"寫入 {_store.PathOf(r.Slot)} 失敗：{e.Message}"); }
+            catch (Exception e) { WindowGroupsMod.Log.Warning($"寫入 {WindowGroupsMod.DataFolder}\\{GroupStore.FileName(r.Slot)} 失敗：{e.Message}"); }
         }
 
         static string Title(PixelWindow w)
@@ -92,13 +79,13 @@ namespace ProbablyStolenWindowGroups
             var r = Record();
             if (r == null) { WindowGroupsMod.DebugLog($"儲存群組 {group}：遊戲還沒載入，不動作"); return; }
             var windows = GameWindows.VisibleWindows().Where(GameWindows.IsGroupWindow).OrderBy(w => w.focusStamp).ToList();
-            var own = windows.Count > 0 ? GameWindows.StoreItemPointers() : null; // null＝不篩選
+            var own = windows.Count > 0 ? GameWindows.StoreItems() : null; // null＝不篩選
             var entries = new List<WindowEntry>();
             var skipped = new List<string>();
             foreach (var w in windows)
             {
                 var item = GameWindows.OwnerItem(w);
-                if (own != null && !own.Contains(item.Pointer)) { skipped.Add($"「{Title(w)}」#{item.uniqueId}"); continue; }
+                if (own != null && !own.Contains(item)) { skipped.Add($"「{Title(w)}」#{item.uniqueId}"); continue; }
                 // 這時才叫 GetUniqueID：還沒有編號的物品發一個（遊戲關窗記位置時本來就會發）
                 int id = item.GetUniqueID();
                 var p = w.rectTransform.anchoredPosition;
@@ -118,6 +105,21 @@ namespace ProbablyStolenWindowGroups
             int count = r.Get(group).Count;
             Toast.Show(GameState.S.Saved(group, count));
             WindowGroupsMod.DebugLog($"儲存群組 {group}（{count} 個，下面的先）：{string.Join("、", entries.Select(e => $"「{e.Title}」#{e.Id} ({e.X:0},{e.Y:0})"))}{skippedNote}");
+        }
+
+        /// <summary>
+        /// 一鍵關窗鎖住的編號（讀法是和一鍵關窗約定好的）：它這次沒在跑就當沒有鎖——
+        /// 也免得 ModHelper 的 ModData 方法順手替沒裝的 mod 建出空資料夾。每次叫出都重讀。
+        /// </summary>
+        static HashSet<int> CloseAllWindowsLocked(List<string> log)
+        {
+            if (!GameState.TryGetRun(out int slot, out string runId)) return new HashSet<int>();
+            if (!GameState.ModRunning(GameState.CloseAllWindowsModId))
+            {
+                log?.Add("一鍵關窗沒在跑，沒有鎖");
+                return new HashSet<int>();
+            }
+            return CloseAllWindowsLocks.Read(name => ModHelper.ReadModDataFileText(GameState.CloseAllWindowsModId, name), slot, runId);
         }
 
         /// <summary>
@@ -158,9 +160,7 @@ namespace ProbablyStolenWindowGroups
 
             // 1. 關掉不在這組的（一鍵關窗鎖住的不關）
             var groupIds = new HashSet<int>(found.Select(f => f.entry.Id));
-            HashSet<int> locked = new HashSet<int>();
-            if (GameState.TryGetRun(out int slot, out string runId))
-                locked = CloseAllWindowsLocks.Read(MelonEnvironment.UserDataDirectory, slot, runId);
+            var locked = CloseAllWindowsLocked(log);
             foreach (var w in GameWindows.VisibleWindows())
             {
                 if (!GameWindows.IsGroupWindow(w)) continue;
@@ -190,7 +190,7 @@ namespace ProbablyStolenWindowGroups
                     bool wasOpen = w.IsVisible();
                     if (!wasOpen)
                     {
-                        // 照 OpenContentAction：標題（箱子可能被標籤機改過名）→ Show（加進 visibleWindows、拉到最上面）。
+                        // 照 OpenContentAction：標題（箱子可能被標籤機改過名）→ Show（加進 visibleWindows、拉到最上面、套用內容分頁）。
                         // 位置下面直接設成群組的，不用 RestoreContentWindowPosition；音效最後只播一次
                         w.SetTitle(item.GetDisplayName(true));
                         w.Show(new Vector2(Input.mousePosition.x, Input.mousePosition.y), translation, false);
@@ -201,6 +201,8 @@ namespace ProbablyStolenWindowGroups
                             log?.Add($"「{e.Title}」#{e.Id} 打不開");
                             continue;
                         }
+                        // 正式版的 OpenContentAction 新增的一步：打開了就記下「打開過」，不然用群組打開的箱子不算打開過
+                        if (item.IsTag(TrackOpenedTag) && !item.IsTag(OpenedTag)) item.EnableTag(OpenedTag);
                         if (sound == null) sound = item.soundContainerOpen ?? "";
                     }
                     w.rectTransform.anchoredPosition = new Vector2(e.X, e.Y);
@@ -214,8 +216,8 @@ namespace ProbablyStolenWindowGroups
             {
                 try
                 {
-                    var audio = AudioManager.Instance;
-                    if (audio != null) audio.TryPlayOne(new Il2CppStringArray(new[] { sound }));
+                    // 先看 Exists：Instance 屬性在沒有實例時會順手建一個新的
+                    if (AudioManager.Exists) AudioManager.Instance.TryPlayOne(sound);
                 }
                 catch (Exception ex) { WindowGroupsMod.DebugLog($"播開啟音效失敗：{ex.Message}"); }
             }

@@ -77,27 +77,30 @@ namespace ProbablyStolenWindowGroups
     /// <summary>一個群組的一個動作綁的鍵。</summary>
     sealed class Binding
     {
-        /// <summary>群組編號 1～12。</summary>
+        /// <summary>群組編號 1～20。</summary>
         public int Group;
         /// <summary>true＝儲存、false＝叫出。</summary>
         public bool Save;
         public Hotkey Key;
-        /// <summary>設定檔裡的名稱（Group3Recall），寫 log 用。</summary>
+        /// <summary>設定的名稱（Group3Recall），寫 log 用。</summary>
         public string Entry;
     }
 
     /// <summary>
     /// 全部 40 個設定（20 組×叫出、儲存）讀成可以用的按鍵：空的不使用；寫錯的不使用並警告；同一個鍵設給兩個動作時，
-    /// 照設定檔的順序（群組 1 叫出、群組 1 儲存、群組 2 叫出…）只有第一個有效並警告；遊戲自己也用的鍵照用並警告。
+    /// 照設定的順序（群組 1 叫出、群組 1 儲存、群組 2 叫出…）只有第一個有效並警告；遊戲自己也用的鍵照用並警告
+    /// （Rules.GameKeyUse；gameBindings 是遊戲按鍵綁定的 id 與目前綁的 KeyCode 名稱）。
     /// </summary>
     sealed class Keymap
     {
         public readonly List<Binding> Bindings = new List<Binding>();
         public readonly List<string> Warnings = new List<string>();
 
-        /// <summary>entries 照設定檔的順序：（設定名稱, 群組, 是不是儲存, 設定的字串）。</summary>
-        public static Keymap Build(IEnumerable<(string entry, int group, bool save, string raw)> entries, Func<string, string> resolve)
+        /// <summary>entries 照設定的順序：（設定名稱, 群組, 是不是儲存, 設定的字串）。</summary>
+        public static Keymap Build(IEnumerable<(string entry, int group, bool save, string raw)> entries, Func<string, string> resolve,
+                                   IEnumerable<(string id, string key)> gameBindings)
         {
+            var game = gameBindings == null ? null : new List<(string id, string key)>(gameBindings); // 每個鍵都要比，只列舉一次
             var map = new Keymap();
             var used = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var (entry, group, save, raw) in entries)
@@ -113,8 +116,8 @@ namespace ProbablyStolenWindowGroups
                 }
                 used[key] = entry;
                 map.Bindings.Add(new Binding { Group = group, Save = save, Key = h, Entry = entry });
-                // 遊戲不看修飾鍵就讀的鍵：照用，但警告按下時遊戲的功能也會動作（照一鍵關窗對 Delete、Esc 的做法）
-                var use = Rules.GameKeyUse(h.Key);
+                // 遊戲不看修飾鍵就讀的鍵：照用，但警告按下時遊戲的功能也會動作（照一鍵關窗 Demo 時對 Delete、Esc 的做法）
+                var use = Rules.GameKeyUse(h.Key, game);
                 if (use != null) map.Warnings.Add($"{entry} = \"{raw}\"：{use}，按下時兩件事會一起發生");
             }
             return map;

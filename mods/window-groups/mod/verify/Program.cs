@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace ProbablyStolenWindowGroups.Verify
 {
     /// <summary>
-    /// 離線測試（不用開遊戲）：按鍵的寫法與比對、群組的資料檔、一鍵關窗的鎖檔、
-    /// 叫出時關哪些、提示文字。任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
+    /// 離線測試（不用開遊戲）：按鍵的寫法與比對、遊戲也用的鍵與操作提示讓開、
+    /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、提示與設定的文字。任何一項失敗就回傳非 0。
+    /// 執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
     {
@@ -31,9 +32,7 @@ namespace ProbablyStolenWindowGroups.Verify
             RulesTest();
             Locks();
             Texts();
-            var dir = Path.Combine(Path.GetTempPath(), "WindowGroups-verify-" + Guid.NewGuid().ToString("N"));
-            try { Store(dir); }
-            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+            Store();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -101,12 +100,23 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(!P("3", out _).ModifiersMatch(true, false, false), "按著 Ctrl 時單按的 3 不成立（工具箱照常）");
         }
 
+        /// <summary>
+        /// 遊戲按鍵綁定的預設值（正式版 KeyBindHelper 的清單：id 與預設的 KeyCode 名稱），模擬 mod 裡的 Settings.GameBindings。
+        /// </summary>
+        static List<(string id, string key)> GameDefaults() => new List<(string id, string key)>
+        {
+            ("rotate_cw", "E"), ("rotate_ccw", "Q"), ("flip_item", "F"), ("reset_orientation", "R"), ("trash_item", "Delete"),
+            ("sort_menu", "S"), ("quick_move_inventory", "LeftControl"), ("quick_move_showcase", "LeftShift"),
+            ("quick_move_storage", "LeftAlt"), ("pin_mode", "P"), ("open_options", "K"), ("control_hints", "O"),
+            ("advance_dialogue", "Space"),
+        }.Concat(Enumerable.Range(1, 9).Select(i => ("toolbox_slot_" + i, "Alpha" + i))).ToList();
+
         static IEnumerable<(string, int, bool, string)> Defaults() =>
             Rules.AllEntries().Select(e => (e.entry, e.group, e.save, Rules.DefaultKey(e.group, e.save)));
 
         static void Keymaps()
         {
-            var map = Keymap.Build(Defaults(), Resolve);
+            var map = Keymap.Build(Defaults(), Resolve, GameDefaults());
             Eq(map.Warnings.Count, 0, "預設按鍵沒有警告");
             Eq(map.Bindings.Count, 18, "預設 18 個按鍵（群組 1～9 各兩個，10～20 空白）");
             var g9 = map.Bindings.Where(b => b.Group == 9).ToList();
@@ -120,7 +130,7 @@ namespace ProbablyStolenWindowGroups.Verify
             custom[2] = ("Group2Recall", 2, false, "ctrl+1"); // 和 Group1Recall 一樣
             custom[22] = ("Group12Recall", 12, false, "F12");
             custom[23] = ("Group12Save", 12, true, "Ctrl+Nope");
-            map = Keymap.Build(custom, Resolve);
+            map = Keymap.Build(custom, Resolve, GameDefaults());
             Check(map.Bindings.Count(b => b.Key.ToString() == "Ctrl+Alpha1") == 1, "重複的鍵只留一個");
             Check(map.Bindings.Any(b => b.Entry == "Group1Recall" && b.Key.ToString() == "Ctrl+Alpha1"), "重複時前面的（群組 1）有效");
             Check(!map.Bindings.Any(b => b.Entry == "Group2Recall"), "重複時後面的（群組 2 叫出）不使用");
@@ -129,17 +139,28 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(!map.Bindings.Any(b => b.Entry == "Group12Save") && map.Warnings.Any(w => w.Contains("Group12Save")), "寫錯的不使用並警告");
             Eq(map.Warnings.Count, 2, "只有兩句警告（重複、寫錯）");
 
-            // 遊戲自己不看修飾鍵就讀的鍵：照用，但警告（上排數字、0、O 由 mod 擋，不警告）
+            // 遊戲自己不看修飾鍵就讀的鍵：照用，但警告（工具箱的數字、操作提示的 O 由 mod 擋，不警告）
             var game = Defaults().ToList();
             game[0] = ("Group1Recall", 1, false, "Ctrl+Delete");
             game[1] = ("Group1Save", 1, true, "Ctrl+Shift+O");
             game[2] = ("Group2Recall", 2, false, "Num5");
-            map = Keymap.Build(game, Resolve);
+            map = Keymap.Build(game, Resolve, GameDefaults());
             Check(map.Bindings.Any(b => b.Entry == "Group1Recall" && b.Key.Key == "Delete"), "設成 Delete 照用");
-            Check(map.Warnings.Any(w => w.Contains("Group1Recall") && w.Contains("垃圾桶")), "設成 Delete 警告會丟東西");
+            Check(map.Warnings.Any(w => w.Contains("Group1Recall") && w.Contains("垃圾桶") && w.Contains("trash_item")), "設成 Delete 警告會丟東西（寫出按鍵綁定的 id）");
             Check(map.Warnings.Any(w => w.Contains("Group2Recall") && w.Contains("電話")), "設成小鍵盤數字警告電話撥號");
             Check(!map.Warnings.Any(w => w.Contains("Group1Save")), "O 由 mod 擋，不警告");
             Eq(map.Warnings.Count, 2, "預設的數字鍵（工具箱）不警告");
+
+            // 玩家在遊戲的選項改了鍵：照目前綁的鍵警告，原本的鍵不再警告
+            var rebound = GameDefaults().Select(b => b.id == "trash_item" ? (b.id, "F5") : b).ToList();
+            var f5 = Defaults().ToList();
+            f5[0] = ("Group1Recall", 1, false, "F5");
+            f5[1] = ("Group1Save", 1, true, "Ctrl+Delete");
+            map = Keymap.Build(f5, Resolve, rebound);
+            Check(map.Warnings.Any(w => w.Contains("Group1Recall") && w.Contains("垃圾桶")), "丟垃圾改成 F5：設成 F5 的群組警告");
+            Check(!map.Warnings.Any(w => w.Contains("Group1Save")), "丟垃圾改成 F5：Delete 不再警告");
+            map = Keymap.Build(f5, Resolve, null);
+            Eq(map.Warnings.Count, 0, "讀不到遊戲的綁定時不比（只少了警告）");
         }
 
         // ── 規則 ──
@@ -175,10 +196,32 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(Rules.ShouldCloseOnRecall(-101, group, locked), "固定設施不在群組：關");
             Check(Rules.ShouldCloseOnRecall(0, new HashSet<int> { 0 }, new HashSet<int> { 0 }), "還沒發編號的物品一定不在群組、也沒鎖過：關");
 
-            Check(Rules.GameKeyUse("Escape") != null && Rules.GameKeyUse("Space") != null && Rules.GameKeyUse("P") != null && Rules.GameKeyUse("T") != null, "遊戲用的 Esc、Space、P、T");
-            Check(Rules.GameKeyUse("Keypad0") != null, "小鍵盤數字是電話");
-            Check(Rules.GameKeyUse("Alpha1") == null && Rules.GameKeyUse("Alpha0") == null && Rules.GameKeyUse("O") == null, "上排數字、0、O 由 mod 擋，不算");
-            Check(Rules.GameKeyUse("F9") == null && Rules.GameKeyUse("KeypadEnter") == null, "F9、小鍵盤 Enter 不算");
+            // 遊戲也用的鍵（正式版：按鍵綁定＋寫死的 Esc、T、小鍵盤數字）
+            var gd = GameDefaults();
+            Check(Rules.GameKeyUse("Escape", gd) != null && Rules.GameKeyUse("T", gd) != null, "遊戲寫死的 Esc、T");
+            Check(Rules.GameKeyUse("Escape", null) != null && Rules.GameKeyUse("T", null) != null, "寫死的不看遊戲的綁定");
+            Check(Rules.GameKeyUse("Keypad0", gd) != null && Rules.GameKeyUse("Keypad9", null) != null, "小鍵盤數字是電話");
+            foreach (var k in new[] { "Space", "P", "K", "Delete", "E", "Q", "F", "R", "S" })
+                Check(Rules.GameKeyUse(k, gd) != null, $"遊戲預設綁定的 {k} 算");
+            Check(Rules.GameKeyUse("Space", gd).Contains("對話") && Rules.GameKeyUse("P", gd).Contains("圖釘") && Rules.GameKeyUse("K", gd).Contains("選項"),
+                  "用途照正式版：空白鍵對話、P 圖釘、K 選項");
+            Check(Rules.GameKeyUse("Alpha1", gd) == null && Rules.GameKeyUse("Alpha9", gd) == null, "工具箱的數字由 mod 擋，不算");
+            Check(Rules.GameKeyUse("O", gd) == null, "操作提示的鍵由 mod 擋，不算");
+            Check(Rules.GameKeyUse("Alpha0", gd) == null, "上排 0 正式版沒有人用");
+            Check(Rules.GameKeyUse("F9", gd) == null && Rules.GameKeyUse("KeypadEnter", gd) == null && Rules.GameKeyUse("Backspace", gd) == null, "F9、小鍵盤 Enter、Backspace 不算");
+            Check(Rules.GameKeyUse("P", null) == null, "沒有遊戲的綁定時 P 不算（Demo 的「P 開選項」拿掉了）");
+            Check(Rules.GameKeyUse("F6", new List<(string, string)> { ("some_new_binding", "F6") }).Contains("some_new_binding"), "不認得的綁定照 id 寫");
+            var twice = new List<(string, string)> { ("rotate_cw", "G"), ("flip_item", "G") };
+            var both = Rules.GameKeyUse("G", twice);
+            Check(both.Contains("旋轉") && both.Contains("翻轉"), "同一個鍵綁了兩個功能：兩個都寫");
+            Check(Rules.GameKeyUse("", gd) == null && Rules.GameKeyUse(null, gd) == null, "空的不算");
+
+            // 操作提示讓開：主要的鍵等於操作提示目前綁的鍵（預設 O，玩家可以改）
+            Check(Rules.BlocksControlHints("O", "O"), "主要的鍵是 O、操作提示是 O：讓開");
+            Check(!Rules.BlocksControlHints("Alpha0", "O"), "上排 0 正式版不再開關操作提示：不用讓");
+            Check(Rules.BlocksControlHints("F5", "F5"), "操作提示改成 F5、群組用 F5：讓開");
+            Check(!Rules.BlocksControlHints("O", "F5"), "操作提示改成 F5、群組用 O：不用讓");
+            Check(!Rules.BlocksControlHints("O", "None") && !Rules.BlocksControlHints("O", null) && !Rules.BlocksControlHints(null, "O"), "沒綁或沒有鍵：不用讓");
 
             Check(Rules.IsStale(101, 100), "大於計數器的編號不算數");
             Check(!Rules.IsStale(100, 100), "等於計數器的編號算數");
@@ -198,16 +241,19 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(CloseAllWindowsLocks.Parse("{\"runId\":\"abc\"}", "abc").Count, 0, "沒有 locked 欄位當成沒有鎖");
             Eq(CloseAllWindowsLocks.Parse("", "abc").Count, 0, "空的檔當成沒有鎖");
             Eq(CloseAllWindowsLocks.Parse("null", "abc").Count, 0, "內容是 null 當成沒有鎖");
-            var dir = Path.Combine(Path.GetTempPath(), "WindowGroups-verify-locks-" + Guid.NewGuid().ToString("N"));
-            try
-            {
-                Eq(CloseAllWindowsLocks.Read(dir, 9, "abc").Count, 0, "沒裝一鍵關窗（沒有資料夾）當成沒有鎖");
-                Directory.CreateDirectory(Path.Combine(dir, "CloseAllWindows"));
-                File.WriteAllText(Path.Combine(dir, "CloseAllWindows", "slot_9.json"), json, new UTF8Encoding(false));
-                Check(CloseAllWindowsLocks.Read(dir, 9, "abc").Contains(9992), "從 UserData\\CloseAllWindows\\slot_9.json 讀");
-                Eq(CloseAllWindowsLocks.Read(dir, 3, "abc").Count, 0, "別的槽沒有檔：沒有鎖");
-            }
-            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+            // 讀檔的函式（遊戲裡是 ModHelper.ReadModDataFileText("dbfoxtw.close-all-windows", 檔名)），這裡用記憶體
+            var files = new Dictionary<string, string>();
+            var asked = new List<string>();
+            Func<string, string> read = name => { asked.Add(name); return files.TryGetValue(name, out var t) ? t : null; };
+            Eq(CloseAllWindowsLocks.Read(read, 9, "abc").Count, 0, "沒有檔（一鍵關窗沒鎖過）當成沒有鎖");
+            Eq(asked.LastOrDefault(), "slot_9.json", "讀的是 slot_9.json");
+            files["slot_9.json"] = json;
+            Check(CloseAllWindowsLocks.Read(read, 9, "abc").Contains(9992), "從 slot_9.json 讀");
+            Eq(CloseAllWindowsLocks.Read(read, 3, "abc").Count, 0, "別的槽沒有檔：沒有鎖");
+            Eq(CloseAllWindowsLocks.Read(_ => throw new System.IO.IOException("鎖住了"), 9, "abc").Count, 0, "讀不了當成沒有鎖");
+            Check(files.Count == 1 && files["slot_9.json"] == json, "讀鎖不改寫一鍵關窗的檔");
+            // 一鍵關窗 2.0.0（Newtonsoft）寫的檔，多了不認得的欄位
+            Check(CloseAllWindowsLocks.Parse("{\"version\":1,\"slot\":9,\"runId\":\"abc\",\"locked\":[5],\"future\":{\"x\":1}}", "abc").Contains(5), "有不認得的欄位也讀得到");
         }
 
         // ── 提示文字 ──
@@ -233,17 +279,38 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(zhs.Skipped(3, 2, 1), "窗口组 3：2 个找不到、1 个打不开", "簡中：找不到又打不開");
             Eq(zhs.Saved(3, 5), "窗口组 3 已保存（5 个窗口）", "簡中：已儲存");
             Check(!zht.Saved(1, 2).Contains("窗口") && !zht.Skipped(1, 2, 1).Contains("个"), "繁中字串沒有簡體字");
+
+            // mod 設定視窗的標籤與說明
+            Eq(en.ConfigLabel(3, false), "Group 3: recall", "英文：叫出的標籤");
+            Eq(en.ConfigLabel(12, true), "Group 12: save", "英文：儲存的標籤");
+            Eq(zht.ConfigLabel(3, false), "視窗群組 3：叫出", "繁中：叫出的標籤");
+            Eq(zhs.ConfigLabel(3, true), "窗口组 3：保存", "簡中：儲存的標籤");
+            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
+            {
+                var st = Strings.For(lang);
+                foreach (var save in new[] { false, true })
+                {
+                    var tip = st.ConfigTip(7, save);
+                    Check(tip.Contains("7"), $"{lang} 說明寫出群組編號");
+                    Check(tip.Contains(save ? "Ctrl+Shift+3" : "Ctrl+3") && tip.Contains("F5"), $"{lang} 說明的例子照 Demo");
+                    Check(!tip.Contains("F12") && !tip.Contains("+0"), $"{lang} 說明不舉 F12、0");
+                }
+            }
+            Check(!zht.ConfigTip(1, true).Contains("窗口") && !zht.ConfigTip(1, false).Contains("这"), "繁中說明沒有簡體字");
         }
 
         // ── 資料檔 ──
 
-        static void Store(string dir)
+        static void Store()
         {
+            // 檔案放在哪裡由 GroupStore 收的兩個函式決定（遊戲裡是 ModHelper 的 ModData），這裡用記憶體
+            var files = new Dictionary<string, string>();
             var warnings = new List<string>();
-            var store = new GroupStore(dir, warnings.Add);
+            var store = new GroupStore(name => files.TryGetValue(name, out var t) ? t : null, (name, text) => files[name] = text, warnings.Add);
 
             var r = store.Load(2, "run-a");
             Eq(r.Get(3).Count, 0, "沒有檔案時是空的");
+            Eq(GroupStore.FileName(2), "slot_2.json", "檔名");
             r.Set(3, new[]
             {
                 new WindowEntry { Id = 101, X = -120.5f, Y = 80f, Title = "工具箱" },
@@ -253,12 +320,15 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(r.Get(3).Count, 2, "同一個編號只留第一個");
             r.Set(1, new[] { new WindowEntry { Id = 7, X = 1f, Y = 2f } });
             store.Save(r);
-            var path = store.PathOf(2);
-            Check(File.Exists(path), "寫成 slot_2.json");
-            var bytes = File.ReadAllBytes(path);
-            Check(!(bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF), "UTF-8 沒有 BOM");
-            Check(File.ReadAllText(path, Encoding.UTF8).Contains("工具箱"), "中文標題照原樣寫（不跳脫成 \\u）");
-            Check(!File.Exists(path + ".tmp"), "暫存檔換掉了");
+            Check(files.ContainsKey("slot_2.json"), "寫成 slot_2.json");
+            Check(files["slot_2.json"].Contains("工具箱"), "中文標題照原樣寫（不跳脫成 \\u）");
+
+            // 格式和 Demo 一樣：欄位名稱 version、slot、runId、groups；視窗的 id、x、y、title；沒有標題的不寫 title
+            var json = JObject.Parse(files["slot_2.json"]);
+            Check(json.Properties().Select(p => p.Name).SequenceEqual(new[] { "version", "slot", "runId", "groups" }), $"欄位名稱與順序：{string.Join(",", json.Properties().Select(p => p.Name))}");
+            var w0 = (JObject)json["groups"]["3"][0];
+            Check(w0.Properties().Select(p => p.Name).SequenceEqual(new[] { "id", "x", "y", "title" }), $"視窗的欄位：{string.Join(",", w0.Properties().Select(p => p.Name))}");
+            Check(((JObject)json["groups"]["1"][0]).Property("title") == null, "沒有標題的不寫 title");
 
             var back = store.Load(2, "run-a");
             var g3 = back.Get(3);
@@ -267,6 +337,11 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(g3[0].X == -120.5f && g3[0].Y == 80f, "位置讀回來一樣（含小數、負數）");
             Eq(g3[1].Title, "垃圾桶", "標題讀回來一樣");
             Eq(back.Get(1).Count, 1, "別組也在");
+
+            // Demo（MelonLoader 版，System.Text.Json）寫的檔照樣讀得到（Demo 的群組不搬，這裡只確認格式相同）
+            files["slot_4.json"] = "{\n  \"version\": 1,\n  \"slot\": 4,\n  \"runId\": \"run-d\",\n  \"groups\": {\n    \"2\": [\n      {\n        \"id\": 2685,\n        \"x\": -320,\n        \"y\": 140.5,\n        \"title\": \"箱子\"\n      }\n    ]\n  }\n}";
+            var demo = store.Load(4, "run-d").Get(2);
+            Check(demo.Count == 1 && demo[0].Id == 2685 && demo[0].X == -320f && demo[0].Y == 140.5f && demo[0].Title == "箱子", "讀得到 Demo 格式的檔");
 
             Check(back.Clear(1), "清空有東西的組回傳 true");
             Eq(back.Get(1).Count, 0, "清空後是空的");
@@ -284,23 +359,28 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(store.Load(2, "run-b").RunId, "run-b", "換成新的一場");
 
             // 不認得的欄位保留（新版 mod 加的，換回舊版時不丟）
-            File.WriteAllText(path,
-                "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"future\":{\"a\":1},\"groups\":{\"6\":[{\"id\":9,\"x\":1,\"y\":2,\"size\":[3,4]}]}}",
-                new UTF8Encoding(false));
+            files["slot_2.json"] = "{\"version\":1,\"slot\":2,\"runId\":\"run-a\",\"future\":{\"a\":1},\"groups\":{\"6\":[{\"id\":9,\"x\":1,\"y\":2,\"size\":[3,4]}]}}";
             var fut = store.Load(2, "run-a");
             Eq(fut.Get(6).Count, 1, "讀得懂有多餘欄位的檔");
             store.Save(fut);
-            var text = File.ReadAllText(path, Encoding.UTF8);
+            var text = files["slot_2.json"];
             Check(text.Contains("future") && text.Contains("size"), "不認得的欄位（最外層與視窗裡）寫回去還在");
 
-            // 壞掉的檔：改用新的、備份成 .bad、警告
-            File.WriteAllText(path, "{ not json", new UTF8Encoding(false));
+            // 讀檔丟例外（ModHelper 讀不了）：重來、警告，不寫 .bad
+            var throwing = new GroupStore(_ => throw new System.IO.IOException("鎖住了"), (n, t) => files[n] = t, warnings.Add);
             warnings.Clear();
-            var broken = store.Load(2, "run-a");
-            Eq(broken.Get(6).Count, 0, "壞掉的檔改用新的一份");
-            Check(File.Exists(path + ".bad"), "壞掉的檔備份成 .bad");
+            Check(throwing.Load(8, "r").Groups.Count == 0 && warnings.Count == 1 && !files.ContainsKey("slot_8.json.bad"), "讀不了：重來、警告");
+
+            // 壞掉的檔：改用新的、原內容備份成 .bad、警告；原檔不動（下次存的時候才蓋掉）
+            const string broken = "{ not json";
+            files["slot_2.json"] = broken;
+            warnings.Clear();
+            var bad = store.Load(2, "run-a");
+            Eq(bad.Get(6).Count, 0, "壞掉的檔改用新的一份");
+            Check(files.TryGetValue("slot_2.json.bad", out var backup) && backup == broken, "壞掉的檔：原內容備份成 .bad");
+            Check(files["slot_2.json"] == broken, "壞掉的檔：原檔不動");
             Eq(warnings.Count, 1, "壞掉時警告一次");
-            File.WriteAllText(path, "null", new UTF8Encoding(false));
+            files["slot_2.json"] = "null";
             Eq(store.Load(2, "run-a").Groups.Count, 0, "內容是 null 也改用新的一份");
         }
     }
