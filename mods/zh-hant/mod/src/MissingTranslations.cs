@@ -140,13 +140,11 @@ namespace ProbablyStolenZhHant
             var db = LocalizationSettings.StringDatabase;
             var cases = new (string table, string key, string arg, bool skipFills, string note)[]
             {
-                ("Dialogue", "dialog_biz_permit_s0_1", null, false, "缺翻，補譯文"),
-                ("Dialogue", "dialog_biz_permit_choice_buy", "123", false, "缺翻，補譯文並代入參數 123"),
-                ("Dialogue", "dialog_biz_permit_s0_1", null, true, "缺翻，假裝沒有譯文 → 應改用英文"),
-                ("MainMenu", "delete_save", null, false, "缺翻，英文也是空的 → 維持錯誤訊息"),
+                // 正式版（2026-10-29 重抽）簡中缺的只有懼曠症改版後不再用的兩條，借來測補譯；沒有缺翻又帶佔位符的、
+                // 英文也空的、漏了佔位符的條目，那三種測試先拿掉（機制照留，遊戲更新又出現時再加回來）
+                ("PerkTable", "perk_agoraphobia_desc", null, false, "缺翻，補譯文"),
+                ("PerkTable", "perk_agoraphobia_desc", null, true, "缺翻，假裝沒有譯文 → 應改用英文"),
                 ("Dialogue", "dialog_cheng_intro_3", null, false, "有翻譯，不該被動到（應為簡體原文）"),
-                ("Dialogue", "dialog_barter_for", "123", false, "原文漏了佔位符，補上並代入參數 123"),
-                ("Dialogue", "dialog_barter_for", null, false, "原文漏了佔位符、沒有參數 → 不動（應為簡體原文）"),
             };
             foreach (var c in cases)
             {

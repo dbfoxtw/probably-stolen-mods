@@ -94,7 +94,7 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 3. 打包發布用的壓縮檔：`python tools/package.py`（壓縮檔最上層是 `dbfoxtw.zh-hant` 資料夾，Nexus 與 Steam Workshop 用同一包）。發布版附的手寫字型是補字版的佑字 肅（Yuji Syuku ZhHant）：
    - 從 [Google Fonts](https://github.com/google/fonts/tree/main/ofl/yujisyuku) 下載 `YujiSyuku-Regular.ttf` 與 `OFL.txt`，放到 `fonts/candidates/`，後者改名 `YujiSyuku-OFL.txt`。
    - 執行 `python tools/make_handwritten_font.py`，會產生 `fonts/handwritten.ttf` 與授權檔 `fonts/handwritten.LICENSE.txt`。
-   - 這支腳本用佑字自己的部件拼出繁中缺的「你喔嗎汙」，並調整刪節號的間距。
+   - 這支腳本用佑字自己的部件拼出繁中缺的字（例如「你喔嗎汙」「卡垃圾幫撐跑躲韌」），並調整刪節號的間距。
 
 ## 已知衝突
 
