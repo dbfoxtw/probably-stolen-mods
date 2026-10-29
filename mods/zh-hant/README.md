@@ -48,7 +48,7 @@
 
 設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.zh-hant.json`。
 
-- 遊戲程式裡寫死、原版簡中也是英文的單位，只有 mod 翻成中文的這幾處開關才管得到：食物熱量、飼料分配器、電池電量、水容器與還沒發酵的酒瓶的存量、水質掃描器的容量。其他寫死的單位照舊顯示英文。
+- 遊戲程式裡寫死、原版簡中也是英文的單位，只有 mod 翻成中文的這幾處開關才管得到：電池電量、水容器與還沒發酵的酒瓶的存量、水質掃描器與成分光譜儀的容量。食物熱量、飼料分配器正式版改走字串表，和其他文字一樣由開關處理。其他寫死的單位照舊顯示英文。
 - 只換遊戲的文字：其他 mod 顯示的字、你自己打的字（例如待辦清單）裡的單位不會被換。
 
 ## 移除
@@ -73,7 +73,7 @@
 | `overrides.tsv` | 逐條修正：只存我們改動的片段與位置。自動轉換的結果和製作時不同（例如遊戲更新改了原文）時，這條修正會自動停用 |
 | `fills.tsv` | 簡中缺翻的條目：我們的譯文，或參照字串表裡另一條的譯文。沒有這個檔時，缺翻的條目改顯示遊戲的英文 |
 | `args.tsv` | 簡中漏了英文有的佔位符的少數條目（例如以物易物的「換取：」後面沒有物品）：補上佔位符的譯文，遊戲代入參數時改用 |
-| `hardcoded.tsv` | 寫死在遊戲程式裡、字串表沒有的少數英文（例如顧客發現彈藥盒裝錯時的台詞）的翻譯規則，只在中文模式套用。為了比對，規則裡保留了英文原句 |
+| `hardcoded.tsv` | 寫死在遊戲程式裡、字串表沒有的少數英文（例如一次性電池的「無法充電」）的翻譯規則，只在中文模式套用。為了比對，規則裡保留了英文原句 |
 | `tables.txt` | 要讀取的字串表名稱 |
 
 OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`）。
@@ -136,7 +136,7 @@ This mod uses the game's official mod format; MelonLoader is not needed.
 
 To update, close the game, delete the old `Mods\dbfoxtw.zh-hant` folder and repeat step 2. Your settings are kept.
 
-**Units in English:** units in the game's text are shown in Chinese by default (克, 毫升, 公升, 微升, 千卡, 千焦). Open this mod's settings on the game's Mods screen and turn off the weight (g), volume (ml, L and uL) or energy (kcal and kJ) unit option, apply, then restart the game. Changes take effect only after a restart. Units hard-coded in English in the game itself (also English in the original Simplified Chinese) follow these settings only where the mod translates them into Chinese: food calories, the feed dispenser, battery charge, the amount in water containers and unfermented Wine Bottles, and the volumes on the AquaScan. Other hard-coded units stay in English. Only the game's own text is changed; units in text you type yourself are left as is.
+**Units in English:** units in the game's text are shown in Chinese by default (克, 毫升, 公升, 微升, 千卡, 千焦). Open this mod's settings on the game's Mods screen and turn off the weight (g), volume (ml, L and uL) or energy (kcal and kJ) unit option, apply, then restart the game. Changes take effect only after a restart. Units hard-coded in English in the game itself (also English in the original Simplified Chinese) follow these settings only where the mod translates them into Chinese: battery charge, the amount in water containers and unfermented Wine Bottles, and the volumes on the AquaScan and the Composition Spectrometer. Food calories and the feed dispenser use the string tables in the full game, so the settings cover them like any other text. Other hard-coded units stay in English. Only the game's own text is changed; units in text you type yourself are left as is.
 
 **Uninstall:** close the game and delete the `Mods\dbfoxtw.zh-hant` folder (and, to remove everything, `ModConfigs\dbfoxtw.zh-hant.json` and the `ModData\dbfoxtw_zh-hant` folder in `%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 

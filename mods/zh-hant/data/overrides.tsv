@@ -28,7 +28,7 @@ Dialogue	dialog_scavenger_request_2	8244ff9b3b8fea5a	6	7	用
 Dialogue	dialog_scavenger_request_3	2ea1a83f5f802ef8	2	3	來
 Dialogue	dialog_selfdefense_request_3	c9768dc0f3d8793e	8	9	裡
 Dialogue	dialog_desperate_addict_request_1	0aa3cef7b60a7db1	3	4	菸
-Dialogue	dialog_worn_spacer_greeting_2	8a5f0ef258a52d4b	10	11	總
+Dialogue	dialog_worn_spacer_greeting_2	430126726c0a5433	10	11	總
 Dialogue	dialog_water_scavenger_1	9731cc2834fdd9c3	8	9	嗎
 Dialogue	dialog_chem_return_substance_5	e1c7fd2ca8ca15de	4	5	起來	6	9	是滑	10	11	
 Dialogue	dialog_chem_return_substance_7	7be7a89daeb6fc1d	14	16	猛
@@ -123,7 +123,7 @@ Dialogue	dialog_lun_duty_6	f2fe6688f708d74d	4	6	只	7	8	留
 Dialogue	dialog_lun_surplus_1	d15511ba4c18880f	6	7	
 Dialogue	dialog_lun_surplus_arrest_sec_2	c5d1a262b6736c8a	5	6		7	7	竊
 Dialogue	dialog_eleanor_intro_1	fc443fa737ee0979	7	8	把	13	13	做
-Dialogue	dialog_eleanor_intro_6	51c473c9be244245	15	16	有飯	17	19	
+Dialogue	dialog_eleanor_intro_6	1bd63661309328e8	15	16	有飯	17	19	
 Dialogue	dialog_eleanor4_3	4a52c42891afaadc	3	5	小偷
 Dialogue	dialog_eleanor4_6	18566d7ee3705561	15	15	老死在	16	19	裡
 Dialogue	dialog_serpico1_8	d7ac01dbd5c1b491	9	10	打
@@ -143,7 +143,7 @@ Dialogue	dialog_desperate_addict_greeting_2	83d954aafb5b6c75	7	8
 Dialogue	dialog_worn_spacer_request_2	ca0d97c6ed9f8752	6	7	紓	9	9	力
 Dialogue	dialog_thirsty_spacer_1	869a31e6a8265bff	0	2	快點	5	6	點
 Dialogue	dialog_upper_chef_2	a3999c930d131ebb	4	5	國
-Dialogue	dialog_maintenance_1	479fa3cbfc534126	10	11	的工作
+Dialogue	dialog_maintenance_1	9ef04504da33fb04	10	11	的工作
 Dialogue	dialog_chem_return_followup_7	9d53b1bfe037920f	2	2	裡	6	6	，	8	9	去	12	13	
 Dialogue	dialog_cartel_exit3_3	83de2ceacbffe298	4	6	時機
 Dialogue	dialog_dealer_first_5	4cc52b51830da228	2	3	
@@ -163,7 +163,7 @@ Dialogue	dialog_marketplace_intro_4	67a002bb51c7e385	5	7	開通
 Dialogue	dialog_appraisal_board_join_2	fa9460429d0f2354	2	3		4	4	練教	5	6	
 Dialogue	dialog_loan_clerk_early_8	41ee635a62c20f26	8	9	存
 Dialogue	dialog_inventor_module_accept_1	c79d13d65586aaeb	0	1	爽
-Dialogue	dialog_minor_engineer_6	860b75a57937d388	11	13	垮掉
+Dialogue	dialog_minor_engineer_6	63cd2e7270c91eec	11	13	垮掉
 Dialogue	dialog_minor_scav_water_right	cb8344d37a842ba9	0	1	好
 Dialogue	dialog_minor_elder_3	77233c85e4c4e230	4	5	小偷
 Dialogue	dialog_minor_lottery_4	fba2948963dac141	6	10	好一陣子前
@@ -283,7 +283,7 @@ Item	item_pink_injector_desc	99060c901e6e2a0c	22	23	並	33	34	立
 Item	item_blank_keycard_desc	985919ccf4a3927d	28	30	存取
 Item	item_system_module_ruined_desc	a702bec522418767	28	30	
 Item	item_med_bottle_small_pink_desc	5edd98f39e51b1c9	18	19	透
-Item	item_soda_red_desc	15d1eda5aa26cbbb	21	22	乾
+Item	item_soda_red_desc	d10b15b94404b457	21	22	乾
 Item	item_desequencer_instruction_flavor	819744adae5770df	33	33	晶片
 Item	item_hydroponic_desc	9aea9bcdd6ee415e	19	20	轉
 Item	item_moisture_farm_instruction_short	ed405b33775f4e7a	3	4	透	55	56	透
@@ -376,7 +376,7 @@ Mechanic	sec_data_crime_no_license	2e8112f2637a151a	1	3	照	4	4	業
 Mechanic	mech_nightlog_power_off	5b1f41a70a7aee9d	21	22	緊	23	23	照明
 Mechanic	mech_nightlog_blackout_active	d67e8feca9f33773	17	18	緊	19	19	照明
 Mechanic	mech_nightlog_vandalized_upper	6591332cf82ab8d0	11	12	用
-Mechanic	event_cosmetic_artist_showcase_desc	11db051401fd7396	28	29	並
+Mechanic	event_cosmetic_artist_showcase_desc	d95d1e079e7d62e3	28	29	並
 Mechanic	event_cosmetic_tech_demo_desc	607ff9ebe77943fa	3	5	舉辦	15	16	新	41	43	以	47	47	為對象
 Mechanic	ins_cig_not_genuine	9effd2493a0f3836	4	5	菸
 Mechanic	handler_btn_unload	e64bd9ea2c5d25d6	1	2	下
@@ -405,9 +405,9 @@ Mechanic	event_op_riot_news	8aa4fe0c3f87d04d	1	2	動
 Mechanic	event_op_riot_display	ccc1327710ceff00	4	5	動
 Mechanic	event_op_riot_desc	128dd2a0c5e40987	21	22	動
 Mechanic	event_op_crackdown_news	29739f7039cb4444	2	4	大掃蕩
-Mechanic	event_op_crackdown_desc	5693e0f22d803fc1	31	33	掃蕩
+Mechanic	event_op_crackdown_desc	d7ece1c0f3bd2845	31	33	掃蕩
 Mechanic	event_op_budget_increase_desc	1c2f999ad03df21f	19	19	展	20	21	
-Mechanic	event_wanted3_desc	0282b27f974a4cfe	18	20	社運	46	46	階
+Mechanic	event_wanted3_desc	5ef842306c916a84	18	20	社運	46	46	階
 Mechanic	event_cosmetic_transit_news	f5ac90552255c4a7	7	8		9	9	車
 Mechanic	event_cosmetic_transit_desc	3dfad977737058e9	3	6		13	13	正式通車
 Mechanic	event_normal_nutrifruit_harvest_news	6eb70b3b091fa666	5	7	
@@ -449,9 +449,9 @@ Mechanic	mech_calendar_keyword_payment	5d3ba34cc66cea45	0	2	房貸
 Mechanic	mech_tooltip_locked_machine	4dbf6f0a6a9cc0e8	8	10		12	12	中
 Mechanic	afterhour_jackson_warning	b492a3fae7a58a72	9	10	幫你取	11	13	
 Mechanic	aquaculture_trait_pellet_proof	1f3f174351fa9dc1	12	14	負面影響
-Mechanic	event_eleanor_leak_desc	41579e3154d72add	13	14	了
+Mechanic	event_eleanor_leak_desc	74e7b00635c08224	13	14	了
 Mechanic	event_serpico_dead_desc	bd3a596b21ef3095	3	5	貪汙
-Mechanic	event_serpico_rev_desc	98a58c7053c57dfc	10	12	貪汙
+Mechanic	event_serpico_rev_desc	280776b9919ef2a8	10	12	貪汙
 Mechanic	event_serpico_rev_news	c0b51d13380d3ef7	3	5	貪汙
 Mechanic	event_serpico_sec_desc	42391e3e565c2db1	35	36	貪	38	38	小
 Mechanic	event_serpico_sec_news	954e5a4dcec3b3b6	0	2	貪汙
@@ -500,8 +500,8 @@ Mechanic	mech_reactor_tooltip_integrity	066c8fa981b53671	1	2	整
 Mechanic	mech_storage_coordinator_no_presets	cbdab16402619807	5	5	集
 Mechanic	note_georgio_iou_title	26b197ec2b2ffb05	0	2	借據
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
-NewGame	gunsmith_body	7078053844be4136	76	77	透	78	79	為
-NewGame	welcome_main	0fd371dc48b73daf	121	123	申請房	124	125	
+NewGame	gunsmith_body	60bb2125ebd052b3	76	77	透	78	79	為
+NewGame	welcome_main	e6fbec78e1effe76	121	123	申請房	124	125	
 NewGame	street_food_vendor_body	e9e05448ff29587c	54	55		56	56	點
 NewGame	organ_trader_body	f5d3da5c44f01afd	40	42	正當
 NewGame	rancher_body	e9e1a195ecd12ef3	26	27	來
@@ -539,7 +539,7 @@ UI	ui_mode_exit	498e1d59b4d787ee	0	2	離開
 UI	intel_mentor_note_display_case_body	3375f0a2d7cf2878
 UI	ins_cig_color_info	3ef155206f1b4717	6	6	比	7	8	
 UI	general_match_label	28e9d6ca6b30dae4	0	2	比對
-UI	intel_mentor_note_food_body	e619c28656595c3e	54	55	
+UI	intel_mentor_note_food_body	ef69f64b0e3190f7	54	55	
 UI	intel_mentor_note_upgrades_body	0a1e30d119036726	25	27	付費
 UI	book_water_s3_note3	9624835f16bdc280	1	3	建議	22	23		24	25	幅
 UI	book_water_s5_a2_body	f3b1c087f7e7b132	28	29	
@@ -566,7 +566,7 @@ UI	book_fuel_p6_m1_bonus	5bb8c7be6f8d6572	7	9	符合
 UI	book_fuel_p6_m2_bonus	48d44a7e5700fa13	7	9	符合
 UI	ui_wild_favor	a757d7c4c797ac0a	14	15	透
 UI	lottery_system_intro	c038009b234b77f7	34	35	同
-UI	lease_body	571433bfc8e26357	4	8	當事人	73	75		224	226	驅逐	285	287	驅逐	303	304		305	305	漲	311	312		313	313	漲
+UI	lease_body	ccb2563696fd5763	4	8	當事人	73	75		224	226	驅逐	285	287	驅逐	303	304		305	305	漲	311	312		313	313	漲
 UI	intel_rev_codeword_body	5017ec88cdc2ae7e	27	27	展	28	29	
 UI	lottery_match3	3e757550546b34dc	3	5	
 UI	lottery_match4	a045ed77dbdb66f4	3	5	
@@ -662,7 +662,7 @@ NetworkUpgrade	network_JACKSON1_desc	01b72f99880d558b	50	52	隨時	55	56	販
 NetworkUpgrade	network_JACKSON2_desc	1f9d2f8a7af4d254	50	52	隨時	58	59	販
 NetworkUpgrade	network_LANDLORD_GRACE_desc	f3ffbd7b3aafd9b0	10	11	：	14	16	漏繳	19	19	房	20	23		26	29	
 NetworkUpgrade	network_COMMERCIAL_POWER_desc	1322ae123f6be682	7	9		11	11	，
-NetworkUpgrade	network_HYPERTECH_SMUGGLER_desc	f5951421bd63f720	13	14	販	35	36	準
+NetworkUpgrade	network_HYPERTECH_SMUGGLER_desc	c5e05b4d040b3ac9	13	14	販	35	36	準
 NetworkUpgrade	network_JACKSON_SPECIAL_STOCK_title	e7294c38025ecf31	3	4	選
 NetworkUpgrade	network_PLANT_DNA_desc	e5ca4640d605de56	30	31	碟
 NetworkUpgrade	network_VENDING_MACHINE_desc	a3a30cb365ad62ca	21	21	販	22	23	

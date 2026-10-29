@@ -43,6 +43,8 @@ namespace ProbablyStolenZhHant
 
         public long Calls, ExactHits, TemplateHits, FallbackHits, CacheHits, Skipped, HardcodedHits, Ticks;
         public int ExactCount => _exact.Count;
+        /// <summary>載入的寫死英文規則數（「=表/key」參照找不到而略過的不算），log 用來確認 hardcoded.tsv 有載入。</summary>
+        public int HardcodedCount => _hardcoded.Count;
         public int TemplateCount => _templates.Count;
         public int TriggerCount { get; private set; }
         public int PhraseCount { get; private set; }

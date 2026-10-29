@@ -293,8 +293,9 @@ namespace ProbablyStolenZhHant
             var early = Conv;
             Conv = conv;
             _tables = TableState.Done;
+            // 寫死英文規則數：使用者重裝後從 log 確認 hardcoded.tsv 有載入；「=表/key」參照找不到的那條會被略過，數字會比檔案少
             Msg($"簡中字串表 {tables.Count} 張、{conv.EntryCount} 條 → 整句 {conv.ExactCount}、樣板 {conv.TemplateCount}、短詞 {conv.PhraseCount}、" +
-                $"簡體專用字 {conv.TriggerCount}、同句異譯 {conv.Conflicts}；逐條修正套用 {Tr.OverridesApplied} 條、缺翻補譯文 {Tr.Fills.Count} 條、補佔位符 {Tr.WithArgs.Count}/{Tr.ArgCount} 條（{sw.ElapsedMilliseconds} ms，" +
+                $"簡體專用字 {conv.TriggerCount}、同句異譯 {conv.Conflicts}、寫死英文規則 {conv.HardcodedCount} 條；逐條修正套用 {Tr.OverridesApplied} 條、缺翻補譯文 {Tr.Fills.Count} 條、補佔位符 {Tr.WithArgs.Count}/{Tr.ArgCount} 條（{sw.ElapsedMilliseconds} ms，" +
                 $"遊戲啟動後 {Time.realtimeSinceStartup:F1} 秒）");
             if (Tr.StaleOverrides.Count > 0)
                 Warning($"原文已變動、暫停套用的逐條修正 {Tr.StaleOverrides.Count} 條：{string.Join("、", Tr.StaleOverrides.GetRange(0, Math.Min(10, Tr.StaleOverrides.Count)))}");

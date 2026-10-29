@@ -1,11 +1,9 @@
-# 寫死在遊戲程式碼裡、不在字串表的英文（原版簡中也沒翻）。只在遊戲語言是中文時套用（MelonLoader mod）。
+# 寫死在遊戲程式碼裡、不在字串表的英文（原版簡中也沒翻）。只在遊戲語言是中文時套用（官方格式 mod，正式版 1.0 起）。
 # 格式：觸發字串<Tab>正規表示式（.NET）<Tab>替換文字。文字含觸發字串才會跑正規表示式，$1 等是擷取群組。
 # 替換文字寫成「=表/key」時，換成字串表那一條的譯文（例如顧客名稱）。
 
 # 錄音機裡玩家台詞的說話者（「Player: 台詞」；遊戲其他地方稱玩家為店主）
 Player	^Player$	店主
-# 錄音機裡治安部警官的說話者（射殺改造體後上門、sec_* 台詞），用顧客名稱的譯文
-Officer	^Security Officer$	=ClientName/name_security_officer
 
 # 刪除存檔等確認對話框的按鈕（寫死在介面上；字串表的 MainMenu/yes、no 是「是／否」，這裡一致）
 Yes	^Yes$	是
@@ -36,20 +34,10 @@ too tired to search it again	I am too tired to search it again today	今天太�
 
 # 以下是 Demo 050（2026-10-19）新增、掃遊戲程式碼找到的介面文字，括號是使用它的類別與方法。
 # 說明框是一整段文字（物品名稱、說明與這些行拼在一起），mod 先把簡中轉好、再套這裡的規則，所以規則只比對英文的部分。
+# 規則都照遊戲的格式寫（顏色標籤、括號、行首行尾），免得換到玩家自己打的字（例如待辦清單裡的 500kJ）。
 
-# 遊戲選項（GameOptionRegistry 的選項名稱；「排序選單」照教學提示 Tutorial/tuto_sort_menu，「停用」照「啟用打字機效果」）
-right-click sort menu	^Disable right-click sort menu$	停用右鍵排序選單
-# 清空飼料分配器的確認對話框（MachineFeedDispenser）；kcal 照字串表譯「千卡」。
-# 單位緊接在 $1 後面：玩家在 MelonPreferences.cfg 把單位改回英文時，mod 把這裡的「$1千卡」「$1千焦」換成「$1kcal」「$1kJ」（照簡中原文「{0}kJ」不加空格）
-kcal will be lost	Throw out all the stored feed\? (\d+) kcal will be lost\.	要清空所有儲存的飼料嗎？會損失$1千卡。
-# 食物的滑鼠提示「 1200kcal (meat)」與一般食物的「 1200kcal」（FoodItemHelper.CreateFoodItemTooltip；肉類照飼料分配器的「肉類：…千卡」）。
-# 肉類那條要排在前面；一般那條只比對數字緊接 kcal 的，飼料分配器有空格的另一條處理。
-# 熱量與電量的規則都照遊戲的格式寫（行首或標籤後的一個空格、括號），免得換到玩家自己打的字（例如待辦清單裡的 500kcal）
-kcal (meat)	(?<=(?:^|[>\n]) )(\d+)kcal \(meat\)	$1千卡（肉類）
-kcal	(?<=(?:^|[>\n]) )(\d+)kcal(?=<|\n|$)	$1千卡
-# 飼料分配器的「 1200/5000 kcal」（MachineFeedDispenser.CreateTooltip，舊版就有）
-kcal	(?<=(?:^|[>\n]) )(\d+)/(\d+) kcal(?=<|\n|$)	$1/$2千卡
-# 電池的「(500/1000kJ)」與自我充電代入的「自我充能（1200kJ）」（PowerHelper.CreatePowerSourceItemTooltip，舊版就有）；kJ 譯「千焦」
+# 電池的「(500/1000kJ)」與自我充電代入的「自我充能（1200kJ）」（PowerHelper.CreatePowerSourceItemTooltip，舊版就有）；kJ 譯「千焦」。
+# 單位緊接在 $1 後面：玩家在 mod 設定把能量單位改回英文時，mod 把這裡的「$1千焦」換成「$1kJ」（照簡中原文「{0}kJ」不加空格）
 kJ	(?<=[(（/])(\d[\d.,]*)kJ(?=[)）])	$1千焦
 # 水容器滑鼠提示的存量（WaterHelper.CreateWaterContainerTooltip）：接在同色的進度條後面，整行是
 # 「<color=#42a2aa>[=         ]</color> <color=#42a2aa> 1000 ml / 6000 ml</color>」。比對進度條與顏色標籤，免得換到玩家自己打的字。
@@ -58,26 +46,50 @@ ml / 	(?<=<color=#42a2aa>\[=* *\]</color> <color=#42a2aa> )(\d+) ml / (\d+) ml(?
 # 還沒開始發酵的酒瓶滑鼠提示「水: 500 / 750 ml」（WineHelper.CreateTooltip；「水」是字串表的液體名稱，容量寫死 750，和水容器同色、沒有進度條）。
 # 比對顏色標籤、「名稱: 」與行尾；原文只在最後寫一次單位，譯文照原文
 ml</	(?<=<color=#42a2aa>[^<>\n]+: )(\d+) / (\d+) ml(?=</color>)	$1 / $2毫升
-# 水質掃描器每種成分一行「名稱: 12.00 mL (0.20%)」（WaterScannerUIManager.FormatAmount：1000 毫升以上「5.98 L」、
-# 1 毫升以上「12.00 mL」、不到 1 毫升「500 uL」）。只比對行首的名稱與冒號、後面的百分比與行尾。
+# 水質掃描器與成分光譜儀每種成分一行「名稱: 12.00 mL (0.20%)」（WaterScannerUIManager.FormatAmount：1000 毫升以上「5.98 L」、
+# 1 毫升以上「12.00 mL」、不到 1 毫升「500 uL」；ChemScannerUIManager.RefreshUI 也用它）。只比對行首的名稱與冒號、後面的百分比與行尾。
 # L 譯「公升」、uL 譯「微升」，和毫升一樣歸容量的開關（改回英文時換成「$1L」「$1uL」）
 mL (	(?<=(?:^|\n)[^\n]+: )(\d+(?:[.,]\d+)?) mL(?= \([\d.,]+%\)(?:\n|$))	$1毫升
 L (	(?<=(?:^|\n)[^\n]+: )(\d+(?:[.,]\d+)?) L(?= \([\d.,]+%\)(?:\n|$))	$1公升
 uL (	(?<=(?:^|\n)[^\n]+: )(\d+) uL(?= \([\d.,]+%\)(?:\n|$))	$1微升
+# 成分光譜儀的「總體積：5.98 L」（ChemScannerUIManager.RefreshUI：字串表的「總體積：{0}」代入同一個函式的結果，單獨一個文字物件、後面沒有百分比）。
+# Demo 拿不到成分光譜儀所以拿掉過，正式版拿得到（網路升級「退休化學家」、化學家開局送）。
+# mod 先把簡中轉好再套這裡，所以比對轉好的標籤；只比對從整段開頭的標籤到結尾的單位
+總體積：	(?<=^總體積：)(\d+(?:[.,]\d+)?) L$	$1公升
+總體積：	(?<=^總體積：)(\d+(?:[.,]\d+)?) mL$	$1毫升
+總體積：	(?<=^總體積：)(\d+) uL$	$1微升
 
-# 開啟基因掃描器時，種子說明框的基因段落（PlantGeneticsHelper.CreateSeedGeneticsTooltip；特性名稱與效果在 PlantTraitList、PlantStat）。
-# 每行都比對遊戲包的顏色標籤（標題紫色、沒有特性灰色、特性綠色或紅色），免得換到玩家自己打的字。
-# 特性那行比提示框的寬度長，遊戲會在空格處斷成幾行、每行各包一組顏色標籤，所以特性名稱後面與效果裡的空格都接受「</color>\n<color=…>」
-# （「- Unappetizing I (innate):」剛好等於提示框的寬度，寬度再小一點就會在名稱後面斷開）；譯文不到一行寬，直接合成一行。
-# 複雜度可能是負數：舊存檔裡的種子沒有先天特性的標籤
-Genetics	(?<=<color=#b082a5>)Genetics(?=</color>)	基因
-Complexity	(?<=<color=#b082a5>)Complexity: (-?\d+)(?=</color>)	複雜度：$1
-No traits	(?<=<color=#88948a>)No traits(?=</color>)	無特性
-Delicious	(?<=<color=#7a9d4a>)- Delicious(?: |</color>\n<color=#7a9d4a>)I(?: |</color>\n<color=#7a9d4a>)\(innate\):(?: |</color>\n<color=#7a9d4a>)Edible(?: |</color>\n<color=#7a9d4a>)produce(?: |</color>\n<color=#7a9d4a>)sells(?: |</color>\n<color=#7a9d4a>)for(?: |</color>\n<color=#7a9d4a>)more\.(?=</color>)	- 美味 I（先天）：可食用的收成物售價較高。
-Unappetizing	(?<=<color=#c07d7d>)- Unappetizing(?: |</color>\n<color=#c07d7d>)I(?: |</color>\n<color=#c07d7d>)\(innate\):(?: |</color>\n<color=#c07d7d>)Edible(?: |</color>\n<color=#c07d7d>)produce(?: |</color>\n<color=#c07d7d>)sells(?: |</color>\n<color=#c07d7d>)for(?: |</color>\n<color=#c07d7d>)less\.(?=</color>)	- 難吃 I（先天）：可食用的收成物售價較低。
-# 汙染物敏感度照種子說明的字串表（Mechanic/mech_seed_contaminant）
-Hardy	(?<=<color=#7a9d4a>)- Hardy(?: |</color>\n<color=#7a9d4a>)I(?: |</color>\n<color=#7a9d4a>)\(innate\):(?: |</color>\n<color=#7a9d4a>)Contaminant(?: |</color>\n<color=#7a9d4a>)sensitivity(?: |</color>\n<color=#7a9d4a>)([+-]?\d+)%(?=</color>)	- 強韌 I（先天）：汙染物敏感度 $1%
-# 議價畫面裡收成物的特性「 -Delicious (+15%)」（PlantTraitList.AddTasteFeature 加的 ItemFeature，NegociationUIManager.AppendFeatureSection 顯示）；
-# 只比對開頭的「-」與後面的百分比
-Delicious	(?<=^ ?(?:<color=#39a78e>)?-)Delicious(?= \([+-]?\d+%\))	美味
-Unappetizing	(?<=^ ?(?:<color=#39a78e>)?-)Unappetizing(?= \([+-]?\d+%\))	難吃
+# 以下是正式版 1.0（2026-10-29）重掃找到的寫死英文，括號是使用它的類別與方法。
+# 滑鼠提示由遊戲的 RichTextBuilder 組成：每段各包一組 <color=#…>（色碼是 RenderHandler.ColorPalette 的值）；一行超過寬度時
+# 在空格處斷行、空格拿掉、每行各包一組同色標籤（粗體、底線也是每行各包一組）。中文語系的寬度是建構參數 ×0.66（提示裡有進度條時 ×0.875），
+# 所以會被斷行的英文，空格都接受斷行的標籤；譯文比原文短，直接合成一行。
+
+# 錄音機裡沒有客人資料時的後備說話者（DialogUIManager.DisplayClientText／DisplaySecText、DialoguePhoneUIManager：「Customer :」，
+# 遊戲拿掉顏色標籤後 mod 拆出的名字是「Customer 」，尾巴有空格）。錨定整個名字，和 Player 一樣
+Customer	^Customer $	顧客
+
+# 顧客發現彈藥盒裝錯的第一句（AmmoBoxHelper.line1Options 的第五句，Demo 就有、2026-10-07 漏掉）；寫法照上面彈藥盒那組
+wouldn't notice this mess	You think I wouldn't notice this mess\?	你以為我看不出來這是亂裝的嗎？
+
+# 一次性電池的滑鼠提示（PowerHelper.CreatePowerSourceItemTooltip，淺橘色 #b8855a 一行；叛軍搶匪會掉）。
+# 物品提示的寬度是 40（中文 26，有電量進度條時 35），31 個字在沒有進度條時會斷成兩行
+Disposable:	(?<=<color=#b8855a>)Disposable:(?: |</color>\n<color=#b8855a>)cannot(?: |</color>\n<color=#b8855a>)be(?: |</color>\n<color=#b8855a>)recharged(?=</color>)	一次性：無法充電
+
+# 開著基因掃描器時，種子說明框的工作量、收穫、耗水後面接灰色（#88948a）的「(Base: 35)」（HydroponicHelper.AddSeedStatLine）。
+# 只換灰色那段，全形括號與冒號；譯法照字串表單獨一個 Base 的「（基礎：…）」（機器、寵物繁殖力）；這時提示寬度是 60（中文 39），實際上不會斷行，保險起見冒號後面的空格也接受斷行的標籤
+(Base:	(?<=<color=#88948a>)\(Base:(?: |</color>\n<color=#88948a>)(-?\d+)\)(?=</color>)	（基礎：$1）
+
+# 物品名稱寫死成英文的兩樣：水培農夫開局的水培系統（NewGameData.HandleInitialItem 的 FARMER 開局，新遊戲畫面的進階開局）與高利貸收債人扣押物品後留下的單據
+# （PlayerStore.Repo：物品名稱，加上 PaperUIManager.OpenGeneralSlipUI 設成單據標題的 SLIP_TITLE）。名稱會出現在物品提示的標題、
+# 視窗標題、議價畫面、選取物品的提示、夜間報告等很多地方（前後常緊接中文），所以不錨定格式，只比對前後不是英文字母的完整名稱；單字之間接受提示框斷行的標籤
+# （標題是白色 #c4c4b0 粗體，選取物品的提示是粗體底線、不包顏色）
+Decrepit	(?<![A-Za-z])Decrepit(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Hydroponic(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)System(?![A-Za-z])	破舊水培系統
+Repo	(?<![A-Za-z])Repo(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Slip(?![A-Za-z])	扣押清單
+
+# 選取物品後滑鼠移到它自己身上的提示（ItemSelectHandler.OnEventUpdate；寬度 60，中文 39）。
+# 可以啟用時是「Use and activate 」接物品名稱（物品名稱包底線，UI 縮放大於 1 時再包粗體，前面不包顏色）：照字串表「對{1}<b>使用</b>{0}」
+# 的寫法譯「使用」緊接名稱。名稱太長、自己又沒有空格可以斷時，遊戲在「activate」後面的空格斷行，所以也接受換行
+Use and activate	(?<=^|\n)Use and activate(?: |\n)(?=<b>|<u>)	使用
+# 不能啟用時是紅色（#be514c）的「Cannot activate 名稱!」：照字串表 Mechanic/handler_activate_cannot 的「無法啟用{0}！」。
+# 名稱可能是含空格的英文自訂名稱，斷行的標籤原樣留在名稱裡；只比對到整段結尾的驚嘆號
+Cannot	(?<=<color=#be514c>)Cannot(?: |</color>\n<color=#be514c>)activate(?: |</color>\n<color=#be514c>)((?:(?!</color>).|</color>\n<color=#be514c>)+?)!(?=</color>$)	無法啟用$1！
