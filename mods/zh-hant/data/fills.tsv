@@ -1,3 +1,3 @@
 # 簡中缺翻、由此補上的譯文：表<Tab>key<Tab>譯文<Tab>參照（和字串表裡另一條的譯文相同時，譯文留空、改記那條的 表/key）
 PerkTable	perk_agoraphobia_desc	你無法離開店鋪前往任何夜間地點。	
-Interactable	door_agoraphobia	由於患有廣場恐懼症，你無法離開店鋪！	
+Interactable	door_agoraphobia	你有廣場恐懼症，不能離開店鋪！	

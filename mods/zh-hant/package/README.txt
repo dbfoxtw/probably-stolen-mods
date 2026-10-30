@@ -2,7 +2,7 @@ Probably Stolen 繁體中文化 mod（非官方） v{version}
 ==================================================
 
 把遊戲內建的簡體中文，在顯示時轉成繁體中文（台灣用語）。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
 
 簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。
 這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報
@@ -51,7 +51,7 @@ Probably Stolen Traditional Chinese mod (unofficial) v{version}
 --------------------------------------------------------------
 
 Shows the game's Simplified Chinese text in Traditional Chinese (Taiwan). Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100)
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5)
 
 The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it.
 This mod has not been thoroughly tested yet. Bug reports are welcome too

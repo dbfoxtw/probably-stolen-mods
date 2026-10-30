@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的繁體中文（台灣用語）顯示 mod，遊戲官方的 mod 格式（不需要 MelonLoader）。非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Traditional Chinese Translation 的最新版，標記 `zh-hant-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -115,7 +115,7 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 
 ## English
 
-An unofficial mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: full release 1.0 (the main menu shows VERSION 100). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Traditional Chinese Translation, tagged `zh-hant-v…`).
+An unofficial mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Traditional Chinese Translation, tagged `zh-hant-v…`).
 
 The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it. This mod has not been thoroughly tested yet, so bug reports are welcome too, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs).
 
