@@ -102,7 +102,8 @@ namespace ProbablyStolenExchangePreview
             BannedShort = "The Underground Exchange won't trade with you",
             RepLine = "Blackmarket Reputation {0} (needs above {1})",
             SurplusLine = "Extra {0} will be cleared (one trade per night)",
-            Arrow = " → ",
+            // 不用「→」：正式版的英文字型（NotoSans-Medium SDF）沒有這個字，會被換成空白（2026-10-31 實機）
+            Arrow = " for ",
             ListSep = ", ",
             Colon = ": ",
             Times = " x{0}",

@@ -11,6 +11,12 @@ namespace ProbablyStolenExchangePreview
         public string Name = "";
         /// <summary>危險廢棄物：清潔服務不會清掉它（PlayerStore.ClearTrash 跳過 GeneralHelper.IsHazardousWaste）。</summary>
         public bool Hazardous;
+        /// <summary>
+        /// 走私者暗格（改進）（smuggler_bay_mod）本身，或直接放在它裡面的東西：清潔服務也不會清掉
+        /// （遊戲 2026-10-31 的更新，PlayerStore.ClearTrash 跳過 IsKeptInTrash）。
+        /// 交易所照樣可能收走它們（GetRequiredItems 看整個垃圾桶，包含暗格裡面）。
+        /// </summary>
+        public bool Kept;
         /// <summary>純度（只有夢塵會讀，其他是 0）。</summary>
         public double Purity;
         public object Handle;
@@ -63,7 +69,7 @@ namespace ProbablyStolenExchangePreview
     {
         public readonly List<SimAccepted> Accepted = new List<SimAccepted>();
         public readonly List<SimPartial> Partial = new List<SimPartial>();
-        /// <summary>沒被收走、也不是危險廢棄物：用清潔服務的話會被清掉（包含多放的）。</summary>
+        /// <summary>沒被收走、也不是危險廢棄物、走私者暗格（改進）與裡面的東西：用清潔服務的話會被清掉（包含多放的）。</summary>
         public readonly List<SimItem> Cleared = new List<SimItem>();
 
         /// <summary>所有成交的交換多放的東西，依成交順序。</summary>
@@ -75,7 +81,7 @@ namespace ProbablyStolenExchangePreview
     /// - 依 priority 由大到小，一筆一筆來；每筆每晚最多成交一次。
     /// - 每個條件依序在垃圾桶裡找第一個還沒被這筆挑走、而且符合條件的東西（ExchangeBarter.GetRequiredItems）。
     /// - 全部條件都配到就成交，那幾件被收走（Accept 立刻銷毀），後面的交換看不到它們。
-    /// - 剩下的除了危險廢棄物都會被清潔服務清掉；其中符合某筆成交的條件、又不是差一點那筆配到的，是「多放的」。
+    /// - 剩下的除了危險廢棄物、走私者暗格（改進）與直接放在裡面的東西，都會被清潔服務清掉；其中符合某筆成交的條件、又不是差一點那筆配到的，是「多放的」。
     /// - 夢塵的兩筆另外算純度（產出看純度，見 ExchangeList 的 DreamDustBarter、ImprovedDreamDustRewards）。
     /// 遊戲用 List.Sort（introsort），但 16 筆以下是插入排序、相同優先序不換順序；交換最多 14 筆，所以用穩定排序就和遊戲一致。
     /// </summary>
@@ -148,7 +154,8 @@ namespace ProbablyStolenExchangePreview
             var partialItems = new HashSet<SimItem>(result.Partial.SelectMany(p => p.Taken));
             foreach (var item in remaining)
             {
-                if (item.Hazardous) continue;
+                // 清潔服務不清的留在垃圾桶：不算會被清掉，也就不算多放
+                if (item.Hazardous || item.Kept) continue;
                 result.Cleared.Add(item);
                 if (partialItems.Contains(item)) continue;
                 // 記在第一筆條件符合的成交上（照成交順序）

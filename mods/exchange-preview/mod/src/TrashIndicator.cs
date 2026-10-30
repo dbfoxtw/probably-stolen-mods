@@ -135,7 +135,7 @@ namespace ProbablyStolenExchangePreview
             {
                 _key = key;
                 _forceAt = Time.unscaledTime + ForceRecompute;
-                bool pickup = ExchangePreviewMod.TrackedInTrash(trash).Count > 0;
+                bool pickup = ExchangePreviewMod.PickupInTrash(trash).Count > 0;
                 bool ready = false, surplus = false;
                 if (st.Unlocked && !st.Distrusted && !pickup)
                 {

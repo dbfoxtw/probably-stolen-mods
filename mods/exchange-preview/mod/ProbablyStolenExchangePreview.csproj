@@ -10,7 +10,7 @@
     <AssemblyName>ProbablyStolenExchangePreview</AssemblyName>
     <RootNamespace>ProbablyStolenExchangePreview</RootNamespace>
     <!-- 版本號只放這裡：組件版本、manifest.xml 的 ModVersion、打包檔名都從這裡來（tools/modkit.py 的 csproj_version） -->
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

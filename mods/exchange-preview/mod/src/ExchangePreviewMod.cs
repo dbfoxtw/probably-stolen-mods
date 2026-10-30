@@ -157,13 +157,18 @@ namespace ProbablyStolenExchangePreview
             return _rec;
         }
 
-        /// <summary>交易所換來、還在垃圾桶裡、沒拿出來過的東西（垃圾桶標示的「待收貨」）。</summary>
-        internal static List<GameItem> TrackedInTrash(List<GameItem> trash)
+        /// <summary>
+        /// 垃圾桶標示的「待收貨」：交易所換來、還在垃圾桶裡、沒拿出來過，而且清潔服務會清掉的東西。
+        /// 清潔服務不清的（交易所送來的走私者暗格（改進）、直接放進暗格裡的）不拿出來也不會不見，算進來的話，
+        /// 玩家把暗格留在垃圾桶多久，標示就卡在待收貨多久（待收貨優先，可交易、多放了都看不到）。
+        /// 追蹤照舊：從暗格拿出來、放在垃圾桶裡的話又會算。
+        /// </summary>
+        internal static List<GameItem> PickupInTrash(List<GameItem> trash)
         {
             var rec = CurrentRecord();
             if (rec == null || rec.Tracked.Count == 0 || trash == null) return new List<GameItem>();
             var ids = new HashSet<int>(rec.Tracked.Where(t => !TakenOut.Contains(t.Id)).Select(t => t.Id));
-            return trash.Where(it => ids.Contains(it.uniqueId)).ToList();
+            return trash.Where(it => ids.Contains(it.uniqueId) && !ExchangeReader.NotCleared(it)).ToList();
         }
 
         internal static void SaveRecord()

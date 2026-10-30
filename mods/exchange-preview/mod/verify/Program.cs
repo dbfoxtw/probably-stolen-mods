@@ -38,8 +38,9 @@ namespace ProbablyStolenExchangePreview.Verify
 
         // ── 模擬用的小工具 ──
 
-        static SimItem I(string id, string name = null, bool hazard = false, double purity = 0) =>
-            new SimItem { Id = id, Name = name ?? id, Hazardous = hazard, Purity = purity };
+        /// <summary>kept：走私者暗格（改進）本身或直接放在它裡面的東西（遊戲裡由 ExchangeReader 判定）。</summary>
+        static SimItem I(string id, string name = null, bool hazard = false, double purity = 0, bool kept = false) =>
+            new SimItem { Id = id, Name = name ?? id, Hazardous = hazard, Purity = purity, Kept = kept };
 
         static SimCondition ById(string id, string label = null) => new SimCondition { Label = label ?? id, Match = x => x.Id == id };
 
@@ -131,6 +132,17 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(new List<SimItem>(), new[] { Bullet(), Filter() });
             Check(r.Accepted.Count == 0 && r.Partial.Count == 0 && r.Cleared.Count == 0, "空的垃圾桶：什麼都沒有");
 
+            // 12. 走私者暗格（改進）（遊戲 2026-10-31 的更新）：暗格本身和直接放在裡面的東西留在垃圾桶，不會被清掉；交易所照樣收得走。
+            // 遊戲的垃圾桶順序是一層一層往下（FindAllChildrenType 是廣度優先），暗格裡的東西排在垃圾桶直接放的後面
+            r = ExchangeSim.Run(new[] { I("newspaper"), I("smuggler_bay_mod", kept: true), I("bottle", kept: true) }, new[] { Bullet() });
+            Eq(string.Join(",", r.Cleared.Select(x => x.Id)), "newspaper", "走私者暗格（改進）與裡面的東西不算在會被清掉裡");
+            r = ExchangeSim.Run(new[] { I("newspaper"), I("smuggler_bay_mod", kept: true), I("ammo_a", kept: true), I("ammo_b", kept: true), I("ammo_c", kept: true) },
+                new[] { Bullet() });
+            Eq(string.Join(",", r.Accepted[0].Taken.Select(x => x.Id)), "ammo_a,ammo_b", "走私者暗格（改進）裡的彈藥照樣被交易所收走");
+            Eq(string.Join(",", r.Cleared.Select(x => x.Id)), "newspaper", "收剩的彈藥留在暗格裡，不會被清掉");
+            r = ExchangeSim.Run(new[] { I("smuggler_bay_mod", kept: true), I("ammo_a", kept: true) }, new[] { Bullet() });
+            Check(r.Partial.Count == 1 && r.Cleared.Count == 0, "暗格裡只有一個彈藥：列為差一點，但不會被清掉");
+
             Surplus();
         }
 
@@ -150,6 +162,10 @@ namespace ProbablyStolenExchangePreview.Verify
             // 危險廢棄物不會被清掉，不算多放
             r = ExchangeSim.Run(new[] { I("ammo_a"), I("ammo_b"), I("ammo_toxic", hazard: true) }, new[] { Bullet() });
             Eq(r.Surplus().Count, 0, "多出來的是危險廢棄物：不會被清掉，不算多放");
+
+            // 走私者暗格（改進）裡多出來的不會被清掉，不算多放；暗格外面的照算
+            r = ExchangeSim.Run(new[] { I("ammo_a"), I("ammo_b"), I("ammo_d"), I("smuggler_bay_mod", kept: true), I("ammo_c", kept: true) }, new[] { Bullet() });
+            Eq(string.Join(",", r.Accepted[0].Surplus.Select(x => x.Id)), "ammo_d", "多出來的兩個：暗格裡的不算多放，外面的照算");
 
             // 走私者暗格拿走 8 支注射器後剩 1 支：那是免疫寧差一點（1/2），不算多放
             var items = new List<SimItem> { I("smuggler_bay") };
@@ -195,6 +211,20 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(new[] { I("newspaper", "報紙") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的|垃圾桶裡的 1 件會被清掉", "提示：沒有可換的");
+
+            // 走私者暗格（改進）和裡面的東西留著：件數不算它們；只剩它們時不說會被清掉
+            r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("newspaper", "報紙"), I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("bottle", "空瓶", kept: true) },
+                new[] { Bullet() });
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|其餘 1 件會被清掉", "提示：走私者暗格（改進）不算在會被清掉的件數裡");
+            r = ExchangeSim.Run(new[] { I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("bottle", "空瓶", kept: true) }, new[] { Bullet() });
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的", "提示：只有走私者暗格（改進）時不說會被清掉");
+            // 差一點的彈藥在暗格裡：留著，件數後面不寫「含差一點的」
+            r = ExchangeSim.Run(new[] { I("newspaper", "報紙"), I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("ammo_a", "10毫米彈藥", kept: true) },
+                new[] { Bullet() });
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(lines.Last().Text, "垃圾桶裡的 1 件會被清掉", "提示：差一點的東西在暗格裡，不算在會被清掉裡");
 
             // 今晚沒用清潔服務：照樣預覽，灰色，不說會被清掉
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("newspaper", "報紙") }, new[] { Bullet() });
@@ -268,6 +298,14 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim,Dim", "提示：沒用清潔服務時多放的也變灰");
             Eq(string.Join("|", PreviewText.Tooltip(Strings.For(Lang.En), new PreviewInput { JanitorialOn = true, Result = r }).Skip(2).Select(l => l.Text)),
                 "Extra 乙彈 will be cleared (one trade per night)", "提示：英文的多放");
+
+            // 英文不用「→」（正式版的英文字型沒有這個字）：會成交與差一點都寫「for」
+            // （差一點那行的名稱是條件的標籤，測試用的 Filter() 標成「濾水器」；產出也是測試用的中文）
+            r = ExchangeSim.Run(new[] { I("ammo_a", "10mm Ammunition"), I("ammo_b", "10mm Ammunition"), I("water_filter", "Water Filter") }, new[] { Bullet(), Filter() });
+            var enLines = PreviewText.Tooltip(Strings.For(Lang.En), new PreviewInput { JanitorialOn = true, Result = r }).Select(l => l.Text).ToList();
+            Eq(enLines[1], "10mm Ammunition x2 for 隨機食物", "提示：英文會成交的那行用 for");
+            Eq(enLines[2], "濾水器 1/3 (2 more for 全新濾水器)", "提示：英文差一點的那行用 for");
+            Check(enLines.All(t => !t.Contains('→')), "提示：英文沒有「→」");
 
             // 中英混排：清單以英數字結尾、後面直接接中文才補空白
             Eq(PreviewText.Fill("多放的{0}會被清掉", "彈藥 ×2"), "多放的彈藥 ×2 會被清掉", "補空白：×2 後面接中文");
@@ -443,7 +481,7 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(lines[1].Text, "一小瓶「夢塵」 ×2 → 隨機合法商品（純度合計 84，120 以上更好）", "提示：常駐夢塵的整行");
             Eq(lines[1].Tone, Tone.Good, "提示：常駐夢塵會成交是綠色");
             lines = PreviewText.Tooltip(en, new PreviewInput { JanitorialOn = true, Result = Improved(99, 99, 99, 99) });
-            Eq(lines[1].Text, "一小瓶「夢塵」 x4 → 隨機醫療用品 (average purity 99, top tier)", "提示：英文的整行（名稱與產出是測試用的）");
+            Eq(lines[1].Text, "一小瓶「夢塵」 x4 for 隨機醫療用品 (average purity 99, top tier)", "提示：英文的整行（名稱與產出是測試用的）");
         }
 
         /// <summary>資料檔：用記憶體裡的「檔案」測（遊戲裡是 ModHelper 的 ModData）。</summary>

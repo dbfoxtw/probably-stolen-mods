@@ -188,7 +188,7 @@ namespace ProbablyStolenExchangePreview
                     if (lost) deal.Destroyed.Add(name);
                     else deal.Outputs.Add(name);
                 }
-                // 交易所換來的：放完之後新出現在垃圾桶裡的（清潔服務已經清過，只剩危險廢棄物和產出）。
+                // 交易所換來的：放完之後新出現在垃圾桶裡的（清潔服務已經清過，只剩它不清的和產出；不清的放進前就在，不會被當成新的）。
                 // 沒攔到 TransferBuffer 時退而求其次：產出本身還在垃圾桶裡的
                 var fresh = _beforeTransfer != null
                     ? trash.Where(t => !_beforeTransfer.Contains(t.uniqueId))

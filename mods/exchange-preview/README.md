@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -23,6 +23,7 @@
 - **垃圾桶標示**：店裡的垃圾桶上貼一張紙條（也可以改用蓋子上的燈）：無交易、可交易、多放了、待收貨（交易所換來的東西還沒拿出來）、禁止交易。
 - **夜間報告**：清潔服務換成功時，早上的報告多一行紫色，寫出交易所在垃圾桶裡留下了什麼。
 - **結束一天的提醒**：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時，在清潔服務那一列下面提醒。只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
+- **走私者暗格（改進）**：暗格和直接放在裡面的東西，清潔服務不會清掉（遊戲 10/31 的更新），所以不算在會被清掉的東西裡，交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
 - **被禁止使用時**：黑市聲望太低、被禁止使用地下交易所時，提示和交易所清單右下角用紅字寫出目前的聲望和門檻。
 - 交易所還沒解鎖（清道夫還沒介紹）時什麼都不顯示，不會爆雷。
 
@@ -110,7 +111,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
+A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
 
@@ -121,12 +122,13 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 - **Trash can tooltip**: hover over the trash can and an "Underground Exchange · tonight" section is added to its tooltip:
   - Trades that will go through: what is taken → what you get (random rewards are named by category, e.g. "random food").
   - Dream Dust purity: when a Dream Dust trade will go through, the purity and the next threshold follow the reward, e.g. "(total purity 85, 120+ is better)"; the four-vial promotional exchange uses the average purity, e.g. "(average purity 72, 80+ is better)". Only the thresholds are shown, not what each tier gives.
-  - Almost there: e.g. "Water Filter 1/3 (2 more → New Water Filter)".
+  - Almost there: e.g. "Water Filter 1/3 (2 more for New Water Filter)".
   - Extras: each trade happens only once per night, so extra items get cleared.
   - How many other items will be cleared; a warning when Dream Dust purity is too low (taken, nothing given); a reminder when the Janitorial Service is off tonight.
 - **Trash can indicator**: a sticky note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up (items from the Exchange are still in the trash can), Banned.
 - **Night report**: when the Exchange made a trade, the morning report gets a purple line listing what it left in the trash can.
 - **End of day reminder**: under the Janitorial Service row, a reminder when items from the Exchange are still in the trash can, or extra items will be cleared tonight. It only covers the Exchange; other things you threw in the trash can aren't mentioned.
+- **Smuggler's Bay (Modified)**: the bay and items placed directly inside it are not cleared by the Janitorial Service (since the game's October 31 update), so they are not counted as cleared, and a bay from the Exchange left in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
 - **When you're banned**: if your Blackmarket Reputation is too low to use the Exchange, the tooltip and the bottom-right of the Exchange Directive show your reputation and the threshold in red.
 - Nothing is shown until the Exchange is unlocked (introduced by the janitor), so there are no spoilers.
 

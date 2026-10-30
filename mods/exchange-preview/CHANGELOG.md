@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.0.1（2026-10-31）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
+
+- 修正：遊戲 10/31 的更新起，走私者暗格（改進）和直接放在裡面的東西留在垃圾桶過夜，清潔服務不會清掉。提示、垃圾桶紙條、結束一天的提醒原本還把它們算成會被清掉，現在照遊戲的新規則；暗格裡的東西照樣可能被交易所收走。
+- 交易所送來的走私者暗格（改進）留在垃圾桶時，紙條不再顯示「待收貨」（反正不會被清掉）。原本暗格留多久，紙條就卡在「待收貨」多久，看不到「可交易」「多放了」。直接放進暗格裡的換來品也一樣不算待收貨。
+- 修正：英文介面的提示少了箭頭（正式版的英文字型沒有「→」，顯示成空白），改寫成「10mm Ammunition x2 for random food」「(2 more for New Water Filter)」。中文照舊。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5)
+
+- Fixed: since the game's October 31 update, the Smuggler's Bay (Modified) and items placed directly inside it stay in the trash can overnight instead of being cleared by the Janitorial Service. The tooltip, the trash can note and the end of day reminder still counted them as cleared; they now follow the game's new rule. The Exchange can still take items from inside the bay.
+- A Smuggler's Bay (Modified) from the Exchange left in the trash can no longer makes the note show Pick up, since it won't be cleared. Before, the note stayed on Pick up for as long as the bay was there, hiding Ready and Too many. Items from the Exchange that you put directly inside the bay don't count for Pick up either.
+- Fixed: the arrow was missing from the English tooltip (the full release's English font has no "→", so it showed as a blank). It now reads "10mm Ammunition x2 for random food" and "(2 more for New Water Filter)".
+
 ## v2.0.0（2026-10-29）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）

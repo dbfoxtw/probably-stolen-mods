@@ -2,7 +2,7 @@ Probably Stolen 交易所預覽 mod（Exchange Preview） v{version}
 ==========================================================
 
 滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
@@ -34,6 +34,8 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 - 夜間報告：交易所換成功時多一行紫色，寫出在垃圾桶裡留下了什麼。
 - 結束一天的提醒：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時提醒。
   只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
+- 走私者暗格（改進）和直接放在裡面的東西，清潔服務不會清掉（遊戲 10/31 的更新），所以不算在會被清掉的東西裡，
+  交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
 - 黑市聲望太低被禁止使用交易所時，提示和交易所清單用紅字寫出目前的聲望和門檻。
 - 交易所還沒解鎖時什麼都不顯示，不會爆雷。
 
@@ -62,7 +64,7 @@ Probably Stolen Exchange Preview mod v{version}
 
 Hover over the trash can in your shop to see what the Underground Exchange will take and leave tonight,
 and what the Janitorial Service will clear. Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100)
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -101,6 +103,9 @@ Features
 - Night report: a purple line listing what the Exchange left in the trash can.
 - End of day reminder: when items from the Exchange are still in the trash can, or extra items will be cleared tonight.
   It only covers the Exchange; other things you threw in the trash can aren't mentioned.
+- The Smuggler's Bay (Modified) and items placed directly inside it are not cleared by the Janitorial Service
+  (since the game's October 31 update), so they are not counted as cleared, and a bay from the Exchange left
+  in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
 - When your Blackmarket Reputation is too low to use the Exchange, the tooltip and the Exchange Directive
   show your reputation and the threshold in red.
 - Nothing is shown until the Exchange is unlocked, so there are no spoilers.

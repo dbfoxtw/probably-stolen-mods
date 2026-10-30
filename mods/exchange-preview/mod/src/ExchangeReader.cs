@@ -28,6 +28,7 @@ namespace ProbablyStolenExchangePreview
         internal const string DistrustPerk = "BM_DISTRUSTED";
         internal const string JanitorialId = "JANITORIAL_SERVICE";
         const string DreamDustId = "dream_dust";
+        const string SmugglerBayModId = "smuggler_bay_mod";
 
         internal static ExchangeState ReadState()
         {
@@ -87,10 +88,23 @@ namespace ProbablyStolenExchangePreview
             Id = item.identifier ?? "",
             Name = name ? Name(item) : "",
             Hazardous = GeneralHelper.IsHazardousWaste(item),
+            Kept = KeptInTrash(item),
             // 純度只有夢塵的兩筆交換會看（常駐的兩瓶看合計、促銷的四瓶看平均）
             Purity = item.identifier == DreamDustId ? ChemicalProductHelper.GetPurity(item) : 0,
             Handle = item,
         };
+
+        /// <summary>
+        /// 清潔服務不清的：走私者暗格（改進）本身，或直接放在它裡面的東西（照遊戲 2026-10-31 更新加的 PlayerStore.IsKeptInTrash，那是 private 只能照抄）。
+        /// FindParentType 往上找到第一層 GameItem 就停，所以放在暗格裡的容器會留著、容器裡的東西照樣被清掉，和遊戲一樣。
+        /// 遊戲用 IsID（identifier.Equals），這裡用 == 比對，identifier 是 null 時不會丟例外。
+        /// </summary>
+        static bool KeptInTrash(GameItem item) =>
+            item.identifier == SmugglerBayModId
+            || GraphUtils.FindParentType<GameItem>(item, p => p.identifier == SmugglerBayModId, null) != null;
+
+        /// <summary>清潔服務不清的（危險廢棄物、走私者暗格（改進）與直接放在裡面的東西），和模擬的 Hazardous、Kept 同一套判斷。</summary>
+        internal static bool NotCleared(GameItem item) => GeneralHelper.IsHazardousWaste(item) || KeptInTrash(item);
 
         /// <summary>
         /// 今晚會處理的交換，順序同 ExchangeManager.HandleExchange：先 activeBarter（常駐），
