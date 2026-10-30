@@ -41,6 +41,7 @@ Dialogue	dialog_scav_household_greeting_5	31127f6bb77936d3	0	1	挖	10	13	想說	
 Dialogue	dialog_food_buyer_offer_5	7693d650ea32f80c	4	6	一塊當	7	8	塊	18	19	什麼	20	21	什麼
 Dialogue	dialog_janitor_intro_4	ba3996507f2860ff	6	8	一帶
 Dialogue	dialog_janitor_ue_1	115bb719bad4cc2a	9	10	地方
+Dialogue	dialog_janitor_ue_fence_2	bfd4467da4811c93	3	3	也	9	11	員
 Dialogue	dialog_off_duty_officer_2	473ab504463540f0	0	1	洋芋
 Dialogue	dialog_inventor_accept_6	ad06d9be85269c15	0	1	改天
 Dialogue	dialog_minor_patrol_5	7c6b0e0ad498ae96	0	1	什麼

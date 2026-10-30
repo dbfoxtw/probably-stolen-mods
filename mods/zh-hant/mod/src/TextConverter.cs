@@ -331,6 +331,10 @@ namespace ProbablyStolenZhHant
                 {
                     for (int v = last; v > u && joinedTo < 0; v--)
                     {
+                        // 拼接不結束在只有空白的片段（例如 RichTextBuilder.AddEmptyLine 的「<size=14px> </size>」）：LookupFlexible 去掉頭尾空白
+                        // 也查得到，但照長度分配時，譯文比原文長就把多出來的字分進空白片段（2.3.0 的「點兩下以打開」），短就分走它的空格。
+                        // 少接這段查到的是同一句，空白原樣留著
+                        if (string.IsNullOrWhiteSpace(tokens[units[v]])) continue;
                         var sb = new StringBuilder();
                         for (int k = u; k <= v; k++) sb.Append(tokens[units[k]]);
                         var r = LookupFlexible(sb.ToString(), templates, anchored: true);
@@ -341,6 +345,11 @@ namespace ProbablyStolenZhHant
                             int len = k == v ? r.Length - pos : Math.Min(tokens[units[k]].Length, r.Length - pos);
                             tokens[units[k]] = r.Substring(pos, len);
                             pos += len;
+                            // 譯文比原文短時，最後幾段分不到字：遊戲斷行時插的換行跟著拿掉，不然畫面上多一行空白
+                            // （2.3.0 垃圾桶的說明原文斷成兩行，譯文一行放得下，說明和「點兩下以打開」中間空了一行）
+                            if (len == 0 && k > u)
+                                for (int t = units[k] - 1; t > units[k - 1]; t--)
+                                    if (tokens[t] == "\n") { tokens[t] = ""; break; }
                         }
                         joinedTo = v;
                     }
