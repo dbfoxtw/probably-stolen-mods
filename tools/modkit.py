@@ -358,6 +358,9 @@ class OfficialMod:
     debug_note: str       # 除錯標記檔的內容（說明這個檔存在時 mod 會多記什麼）
     author: str = "dbfoxtw"
     debug_file: str = "debug"  # 除錯標記檔：放在 mod 資料夾裡，mod 用 ModHelper.ModFileExists 判斷
+    # manifest 的 <Prerequisites>：要先啟用的 mod 的 ID（例如給某個框架用的資料包）。遊戲只在 mod 清單上列出、
+    # 沒啟用時在 log 警告，不會擋載入，也不會幫玩家訂閱；Workshop 的「必要項目」要另外在項目頁設
+    prerequisites: tuple[str, ...] = ()
 
     @property
     def csproj(self) -> Path:
@@ -381,7 +384,12 @@ class OfficialMod:
     def manifest_xml(self, version: str) -> str:
         """照官方範例（dragonpan2/probably-stolen-modding 的 LearnerMod）的欄位與順序，最外層是 <Manifest>（遊戲不看最外層的名稱，
         照官方的比較保險）。<GameVersions> 見 GAME_VERSIONS。<Capabilities/> 空的：mod 不宣告任何權限（玩家啟用時不跳確認），
-        沒有也要寫。"""
+        沒有也要寫。沒有 prerequisites 時照舊寫空的 <Prerequisites />：已發布的 mod 的 manifest 一個字都不變，
+        遊戲算的指紋（manifest＋DLL）才不會跟著變。"""
+        if self.prerequisites:
+            prereq = ["  <Prerequisites>", *(f"    <Mod>{escape(p)}</Mod>" for p in self.prerequisites), "  </Prerequisites>"]
+        else:
+            prereq = ["  <Prerequisites />"]
         return "\n".join([
             '<?xml version="1.0" encoding="utf-8"?>',
             "<Manifest>",
@@ -393,7 +401,7 @@ class OfficialMod:
             "  <GameVersions>",
             *(f"    <Version>{escape(v)}</Version>" for v in GAME_VERSIONS),
             "  </GameVersions>",
-            "  <Prerequisites />",
+            *prereq,
             "  <Assemblies>",
             f"    <Assembly>{escape(self.dll.name)}</Assembly>",
             "  </Assemblies>",
