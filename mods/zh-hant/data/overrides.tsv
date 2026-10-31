@@ -318,6 +318,100 @@ Dialogue	dialog_wanted8_6	d546cee96feff41b	9	10	次
 Dialogue	dialog_water_scavenger_4	b43132d312d53324	8	14	走不了
 Dialogue	dialog_water_scavenger_wrong_item	ceef3e4a8c8402d4	8	12		16	18	行
 Dialogue	aug_dialog_mat_t3_1_b	4cab762deac0043c	2	2	此	4	6		8	15	該物品
+Dialogue	aug_dialog_mat_t3o_2_b	f7da74cca073c717	2	4	即	5	8	
+Dialogue	dialog_appraisal_board_intro_2	ee5a1efbdd6a78cf	0	1	有	4	6	的定價很	8	13	
+Dialogue	dialog_appraisal_board_intro_3	ecf721c5f4ca923b	3	4		6	7	判	8	9		11	11	的
+Dialogue	dialog_appraisal_board_intro_6	9713f1029bad2435	1	3	會是	4	6	
+Dialogue	dialog_appraisal_promo_accept_items	a92a2f163ec192fe	9	10		11	13	練教材
+Dialogue	dialog_barter_food_tutorial_repeat	04f87385b070a1b3	9	10	要的是	11	14	的
+Dialogue	dialog_barter_scav_repeat	5c84f4d92d020cca	1	2		3	3	了
+Dialogue	dialog_blackmailer_intro_1	4c763154b8e4923f	7	10		13	15	錢
+Dialogue	dialog_blackmailer_intro_2	b34f442a9f3d3122	0	1	錢	3	5	
+Dialogue	dialog_cartel_checkin_4	1f3fbbc74bbbfab4	0	0	配額	3	8	要	9	12	
+Dialogue	dialog_cartel_checkin_choice_ingredient	5addf16c377de906	1	2	再	3	5	一些
+Dialogue	dialog_cartel_exit4_3	dbb3b2798f224e2c	0	1		2	5	沒理清
+Dialogue	dialog_cartel_next_week_3	469f681d4e315d91	4	6		8	10	要
+Dialogue	dialog_cartel_next_week_5	31d7e8540e9b1901	0	4	別交不出
+Dialogue	dialog_cartel_snitched_6	fa53ebe3056e7303	1	3	不是	5	6	取
+Dialogue	dialog_cartel_snitched_9	31d7e8540e9b1901	0	4	別交不出
+Dialogue	dialog_chem_return_followup_2	456b6f0ea4b2a37e	0	2		3	3	要是	5	7		10	11	給我	13	18	願意出高	19	21	
+Dialogue	dialog_chem_return_general_5	4cc9e343566a9f25	0	2	不管	7	9	摻了
+Dialogue	dialog_chem_return_substance_12	5b5908fad48feaf4	4	4	讓我暫時逃離現實，	10	14	
+Dialogue	dialog_cheng_ref_3	62b1d5afc4315883	16	18	將就
+Dialogue	dialog_eleanor2_5	530cab5612a2c42f	3	3	*	5	5	*
+Dialogue	dialog_eleanor3_2	3ab2ece978d4a1fd	2	4	錢
+Dialogue	dialog_eleanor4_2	d927189a156cb306	2	6	錢花光
+Dialogue	dialog_eleanor4_7	b7c7a96175a09a02	12	14	開	16	18	口
+Dialogue	dialog_eleanor_intro_5	035d53b5a156bc08	10	13	把	14	15		17	17	關了起來	18	19		24	25		31	32	
+Dialogue	dialog_food_bank_3	ae6d566cde894525	8	9	幫	10	12	說	13	15	話
+Dialogue	dialog_food_bank_4	12ab90d354764764	0	3		7	7	以	12	13		20	21	
+Dialogue	dialog_georgio_intro2_3	4bd61e84b8be636f	14	15		16	18	己
+Dialogue	dialog_info_bad_harvest_mid	3dac54a5545823eb	11	14	大型	19	22	會
+Dialogue	dialog_info_harvest_intro_3	344239fac058ee48	1	3	選對	4	8	
+Dialogue	dialog_info_med_intro_3	52a6c0e166d312de	0	4	別說	5	6		7	11	告訴你
+Dialogue	dialog_info_mining_outcome_3	edde85becb308260	0	1		4	4	一	5	10	進來	15	17	應該	18	21		22	22	一些
+Dialogue	dialog_info_storeroom_conclusion_3	cc577339788546ca	2	2	會	4	9	
+Dialogue	dialog_info_storeroom_intro_4	1033bbb2221dbdda	0	3	有	4	5	事剛	7	9	
+Dialogue	dialog_inspection_showcase_2	0eeb942407c05492	2	4	做一次	6	7	盤
+Dialogue	dialog_insurance_7	6af394c6f3ca6444	8	9	
+Dialogue	dialog_inventor_intro_11	278b5b599d5e19b7	5	6	把	12	17	煉成	18	18	錢
+Dialogue	dialog_inventor_intro_2	078bad9982f2e349	0	4	幸會
+Dialogue	dialog_inventor_storage_4	c274299fac6290d9	6	9	拿出來	10	11	
+Dialogue	dialog_janitor_intro_7	5b0f18deac01bdcd	1	3	就得	6	7		9	10	
+Dialogue	dialog_janitor_ue_11	d3eb7dd04244cbbc	4	5	小
+Dialogue	dialog_janitor_ue_7	d1f028d66e92f85c	2	6		8	8	早上	10	13		14	14	一些東西	16	18	當
+Dialogue	dialog_janitor_ue_fence_1	2cb88fb53e112327	2	4	照	8	8	說好	9	11	
+Dialogue	dialog_janitor_ue_fence_3	48d1c11ff0327a88	5	11	上面要的東西	17	19	換
+Dialogue	dialog_janitor_ue_fence_6	ed4a2ef97282d834	0	4		6	6	早上	8	11		12	12	一些東西	14	16	當
+Dialogue	dialog_loan_clerk_early_4	af751aafc39b6a17	10	12		14	14	它
+Dialogue	dialog_loan_shark2_last_line	6fbdaff4dc496e54	0	4	在我們談下去之	6	7	先	8	9	定	10	13	每一期都	14	19	得出來
+Dialogue	dialog_loan_shark_intro_10	d004e4d5625a7984	2	3	手上	11	12		14	16		19	20		21	22	找你
+Dialogue	dialog_mentor_afterhours_5	e9f1b9d64154437b	0	3	晚上	4	5	門是	7	8		10	10	的
+Dialogue	dialog_mentor_afterhours_6	f0b8a38d1d3acda6	4	6	就沒辦	7	8	那麼	12	14	還	18	19	個
+Dialogue	dialog_mentor_bargain_3	ddf93783fefb7d61	5	6	讓價給	8	10		11	12	這	13	17	跟他	19	22	拿到	27	28	就	29	31	變多
+Dialogue	dialog_mentor_bargain_4	685a6c9fc6721f1d	8	11	他的	15	17	變多
+Dialogue	dialog_mentor_bargain_5	6b067fa01d8332fc	14	16	這	17	19	跟他	21	24	拿到	31	32	變
+Dialogue	dialog_mentor_bargain_6	32d97f73f1025b5c	8	11	他的	15	16	變
+Dialogue	dialog_mentor_bargain_7	0f080c1e4a737534	18	19	但如果	20	22	要求	31	32		33	33	他們接不接受就要看	35	38	他們	40	41		44	53	了
+Dialogue	dialog_mentor_display_case_reminder_5	5bd74a320a0fdedf	0	1	兩種都	3	9	一直擺在	11	13	櫃裡
+Dialogue	dialog_mentor_intro2_7	a087389637bd7e21	3	4	幫	7	8	好	9	10	天送	12	15	了
+Dialogue	dialog_mentor_intro_6	796888c9ee28de3d	3	3	隨	4	8		13	18	清空
+Dialogue	dialog_mentor_outro_4	965a4654657be10b	7	8		19	20	幫	21	23	辦
+Dialogue	dialog_mentor_permit_2	39488d86482e6ee4	7	8	就	15	16	得
+Dialogue	dialog_mentor_permit_3	4ae813d105bfcb72	7	9		12	12	就會	14	16	賣
+Dialogue	dialog_mentor_permit_5	55a0977723765dae	0	1		4	5	再過	7	8	就會	10	14	取締
+Dialogue	dialog_mentor_sec_8	bfa1b86227406db9	3	13	的嘴巴特別不牢
+Dialogue	dialog_merchant_4	a2b5cea95837e8cc	4	8	出比	10	10	低	15	17		18	20	錢
+Dialogue	dialog_merchant_5	578b13061d87a8de	0	0	而	2	4	算
+Dialogue	dialog_minor_conspiracy_4	1f2b03b3790c56f2	2	17	先	23	24	，再去入侵共和國的其他地方
+Dialogue	dialog_minor_farmer_2	751f26d2215bf8ee	1	2	種	7	8		9	10	又抗	11	14	又抗	15	21	
+Dialogue	dialog_minor_patrol_2	4aac5d4dac62aae6	0	0	或者	5	6	、	10	11	。
+Dialogue	dialog_minor_salvage_pilot_4	101f84a7f3adf8ae	13	15	你	16	17	我擠
+Dialogue	dialog_nellis2_9	809d2167aff8341c	0	4		7	10	那邊又沒半點
+Dialogue	dialog_nellis4_4	15ca7a666b19f211	7	8	完全不了解	14	15		16	17	際狀	18	23	
+Dialogue	dialog_reaction_strong_1	46a01443f0aec508	3	3	真夠	4	7		15	16	
+Dialogue	dialog_scav_greet_8	366cd1ed437ce6c0	0	1	一	6	10	，	16	19		20	20	藏	21	24	對吧
+Dialogue	dialog_sec_inspect_contraband_counter_2	72d839a46726c4e3	5	10	徹底盤	11	11	一遍
+Dialogue	dialog_sec_wanted_intro2_3	7e56acc8c10b8f24	1	3		8	8	要給你
+Dialogue	dialog_shady_merchant_2	228497e94e9f6f89	6	8	手上
+Dialogue	dialog_shady_merchant_4	bf6989907ac31a58	3	6	用比	8	8	低	9	11		12	12	錢	13	14	
+Dialogue	dialog_supplier_2	64ee04f3c7fcfe33	1	9		10	10	錢會比較貴
+Dialogue	dialog_supplier_intro_1	0a714fb8d6bbd153	5	7		13	16	要用的	22	22	，我都有賣
+Dialogue	dialog_supplier_intro_2	78b36aaba71de6fd	4	7	價錢	8	12	比較貴
+Dialogue	dialog_tourist_deal_5	b7f2ae37692464aa	15	18	找樂子
+Dialogue	dialog_wanted2_arrest_client	1d5ce1fecae0d026	17	18	取
+Dialogue	dialog_wanted4_3	b35a2e5cbb53c7c3	2	10	筆生意想跟	12	13	
+Dialogue	dialog_wanted6_thanks	19b39fcaf7aedb65	8	9		10	11		14	16	人，免得他們死於	22	26	
+Dialogue	dialog_water_seller_1	d57e5a868b7de601	1	3		5	7	要賣
+Dialogue	dialog_water_seller_2	784f3f53334fab9f	1	2	部
+Dialogue	dialog_wild_bailout_3	8e9e3d81f0eb6746	5	9	送	10	10	幾個恩惠
+Dialogue	dialog_wild_cheng_5	459be788881050f8	11	13		16	18	支
+Dialogue	dialog_wild_network_3	e31c79419ed05f6d	0	10	要是拿太多、又什麼都	11	18	回饋
+Dialogue	dialog_wild_network_4	e2a86f276419f741	11	16	會垮掉
+Dialogue	dialog_wild_upgrade_reminder_2	d37d61a6d4cceb5f	6	8	跟	9	9	說	11	13	也	14	15		16	18	找
+Dialogue	sec_aug_shoot_on_sight	eb35847ab1776669	2	6	當場	7	9	
+Dialogue	aug_dialog_tier2_hint_req_b	36a17087e661ed0c	4	8	你有的	9	10	要
+Dialogue	dialog_deal_accepted_7	2a2d68c4ff9cf359	0	3	好，就這麼辦
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -773,6 +867,12 @@ UI	ui_mods_note_unlisted	fd7672421bbbf61c	8	10	檔案
 UI	ui_mods_trust_list_stale	7c6d010696b00c83	10	11	重	12	12	整理
 UI	ui_mods_unsubscribe_confirm	6ba5624fae276fcd	21	23	檔案
 UI	ui_mods_unsubscribe_shadowed_confirm	c26d314e0e1b0d65	25	26	機
+UI	ui_mods_cap_links	78607c6d2131edd1	9	11	連結
+UI	ui_mods_cap_steam	5ff98a680037db23	0	1	透	5	6	號
+UI	ui_mods_note_rescan_undeclared	ca5aebff3b9a6067	16	18	宣告
+UI	ui_mods_note_stopped	d8f9a11175c16cb2	23	24	號
+UI	ui_mods_note_stopped_process	7815c306db318ef9	8	9	式
+UI	ui_mods_trust_stopped	06173056fb71424d	36	38	執行
 UI	ui_nego_gun_market_price	7128c941c3b69356	1	2	
 UI	ui_quick_dial	bd40865e4cdd75f9	1	2	速
 UI	ui_run_summary_highlights	46b55b0cd8dc21c1	0	2	精彩
@@ -927,6 +1027,9 @@ PhoneDialogue	ashish_cooldown2	8e42dac2d004a0cd	2	3	上	8	8	筆訂
 PhoneDialogue	caulson_intro1	06fe66567950dfac	7	9	介紹	14	14	個
 PhoneDialogue	dale_intro2	06975a9cce7e68ed	7	8	好
 PhoneDialogue	red_imp_rep_intro1	4cbe18321eff05c1	8	13	說	15	16	會打	17	18	
+PhoneDialogue	odin_yes	a1673b4ee2af5302	0	1	對
+PhoneDialogue	dale_regular2	c129b9e1c09d60da	0	0	先	1	2	定	3	4	旁
+PhoneDialogue	red_imp_rep_intro2	b72477eed4183230	0	0	以後	1	2	就
 Hint	negociation_interface_hover	2ac6dc74f0fec0ef	13	14	透
 Hint	customer_counter_hover	42c441d66a7a271d	4	4	還在排	5	9		12	12	人	13	14	
 Hint	display_case_hover	719f4d705d9aea75	0	1	把	4	8	在這裡，	10	11	有

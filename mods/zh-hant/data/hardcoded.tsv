@@ -94,6 +94,22 @@ Use and activate	(?<=^|\n)Use and activate(?: |\n)(?=<b>|<u>)	使用
 # 名稱可能是含空格的英文自訂名稱，斷行的標籤原樣留在名稱裡；只比對到整段結尾的驚嘆號
 Cannot	(?<=<color=#be514c>)Cannot(?: |</color>\n<color=#be514c>)activate(?: |</color>\n<color=#be514c>)((?:(?!</color>).|</color>\n<color=#be514c>)+?)!(?=</color>$)	無法啟用$1！
 
+# 彩券說明頁（PaperUIManager.OpenLotteryInfo 打開的 _LotteryInfographic，level1 場景裡序列化好的文字，2026-10-31 實機看到）：
+# 獎品表右欄的獎金寫死成「1000000 Credits」等五個（字型設成全大寫，畫面上是 CREDITS），左欄「中6個」等走字串表。
+# 照字串表「{0}信用點」緊接數字；只列這五個金額、整段剛好是「數字 Credits」才換，免得換到玩家自己打的字
+ Credits	^(1000000|100000|2500|300|35) Credits$	$1信用點
+
+# 以下是 2026-10-31 掃場景與預製物件（level0、level1、sharedassets）找到、中文玩家看得到的寫死英文。
+# 都是整段只有這幾個字的 TMP，錨定整段。按鍵名稱（ESC、SPACE…）、Discord、網址、EMG、名片與單據抬頭這類美術字維持英文（使用者決定）。
+# 模組面板的標題（ModUIManager.OpenPanel 打開的 _ModPanel/TitleTMP；TMPLocalizer 只換字型）：照主選單按鈕 MainMenu/mods
+Modding	^Modding$	模組
+# 探險日誌的視窗標題（物品 expedition_log 經 LogUIManager.Toggle 打開的 _LogPanel）：照物品名稱「探險日誌」
+Logs	^Logs$	日誌
+# 遊戲結束畫面的「繼續玩」按鈕（_GameOverPanel，showContinuePlay 而且沒有結局總結時才顯示）
+Continue Playing	^Continue Playing$	繼續遊玩
+# 釀酒指南第 1 頁的瓶子容量（BookWine/Page1/waterGroup）；毫升照字串表緊接數字，容量的單位改回英文時 mod 換回「$1ml」
+750ml	^(750)ml$	$1毫升
+
 # 以下是遊戲自己拼出來、字串表沒有的中文（正式版 1.0，2026-10-30）。
 # 市場委託的卡片，物品那行是「數量＋空格＋物品名稱」（StoreRequestElement.Init），名稱本身帶「一＋量詞」的物品會變成「4 一卷衛生紙」：
 # 拿掉「一」成「4 卷衛生紙」（空格照遊戲原樣，和其他卡片的「3 醫療用品（普通）」對齊）。只列委託會要的物品裡名稱帶「一」的 4 個
