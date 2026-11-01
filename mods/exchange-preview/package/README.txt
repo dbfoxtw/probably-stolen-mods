@@ -34,7 +34,7 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 - 夜間報告：交易所換成功時多一行紫色，寫出在垃圾桶裡留下了什麼。
 - 結束一天的提醒：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時提醒。
   只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
-- 走私者暗格（改進）和直接放在裡面的東西，清潔服務不會清掉（遊戲 10/31 的更新），所以不算在會被清掉的東西裡，
+- 走私者暗格（改進）和直接放在裡面的東西，清潔服務不會清掉（遊戲 VERSION 100-REV5 起），所以不算在會被清掉的東西裡，
   交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
 - 黑市聲望太低被禁止使用交易所時，提示和交易所清單用紅字寫出目前的聲望和門檻。
 - 交易所還沒解鎖時什麼都不顯示，不會爆雷。
@@ -104,7 +104,7 @@ Features
 - End of day reminder: when items from the Exchange are still in the trash can, or extra items will be cleared tonight.
   It only covers the Exchange; other things you threw in the trash can aren't mentioned.
 - The Smuggler's Bay (Modified) and items placed directly inside it are not cleared by the Janitorial Service
-  (since the game's October 31 update), so they are not counted as cleared, and a bay from the Exchange left
+  (since game VERSION 100-REV5), so they are not counted as cleared, and a bay from the Exchange left
   in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
 - When your Blackmarket Reputation is too low to use the Exchange, the tooltip and the Exchange Directive
   show your reputation and the threshold in red.
