@@ -147,6 +147,15 @@ namespace ProbablyStolenZhHant
                     // 含簡體字的字串分詞時也一樣：行事曆上的某個短詞有專用譯文，同一個詞出現在別的句子裡時不能跟著換掉
                     bool plain = !c.NeedsConversion(kv.Key);
                     if (plain && zhOut.IndexOf(kv.Key, StringComparison.Ordinal) >= 0) continue;
+                    // 含簡體字、譯文和一般轉換不同的短詞（介面標籤「市场价」譯「市價」、「高级」譯「進階」）：一般轉換的結果出現在別的譯文裡，
+                    // 表示別的句子照一般轉換譯，分詞時換成標籤的譯文會把長詞拆錯（「武器的市场价格」→「武器的市價格」），一樣不收。
+                    // 譯文本身含一般轉換的結果時分不出來，照舊收
+                    if (!plain)
+                    {
+                        var normal = tr.ConvertFallback(kv.Key);
+                        if (normal != kv.Value && kv.Value.IndexOf(normal, StringComparison.Ordinal) < 0
+                            && zhOut.IndexOf(normal, StringComparison.Ordinal) >= 0) continue;
+                    }
                     AddByFirstChar(c._phrases, kv.Key, kv.Value);
                     c.PhraseCount++;
                     if (plain)

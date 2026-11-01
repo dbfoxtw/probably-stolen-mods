@@ -412,6 +412,11 @@ Dialogue	dialog_wild_upgrade_reminder_2	d37d61a6d4cceb5f	6	8	跟	9	9	說	11	13	�
 Dialogue	sec_aug_shoot_on_sight	eb35847ab1776669	2	6	當場	7	9	
 Dialogue	aug_dialog_tier2_hint_req_b	36a17087e661ed0c	4	8	你有的	9	10	要
 Dialogue	dialog_deal_accepted_7	2a2d68c4ff9cf359	0	3	好，就這麼辦
+Dialogue	dialog_georgio_serpico_food_favor_1	a10b35d01bfa0cc4	0	0	是	3	3	的朋友啊？	4	11	就
+Dialogue	dialog_eleanor_bail_1	39ff9cfc7430df44	18	20	女孩
+Dialogue	dialog_eleanor_bail_vouched	7dd14c7b02456c5e	0	1	好
+Dialogue	dialog_eleanor_freed_4	ef72b0eb60af4174	0	4		9	9	的
+Dialogue	dialog_georgio_serpico_food_unable_1	8f6b4f0b43c97416	11	14	最近
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -482,7 +487,6 @@ Item	item_tilapia_flavor	49d294dfe2981d4d	21	22	事
 Item	item_turbo_booster_hypertech_desc	e9671c7344d8f6eb	8	9	電
 Item	item_water_pitcher_desc	81d742fce8ae6ae1	7	8	過濾	12	16	
 Item	item_water_purifier_desc	084192bc0072d44f	19	32	
-Item	item_3d_printer_instruction_flavor	c93a4d39461e944f	46	46	2
 Item	item_age_well_desc	7ece140f187b52fd	2	7	裡面	14	16		22	23	讓	32	34	多
 Item	item_age_well_instruction_flavor	d8ac3d621948bfd0	38	41	有	46	47		56	56	，	57	58	在	59	60	間運
 Item	item_aug_scanner_desc	5d35828ec33f9e9e	1	11	來	21	21	，準確率100%
@@ -561,6 +565,26 @@ MainMenu	option_enable_fps_cap	d72f9e63819934ff	0	2	FPS
 MainMenu	option_key_reset_orientation	9d8802ac1bd1def0	1	2	設
 MainMenu	option_key_toolbox_slot	c04bec3cc8b61978	3	5	第	8	8	格
 MainMenu	option_key_call_next_customer	b616540ad353fc16	8	8	按
+MainMenu	credit_localization	2aced7adb1a59d5c	0	1	在
+MainMenu	credit_loc_director	02a241dd470015db	3	5	專案
+MainMenu	credit_community_manager	88672dbcea2b2542	1	2	群
+MainMenu	credit_pub_ceo	5fc42541da0561f7	0	2		4	5	長
+MainMenu	credit_pub_cfo	48640c861b052711	0	2		4	5	長
+MainMenu	credit_pub_bizdev_director	677df2e7796c1385	2	4	開發
+MainMenu	credit_pub_sales_director	3edbe353037d2a44	0	2	業務
+MainMenu	credit_pub_senior_marketing_manager	51fa3af253c2bcba	0	4	資深行銷
+MainMenu	credit_pub_marketing_manager	b724ba634a521dba	0	2	行銷
+MainMenu	credit_pub_head_influencer	7c60cdccd00c5c66	0	2	網紅
+MainMenu	credit_pub_senior_influencer_manager	b58468b129d22c6f	0	4	資深網紅
+MainMenu	credit_pub_senior_community_manager	66bc6861f9dc7250	0	2	資深	3	4	群
+MainMenu	credit_pub_social_media_manager	c204e7de33aee4a7	1	2	群
+MainMenu	credit_pub_user_acquisition_manager	bbebb17955741aa4
+MainMenu	credit_pub_localization_manager	95e2cef85e4b299e	0	1	在
+MainMenu	credit_pub_discord_manager	6e03189eba88a5bb	8	9	群
+MainMenu	credit_pub_support_manager	4eb3be14b1e914b7	1	4	服
+MainMenu	credit_pub_head_media	1203becf1d89af43	2	3	製
+MainMenu	credit_pub_media_project_manager	3a35e82081ae84ef	2	4	專案
+MainMenu	option_move_bought_to_inventory	214b4d36c49816e1	7	9	物品欄
 Mechanic	mech_chem_finisher_btn_configure	148d195e21b05db5	0	2	設定
 Mechanic	mech_vending_tooltip_popular	2710378a91949d6e	7	8	透
 Mechanic	type_evaporator_module	f94eaef7fbeabe49	1	2	發
@@ -752,6 +776,7 @@ Mechanic	mech_portable_purifier_already_clean	d0216dbb31873276	5	6	達到	9	15	�
 Mechanic	note_admirer_1	2ff8b48694a4dc2e	10	11		17	17	，	18	19	會	23	24	跟	29	30	
 Mechanic	request_mother_galaxy_desc	80d5fc3941697faf	6	6	在	9	10	，營養夠寶寶吃的像樣食物，竟	17	34		41	41	吧
 Mechanic	mech_auto_butcher_info_count_protected	2e5cc95836d09a19	0	3		13	15	，也算進要
+Mechanic	mech_nightlog_serpico_food_extra_day	6eea829875da157c	14	22	還有	25	25	晚可以把剩下的送齊。
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
 NewGame	gunsmith_body	60bb2125ebd052b3	76	77	透	78	79	為
 NewGame	welcome_main	e6fbec78e1effe76	121	123	申請房	124	125	
@@ -945,6 +970,14 @@ UI	ui_end_day	71f52e263500fecb	0	4	打烊
 UI	inte_shutter_dismiss	6051baf6d4fca1bb	9	15	打烊
 UI	inte_shutter_start	88e5b7212a5bd54d	1	4	店
 UI	ui_tooltip_vsync_info	311d801a33993bcc	0	0	螢幕	1	1	更新一	2	7		33	33	示
+UI	ui_tooltip_disable_pop_culture_clients_info	8968ac3b325f225f	0	1	以	5	7	為靈感	11	11	例	17	19	老饕	22	23		24	24	會	25	28	來	29	29	裡
+UI	ui_tooltip_move_bought_to_inventory_info	d4d3286b051a4ad1	0	1		2	2	來	7	9	換來	17	21	物品欄	26	28	物品	41	43	一律
+UI	ui_mods_prompt_local	75e49ea62fcc24e3	0	2	不是	13	13	的	16	19	確認
+UI	ui_mods_prompt_unknown	7ad61d550dabd43e	5	6	回	8	8	無法得知	15	17	
+UI	ui_mods_prompt_ago_weeks	79295187f1776030	3	4	週
+UI	ui_mods_refused_hint	54b6410383d7bd40	2	5	記錄並	6	7		18	18	回	19	21	裡
+UI	ui_mods_refused_copy_log	7b0cd5489a0c87cb	2	4	記錄
+UI	ui_tooltip_dialogue_bubble_scale_info	41ecbefa1127506e	5	6	裡的	12	13	字標籤	26	29	是原本的
 RepPerkTable	rep_perk_UL_TOURISTTRAP_desc	e56baee2601821a8	6	6	較不會	12	18	
 RepPerkTable	rep_perk_SEC_ALARM_IGNORED_flavor	f2208254c0dbda01	13	14	抑
 RepPerkTable	rep_perk_BM_UNINSURABLE_name	2d3df1340205f431	2	3	投
@@ -1015,6 +1048,7 @@ NetworkUpgrade	network_CRIMINEL_NETWORK_desc	c887f474400ca0e5	2	4		6	7	付一筆
 NetworkUpgrade	network_PHARMA_desc	510533ad9d712f5a	4	5	把	25	27	從今以後就	28	31		33	34		48	51	會收到	53	53	名片，	54	55	來	57	58	這個	61	64	
 NetworkUpgrade	network_SEC_GRACE_desc	b3b1a0adf0dc3d6e	0	0	萬一治安部盤查員查到會讓你坐牢的違禁品，	3	5	會動	6	8		14	39	讓	41	43	收	46	48	了事	53	54	只能用	56	58	
 NetworkUpgrade	network_SELL_REFERAL_desc	54bf8d3e9068e4de	2	4		6	7	付一筆	13	14	就	15	21	介紹他認識的	23	30	上門
+NetworkUpgrade	network_POWER_HIJACK2_desc	852606793c803fce	5	6	在	10	11	上	12	13	
 PhoneDialogue	ashish_intro2	c2d4074dc13efbd3	10	12		13	14	上幫
 PhoneDialogue	caulson_ready	d834812018a8b86b	0	1	好	9	11		14	14	給你
 PhoneDialogue	wild2	e2615f4bef50ae19	0	3	有什麼	4	8	為	9	9	效勞的
