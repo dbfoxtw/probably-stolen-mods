@@ -6,7 +6,7 @@ Probably Stolen_Data\Managed（只讀）。
 用法：
   python tools/install.py build        編譯 mod（不動遊戲）
   python tools/install.py install      編譯後裝到遊戲的 Mods\dbfoxtw.collect-all-water\（整個資料夾清空重放；
-                                       --debug：放除錯標記檔，Player.log 會記每次右鍵選單算出的集水器水量與收水的經過）
+                                       --debug：放除錯標記檔，Player.log 會記每次右鍵選單算出的各水源的水量與收水的經過）
   python tools/install.py uninstall    移除 Mods\dbfoxtw.collect-all-water\（設定 ModConfigs 保留，訊息會說在哪裡）
   python tools/install.py package      編譯後打包給玩家的 zip（build\ProbablyStolen-CollectAllWater-<版本>.zip，最上層是
                                        dbfoxtw.collect-all-water\，不動遊戲；--out 改輸出資料夾）
@@ -30,13 +30,16 @@ MOD = modkit.OfficialMod(
     mod_id="dbfoxtw.collect-all-water",  # 和 mod/src/CollectAllWaterMod.cs 的 ModId 一致
     name="Collect All Water",
     description=("Adds buttons such as \"Collect Ghostwater (12400ml)\" to the right-click menu of water containers. "
-                 "Each one pours the water from every Moisture Farm in your shop that makes that water, fullest first, "
-                 "until the container is full, the same way as pouring by hand. Ghostwater is on by default; "
-                 "Basewater, High-Quality Water and Pure Water can be turned on in the mod settings. "
-                 "Moisture Farms placed in the Vending Fountain are left alone."),
+                 "Each one pours that water into the container until it is full, going by the actual water quality "
+                 "in each container: from your Moisture Farms (on by default) and, if switched on in the mod settings, "
+                 "from Water Purifiers, the Vending Fountain, Fridges, and containers in the inventory, the Display Case "
+                 "and the Trash Can. Containers on the counter are never taken. "
+                 "It pours the same way as by hand. Ghostwater is on by default; "
+                 "Basewater, High-Quality Water and Pure Water can be turned on in the settings. "
+                 "Moisture Farms placed in the Vending Fountain are left alone unless the Vending Fountain is switched on."),
     assembly="ProbablyStolenCollectAllWater",
     zip_name="ProbablyStolen-CollectAllWater",
-    debug_note="這個檔存在時，mod 會把每次右鍵選單算出的集水器水量、收水的經過寫進 Player.log。\n",
+    debug_note="這個檔存在時，mod 會把每次右鍵選單算出的各水源的水量、收水的經過寫進 Player.log。\n",
 )
 
 if __name__ == "__main__":

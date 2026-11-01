@@ -1,5 +1,23 @@
 # 版本紀錄（Changelog）
 
+## v2.1.0（2026-11-02）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+
+- **改看容器裡實際的水質**：哪個容器算哪種水，改看它裡面實際裝的水（遊戲自己的標準：幽靈水 96% 以上、基礎水 98%、優質水 99%、純水 99.9%），不再看水分收集器滑鼠提示上的產水品質。水分收集器每晚產的就是提示上那種水，平常結果和以前一樣；容器裡原本混了別的水、或換過模組時才不同。括號的水量因此會透露每個容器裡實際是什麼水。這項沒有開關。
+- 新設定段落「Water sources」，七個開關：收水分收集器（預設開，和以前一樣）；其他預設關，打開的地方也會收：淨水器（照目前的水質，還在淨化的也會收走）、自動售水機（三個水箱，含放在裡面的水分收集器、淨水器）、冰箱（冷藏區、冷凍區），以及物品欄、展示櫃、垃圾桶裡不在機器內的容器。櫃檯上的容器、其他機器裡的容器、化學品成品不收。
+- 收的順序：水分收集器 → 淨水器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃；水分收集器、淨水器最滿的先，其他的最少的先。
+- 打開的水源一個都找不到時，按鈕的括號寫「(沒有水源)」，不再和「沒水」一樣寫「(0ml)」。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
+
+- **Goes by the actual water quality**: which water a container counts as now depends on what's actually in it (the game's own thresholds: Ghostwater from 96%, Basewater 98%, High-Quality Water 99%, Pure Water 99.9%), not the quality shown in a Moisture Farm's tooltip. Moisture Farms make the water their tooltip shows every night, so normally nothing changes; it only differs when the container already held other water or the modules were changed. The numbers therefore reveal what's really in each container. There's no switch for this.
+- New settings section "Water sources" with seven switches: Collect from Moisture Farms (on by default, same as before); the rest are off by default and add more places to collect from: Water Purifiers (by the water's current quality, so water still being purified is taken too), the Vending Fountain (its three tanks, including Moisture Farms and Water Purifiers placed there), Fridges (Chill Zone and Freeze Zone), and containers in the inventory, the Display Case and the Trash Can that aren't inside a machine. Containers on the counter, containers in other machines and chemical products are never taken.
+- Order: Moisture Farms → Water Purifiers → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case; Moisture Farms and Water Purifiers fullest first, the rest emptiest first.
+- If none of the water sources switched on can be found, the button now says "(no water sources)" instead of "(0ml)", which still means there's simply no water.
+
 ## v2.0.0（2026-10-29）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV1）

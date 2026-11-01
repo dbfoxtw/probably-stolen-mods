@@ -1,4 +1,19 @@
-# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升）
+# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 的各项没有占位符）
 button,收集{0} ({1}ml)
+button_no_source,收集{0} (没有水源)
 cfg_collect,收集{0}
-cfg_collect_tip,在水容器的右键菜单中显示“收集{0}”：把店里所有产{0}的水分收集器（以它的提示上显示的为准）里的水倒进这个容器，最满的先倒，倒满为止。放在自动售水机里的水分收集器不收。
+cfg_collect_tip,右键水容器时显示“收集{0}”，把各水源里的{0}倒进来，倒满为止。看容器里实际的水质。
+cfg_src_farm,收水分收集器
+cfg_src_farm_tip,店里所有的水分收集器，含箱子里的；损坏的不算。
+cfg_src_purifier,收净水器
+cfg_src_purifier_tip,按水现在的水质收，还在净化的也会被收走。
+cfg_src_fountain,收自动售水机
+cfg_src_fountain_tip,三个水箱都收，含放在里面的水分收集器、净水器。要卖的水会被收走。
+cfg_src_fridge,收冰箱
+cfg_src_fridge_tip,冷藏区、冷冻区都收。
+cfg_src_inventory,收物品栏里的容器
+cfg_src_inventory_tip,物品栏、箱子里等不在机器内的水容器。
+cfg_src_showcase,收展示柜里的容器
+cfg_src_showcase_tip,展示柜里不在机器内的水容器。会影响第二天来的客人。
+cfg_src_trash,收垃圾桶里的容器
+cfg_src_trash_tip,垃圾桶里不在机器内的水容器。

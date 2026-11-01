@@ -1,8 +1,9 @@
 Probably Stolen 一鍵收水 mod（Collect All Water） v{version}
 ==========================================================
 
-水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV1）
+水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；
+也可以在設定裡打開淨水器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。非官方製作。
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/735?tab=bugs
@@ -29,25 +30,34 @@ ModConfigs\dbfoxtw.collect-all-water.json。
 
 【功能】
 - 一鍵收水：在店鋪畫面按住右鍵點水容器，遊戲原本的七顆按鈕下面多一行「收集幽靈水 (12400ml)」，
-  移到上面放開，就從店裡所有產幽靈水的水分收集器把水倒進這個容器，倒滿為止。
-  括號是這些水分收集器裡的水加起來還有多少（毫升）。最滿的那台先倒。
+  移到上面放開，就把店裡裝著幽靈水的水分收集器（以及設定裡打開的其他地方）的水倒進這個容器，倒滿為止。
+  括號是這些地方的幽靈水加起來還有多少（毫升）；打開的水源一個都找不到時寫「(沒有水源)」。
   倒水用遊戲自己手動倒水的方法，結果和手動倒的一樣（例如倒進水罐時一樣會經過濾芯），倒完播一次倒水聲。
-  容器滿了、或這些水分收集器裡都沒水時，按鈕變灰。快速點一下右鍵（沒有按住）不會收水。
-- 哪些水分收集器算：店裡所有自己的水分收集器，包括放在箱子裡的。產什麼水看水分收集器滑鼠提示上顯示的，
-  不看它容器裡實際裝的水。損壞的不算；你右鍵的容器所在的那台不算。
-- 放在自動售水機裡當貨源的水分收集器不算：不收、也不算進括號的水量，放進去賣的水不會被倒走。
-  自動售水機貨源格裡直接放的水容器，右鍵照樣有收水按鈕。
+  容器滿了、或找不到這種水時，按鈕變灰。快速點一下右鍵（沒有按住）不會收水。
+- 看容器裡實際的水質（2.1.0 起）：哪個容器算哪種水，看它裡面實際裝的水（遊戲自己的標準：幽靈水 96% 以上、
+  基礎水 98%、優質水 99%、純水 99.9%），不再看水分收集器滑鼠提示上的產水品質。水分收集器每晚產的就是提示上
+  那種水，平常結果和以前一樣。括號的水量會透露每個容器裡實際是什麼水。
+- 水分收集器（設定，預設開）：店裡所有自己的水分收集器，包括放在箱子裡的。損壞的不算；你右鍵的容器所在的那台不算。
+- 其他水源（設定，預設關）：淨水器（照目前的水質收，還在淨化的水也會被收走）、自動售水機（三個水箱，
+  含放在裡面的水分收集器、淨水器；留著要賣的水會被收走）、冰箱（冷藏區、冷凍區），以及物品欄、展示櫃
+  （裡面的商品決定隔天來什麼客人，收走水可能會影響）、垃圾桶裡不在機器內的容器。
+  櫃檯上的容器（交易時你這一側放的是要給客人的東西）、其他機器裡的容器、化學品成品不收。
+- 收的順序：水分收集器 → 淨水器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，裝滿就停。
+  水分收集器、淨水器最滿的先倒，其他的最少的先倒。
+- 沒打開「收自動售水機」時，放在自動售水機裡的水分收集器、淨水器不收、也不算進括號的水量。
+  自動售水機水箱裡直接放的水容器，右鍵照樣有收水按鈕。
 - 哪些容器有這個按鈕：自己的水容器（桶裝水、瓶裝水、水罐、儲水罐、循環水養殖系統水箱…），
   以及還沒開始發酵的酒瓶。發酵中、釀好的酒瓶不會被倒進水，也不會被當成水源。
-- 不檢查水質：容器裡原本有別的水時會混在一起，和手動倒一樣。
+- 不檢查右鍵容器裡原本的水：原本有別的水時會混在一起，和手動倒一樣。
 - 其他水質（設定，預設關）：基礎水、優質水、純水各有一個開關，打開後選單多一行對應的按鈕。
-- 鐵鏽水、溝渠水不收：產這兩種水的水分收集器（例如裝了優化模組的）完全不會碰。
+- 鐵鏽水、溝渠水不收：水質低於幽靈水的水不屬於任何按鈕，不會被倒走。
 選單上的收水按鈕是這個 mod 加的，不是遊戲本身的功能；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-在主選單的「Mods」（模組）畫面打開這個 mod 的設定，段落「Right-click menu」有四個開關，
-改好套用，下次按右鍵就生效，不用重開遊戲：
-收集幽靈水（預設開）、收集基礎水（預設關）、收集優質水（預設關）、收集純水（預設關）。
+在主選單的「Mods」（模組）畫面打開這個 mod 的設定，改好套用，下次按右鍵就生效，不用重開遊戲：
+- Right-click menu：收集幽靈水（預設開）、收集基礎水、收集優質水、收集純水（預設關）。
+- Water sources：收水分收集器（預設開）、收淨水器、收自動售水機、收冰箱、收物品欄裡的容器、
+  收展示櫃裡的容器、收垃圾桶裡的容器（預設關）。七個都關掉時，按鈕寫「(沒有水源)」。
 設定存在存檔資料夾的 ModConfigs\dbfoxtw.collect-all-water.json。
 Demo 版在 MelonPreferences.cfg 的設定不會搬過來，Demo 時打開過其他水質的，要在設定視窗重新打開。
 
@@ -55,7 +65,8 @@ Demo 版在 MelonPreferences.cfg 的設定不會搬過來，Demo 時打開過其
 - 不讀寫遊戲的存檔檔案。倒過來的水和手動倒的一樣裝在容器裡，睡覺時由遊戲存下來。
 - 按鈕上的字跟著遊戲語言（中文介面是「收集」，其他語言是「Collect」），水的名稱用遊戲自己的翻譯。
   遊戲的中文只有簡體，這個 mod 的中文也是簡體字；裝了繁體中文化 mod 會跟著轉成繁體。
-- 已知限制：遊戲之後如果改了水分收集器、水容器或右鍵選單的做法，要等 mod 更新。
+- 已知限制：化學溶液裡的水夠多（96% 以上）時也會被當成水收走。櫃檯上的水容器不收，要先移回物品欄。
+  遊戲之後如果改了水分收集器、淨水器、冰箱、水容器或右鍵選單的做法，要等 mod 更新。
 - 相容性：其他也會改右鍵選單的 mod，可能和這個 mod 互相影響，沒有測試過。
 
 【授權】
@@ -68,8 +79,10 @@ Probably Stolen Collect All Water mod v{version}
 ------------------------------------------------
 
 Adds "Collect Ghostwater" to the right-click menu of water containers: one click fills the container
-from all the Moisture Farms in your shop. Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100-REV1)
+from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers,
+the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. Unofficial.
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch
+is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -102,36 +115,52 @@ in the save folder (%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probabl
 
 Features
 - Collect with one click: on the shop screen, hold right-click on a water container. Below the game's
-  seven buttons there's a new line, "Collect Ghostwater (12400ml)"; release on it and water is poured
-  into the container from every Moisture Farm in your shop that makes Ghostwater, until the container is full.
-  The number is how much water those Moisture Farms hold in total, in ml. The fullest Moisture Farm goes first.
+  seven buttons there's a new line, "Collect Ghostwater (12400ml)"; release on it and the Ghostwater in your
+  shop's Moisture Farms (and in the places you switched on in the settings) is poured into the container,
+  until it is full. The number is how much Ghostwater those places hold in total, in ml; if none of the water
+  sources switched on can be found, it says "(no water sources)".
   It pours the same way the game does when you pour by hand, with the same results (e.g. water poured
   into the Water Pitcher still goes through its filter), with one pouring sound. When the container
-  is full or the Moisture Farms are empty, the button is greyed out. A quick right-click tap (not held)
+  is full or there's none of that water, the button is greyed out. A quick right-click tap (not held)
   never collects.
-- Which Moisture Farms count: every Moisture Farm you own in the shop, including ones packed in boxes.
-  The water type is what the Moisture Farm's tooltip shows, not what's actually in its container.
-  Broken Moisture Farms don't count, and neither does the one the container you right-clicked is sitting in.
-- Moisture Farms placed in the Vending Fountain as a water source are left alone: they aren't collected from
-  and aren't counted in the number, so the water you set aside to sell stays there. Water containers placed
-  directly in the Vending Fountain's source slots still get the Collect button.
+- Goes by the actual water quality (from 2.1.0): which water a container counts as depends on what's actually
+  in it (the game's own thresholds: Ghostwater from 96%, Basewater 98%, High-Quality Water 99%, Pure Water 99.9%),
+  not the quality shown in a Moisture Farm's tooltip. Moisture Farms make the water their tooltip shows every
+  night, so normally nothing changes. The numbers reveal what's really in each container.
+- Moisture Farms (setting, on by default): every one you own in the shop, including ones packed in boxes.
+  Broken ones don't count, and neither does the one the container you right-clicked is sitting in.
+- Other water sources (settings, off by default): Water Purifiers (by the water's current quality, so water
+  still being purified is taken too), the Vending Fountain (its three tanks, including Moisture Farms and
+  Water Purifiers placed there; water you set aside to sell will be taken), Fridges (Chill Zone and Freeze
+  Zone), and containers in the inventory, the Display Case (what's in it decides which customers come the next
+  day, so taking the water out can change that) and the Trash Can that aren't inside a machine. Containers on
+  the counter (during a deal, your side holds what you're offering the customer), containers in other machines
+  and chemical products are never taken.
+- Order: Moisture Farms → Water Purifiers → Trash Can → containers in the inventory → Fridges → Vending Fountain
+  → Display Case, stopping when the container is full. Moisture Farms and Water Purifiers go fullest first,
+  the rest emptiest first.
+- Unless the Vending Fountain switch is on, Moisture Farms and Water Purifiers placed in the Vending Fountain
+  are left alone and aren't counted. Water containers placed directly in its tanks still get the Collect button.
 - Which containers get the button: your own water containers (Jugs of Water, Bottles of Water,
   the Water Pitcher, the Water Tank, the RAS Water Tank…) and Wine Bottles that haven't started fermenting.
   Fermenting or finished wine is never filled, and never used as a source.
-- Water isn't checked: if the container already holds a different water, they mix,
+- The container you right-click isn't checked: if it already holds a different water, they mix,
   just like pouring by hand.
 - Other water types (settings, off by default): Basewater, High-Quality Water and Pure Water
   each have a switch that adds its own line.
-- Rustwater and Gutterflow aren't supported: Moisture Farms that make them (e.g. with Streamlining Modules)
-  are never touched.
+- Rustwater and Gutterflow aren't supported: water below Ghostwater quality doesn't belong to any button
+  and is never taken.
 The Collect buttons come from this mod, not the base game; please report problems to this mod,
 not to the game developers.
 
 Settings
-Open this mod's settings on the Mods screen of the main menu. Under "Right-click menu" there are four switches;
-apply, and the change takes effect the next time you right-click (no restart needed):
-Collect Ghostwater (default on), Collect Basewater (default off),
-Collect High-Quality Water (default off), Collect Pure Water (default off).
+Open this mod's settings on the Mods screen of the main menu; apply, and the change takes effect the next
+time you right-click (no restart needed):
+- Right-click menu: Collect Ghostwater (default on), Collect Basewater, Collect High-Quality Water,
+  Collect Pure Water (default off).
+- Water sources: Collect from Moisture Farms (default on), from Water Purifiers, from the Vending Fountain,
+  from Fridges, from containers in the inventory, in the Display Case, in the Trash Can (default off).
+  With all seven off, the buttons say "(no water sources)".
 The settings are kept in ModConfigs\dbfoxtw.collect-all-water.json in the save folder.
 Settings from the Demo's MelonPreferences.cfg are not carried over; if you turned on other water types
 in the Demo, turn them on again in the settings window.
@@ -140,8 +169,10 @@ Notes
 - Your save files are never read or written. The water it pours sits in your containers just like water
   you pour by hand, and the game saves it when you sleep.
 - The button says "Collect" in every game language except Chinese; water names use the game's own translations.
-- Known limitations: if a game update changes how Moisture Farms, water containers or the right-click menu
-  work, wait for a mod update.
+- Known limitations: a chemical solution that is mostly water (96% or more) counts as water and can be taken.
+  Water containers on the counter are never taken; move them back to the inventory first.
+  If a game update changes how Moisture Farms, Water Purifiers, Fridges, water containers or the right-click
+  menu work, wait for a mod update.
 - Compatibility: other mods that also change the right-click menu may interfere with this one; not tested.
 
 License

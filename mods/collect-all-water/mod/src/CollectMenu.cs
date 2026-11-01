@@ -133,19 +133,21 @@ namespace ProbablyStolenCollectAllWater
                 var shown = new List<Extra>();
                 if (grades.Count > 0)
                 {
-                    var farms = WaterSources.Scan(item);
+                    var scan = WaterSources.Scan(item);
                     bool full = WaterSources.IsFull(item);
-                    var template = ModHelper.GetLocalized(CollectAllWaterMod.ModId, "button");
+                    // 一個水源都沒找到時改寫「沒有水源」（七個開關全關也是），那時每種水都是 0ml、按鈕是灰的
+                    var kind = Rules.KindOf(scan.SourceCount);
+                    var template = ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.KeyOf(kind));
                     foreach (var g in grades)
                     {
                         var x = ExtraFor(s, g);
-                        int ml = WaterSources.TotalMl(farms, g);
-                        x.Text = Rules.Label(template, WaterSources.WaterName(g), ml);
+                        int ml = scan.TotalMl(g);
+                        x.Text = Rules.Label(kind, template, WaterSources.WaterName(g), ml);
                         x.Enabled = Rules.CanCollect(full, ml);
                         shown.Add(x);
                     }
-                    CollectAllWaterMod.DebugLog($"右鍵 {item.identifier}（{WaterHelper.GetCurrentCapacityML(item)} ml{(full ? "，滿了" : "")}）：" +
-                        string.Join("；", grades.Select(g => $"{g} {(farms.TryGetValue(g.Id, out var l) ? l.Count : 0)} 台 {WaterSources.TotalMl(farms, g)} ml")));
+                    CollectAllWaterMod.DebugLog($"右鍵 {item.identifier}（{WaterHelper.GetCurrentCapacityML(item)} ml{(full ? "，滿了" : "")}）：水源 {scan.SourceCount} 個（{kind}）；" +
+                        string.Join("；", grades.Select(g => $"{g} {scan.Count(g)} 個 {scan.TotalMl(g)} ml")));
                 }
                 s.Shown = shown;
                 Paint(s, colors, null); // 先填字再掛進格子，格子排版時就有寬度

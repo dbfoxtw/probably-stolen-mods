@@ -5,8 +5,11 @@ using HarmonyLib;
 namespace ProbablyStolenCollectAllWater
 {
     /// <summary>
-    /// 一鍵收水：水容器的右鍵選單多出「收集幽靈水 (12400ml)」這類按鈕，按下去把店裡所有產那種水的集水器的水倒進這個容器，
-    /// 倒滿為止（CollectMenu、WaterSources）。用遊戲自己手動倒水的方法；不讀寫存檔，倒過來的水和手動倒的一樣，睡覺時由遊戲存下來。
+    /// 一鍵收水：水容器的右鍵選單多出「收集幽靈水 (12400ml)」這類按鈕，按下去把店裡裝著那種水的容器倒進這個容器，倒滿為止
+    /// （CollectMenu、WaterSources）。水種看每個容器裡實際的水質；水分收集器（預設開）、淨水器、自動售水機、
+    /// 冰箱、物品欄裡的容器、展示櫃、垃圾桶各看設定的開關（Settings），櫃台上的一律不收；
+    /// 照層級順序收：水分收集器 → 淨水器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃。
+    /// 用遊戲自己手動倒水的方法；不讀寫存檔，倒過來的水和手動倒的一樣，睡覺時由遊戲存下來。
     /// 官方格式的 mod（manifest.xml 與 IMod，照繁中 mod）：遊戲的 mod 載入器先用 id「mod.＋ID」的 Harmony PatchAll（攔截都用屬性，
     /// 見 CollectMenu），再呼叫 Init、OnEnable。設定用官方的 ModConfig、文字放 mod 的 Localization\*.csv，不宣告任何權限。
     /// </summary>
@@ -62,7 +65,7 @@ namespace ProbablyStolenCollectAllWater
         static bool _debugKnown, _debug;
 
         /// <summary>
-        /// 除錯模式：mod 資料夾裡有 debug 檔（install.bat 裝的開發版）時，右鍵選單算出的水量、收水的經過寫進 log。
+        /// 除錯模式：mod 資料夾裡有 debug 檔（install.bat 裝的開發版）時，掃描水源的經過、右鍵選單算出的水量、收水的經過寫進 log。
         /// Init 時遊戲還沒把這個 mod 登記進 ModLoader.Mods（Init 回來之後才登記），ModHelper 找不到 mod 資料夾，
         /// 所以延後到第一次需要時才查、查到就記住；查得到之前當作關。
         /// </summary>

@@ -1,4 +1,19 @@
-# Button text and the labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value ({0} = water name, {1} = ml)
+# Button text and the labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value ({0} = water name, {1} = ml; button_no_source only has {0}; the Water sources entries have no placeholders)
 button,Collect {0} ({1}ml)
+button_no_source,Collect {0} (no water sources)
 cfg_collect,Collect {0}
-cfg_collect_tip,"Show ""Collect {0}"" in the right-click menu of water containers. It pours the water from every Moisture Farm in your shop that makes {0} (as shown in its tooltip) into the container, fullest first, until the container is full. Moisture Farms placed in the Vending Fountain are left alone."
+cfg_collect_tip,"Show ""Collect {0}"" when you right-click a water container: pours {0} from your water sources until the container is full, going by the actual water quality in each container."
+cfg_src_farm,Collect from Moisture Farms
+cfg_src_farm_tip,"Every Moisture Farm in your shop, including ones in boxes. Broken ones don't count."
+cfg_src_purifier,Collect from Water Purifiers
+cfg_src_purifier_tip,"Goes by the water's current quality, so water still being purified is taken too."
+cfg_src_fountain,Collect from the Vending Fountain
+cfg_src_fountain_tip,"All three tanks, including Moisture Farms and Water Purifiers placed there. Water you set aside to sell will be taken."
+cfg_src_fridge,Collect from Fridges
+cfg_src_fridge_tip,Both the Chill Zone and the Freeze Zone.
+cfg_src_inventory,Collect from containers in the inventory
+cfg_src_inventory_tip,"Water containers in the inventory, boxes and so on that aren't inside a machine."
+cfg_src_showcase,Collect from containers in the Display Case
+cfg_src_showcase_tip,Water containers in the Display Case that aren't inside a machine. This can change which customers come the next day.
+cfg_src_trash,Collect from containers in the Trash Can
+cfg_src_trash_tip,Water containers in the Trash Can that aren't inside a machine.
