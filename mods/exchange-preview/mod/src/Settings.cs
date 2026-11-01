@@ -13,9 +13,11 @@ namespace ProbablyStolenExchangePreview
         /// 所以用 mod 的英文名稱（和 Demo 時設定檔的段落名稱一樣）。段落不存進設定檔（ModConfigs 只存 key 與值）。
         /// </summary>
         const string Section = "Exchange Preview";
-        static ConfigEntry<bool> _tooltip, _listWarning, _nightReport, _reminder, _note, _led;
+        static ConfigEntry<bool> _tooltip, _promos, _listWarning, _nightReport, _reminder, _note, _led;
 
         internal static bool TrashTooltip => _tooltip == null || _tooltip.Value;
+        /// <summary>垃圾桶提示列出本週促銷；垃圾桶提示整段關掉時也不列（TrashTooltip 先擋）。</summary>
+        internal static bool TrashPromos => _promos == null || _promos.Value;
         internal static bool ExchangeListWarning => _listWarning == null || _listWarning.Value;
         internal static bool NightReport => _nightReport == null || _nightReport.Value;
         internal static bool EndOfDayReminder => _reminder == null || _reminder.Value;
@@ -28,6 +30,8 @@ namespace ProbablyStolenExchangePreview
         {
             var cfg = ModConfig.For(ExchangePreviewMod.ModId);
             _tooltip = cfg.Define("TrashTooltip", true, Section, () => S.CfgTooltip, () => S.CfgTooltipTip);
+            // 緊接在垃圾桶提示後面：設定視窗照定義的順序排，放在它下面
+            _promos = cfg.Define("TrashPromos", true, Section, () => S.CfgPromos, () => S.CfgPromosTip);
             _listWarning = cfg.Define("ExchangeListWarning", true, Section, () => S.CfgListWarning, () => S.CfgListWarningTip);
             _nightReport = cfg.Define("NightReport", true, Section, () => S.CfgNightReport, () => S.CfgNightReportTip);
             _reminder = cfg.Define("EndOfDayReminder", true, Section, () => S.CfgReminder, () => S.CfgReminderTip);
@@ -36,6 +40,6 @@ namespace ProbablyStolenExchangePreview
         }
 
         internal static string Describe() =>
-            $"垃圾桶提示={TrashTooltip}、清單紅字={ExchangeListWarning}、夜間報告={NightReport}、結束一天的提醒={EndOfDayReminder}、垃圾桶紙條={TrashNote}、垃圾桶 LED={TrashLed}";
+            $"垃圾桶提示={TrashTooltip}、本週促銷={TrashPromos}、清單紅字={ExchangeListWarning}、夜間報告={NightReport}、結束一天的提醒={EndOfDayReminder}、垃圾桶紙條={TrashNote}、垃圾桶 LED={TrashLed}";
     }
 }

@@ -2,7 +2,7 @@ Probably Stolen 交易所預覽 mod（Exchange Preview） v{version}
 ==========================================================
 
 滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
@@ -28,6 +28,7 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 【功能】
 - 垃圾桶提示：會成交的（收走什麼 → 換到什麼）、差一點的（還差幾個）、多放的（每晚只換一次）、
   其餘會被清掉的件數；夢塵純度不夠、今晚沒勾清潔服務時也會提醒。
+- 本週促銷：垃圾桶提示最後列出這週地下交易所的三筆促銷交易（要丟什麼 → 換到什麼），列出時提示框會變寬。
 - 夢塵的純度：夢塵的交換會成交時，產出後面寫出純度和下一級的門檻，例如「（純度合計 85，120 以上更好）」；
   促銷交易的四瓶夢塵看平均純度，例如「（平均純度 72，80 以上更好）」。只寫門檻，不列每一級會給什麼。
 - 垃圾桶上的紙條（或蓋子上的燈）：無交易、可交易、多放了、待收貨、禁止交易。
@@ -41,7 +42,7 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 
 【設定】
 在遊戲的 Mods 畫面打開這個 mod 的設定，按套用就生效，不用重開遊戲：
-垃圾桶提示、清單紅字、夜間報告、結束一天的提醒、垃圾桶紙條預設開；垃圾桶的燈（蓋子上的燈）預設關，可以和紙條同時開。
+垃圾桶提示、垃圾桶提示列出本週促銷、清單紅字、夜間報告、結束一天的提醒、垃圾桶紙條預設開；垃圾桶的燈（蓋子上的燈）預設關，可以和紙條同時開。
 
 【說明】
 - 不讀寫遊戲的存檔檔案。夜間報告那一行是在遊戲存檔之後才加上去的，不會寫進存檔。
@@ -64,7 +65,7 @@ Probably Stolen Exchange Preview mod v{version}
 
 Hover over the trash can in your shop to see what the Underground Exchange will take and leave tonight,
 and what the Janitorial Service will clear. Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5)
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -96,6 +97,8 @@ Features
 - Trash can tooltip: trades that will go through (what is taken → what you get), trades that are almost there
   (how many more), extra items (each trade happens once per night), and how many other items will be cleared;
   also warns about low Dream Dust purity and when the Janitorial Service is off tonight.
+- This week's promotions: the trash can tooltip ends with the three promotional exchanges running this week
+  (what to put in for what you get); the tooltip gets wider while they're shown.
 - Dream Dust purity: when a Dream Dust trade will go through, the purity and the next threshold follow the reward,
   e.g. "(total purity 85, 120+ is better)"; the four-vial promotional exchange uses the average purity,
   e.g. "(average purity 72, 80+ is better)". Only the thresholds are shown, not what each tier gives.
@@ -112,7 +115,8 @@ Features
 
 Settings
 Open this mod's settings on the game's Mods screen; changes apply as soon as you press Apply, no restart needed:
-trash can tooltip, Exchange list warning, night report, end of day reminder and trash can note are on by default;
+trash can tooltip, weekly promotions in tooltip, Exchange list warning, night report, end of day reminder
+and trash can note are on by default;
 the trash can light (on the lid) is off by default and can be on together with the note.
 
 Notes

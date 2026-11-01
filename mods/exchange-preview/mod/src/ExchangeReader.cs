@@ -10,8 +10,9 @@ namespace ProbablyStolenExchangePreview
         public bool Ready;
         public bool Unlocked, Distrusted, JanitorialOn;
         /// <summary>
-        /// 清潔服務還沒開放（第 10 天清道夫來介紹，或新遊戲勾「跳過開場」才開放）。正式版的 Fence 開局一開始就解鎖交易所，
-        /// 第 1～9 天交易所「開放」卻不會交換（HandleJanitorial 整段跳過）；Demo 沒有這種組合（交易所第 25 天才開）。
+        /// 清潔服務還沒開放（一般開局第 10 天清道夫來介紹才開放）。正常玩遇不到「交易所開了、清潔服務沒開放」：
+        /// Fence 開局解鎖交易所，但也強制跳過開場、清潔服務一開始就開放；sawyer_crew 特性也直接開放。
+        /// 程式留著當保險；萬一遇到，交易所「開放」卻不會交換（HandleJanitorial 整段跳過）。
         /// </summary>
         public bool JanitorialLocked;
         public int Rep, Threshold;
@@ -119,15 +120,39 @@ namespace ProbablyStolenExchangePreview
             var active = em.activeBarter;
             if (active != null)
                 for (int i = 0; i < active.Count; i++) Add(result, active[i], s, text);
-            var promo = em.promotionalBarter;
-            var ids = em.activePromotionalBarterIds;
-            if (promo != null && ids != null)
-                for (int i = 0; i < promo.Count; i++)
-                {
-                    var b = promo[i];
-                    if (b != null && ids.Contains(b.identifier)) Add(result, b, s, text);
-                }
+            AddPromos(result, em, s, text);
             return result;
+        }
+
+        /// <summary>
+        /// 本週的促銷（垃圾桶提示列出來），帶產出與條件的名稱。
+        /// 順序照 promotionalBarter（ExchangeManager.Init 加進去的順序），只留 id 在 activePromotionalBarterIds 的。
+        /// 沒有 PlayerStore 或這週沒有促銷時回傳空清單。
+        /// </summary>
+        internal static List<SimBarter> WeeklyPromos(Strings s)
+        {
+            var result = new List<SimBarter>();
+            var em = Exchange();
+            if (em != null) AddPromos(result, em, s, true);
+            return result;
+        }
+
+        /// <summary>
+        /// 快取鍵用的本週促銷 id（activePromotionalBarterIds 照原順序接起來）：每週一重抽、換存檔時會變。
+        /// 只讀 id，不組文字（提示每幀重組，組文字要查遊戲的字串表）。
+        /// </summary>
+        internal static string WeeklyPromoKey()
+        {
+            var em = Exchange();
+            var ids = em != null ? em.activePromotionalBarterIds : null;
+            return ids == null ? "" : string.Join(",", ids);
+        }
+
+        static void AddPromos(List<SimBarter> result, ExchangeManager em, Strings s, bool text)
+        {
+            // 篩選與順序放在 ExchangeSim（不碰 Unity，離線測試測得到）
+            foreach (var b in ExchangeSim.ActivePromos(em.promotionalBarter, x => x.identifier, em.activePromotionalBarterIds))
+                Add(result, b, s, text);
         }
 
         static void Add(List<SimBarter> result, ExchangeBarter b, Strings s, bool text)
@@ -150,7 +175,7 @@ namespace ProbablyStolenExchangePreview
             result.Add(sb);
         }
 
-        /// <summary>差一點時顯示的條件名稱：指定物品用遊戲的物品名稱，指定分類用 mod 的字串。</summary>
+        /// <summary>差一點與本週促銷顯示的條件名稱：指定物品用遊戲的物品名稱，指定分類用 mod 的字串。</summary>
         static string LabelOf(BarterCondition c, Strings s)
         {
             var id = c.requiredItemId;

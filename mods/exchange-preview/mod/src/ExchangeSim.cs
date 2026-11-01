@@ -106,6 +106,19 @@ namespace ProbablyStolenExchangePreview
             return null;
         }
 
+        /// <summary>
+        /// 本週促銷的篩選與順序：照遊戲 promotionalBarter 的順序走，只留 id 在 activePromotionalBarterIds 的。
+        /// 不照 activePromotionalBarterIds 的順序：那是每週隨機抽出來的順序，每週都不一樣。null 的跳過。
+        /// </summary>
+        public static List<T> ActivePromos<T>(IList<T> all, Func<T, string> id, ICollection<string> active) where T : class
+        {
+            var result = new List<T>();
+            if (all == null || active == null) return result;
+            foreach (var b in all)
+                if (b != null && active.Contains(id(b))) result.Add(b);
+            return result;
+        }
+
         public static SimResult Run(IList<SimItem> trash, IEnumerable<SimBarter> barters)
         {
             var result = new SimResult();

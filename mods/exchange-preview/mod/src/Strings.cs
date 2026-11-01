@@ -38,6 +38,8 @@ namespace ProbablyStolenExchangePreview
         public string RepLine;
         /// <summary>多放的：{0}＝東西。</summary>
         public string SurplusLine;
+        /// <summary>本週促銷那段的標題：不寫還剩幾晚（牆上的日曆有星期幾，遊戲的清單也寫週一重置）。</summary>
+        public string PromoHeader;
 
         // ── 共用的標點與格式 ──
         public string Arrow, ListSep, Colon;
@@ -80,7 +82,7 @@ namespace ProbablyStolenExchangePreview
         public string ReminderSurplus, ReminderSurplusAlso;
 
         // ── 遊戲的 mod 設定視窗（ModConfig）：每個開關的標籤與說明（滑鼠移到 i 圖示上顯示） ──
-        public string CfgTooltip, CfgTooltipTip, CfgListWarning, CfgListWarningTip, CfgNightReport, CfgNightReportTip,
+        public string CfgTooltip, CfgTooltipTip, CfgPromos, CfgPromosTip, CfgListWarning, CfgListWarningTip, CfgNightReport, CfgNightReportTip,
             CfgReminder, CfgReminderTip, CfgNote, CfgNoteTip, CfgLed, CfgLedTip;
 
         static readonly Strings En = new Strings
@@ -102,6 +104,7 @@ namespace ProbablyStolenExchangePreview
             BannedShort = "The Underground Exchange won't trade with you",
             RepLine = "Blackmarket Reputation {0} (needs above {1})",
             SurplusLine = "Extra {0} will be cleared (one trade per night)",
+            PromoHeader = "This week's promotions",
             // 不用「→」：正式版的英文字型（NotoSans-Medium SDF）沒有這個字，會被換成空白（2026-10-31 實機）
             Arrow = " for ",
             ListSep = ", ",
@@ -137,6 +140,8 @@ namespace ProbablyStolenExchangePreview
             ReminderSurplusAlso = "Extra {0} will also be cleared tonight (one trade per night)",
             CfgTooltip = "Trash can tooltip",
             CfgTooltipTip = "Hover over the trash can to see what the Underground Exchange will take and leave tonight",
+            CfgPromos = "Weekly promotions in tooltip",
+            CfgPromosTip = "List this week's three promotional exchanges (what to put in and what you get) in the trash can tooltip; the tooltip gets wider",
             CfgListWarning = "Exchange list warning",
             CfgListWarningTip = "Red text on the Exchange Directive when you are banned for low Blackmarket Reputation",
             CfgNightReport = "Night report",
@@ -168,6 +173,7 @@ namespace ProbablyStolenExchangePreview
             BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市声望 {0}（需要高于 {1}）",
             SurplusLine = "多放的{0}会被清掉（每晚只换一次）",
+            PromoHeader = "本周促销",
             Arrow = " → ",
             ListSep = "、",
             Colon = "：",
@@ -201,6 +207,8 @@ namespace ProbablyStolenExchangePreview
             ReminderSurplusAlso = "多放的{0}今晚也会被清掉（每晚只换一次）",
             CfgTooltip = "垃圾桶提示",
             CfgTooltipTip = "鼠标移到垃圾桶时，显示今晚地下交易所会收走什么、换成什么",
+            CfgPromos = "垃圾桶提示列出本周促销",
+            CfgPromosTip = "在垃圾桶提示里列出本周地下交易所的三笔促销交易（要丢什么、换到什么），提示框会变宽",
             CfgListWarning = "清单红字",
             CfgListWarningTip = "黑市声望太低被禁止使用时，在地下交易所清单右下角用红字显示",
             CfgNightReport = "夜间报告",
@@ -232,6 +240,7 @@ namespace ProbablyStolenExchangePreview
             BannedShort = "地下交易所不跟你交易",
             RepLine = "黑市聲望 {0}（需要高於 {1}）",
             SurplusLine = "多放的{0}會被清掉（每晚只換一次）",
+            PromoHeader = "本週促銷",
             Arrow = " → ",
             ListSep = "、",
             Colon = "：",
@@ -265,6 +274,8 @@ namespace ProbablyStolenExchangePreview
             ReminderSurplusAlso = "多放的{0}今晚也會被清掉（每晚只換一次）",
             CfgTooltip = "垃圾桶提示",
             CfgTooltipTip = "滑鼠移到垃圾桶時，顯示今晚地下交易所會收走什麼、換成什麼",
+            CfgPromos = "垃圾桶提示列出本週促銷",
+            CfgPromosTip = "在垃圾桶提示裡列出本週地下交易所的三筆促銷交易（要丟什麼、換到什麼），提示框會變寬",
             CfgListWarning = "清單紅字",
             CfgListWarningTip = "黑市聲望太低被禁止使用時，在地下交易所清單右下角用紅字顯示",
             CfgNightReport = "夜間報告",

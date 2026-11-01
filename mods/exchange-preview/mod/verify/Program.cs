@@ -28,6 +28,7 @@ namespace ProbablyStolenExchangePreview.Verify
             Console.OutputEncoding = Encoding.UTF8;
             Sim();
             Text();
+            Promos();
             StringsComplete();
             Indicator();
             Purity();
@@ -325,6 +326,120 @@ namespace ProbablyStolenExchangePreview.Verify
                 "清單紅字：英文用 mod 自己的話");
         }
 
+        /// <summary>
+        /// 本週促銷：一筆一行「條件 → 產出」、紫色標題＋白字、
+        /// 提示的順序（今晚 → 空一行 → 促銷 → mod 標示）、什麼時候列。
+        /// 條件的名稱與產出照遊戲裡 ExchangeReader 給的（物品名稱是遊戲的字串表），這裡直接寫。
+        /// </summary>
+        static void Promos()
+        {
+            var s = Strings.For(Lang.ZhHant);
+            var en = Strings.For(Lang.En);
+            // 遊戲 promotionalBarter 的順序：加強版夢塵、治安部物資箱、……、黑市聲望
+            List<SimBarter> Week(bool english) => new List<SimBarter>
+            {
+                B("improved_dream_dust_barter", 4, english ? "random medical supplies" : "隨機醫療用品",
+                    Repeat(() => ById("dream_dust", english ? "Vial of \"Dream Dust\"" : "一小瓶「夢塵」"), 4)),
+                B("sec_crate_barter", 3, english ? "Security Department Supply Crate" : "治安部物資箱",
+                    Repeat(() => ById("sec_keycard", english ? "Disposable Keycard (Security)" : "一次性鑰匙卡（治安）"), 3)),
+                B("bm_rep_barter", 1, english ? "Blackmarket Reputation +25" : "黑市聲望 +25",
+                    ById("scav_token", english ? "Scavenger's Token" : "拾荒者信物")),
+            };
+
+            var promo = PreviewText.Promos(s, Week(false));
+            Eq(string.Join("|", promo.Select(l => l.Text)),
+                "本週促銷|一小瓶「夢塵」 ×4 → 隨機醫療用品|一次性鑰匙卡（治安） ×3 → 治安部物資箱|拾荒者信物 → 黑市聲望 +25", "促銷：一筆一行、同名合併計數、照遊戲的順序");
+            Eq(string.Join(",", promo.Select(l => l.Tone)), "Header,Normal,Normal,Normal", "促銷：標題紫色、三筆白字");
+            Eq(promo[0].Tone, Tone.Header, "促銷：標題和「地下交易所・今晚」同色");
+            Check(PreviewText.Promos(s, new List<SimBarter>()).Count == 0, "促銷：沒有本週促銷就沒有這段（不加標題）");
+            Check(PreviewText.Promos(s, null).Count == 0, "促銷：null 也不加");
+
+            var enPromo = PreviewText.Promos(en, Week(true)).Select(l => l.Text).ToList();
+            Eq(enPromo[0], "This week's promotions", "促銷：英文標題");
+            Eq(enPromo[2], "Disposable Keycard (Security) x3 for Security Department Supply Crate", "促銷：英文合併計數的那筆用 for");
+            Eq(enPromo[3], "Scavenger's Token for Blackmarket Reputation +25", "促銷：英文單件的那筆");
+            Check(enPromo.All(t => !t.Contains('→')), "促銷：英文沒有「→」");
+            Check(en.PromoHeader.All(c => c < 128) && en.CfgPromos.All(c => c < 128) && en.CfgPromosTip.All(c => c < 128),
+                "促銷：英文的新字串只用 ASCII（正式版英文字型缺符號）");
+
+            // 提示整體的順序：今晚那段 → 空一行 → 促銷 → mod 標示
+            var r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥") }, new[] { Bullet() });
+            var on = new PreviewInput { JanitorialOn = true, Result = r };
+            var lines = PreviewText.TooltipFull(s, on, Week(false));
+            Eq(string.Join("|", lines.Select(l => l.Text)),
+                "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物||本週促銷|一小瓶「夢塵」 ×4 → 隨機醫療用品|一次性鑰匙卡（治安） ×3 → 治安部物資箱|拾荒者信物 → 黑市聲望 +25|交易所預覽（mod）",
+                "提示：今晚 → 空一行 → 促銷 → mod 標示");
+            Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Blank,Header,Normal,Normal,Normal,Dim", "提示：促銷那段的顏色與空行");
+            Eq(lines.Count(l => l.Tone == Tone.Blank), 1, "提示：只空一行");
+            Check(PreviewText.ShowPromos(on, Week(false)), "有本週促銷：列、加寬");
+
+            // 設定關掉（呼叫端傳 null）、沒有本週促銷：今晚那段後面直接接 mod 標示，不空行、不加寬
+            lines = PreviewText.TooltipFull(s, on, null);
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|交易所預覽（mod）", "提示：設定關掉時不列促銷");
+            lines = PreviewText.TooltipFull(s, on, new List<SimBarter>());
+            Check(lines.All(l => l.Tone != Tone.Blank) && lines.Last().Text == s.TooltipTag, "提示：沒有本週促銷時不空行、mod 標示照樣在最後");
+            Check(!PreviewText.ShowPromos(on, null) && !PreviewText.ShowPromos(on, new List<SimBarter>()), "沒有列促銷時不加寬");
+
+            // 被禁止交易：不列（不會交換）、不加寬
+            r = ExchangeSim.Run(new[] { I("ammo_a") }, new List<SimBarter>());
+            var banned = new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, JanitorialOn = true, Result = r };
+            lines = PreviewText.TooltipFull(s, banned, Week(false));
+            Check(lines.All(l => l.Text != s.PromoHeader && l.Tone != Tone.Blank), "提示：被禁止交易時不列促銷");
+            Eq(lines.Last().Text, s.TooltipTag, "提示：被禁止交易時 mod 標示照樣在最後");
+            Check(!PreviewText.ShowPromos(banned, Week(false)), "被禁止交易時不加寬");
+
+            // 今晚沒用清潔服務、清潔服務還沒開放：照樣列，白字不變灰
+            r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥") }, new[] { Bullet() });
+            foreach (var locked in new[] { false, true })
+            {
+                var off = new PreviewInput { JanitorialOn = false, JanitorialLocked = locked, Result = r };
+                lines = PreviewText.TooltipFull(s, off, Week(false));
+                Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim,Blank,Header,Normal,Normal,Normal,Dim",
+                    locked ? "提示：清潔服務還沒開放時促銷照樣列、白字" : "提示：今晚沒用清潔服務時促銷照樣列、白字");
+                Check(PreviewText.ShowPromos(off, Week(false)), locked ? "清潔服務還沒開放時照樣加寬" : "今晚沒用清潔服務時照樣加寬");
+            }
+
+            // 篩選與順序：照遊戲 promotionalBarter 的順序，只留本週的；本週的 id 是隨機抽的順序，不照它排
+            var gameOrder = new List<string> { "improved_dream_dust_barter", "sec_crate_barter", "med_crate_barter", "eng_crate_barter",
+                "seed_barter", "bm_rep_barter", "immunivax_barter" };
+            var weekIds = new List<string> { "bm_rep_barter", "improved_dream_dust_barter", "sec_crate_barter" };
+            Eq(string.Join(",", ExchangeSim.ActivePromos(gameOrder, x => x, weekIds)),
+                "improved_dream_dust_barter,sec_crate_barter,bm_rep_barter", "促銷：照遊戲清單的順序，不照本週 id 抽出來的順序");
+            Eq(string.Join(",", ExchangeSim.ActivePromos(new List<string> { "seed_barter", null, "bm_rep_barter" }, x => x,
+                    new List<string> { "bm_rep_barter", "not_in_game_barter" })),
+                "bm_rep_barter", "促銷：清單裡的 null 跳過、本週 id 不在遊戲清單裡的不列");
+            Check(ExchangeSim.ActivePromos(gameOrder, x => x, new List<string>()).Count == 0
+                && ExchangeSim.ActivePromos(gameOrder, x => x, null).Count == 0
+                && ExchangeSim.ActivePromos<string>(null, x => x, weekIds).Count == 0, "促銷：本週沒有、或讀不到清單時是空的");
+
+            // 同一筆促銷上面已經是差一點的（的 D1）：下面照樣列三筆
+            var week = Week(false);
+            r = ExchangeSim.Run(new[] { I("sec_keycard", "一次性鑰匙卡（治安）"), I("sec_keycard", "一次性鑰匙卡（治安）") }, week);
+            lines = PreviewText.TooltipFull(s, new PreviewInput { JanitorialOn = true, Result = r }, week);
+            Check(lines.Any(l => l.Tone == Tone.Partial && l.Text.StartsWith("一次性鑰匙卡（治安） 2/3")), "促銷：上面有差一點的治安鑰匙卡");
+            Eq(lines.SkipWhile(l => l.Tone != Tone.Blank).Skip(1).Count(l => l.Tone == Tone.Normal), 3, "促銷：上面已經出現的那筆，下面照樣列（三筆）");
+            // 同一筆今晚會成交時也一樣
+            r = ExchangeSim.Run(Enumerable.Range(0, 3).Select(_ => I("sec_keycard", "一次性鑰匙卡（治安）")).ToList(), week);
+            lines = PreviewText.TooltipFull(s, new PreviewInput { JanitorialOn = true, Result = r }, week);
+            Check(lines.Any(l => l.Tone == Tone.Good && l.Text.StartsWith("一次性鑰匙卡（治安） ×3 → 治安部物資箱")), "促銷：上面有今晚會成交的治安鑰匙卡");
+            Eq(lines.SkipWhile(l => l.Tone != Tone.Blank).Skip(1).Count(l => l.Tone == Tone.Normal), 3, "促銷：今晚會成交的那筆，下面照樣列（三筆）");
+
+            // 英文、簡中的整份順序與標題
+            var bulletTwo = ExchangeSim.Run(new[] { I("ammo_a", "10mm Ammunition"), I("ammo_b", "10mm Ammunition") },
+                new[] { B("bullet_barter", 1, "random food", Repeat(() => ByTag("ammo", "Ammunition"), 2)) });
+            lines = PreviewText.TooltipFull(en, new PreviewInput { JanitorialOn = true, Result = bulletTwo }, Week(true));
+            Eq(string.Join("|", lines.Select(l => l.Text)),
+                "Underground Exchange · tonight|10mm Ammunition x2 for random food||This week's promotions|Vial of \"Dream Dust\" x4 for random medical supplies|"
+                + "Disposable Keycard (Security) x3 for Security Department Supply Crate|Scavenger's Token for Blackmarket Reputation +25|Exchange Preview (mod)",
+                "提示（英文）：今晚 → 空一行 → 促銷 → mod 標示");
+            var hans = Strings.For(Lang.ZhHans);
+            Eq(hans.PromoHeader, "本周促销", "促銷：簡中標題");
+            lines = PreviewText.TooltipFull(hans, new PreviewInput { JanitorialOn = true, Result = r }, week);
+            Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Blank,Header,Normal,Normal,Normal,Dim", "提示（簡中）：促銷那段的顏色與空行");
+            Eq(lines[3].Text, "本周促销", "提示（簡中）：促銷的標題");
+            Eq(lines.Last().Text, hans.TooltipTag, "提示（簡中）：mod 標示在最後");
+        }
+
         /// <summary>三種語言的字串都填了，而且格式化不會丟例外（漏了 {0} 之類的）。</summary>
         static void StringsComplete()
         {
@@ -341,14 +456,15 @@ namespace ProbablyStolenExchangePreview.Verify
                 }
             Check(!Strings.For(Lang.ZhHant).Header.Any(c => "们这时会过还说个里么为后对没换获见"
                 .Contains(c)), "繁中字串沒有簡體字（繁中 mod 才不會再轉）");
-            // 這次新加的句子（純度、設定視窗）：繁中沒有簡體字、簡中沒有繁體字
+            // 2.0.0 起新加的句子（純度、設定視窗、本週促銷）：繁中沒有簡體字、簡中沒有繁體字
             var hant = Strings.For(Lang.ZhHant);
             var hans = Strings.For(Lang.ZhHans);
             var newFields = typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .Where(f => f.FieldType == typeof(string) && (f.Name.StartsWith("Purity") || f.Name.StartsWith("Cfg"))).ToList();
-            Check(newFields.Count == 17, $"純度與設定的字串有 17 個（實際 {newFields.Count}）");
-            const string simplifiedOnly = "们这会过还说个里么为后对没换获见纯级标显红声间报写进结画洁东贴纸条灯盖状闪开单";
-            const string traditionalOnly = "們這會過還說個裡麼為後對沒換獲見純級標顯紅聲間報寫進結畫潔東貼紙條燈蓋狀閃開單";
+                .Where(f => f.FieldType == typeof(string) && (f.Name.StartsWith("Purity") || f.Name.StartsWith("Cfg") || f.Name.StartsWith("Promo"))).ToList();
+            // 純度 5 個、設定 7 組 14 個、本週促銷的標題 1 個
+            Check(newFields.Count == 20, $"純度、設定與促銷的字串有 20 個（實際 {newFields.Count}）");
+            const string simplifiedOnly = "们这会过还说个里么为后对没换获见纯级标显红声间报写进结画洁东贴纸条灯盖状闪开单笔销丢变宽";
+            const string traditionalOnly = "們這會過還說個裡麼為後對沒換獲見純級標顯紅聲間報寫進結畫潔東貼紙條燈蓋狀閃開單筆銷丟變寬";
             foreach (var f in newFields)
             {
                 var t = (string)f.GetValue(hant);

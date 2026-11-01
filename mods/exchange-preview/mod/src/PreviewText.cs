@@ -5,8 +5,11 @@ using System.Text;
 
 namespace ProbablyStolenExchangePreview
 {
-    /// <summary>提示每一行的色調；遊戲那邊對應到 RenderHandler.ColorPalette。</summary>
-    enum Tone { Header, Good, Partial, Warn, Bad, Normal, Dim }
+    /// <summary>
+    /// 提示每一行的色調；遊戲那邊對應到 RenderHandler.ColorPalette。
+    /// Blank 不是顏色：空一行（遊戲的 AddEmptyLine，高度和我們那段前面空的一樣；今晚那段與本週促銷之間）。
+    /// </summary>
+    enum Tone { Header, Good, Partial, Warn, Bad, Normal, Dim, Blank }
 
     sealed class Line
     {
@@ -113,6 +116,46 @@ namespace ProbablyStolenExchangePreview
                 if (partialNames.Count > 0) text += Fill(s.PartialIncluded, Group(s, partialNames));
                 lines.Add(new Line(text, Tone.Warn));
             }
+            return lines;
+        }
+
+        /// <summary>
+        /// 垃圾桶提示要加的全部行：今晚那段 → 空一行 → 本週促銷 → mod 標示。
+        /// promos 是本週的促銷（遊戲 promotionalBarter 的順序）；設定關掉時傳 null。列不列照 ShowPromos。
+        /// </summary>
+        public static List<Line> TooltipFull(Strings s, PreviewInput p, IList<SimBarter> promos)
+        {
+            var lines = Tooltip(s, p);
+            if (ShowPromos(p, promos))
+            {
+                lines.Add(new Line("", Tone.Blank));
+                lines.AddRange(Promos(s, promos));
+            }
+            // 最後一行標明是 mod 加的；RichTextBuilder 沒有字級可設、照字數換行，所以用同字級的灰色（Dim）
+            lines.Add(new Line(s.TooltipTag, Tone.Dim));
+            return lines;
+        }
+
+        /// <summary>
+        /// 要不要列本週促銷：被禁止交易時不列（不會交換）；沒有本週促銷時不列。
+        /// 今晚沒用清潔服務、清潔服務還沒開放時照樣列（整週的資訊，不是今晚會發生的事）。
+        /// 列的時候提示框加寬，所以垃圾桶提示也用這個判斷要不要加寬。
+        /// </summary>
+        public static bool ShowPromos(PreviewInput p, IList<SimBarter> promos) =>
+            p != null && !p.Distrusted && promos != null && promos.Count > 0;
+
+        /// <summary>
+        /// 本週促銷那段：紫色標題（和「地下交易所・今晚」同色）＋每筆一行白字，
+        /// 寫法和今晚會成交那行一樣：條件的名稱同名合併計數 → 產出。加強版夢塵不加純度提示（還不知道會丟哪幾瓶）。
+        /// 固定照列遊戲清單上的每一筆（上面差一點、會成交的照列）；沒有就回傳空清單（不加標題）。
+        /// </summary>
+        public static List<Line> Promos(Strings s, IList<SimBarter> promos)
+        {
+            var lines = new List<Line>();
+            if (promos == null || promos.Count == 0) return lines;
+            lines.Add(new Line(s.PromoHeader, Tone.Header));
+            foreach (var b in promos)
+                lines.Add(new Line(Group(s, b.Conditions.Select(c => c.Label)) + s.Arrow + b.Output, Tone.Normal));
             return lines;
         }
 

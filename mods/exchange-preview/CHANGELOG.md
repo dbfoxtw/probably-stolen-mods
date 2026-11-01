@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.1.0（2026-11-01）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+
+- 新增：垃圾桶提示的最後列出這週地下交易所的三筆促銷交易（要丟什麼 → 換到什麼），和地下交易所清單上的一樣，不用再去翻那張清單。列出時垃圾桶的提示框會變寬（只有垃圾桶，其他東西的提示不變）。
+- 新設定「垃圾桶提示列出本週促銷」（`TrashPromos`，預設開）：不想看可以在 Mods 畫面裡這個 mod 的設定關掉，關掉後提示和以前一樣。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
+
+- New: the trash can tooltip now ends with the three promotional exchanges running this week (what to put in for what you get), the same as on the Underground Exchange Directive, so you don't have to go and find it. The trash can tooltip gets wider while they're shown (only the trash can; other tooltips are unchanged).
+- New setting "Weekly promotions in tooltip" (`TrashPromos`, on by default): turn it off in this mod's settings on the Mods screen and the tooltip is the same as before.
+
 ## v2.0.1（2026-10-31）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）

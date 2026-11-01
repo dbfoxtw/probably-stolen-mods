@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV5）
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -20,6 +20,7 @@
   - 差一點的：例如「濾水器 1/3（還差 2 個 → 全新濾水器）」。
   - 多放的：每種交換每晚只換一次，多放的會被清掉。
   - 其餘會被清掉的件數；夢塵純度不夠（收走了卻換不到東西）的警告；今晚沒有勾清潔服務時的提醒。
+  - 本週促銷：最後列出這週地下交易所的三筆促銷交易（要丟什麼 → 換到什麼），和地下交易所清單上的一樣。列出時提示框會變寬。
 - **垃圾桶標示**：店裡的垃圾桶上貼一張紙條（也可以改用蓋子上的燈）：無交易、可交易、多放了、待收貨（交易所換來的東西還沒拿出來）、禁止交易。
 - **夜間報告**：清潔服務換成功時，早上的報告多一行紫色，寫出交易所在垃圾桶裡留下了什麼。
 - **結束一天的提醒**：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時，在清潔服務那一列下面提醒。只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
@@ -34,6 +35,7 @@
 | 設定 | 預設 | 內容 |
 |---|---|---|
 | 垃圾桶提示（`TrashTooltip`） | 開 | 垃圾桶提示 |
+| 垃圾桶提示列出本週促銷（`TrashPromos`） | 開 | 垃圾桶提示最後的本週促銷（關掉時提示框照原本的寬度） |
 | 清單紅字（`ExchangeListWarning`） | 開 | 被禁止使用時，交易所清單的紅字 |
 | 夜間報告（`NightReport`） | 開 | 夜間報告那一行 |
 | 結束一天的提醒（`EndOfDayReminder`） | 開 | 結束一天的提醒 |
@@ -111,7 +113,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100-REV5). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
+A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
 
@@ -125,6 +127,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
   - Almost there: e.g. "Water Filter 1/3 (2 more for New Water Filter)".
   - Extras: each trade happens only once per night, so extra items get cleared.
   - How many other items will be cleared; a warning when Dream Dust purity is too low (taken, nothing given); a reminder when the Janitorial Service is off tonight.
+  - This week's promotions: the three promotional exchanges running this week (what to put in for what you get) are listed last, the same as on the Underground Exchange Directive. The tooltip gets wider while they're shown.
 - **Trash can indicator**: a sticky note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up (items from the Exchange are still in the trash can), Banned.
 - **Night report**: when the Exchange made a trade, the morning report gets a purple line listing what it left in the trash can.
 - **End of day reminder**: under the Janitorial Service row, a reminder when items from the Exchange are still in the trash can, or extra items will be cleared tonight. It only covers the Exchange; other things you threw in the trash can aren't mentioned.
@@ -137,6 +140,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 | Setting | Default | What it does |
 |---|---|---|
 | Trash can tooltip (`TrashTooltip`) | on | Trash can tooltip |
+| Weekly promotions in tooltip (`TrashPromos`) | on | This week's promotions at the end of the trash can tooltip (when off, the tooltip keeps its usual width) |
 | Exchange list warning (`ExchangeListWarning`) | on | Red text on the Exchange Directive when you're banned |
 | Night report (`NightReport`) | on | The line in the night report |
 | End of day reminder (`EndOfDayReminder`) | on | End of day reminder |
