@@ -1,4 +1,4 @@
-# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 的各项没有占位符）
+# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 与 Mod water sources 的各项没有占位符，只有 cfg_src_watertower_missing 的 {0} 是选项名称）
 button,收集{0} ({1}ml)
 button_no_source,收集{0} (没有水源)
 cfg_collect,收集{0}
@@ -17,3 +17,6 @@ cfg_src_showcase,收展示柜里的容器
 cfg_src_showcase_tip,展示柜里不在机器内的水容器。会影响第二天来的客人。
 cfg_src_trash,收垃圾桶里的容器
 cfg_src_trash_tip,垃圾桶里不在机器内的水容器。
+cfg_src_watertower,收水塔
+cfg_src_watertower_missing,{0}（未检测到水塔 mod）
+cfg_src_watertower_tip,水塔 mod（Water Tower、WaterTowerPlus）的蓄水箱。净化中的水也会被收走。

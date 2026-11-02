@@ -1,4 +1,4 @@
-# Button text and the labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value ({0} = water name, {1} = ml; button_no_source only has {0}; the Water sources entries have no placeholders)
+# Button text and the labels and tooltips of this mod's settings window (ModHelper.GetLocalized). Format: key,value ({0} = water name, {1} = ml; button_no_source only has {0}; the Water sources and Mod water sources entries have no placeholders, except cfg_src_watertower_missing: {0} = the setting's name)
 button,Collect {0} ({1}ml)
 button_no_source,Collect {0} (no water sources)
 cfg_collect,Collect {0}
@@ -17,3 +17,6 @@ cfg_src_showcase,Collect from containers in the Display Case
 cfg_src_showcase_tip,Water containers in the Display Case that aren't inside a machine. This can change which customers come the next day.
 cfg_src_trash,Collect from containers in the Trash Can
 cfg_src_trash_tip,Water containers in the Trash Can that aren't inside a machine.
+cfg_src_watertower,Collect from Water Towers
+cfg_src_watertower_missing,{0} (no water tower mod detected)
+cfg_src_watertower_tip,The tanks of the Water Tower and WaterTowerPlus mods. Water still being purified is collected too.

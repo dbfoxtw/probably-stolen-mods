@@ -2,7 +2,8 @@ Probably Stolen 一鍵收水 mod（Collect All Water） v{version}
 ==========================================================
 
 水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；
-也可以在設定裡打開淨水器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。非官方製作。
+也可以在設定裡打開淨水器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器；
+裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也會收水塔蓄水箱裡的水。非官方製作。
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
@@ -42,8 +43,11 @@ ModConfigs\dbfoxtw.collect-all-water.json。
   含放在裡面的水分收集器、淨水器；留著要賣的水會被收走）、冰箱（冷藏區、冷凍區），以及物品欄、展示櫃
   （裡面的商品決定隔天來什麼客人，收走水可能會影響）、垃圾桶裡不在機器內的容器。
   櫃檯上的容器（交易時你這一側放的是要給客人的東西）、其他機器裡的容器、化學品成品不收。
-- 收的順序：水分收集器 → 淨水器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，裝滿就停。
-  水分收集器、淨水器最滿的先倒，其他的最少的先倒。
+- 水塔 mod 的蓄水箱（2.2.0 起，設定，預設開）：裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，
+  也從水塔的 600L 蓄水箱收；塔裡淨化中的水也會被收走。塔的取水槽、過濾器格不收；塔工作區裡自己放了容器的
+  水分收集器、淨水器照它們自己的開關。右鍵蓄水箱本身也有收水按鈕，可以把各處的水集中到塔裡。
+- 收的順序：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，裝滿就停。
+  水分收集器、淨水器、水塔最滿的先倒，其他的最少的先倒。
 - 沒打開「收自動售水機」時，放在自動售水機裡的水分收集器、淨水器不收、也不算進括號的水量。
   自動售水機水箱裡直接放的水容器，右鍵照樣有收水按鈕。
 - 哪些容器有這個按鈕：自己的水容器（桶裝水、瓶裝水、水罐、儲水罐、循環水養殖系統水箱…），
@@ -57,7 +61,9 @@ ModConfigs\dbfoxtw.collect-all-water.json。
 在主選單的「Mods」（模組）畫面打開這個 mod 的設定，改好套用，下次按右鍵就生效，不用重開遊戲：
 - Right-click menu：收集幽靈水（預設開）、收集基礎水、收集優質水、收集純水（預設關）。
 - Water sources：收水分收集器（預設開）、收淨水器、收自動售水機、收冰箱、收物品欄裡的容器、
-  收展示櫃裡的容器、收垃圾桶裡的容器（預設關）。七個都關掉時，按鈕寫「(沒有水源)」。
+  收展示櫃裡的容器、收垃圾桶裡的容器（預設關）。
+- Mod water sources（2.2.0 起）：收水塔（預設開；沒裝水塔 mod 時名稱後面會註明沒偵測到）。
+水源的開關全部關掉時，按鈕寫「(沒有水源)」。
 設定存在存檔資料夾的 ModConfigs\dbfoxtw.collect-all-water.json。
 Demo 版在 MelonPreferences.cfg 的設定不會搬過來，Demo 時打開過其他水質的，要在設定視窗重新打開。
 
@@ -67,7 +73,9 @@ Demo 版在 MelonPreferences.cfg 的設定不會搬過來，Demo 時打開過其
   遊戲的中文只有簡體，這個 mod 的中文也是簡體字；裝了繁體中文化 mod 會跟著轉成繁體。
 - 已知限制：化學溶液裡的水夠多（96% 以上）時也會被當成水收走。櫃檯上的水容器不收，要先移回物品欄。
   遊戲之後如果改了水分收集器、淨水器、冰箱、水容器或右鍵選單的做法，要等 mod 更新。
-- 相容性：其他也會改右鍵選單的 mod，可能和這個 mod 互相影響，沒有測試過。
+  水塔的支援照水塔 mod 1.0.3 的做法；水塔 mod 之後改了蓄水箱的做法時，要等本 mod 更新。
+- 相容性：支援水塔 mod（Water Tower、WaterTowerPlus），蓄水箱當成水源。其他也會改右鍵選單的 mod，
+  可能和這個 mod 互相影響，沒有測試過。
 
 【授權】
 - 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/collect-all-water
@@ -80,7 +88,9 @@ Probably Stolen Collect All Water mod v{version}
 
 Adds "Collect Ghostwater" to the right-click menu of water containers: one click fills the container
 from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers,
-the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. Unofficial.
+the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can.
+With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects
+from the towers' tanks. Unofficial.
 Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch
 is also supported)
 
@@ -136,9 +146,14 @@ Features
   day, so taking the water out can change that) and the Trash Can that aren't inside a machine. Containers on
   the counter (during a deal, your side holds what you're offering the customer), containers in other machines
   and chemical products are never taken.
-- Order: Moisture Farms → Water Purifiers → Trash Can → containers in the inventory → Fridges → Vending Fountain
-  → Display Case, stopping when the container is full. Moisture Farms and Water Purifiers go fullest first,
-  the rest emptiest first.
+- Water tower tanks (from 2.2.0; setting, on by default): with the water tower mods from the Steam Workshop
+  (Water Tower, WaterTowerPlus) installed, it also collects from the towers' 600L tanks, including water still
+  being purified. The tower's fill slot and filter slots are left alone; Moisture Farms and Water Purifiers
+  in its work area that hold their own container go by their own switches. The tank itself gets the Collect
+  button too, so you can gather water from everywhere into the tower.
+- Order: Moisture Farms → Water Purifiers → Water Towers → Trash Can → containers in the inventory → Fridges
+  → Vending Fountain → Display Case, stopping when the container is full. Moisture Farms, Water Purifiers and
+  Water Towers go fullest first, the rest emptiest first.
 - Unless the Vending Fountain switch is on, Moisture Farms and Water Purifiers placed in the Vending Fountain
   are left alone and aren't counted. Water containers placed directly in its tanks still get the Collect button.
 - Which containers get the button: your own water containers (Jugs of Water, Bottles of Water,
@@ -160,7 +175,9 @@ time you right-click (no restart needed):
   Collect Pure Water (default off).
 - Water sources: Collect from Moisture Farms (default on), from Water Purifiers, from the Vending Fountain,
   from Fridges, from containers in the inventory, in the Display Case, in the Trash Can (default off).
-  With all seven off, the buttons say "(no water sources)".
+- Mod water sources (from 2.2.0): Collect from Water Towers (default on; without a water tower mod, its name
+  says none was detected).
+With every source switched off, the buttons say "(no water sources)".
 The settings are kept in ModConfigs\dbfoxtw.collect-all-water.json in the save folder.
 Settings from the Demo's MelonPreferences.cfg are not carried over; if you turned on other water types
 in the Demo, turn them on again in the settings window.
@@ -172,8 +189,10 @@ Notes
 - Known limitations: a chemical solution that is mostly water (96% or more) counts as water and can be taken.
   Water containers on the counter are never taken; move them back to the inventory first.
   If a game update changes how Moisture Farms, Water Purifiers, Fridges, water containers or the right-click
-  menu work, wait for a mod update.
-- Compatibility: other mods that also change the right-click menu may interfere with this one; not tested.
+  menu work, wait for a mod update. Water tower support follows how version 1.0.3 of the water tower mods
+  works; if they change how their tanks work, wait for a mod update.
+- Compatibility: the water tower mods (Water Tower, WaterTowerPlus) are supported; their tanks are a water
+  source. Other mods that also change the right-click menu may interfere with this one; not tested.
 
 License
 - This mod: MIT (LICENSE.txt). Source: https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/collect-all-water

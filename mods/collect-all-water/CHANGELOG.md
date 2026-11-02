@@ -1,5 +1,23 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-03）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+
+- **支援水塔 mod**：裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也從水塔的 600L 蓄水箱收水。新設定段落「Mod water sources」的「收水塔」，預設開；沒裝水塔 mod 時名稱後面會註明沒偵測到。塔裡淨化中的水也會被收走；塔的取水槽、過濾器格不收。
+- 收的順序：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃；水塔和水分收集器、淨水器一樣最滿的先。
+- 右鍵水塔的蓄水箱也有收水按鈕，可以把各處的水集中到塔裡。
+- 修正：裝了 WaterTowerPlus 時，塔的取水槽裡的容器會被當成「物品欄裡的容器」收走（打開那個開關時）。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
+
+- **Water tower mod support**: with the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' 600L tanks. New settings section "Mod water sources" with "Collect from Water Towers", on by default; without a water tower mod, its name says none was detected. Water still being purified in a tower is taken too; the tower's fill slot and filter slots are left alone.
+- Order: Moisture Farms → Water Purifiers → Water Towers → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case; Water Towers go fullest first, like Moisture Farms and Water Purifiers.
+- The water tower's tank gets the Collect button too, so you can gather water from everywhere into the tower.
+- Fixed: with WaterTowerPlus installed, a container in the tower's fill slot was treated as a container in the inventory and taken (when that switch was on).
+
 ## v2.1.0（2026-11-02）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）

@@ -34,6 +34,7 @@ MOD = modkit.OfficialMod(
                  "in each container: from your Moisture Farms (on by default) and, if switched on in the mod settings, "
                  "from Water Purifiers, the Vending Fountain, Fridges, and containers in the inventory, the Display Case "
                  "and the Trash Can. Containers on the counter are never taken. "
+                 "With the Water Tower or WaterTowerPlus mod installed, it also collects from the towers' tanks (on by default). "
                  "It pours the same way as by hand. Ghostwater is on by default; "
                  "Basewater, High-Quality Water and Pure Water can be turned on in the settings. "
                  "Moisture Farms placed in the Vending Fountain are left alone unless the Vending Fountain is switched on."),

@@ -135,7 +135,7 @@ namespace ProbablyStolenCollectAllWater
                 {
                     var scan = WaterSources.Scan(item);
                     bool full = WaterSources.IsFull(item);
-                    // 一個水源都沒找到時改寫「沒有水源」（七個開關全關也是），那時每種水都是 0ml、按鈕是灰的
+                    // 一個水源都沒找到時改寫「沒有水源」（水源開關全關也是），那時每種水都是 0ml、按鈕是灰的
                     var kind = Rules.KindOf(scan.SourceCount);
                     var template = ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.KeyOf(kind));
                     foreach (var g in grades)

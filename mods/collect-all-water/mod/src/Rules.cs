@@ -67,14 +67,17 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 水源的種類。**列舉的順序就是收水的順序**：水分收集器 → 淨水器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃。
-        /// 開關的順序（Switches）和這個不同，改開關的順序不影響收水的順序。
+        /// 水源的種類。**列舉的順序就是收水的順序**：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃。
+        /// 開關的順序（Switches，ModSwitches）和這個不同，改開關的順序不影響收水的順序。
         /// 垃圾桶開了清潔服務每晚會清掉，所以先收；自動售水機是要賣的貨；展示櫃的東西決定隔天來什麼客人，放最後。
+        /// 只加在中間、不改既有的名稱：值不存進設定檔（設定檔存的是開關的鍵），插在中間不影響玩家的設定。
         /// </summary>
         internal enum Source
         {
             MoistureFarm,
             Purifier,
+            /// <summary>Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的 600 L 蓄水箱，只認塔裡面的。</summary>
+            WaterTower,
             TrashCan,
             /// <summary>物品欄裡的容器：不在機器、垃圾桶、展示櫃、櫃台上的水容器。</summary>
             Inventory,
@@ -90,6 +93,7 @@ namespace ProbablyStolenCollectAllWater
             {
                 case Source.MoistureFarm: return "水分收集器";
                 case Source.Purifier: return "淨水器";
+                case Source.WaterTower: return "水塔";
                 case Source.TrashCan: return "垃圾桶";
                 case Source.Inventory: return "物品欄";
                 case Source.Fridge: return "冰箱";
@@ -100,10 +104,9 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 同一層裡誰先收：水分收集器、淨水器水多的先（容器滿了隔夜的產量就浪費了，淨水器照同一條）；
-        /// 其他水少的先（一次清空最多個容器）。
+        /// 同一層裡誰先收：水分收集器、淨水器、水塔水多的先（容器滿了隔夜的產量就浪費了，淨水器照同一條；/// 蓄水箱滿了，塔裡沒放容器的水分收集器當晚就不產）；其他水少的先（一次清空最多個容器）。
         /// </summary>
-        internal static bool FullestFirst(Source s) => s == Source.MoistureFarm || s == Source.Purifier;
+        internal static bool FullestFirst(Source s) => s == Source.MoistureFarm || s == Source.Purifier || s == Source.WaterTower;
 
         /// <summary>
         /// 收的順序：照水源的層級（Source 列舉的順序），同層照 FullestFirst 的方向排；同層同量照原本的順序（LINQ 的排序是穩定的）；
@@ -124,16 +127,25 @@ namespace ProbablyStolenCollectAllWater
             /// <summary>Localization\*.csv 裡開關的名稱；說明是它加上 "_tip"。</summary>
             public readonly string LabelKey;
             public readonly bool DefaultOn;
+            /// <summary>
+            /// 這個水源來自哪些別人的 mod（manifest 的 ID），任一個在跑就算偵測到；null＝遊戲本身的水源。
+            /// 沒偵測到時名稱改用 MissingKey 的樣板加註，開關照樣列出、照樣有效（收水只看物品識別值）。
+            /// </summary>
+            public readonly string[] ModIds;
 
-            public SourceSwitch(Source source, string configKey, string labelKey, bool defaultOn)
+            public SourceSwitch(Source source, string configKey, string labelKey, bool defaultOn, string[] modIds = null)
             {
                 Source = source;
                 ConfigKey = configKey;
                 LabelKey = labelKey;
                 DefaultOn = defaultOn;
+                ModIds = modIds;
             }
 
             public string TipKey => LabelKey + "_tip";
+
+            /// <summary>沒偵測到 ModIds 的 mod 時名稱用的樣板（{0} 是原本的名稱）；只有 ModIds 不是 null 的開關用得到。</summary>
+            public string MissingKey => LabelKey + "_missing";
 
             public override string ToString() => ConfigKey;
         }
@@ -154,6 +166,41 @@ namespace ProbablyStolenCollectAllWater
             new SourceSwitch(Source.TrashCan, "SourceTrashCan", "cfg_src_trash", false),
         };
 
+        /// <summary>Workshop 的兩個水塔 mod 的 manifest ID（WaterTower、WaterTowerPlus）。</summary>
+        internal static readonly string[] WaterTowerModIds = { "watertower", "watertowerplus" };
+
+        /// <summary>
+        /// 別人的 mod 帶來的水源開關，放在設定視窗另一個段落 Mod water sources。和 Switches 分開放：
+        /// Switches 的鍵與順序是玩家設定檔已經有的，不動。
+        /// 水塔一個開關管兩個 mod，預設開：蓄水箱裝的就是水分收集器的產水，和「收水分收集器」預設開一致，
+        /// 裝了水塔的玩家更新後不用動設定。
+        /// </summary>
+        internal static readonly SourceSwitch[] ModSwitches =
+        {
+            new SourceSwitch(Source.WaterTower, "SourceWaterTowers", "cfg_src_watertower", true, WaterTowerModIds),
+        };
+
+        /// <summary>全部的水源開關：Switches 再接 ModSwitches（設定視窗的順序）。</summary>
+        internal static IEnumerable<SourceSwitch> AllSwitches => Switches.Concat(ModSwitches);
+
+        /// <summary>Localization\*.csv 的 cfg_src_watertower_missing 查不到或寫壞時用的英文樣板（同 en.csv）。</summary>
+        internal const string DefaultWaterTowerMissingLabel = "{0} (no water tower mod detected)";
+
+        /// <summary>
+        /// 沒偵測到水塔 mod 時開關的名稱：「收水塔（未偵測到水塔 mod）」。template 是 MissingKey 查到的值（{0} 原本的名稱），
+        /// 查不到（GetLocalized 回傳 key 本身）、空的或格式寫壞了都退回英文樣板，和按鈕文字一樣不會變成怪字。
+        /// </summary>
+        internal static string MissingLabel(string template, string missingKey, string name)
+        {
+            name = string.IsNullOrWhiteSpace(name) ? "?" : name.Trim();
+            if (!string.IsNullOrWhiteSpace(template) && template != missingKey)
+            {
+                try { return string.Format(template, name); }
+                catch (FormatException) { }
+            }
+            return string.Format(DefaultWaterTowerMissingLabel, name);
+        }
+
         /// <summary>
         /// 一個水容器放在店裡的哪裡（WaterSources.Scan 從上往下建的集合查出來的），給 LayerOf 判斷歸哪一層。
         /// 抽成一包布林、不直接傳遊戲的物品，離線測試才測得到分層的優先順序。
@@ -162,6 +209,11 @@ namespace ProbablyStolenCollectAllWater
         {
             /// <summary>在自動售水機的格子底下（售水機本身的子孫，含放在裡面的水分收集器、淨水器與它們的容器）。</summary>
             public bool InFountain;
+            /// <summary>
+            /// 是某座水塔裡的蓄水箱（watertower_tank／watertower_plus_tank，只記會算座數的塔裡的：自己的、沒壞、不在關著的自動售水機裡）。
+            /// 蓄水箱同時也在塔的子孫裡（InMachine），塔外面單獨的蓄水箱不算。
+            /// </summary>
+            public bool InTowerTank;
             /// <summary>是某台水分收集器容器格裡的容器（只記會算台數的那些：自己的、沒壞、不在關著的自動售水機裡）。</summary>
             public bool InFarmSlot;
             /// <summary>是某台淨水器容器格裡的容器（條件同上）。</summary>
@@ -178,6 +230,12 @@ namespace ProbablyStolenCollectAllWater
             public bool InShowcase;
         }
 
+        /// <summary>
+        /// 塔的子孫裡的蓄水箱算不算這座塔的蓄水箱（WaterSources.BelongsToTower）：最近的上層物品找得到而且不是這座塔就不算
+        /// （例如備用蓄水箱放在塔工作區裡水分收集器的容器格，歸水分收集器那層）；找不到時照算，免得遊戲結構和預期不同時整座塔收不到。
+        /// </summary>
+        internal static bool IsTowerTank(bool hasParentItem, bool parentIsTower) => !hasParentItem || parentIsTower;
+
         // 不收的理由（除錯 log 用）
         internal const string SkipFountainOff = "在自動售水機裡（沒開這個水源）";
         internal const string SkipFountainMachine = "在自動售水機裡的其他機器";
@@ -186,12 +244,14 @@ namespace ProbablyStolenCollectAllWater
 
         /// <summary>
         /// 水容器歸到哪一層：先符合的算，優先順序是
-        /// 自動售水機 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。
+        /// 自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。
+        /// 蓄水箱也在塔（機器）的子孫裡，所以排在「其他機器裡」前面；塔放不進自動售水機，排在它後面；塔裡的取水槽、濾芯格不是蓄水箱，
+        /// 照「其他機器裡」不收，塔工作區裡的水分收集器、淨水器的容器格照它們自己那層。
         /// 回傳 null 是不收，skip 是理由；回傳一層時 skip 是 null。這裡不看那層自己的開關：先歸層、再由呼叫的一方看開關，
         /// 關著的那層不收、也不會掉到下一層（例如水分收集器的開關關了，容器格裡的不會被當成物品欄的收走）。
         /// 自動售水機那層：開關關著時裡面的都不收；開著時只收直接放在水箱的，與放在裡面的水分收集器、淨水器的容器，
         /// 它們只看自動售水機的開關、不看自己的（外層優先）；售水機裡其他機器裡的不收。
-        /// 櫃台上、展示櫃、垃圾桶裡放的機器照機器那層算，所以機器的幾層排在它們前面。
+        /// 櫃台上、展示櫃、垃圾桶裡放的機器照機器那層算，所以機器的幾層排在它們前面；放在那裡的水塔也一樣，蓄水箱算水塔。
         /// </summary>
         internal static Source? LayerOf(Where w, bool fountainOn, out string skip)
         {
@@ -202,6 +262,7 @@ namespace ProbablyStolenCollectAllWater
                 if (!w.InFarmSlot && !w.InPurifierSlot && w.InMachineButFountain) { skip = SkipFountainMachine; return null; }
                 return Source.VendingFountain;
             }
+            if (w.InTowerTank) return Source.WaterTower;
             if (w.InFarmSlot) return Source.MoistureFarm;
             if (w.InPurifierSlot) return Source.Purifier;
             if (w.InFridge) return Source.Fridge;
@@ -213,14 +274,16 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 找到的水源總數（是 0 時按鈕寫「沒有水源」），只算開著的：水分收集器、淨水器、冰箱算台數，
+        /// 找到的水源總數（是 0 時按鈕寫「沒有水源」），只算開著的：水分收集器、淨水器、水塔、冰箱算台數（座數），
         /// 自動售水機有就算 1，物品欄、展示櫃、垃圾桶算歸到那層的水容器個數。台數由呼叫的一方先排除不算的
         /// （不是自己的、損壞的、在關著的自動售水機裡的）；放在開著的自動售水機裡的水分收集器、淨水器照樣算進台數，但只在自己的開關也開著時。
+        /// 水塔照水分收集器的算法：不管蓄水箱有沒有水、是不是右鍵的那個，一座算 1。
         /// </summary>
-        internal static int SourceCount(int farms, int purifiers, int fridges, bool hasFountain,
+        internal static int SourceCount(int farms, int purifiers, int towers, int fridges, bool hasFountain,
             int inventory, int displayCase, int trashCan, Func<Source, bool> isOn) =>
             (isOn(Source.MoistureFarm) ? farms : 0)
             + (isOn(Source.Purifier) ? purifiers : 0)
+            + (isOn(Source.WaterTower) ? towers : 0)
             + (isOn(Source.VendingFountain) && hasFountain ? 1 : 0)
             + (isOn(Source.Fridge) ? fridges : 0)
             + (isOn(Source.Inventory) ? inventory : 0)
@@ -232,7 +295,7 @@ namespace ProbablyStolenCollectAllWater
         {
             /// <summary>有找到水源：「收集幽靈水 (12400ml)」（沒有這種水時照樣 0ml）。</summary>
             Amount,
-            /// <summary>一個水源都沒找到（七個開關全關也是）：「收集幽靈水 (沒有水源)」。</summary>
+            /// <summary>一個水源都沒找到（水源開關全關也是）：「收集幽靈水 (沒有水源)」。</summary>
             NoSource,
         }
 
