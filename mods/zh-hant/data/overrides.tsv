@@ -777,6 +777,7 @@ Mechanic	note_admirer_1	2ff8b48694a4dc2e	10	11		17	17	，	18	19	會	23	24	跟	29
 Mechanic	request_mother_galaxy_desc	80d5fc3941697faf	6	6	在	9	10	，營養夠寶寶吃的像樣食物，竟	17	34		41	41	吧
 Mechanic	mech_auto_butcher_info_count_protected	2e5cc95836d09a19	0	3		13	15	，也算進要
 Mechanic	mech_nightlog_serpico_food_extra_day	6eea829875da157c	14	22	還有	25	25	晚可以把剩下的送齊。
+Mechanic	mech_nightlog_alarm_no_power	1b9bf48b089650ec	4	6	沒有	9	10		12	16	的電量不夠	19	21	要用	27	29	
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
 NewGame	gunsmith_body	60bb2125ebd052b3	76	77	透	78	79	為
 NewGame	welcome_main	e6fbec78e1effe76	121	123	申請房	124	125	

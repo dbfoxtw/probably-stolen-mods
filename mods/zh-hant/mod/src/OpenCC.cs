@@ -26,6 +26,17 @@ namespace ProbablyStolenZhHant
 
         public int EntryCount => _norm.Count + _phrases.Count + _chars.Count + _twPhrases.Count + _twChars.Count;
 
+        /// <summary>第一層的詞組（STPhrases ∪ 地區詞組，詞 → 第一個譯法）；TextConverter 找「沒有簡體專用字、詞組卻會轉」的詞用。</summary>
+        public IEnumerable<KeyValuePair<string, string>> Phrases => _phrases.Entries;
+
+        readonly bool[] _outputs = new bool[char.MaxValue + 1];
+
+        /// <summary>
+        /// 轉換會轉出來的漢字：字表與詞組的所有候選（不只第一個）裡、不在原本的字（詞）裡的字，扣掉 STCharacters 的 key。
+        /// key 是簡體這邊的字，簡中也照常用（「皂」是 TWVariants「皁→皂」轉出來的、「才」是「纔→才」）。TextConverter 判斷文字是不是已經是繁體用。
+        /// </summary>
+        public bool IsOutput(char c) => _outputs[c];
+
         /// <summary>
         /// read：相對路徑（以 / 分隔）→ 檔案內容，檔案不存在時傳回 null。遊戲裡是 ModHelper.ReadModFileText（mod 資料夾），
         /// 離線驗證是 File.ReadAllText。mod 的 DLL 不能直接用 System.IO.File：遊戲的掃描會把它當成要宣告「讀寫檔案」的權限。
@@ -39,11 +50,13 @@ namespace ProbablyStolenZhHant
                 return read(path) ?? throw new InvalidDataException($"找不到 OpenCC 字典 {path}");
             }
             cc._norm.Load(P("CJK_Compatibility_Ideographs.txt"));
-            cc._phrases.Load(P("STPhrases.txt")); // 聯集：同一個詞兩邊都有時，先載入的優先
-            cc._phrases.Load(P("STPhrases_GeneratedFromRegionalPhrases.txt"));
-            cc._chars.Load(P("STCharacters.txt"));
-            cc._twPhrases.Load(P("TWVariantsPhrases.txt"));
-            cc._twChars.Load(P("TWVariants.txt"));
+            cc._phrases.Load(P("STPhrases.txt"), cc._outputs); // 聯集：同一個詞兩邊都有時，先載入的優先
+            cc._phrases.Load(P("STPhrases_GeneratedFromRegionalPhrases.txt"), cc._outputs);
+            cc._chars.Load(P("STCharacters.txt"), cc._outputs);
+            cc._twPhrases.Load(P("TWVariantsPhrases.txt"), cc._outputs);
+            cc._twChars.Load(P("TWVariants.txt"), cc._outputs);
+            foreach (var kv in cc._chars.Entries)
+                if (kv.Key.Length == 1) cc._outputs[kv.Key[0]] = false;
             return cc;
         }
 
@@ -168,8 +181,10 @@ namespace ProbablyStolenZhHant
             readonly Dictionary<char, ulong> _lengths = new Dictionary<char, ulong>();
 
             public int Count => _map.Count;
+            public IEnumerable<KeyValuePair<string, string>> Entries => _map;
 
-            public void Load(string text)
+            /// <summary>outputs 不為 null 時，順便標出所有候選裡、不在 key 裡的漢字（見 OpenCC.IsOutput）。</summary>
+            public void Load(string text, bool[] outputs = null)
             {
                 foreach (var line in Lines(text))
                 {
@@ -177,8 +192,14 @@ namespace ProbablyStolenZhHant
                     if (tab <= 0) continue;
                     int space = line.IndexOf(' ', tab + 1);
                     Add(line.Substring(0, tab), space < 0 ? line.Substring(tab + 1) : line.Substring(tab + 1, space - tab - 1));
+                    if (outputs == null) continue;
+                    for (int j = tab + 1; j < line.Length; j++)
+                        if (IsIdeograph(line[j]) && line.IndexOf(line[j], 0, tab) < 0) outputs[line[j]] = true;
                 }
             }
+
+            // 和 Translator.CjkRanges 相同的範圍；代理字元（擴充區的半個字）不算，免得和表情符號的半個字混在一起
+            static bool IsIdeograph(char c) => c >= 0x3400 && c <= 0x4DBF || c >= 0x4E00 && c <= 0x9FFF || c >= 0xF900 && c <= 0xFAFF;
 
             void Add(string key, string value)
             {

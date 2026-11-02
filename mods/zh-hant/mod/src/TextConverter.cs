@@ -27,6 +27,11 @@ namespace ProbablyStolenZhHant
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _plainPhrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _phrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
         readonly bool[] _trigger = new bool[char.MaxValue + 1];
+        // 沒有簡體專用字、OpenCC 的詞組卻會轉的詞（「桶里」→「桶裡」、「一只」→「一隻」），依開頭兩個字分組；_phraseStart 標開頭的字，見 Build
+        readonly Dictionary<int, List<string>> _triggerPhrases = new Dictionary<int, List<string>>();
+        readonly bool[] _phraseStart = new bool[char.MaxValue + 1];
+        // 繁體的字：OpenCC 會轉出來、簡中原文裡從沒出現過的漢字（「這」「們」「裡」）。有這種字的文字已經是繁體，不看上面的詞，見 Build
+        readonly bool[] _traditional = new bool[char.MaxValue + 1];
         readonly Dictionary<string, string> _cache = new Dictionary<string, string>(StringComparer.Ordinal);
         readonly HashSet<string> _unchanged = new HashSet<string>(StringComparer.Ordinal); // 轉換前後相同的短字串（例如沒有簡體專用字的人名），認說話者用
 
@@ -47,6 +52,7 @@ namespace ProbablyStolenZhHant
         public int HardcodedCount => _hardcoded.Count;
         public int TemplateCount => _templates.Count;
         public int TriggerCount { get; private set; }
+        public int TriggerPhraseCount { get; private set; }
         public int PhraseCount { get; private set; }
         public int PlainPhraseCount { get; private set; }
         /// <summary>建立時翻譯的字串表條目數；同一句原文有兩種譯文、只能留一種的次數。</summary>
@@ -75,6 +81,7 @@ namespace ProbablyStolenZhHant
         {
             var c = new TextConverter(tr);
             var outChars = new HashSet<char>();
+            var srcChars = new HashSet<char>();
             var outText = new StringBuilder(); // 全部譯文，用來確認短詞不會出現在已轉好的文字裡
             var byKey = new Dictionary<string, string>(); // 「表/key」→ 譯文，給 hardcoded.tsv 的參照用
             // 單位改成英文時，另外記下三個開關都開時的整句對照與全部譯文：短詞表照它建，只差在單位的條目（原文和譯文本來一樣）
@@ -100,6 +107,7 @@ namespace ProbablyStolenZhHant
                 byKey[table + "/" + key] = dst;
                 c.EntryCount++;
                 foreach (var ch in dst) outChars.Add(ch);
+                foreach (var ch in src) srcChars.Add(ch);
                 outText.Append(dst).Append('\n');
                 Add(src, dst);
                 Add(StripAnimTags(src), StripAnimTags(dst));
@@ -127,6 +135,39 @@ namespace ProbablyStolenZhHant
             for (int ch = 0; ch <= char.MaxValue; ch++)
                 if (tr.Changes((char)ch) && !outChars.Contains((char)ch)) { c._trigger[ch] = true; c.TriggerCount++; }
 
+            // 沒有簡體專用字、OpenCC 的詞組卻會轉的詞：別的 mod 的「收垃圾桶里的容器」沒有簡體專用字（「里」單獨轉是「裡」，
+            // 但譯文裡有「卡路里」，所以不算），只看簡體專用字會整句跳過；「桶里」是 OpenCC 的詞組，要當成詞才轉成「桶裡」。
+            // 只收 OpenCC 詞組會改、整個轉換（含術語表）結果也不同的詞，所以術語表換回去的不算（「台北」：OpenCC 轉成「臺北」，
+            // 術語表「臺→台」又換回來）。同簡體專用字的規則，譯文裡出現過的詞也不算（「了解」「公布」），已轉好的文字不會被再轉一次。
+            // 字串表還沒載入的暫用轉換器沒有譯文可以排除，不建（照舊只看簡體專用字，不然「我了解」會變成「我瞭解」）
+            if (c.EntryCount > 0)
+            {
+                // 這些詞有些台灣繁體也會寫（「分布」→「分佈」、「看表格」的「看表」→「看錶」），別的 mod 自帶的繁中、玩家打的繁體字
+                // 不能被轉，所以有繁體的字的文字不看這些詞。繁體的字是近似的判斷：OpenCC 會轉出來、和原本的字不同的漢字（字表與詞組的
+                // 所有候選，見 OpenCC.IsOutput），扣掉簡中原文用過的。不用「譯文裡有、原文沒有」：譯文裡有逐條修正與術語表帶進來的
+                // 簡繁共用字（「橘」「田」），簡中的「放在桶里的橘子」會被當成繁體
+                for (int ch = 0x3400; ch <= char.MaxValue; ch++)
+                    if (tr.CC.IsOutput((char)ch) && !srcChars.Contains((char)ch)) c._traditional[ch] = true;
+                var candidates = new Dictionary<int, List<string>>();
+                foreach (var kv in tr.CC.Phrases)
+                    if (kv.Key.Length >= 2 && kv.Key != kv.Value && !c.HasTriggerChar(kv.Key) && tr.ConvertPlain(kv.Key) != kv.Key)
+                        AddByPair(candidates, kv.Key);
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                var outAll = outText.ToString();
+                for (int i = 0; i + 1 < outAll.Length; i++)
+                    if (candidates.TryGetValue(Pair(outAll, i), out var list))
+                        foreach (var k in list)
+                            if (k.Length <= outAll.Length - i && string.CompareOrdinal(outAll, i, k, 0, k.Length) == 0) seen.Add(k);
+                foreach (var list in candidates.Values)
+                    foreach (var k in list)
+                        if (!seen.Contains(k))
+                        {
+                            AddByPair(c._triggerPhrases, k);
+                            c._phraseStart[k[0]] = true;
+                            c.TriggerPhraseCount++;
+                        }
+            }
+
             foreach (var kv in c._exact)
             {
                 var k = kv.Key.Trim();
@@ -144,8 +185,10 @@ namespace ProbablyStolenZhHant
                 if (kv.Key.Length >= 2 && kv.Key.Length <= 12 && !PhraseExclude.IsMatch(kv.Key))
                 {
                     // 「退出」「配置」「支付」這類原文也是正常的繁中詞、會出現在別的譯文裡，換掉會誤傷，所以只收譯文裡沒出現過的。
-                    // 含簡體字的字串分詞時也一樣：行事曆上的某個短詞有專用譯文，同一個詞出現在別的句子裡時不能跟著換掉
-                    bool plain = !c.NeedsConversion(kv.Key);
+                    // 含簡體字的字串分詞時也一樣：行事曆上的某個短詞有專用譯文，同一個詞出現在別的句子裡時不能跟著換掉。
+                    // 只看簡體專用字、不看詞觸發：「速食拉面」「游客」含詞觸發，但混在繁體裡（交易所預覽的繁中句子代入物品名稱）時
+                    // NeedsConversion 不成立，要靠這張表換
+                    bool plain = !c.HasTriggerChar(kv.Key);
                     if (plain && zhOut.IndexOf(kv.Key, StringComparison.Ordinal) >= 0) continue;
                     // 含簡體字、譯文和一般轉換不同的短詞（介面標籤「市场价」譯「市價」、「高级」譯「進階」）：一般轉換的結果出現在別的譯文裡，
                     // 表示別的句子照一般轉換譯，分詞時換成標籤的譯文會把長詞拆錯（「武器的市场价格」→「武器的市價格」），一樣不收。
@@ -191,10 +234,12 @@ namespace ProbablyStolenZhHant
             // 字面部分越長的樣板越具體，先比對（避免「…{0}…」把別的樣板的字面也吃進佔位符）
             c._templates.Sort((a, b) => b.LiteralLength.CompareTo(a.LiteralLength));
             // 字面沒有簡體專用字、套用後字面卻會變的樣板（例如含「下周」「槽位」，套用後變成「下週」「欄位」）另外列出，
-            // 不用轉的字串也要比對。只收字面會變的，所以單邊的樣板套上去也只是換掉那個詞，不怕寬鬆
+            // 不用轉的字串也要比對。只收字面會變的，所以單邊的樣板套上去也只是換掉那個詞，不怕寬鬆。
+            // 只看簡體專用字、不看詞觸發：「你的{0}已被治愈！」的「治愈」是詞觸發，但佔位符填的是繁體（玩家取的名字）時
+            // NeedsConversion 不成立，要靠這張表
             foreach (var t in c._templates)
             {
-                if (c.NeedsConversion(t.Literal) || t.KeepsLiteral) continue;
+                if (c.HasTriggerChar(t.Literal) || t.KeepsLiteral) continue;
                 c._plainTemplates.Add(t);
                 // 三個開關都開時不會在這份清單裡的（原文和譯文本來一樣，例如「需要{0}毫升水」），是只因為單位改成英文才收進來的：
                 // 佔位符什麼都吃，玩家打的「需要去超市買2000毫升水」也會對上，所以只在佔位符是遊戲代入的數字時才套。
@@ -278,12 +323,41 @@ namespace ProbablyStolenZhHant
             return ReferenceEquals(r, s) || r == s ? null : r;
         }
 
-        /// <summary>含有簡體專用字才需要轉（繁體譯文裡出現過的字都不算）。</summary>
+        /// <summary>
+        /// 含有簡體專用字（繁體譯文裡出現過的字都不算）才需要轉；沒有的話，含有 OpenCC 的詞組會轉的詞（「桶里」，見 Build）、
+        /// 而且沒有繁體的字（「這」「們」）時也要轉。
+        /// </summary>
         public bool NeedsConversion(string s)
+        {
+            // 每次設文字都會跑，所以只掃一遍：簡體專用字一出現就要轉；詞觸發與繁體的字記下來，掃完再決定
+            bool phrase = false, traditional = false;
+            for (int i = 0; i < s.Length; i++)
+            {
+                char ch = s[i];
+                if (_trigger[ch]) return true;
+                if (_traditional[ch]) { traditional = true; continue; }
+                if (phrase || traditional || !_phraseStart[ch] || i + 1 >= s.Length || !_triggerPhrases.TryGetValue(Pair(s, i), out var list)) continue;
+                foreach (var k in list)
+                    if (k.Length <= s.Length - i && string.CompareOrdinal(s, i, k, 0, k.Length) == 0) { phrase = true; break; }
+            }
+            return phrase && !traditional;
+        }
+
+        bool HasTriggerChar(string s)
         {
             foreach (var ch in s)
                 if (_trigger[ch]) return true;
             return false;
+        }
+
+        /// <summary>s[i]、s[i+1] 兩個字合成的分組鍵（_triggerPhrases 用）。</summary>
+        static int Pair(string s, int i) => s[i] << 16 | s[i + 1];
+
+        static void AddByPair(Dictionary<int, List<string>> d, string s)
+        {
+            int key = Pair(s, 0);
+            if (!d.TryGetValue(key, out var list)) d[key] = list = new List<string>();
+            list.Add(s);
         }
 
         /// <summary>anchored：只用前後都有固定文字的樣板（拼接比對時，開頭或結尾就是佔位符的樣板會把別段也吃進去）。</summary>

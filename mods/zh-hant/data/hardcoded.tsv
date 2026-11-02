@@ -110,14 +110,6 @@ Continue Playing	^Continue Playing$	繼續遊玩
 # 釀酒指南第 1 頁的瓶子容量（BookWine/Page1/waterGroup）；毫升照字串表緊接數字，容量的單位改回英文時 mod 換回「$1ml」
 750ml	^(750)ml$	$1毫升
 
-# 以下是 100-Rev7（2026-11-01）新的寫死英文。啟用要權限的模組時的確認視窗（ModEnablePromptUI.Build）用了三個字串表沒有的 key
-# （ui_mods_prompt_header、ui_mods_prompt_warning、ui_mods_prompt_warning_severe，英文表也沒有），所有語言都顯示寫死的英文。
-# 標題照 Rev7 以前同一個視窗的 UI/ui_mods_enable_prompt；兩句警告照搬那條的譯文會和遊戲文字一樣（公開檔不能放），改用自己的說法。
-# $1 是模組名稱（manifest 的 Name，沒有就是 ID），整段錨定
-asks for these capabilities:	^(.+) asks for these capabilities:$	$1請求取得以下權限：
-A mod with these capabilities	^A mod with these capabilities can do anything on this computer that you can\. Only activate mods from authors you trust\.$	有這些權限的模組，能在這台電腦上做任何你能做的事。請只啟用信得過的作者做的模組。
-Only activate mods from authors you trust.	^Only activate mods from authors you trust\.$	請只啟用信得過的作者做的模組。
-
 # 以下是遊戲自己拼出來、字串表沒有的中文（正式版 1.0，2026-10-30）。
 # 市場委託的卡片，物品那行是「數量＋空格＋物品名稱」（StoreRequestElement.Init），名稱本身帶「一＋量詞」的物品會變成「4 一卷衛生紙」：
 # 拿掉「一」成「4 卷衛生紙」（空格照遊戲原樣，和其他卡片的「3 醫療用品（普通）」對齊）。只列委託會要的物品裡名稱帶「一」的 4 個
