@@ -79,10 +79,30 @@ namespace ProbablyStolenExchangePreview
             catch { return "?"; }
         }
 
-        internal static SimItem ToSim(GameItem item) => ToSim(item, true);
-
-        /// <summary>不取名稱（垃圾桶標示只要判定，不用顯示的文字，省掉遊戲的本地化查詢）。</summary>
-        internal static SimItem ToSimBare(GameItem item) => ToSim(item, false);
+        /// <summary>
+        /// 整份垃圾桶清單（TrashItems）轉成模擬的輸入，順序照原清單，並接上 SimItem.Parent
+        /// （交換收走容器時，裡面的東西跟著不見，見 ExchangeSim）。
+        /// name 是 false 時不取名稱（垃圾桶標示只要判定，不用顯示的文字，省掉遊戲的本地化查詢）。
+        /// </summary>
+        internal static List<SimItem> ToSims(List<GameItem> trash, bool name)
+        {
+            var result = new List<SimItem>(trash.Count);
+            // GameItem 沒有覆寫 Equals／GetHashCode，是參考相等（遊戲自己也用 HashSet<GameItem>）
+            var byItem = new Dictionary<GameItem, SimItem>(trash.Count);
+            foreach (var item in trash)
+            {
+                var sim = ToSim(item, name);
+                result.Add(sim);
+                byItem[item] = sim;
+            }
+            foreach (var item in trash)
+            {
+                // 往上找到第一層 GameItem 就停（和 KeptInTrash 一樣）；直接放在垃圾桶裡的找到垃圾桶本身，不在清單裡 → null
+                var parent = GraphUtils.FindParentType<GameItem>(item, null, null);
+                if (parent != null && byItem.TryGetValue(parent, out var p)) byItem[item].Parent = p;
+            }
+            return result;
+        }
 
         static SimItem ToSim(GameItem item, bool name) => new SimItem
         {
@@ -111,7 +131,7 @@ namespace ProbablyStolenExchangePreview
         /// 今晚會處理的交換，順序同 ExchangeManager.HandleExchange：先 activeBarter（常駐），
         /// 再 promotionalBarter 裡 id 在 activePromotionalBarterIds 的（本週促銷）。排序交給 ExchangeSim。
         /// </summary>
-        /// <remarks>text 是 false 時不組產出與條件名稱（垃圾桶標示用，見 ToSimBare）。</remarks>
+        /// <remarks>text 是 false 時不組產出與條件名稱（垃圾桶標示用，見 ToSims）。</remarks>
         internal static List<SimBarter> Barters(Strings s, bool text = true)
         {
             var result = new List<SimBarter>();
@@ -253,7 +273,7 @@ namespace ProbablyStolenExchangePreview
             items = null;
             var trash = TrashItems();
             if (trash == null) return null;
-            items = trash.ConvertAll(ToSim);
+            items = ToSims(trash, true);
             return Run(st, items, s);
         }
     }

@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.1.1（2026-11-04）
+
+對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+
+- 修正：交易所收走容器（例如走私者暗格、一包營養果種子）時，裡面沒被收走的東西會跟著一起不見。提示原本還把它們算給之後的交易，例如種子促銷那週，把裝了種子的一包營養果種子放進走私者暗格時，會說種子那筆也換得到能量電池（實際上不會，包跟著暗格沒了）。現在照遊戲實際的結果。
+- 修正：會被清潔服務清掉的容器（例如背包）裡的危險廢棄物，會跟著容器一起被清掉。提示原本當成會留在垃圾桶。
+
+**English**
+
+Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
+
+- Fixed: when the Exchange takes a container (such as a Smuggler's Bay or a Packet of Nutrifruit Seeds), whatever it doesn't take from inside goes with it. The tooltip still counted those items for later trades; for example, in a week with the seed promotion, with a Packet of Nutrifruit Seeds (with seeds in it) inside a Smuggler's Bay it said the seed trade for an Energy Cell would also go through (it doesn't: the packet is gone with the bay). It now follows what the game actually does.
+- Fixed: hazardous waste inside a container that the Janitorial Service clears (such as a backpack) is cleared along with it. The tooltip used to treat it as staying in the trash can.
+
 ## v2.1.0（2026-11-01）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）

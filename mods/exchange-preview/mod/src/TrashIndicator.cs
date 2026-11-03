@@ -140,7 +140,7 @@ namespace ProbablyStolenExchangePreview
                 if (st.Unlocked && !st.Distrusted && !pickup)
                 {
                     // 只要判定，不組名稱與產出的文字（省掉遊戲的本地化查詢；字串表缺 key 時也不會一直往 Player.log 寫警告）
-                    var items = trash.ConvertAll(ExchangeReader.ToSimBare);
+                    var items = ExchangeReader.ToSims(trash, false);
                     var result = ExchangeReader.Run(st, items, Strings.For(lang), text: false);
                     ready = IndicatorLogic.AnyReady(result);
                     surplus = IndicatorLogic.AnySurplus(result);

@@ -75,7 +75,7 @@ namespace ProbablyStolenExchangePreview
             }
 
             var s = Strings.For(lang);
-            var items = trash.ConvertAll(ExchangeReader.ToSim);
+            var items = ExchangeReader.ToSims(trash, true);
             var result = ExchangeReader.Run(st, items, s);
             var input = new PreviewInput
             {

@@ -39,9 +39,20 @@ namespace ProbablyStolenExchangePreview.Verify
 
         // ── 模擬用的小工具 ──
 
-        /// <summary>kept：走私者暗格（改進）本身或直接放在它裡面的東西（遊戲裡由 ExchangeReader 判定）。</summary>
-        static SimItem I(string id, string name = null, bool hazard = false, double purity = 0, bool kept = false) =>
-            new SimItem { Id = id, Name = name ?? id, Hazardous = hazard, Purity = purity, Kept = kept };
+        /// <summary>
+        /// kept：走私者暗格（改進）本身或直接放在它裡面的東西（遊戲裡由 ExchangeReader 判定）。
+        /// parent：直接裝著它的容器（遊戲裡由 ExchangeReader.ToSims 接上）；清單順序照遊戲的廣度優先，容器排在裡面的東西前面。
+        /// </summary>
+        static SimItem I(string id, string name = null, bool hazard = false, double purity = 0, bool kept = false, SimItem parent = null) =>
+            new SimItem { Id = id, Name = name ?? id, Hazardous = hazard, Purity = purity, Kept = kept, Parent = parent };
+
+        /// <summary>n 件同樣的東西，裝在 parent 裡（名稱是 tag＋編號，方便看收走的是哪幾件；parent 是 null 就是直接放在垃圾桶裡）。</summary>
+        static List<SimItem> In(SimItem parent, string id, string tag, int n) =>
+            Enumerable.Range(1, n).Select(i => I(id, $"{tag}{i}", parent: parent)).ToList();
+
+        static string Names(IEnumerable<SimItem> items) => string.Join(",", items.Select(x => x.Name));
+
+        static SimBarter Seed() => B("seed_barter", 2, "能量電池", Repeat(() => ByTag("seed", "種子"), 5));
 
         static SimCondition ById(string id, string label = null) => new SimCondition { Label = label ?? id, Match = x => x.Id == id };
 
@@ -145,6 +156,149 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(r.Partial.Count == 1 && r.Cleared.Count == 0, "暗格裡只有一個彈藥：列為差一點，但不會被清掉");
 
             Surplus();
+            Containers();
+        }
+
+        /// <summary>
+        /// 交換收走容器時裡面的東西：
+        /// ExchangeBarter.Accept 銷毀容器，裡面沒被收走的東西跟著離開垃圾桶，後面的交換看不到、今晚就沒了（危險廢棄物也一樣），
+        /// 多放的只算帶走它的那筆；清潔服務清掉的容器也一樣，裡面的危險廢棄物跟著不見。
+        /// 同一筆之內照樣可以挑到容器和裡面的東西。清單順序照遊戲的廣度優先：容器在前、裡面的在後。
+        /// </summary>
+        static void Containers()
+        {
+            // 13. 一包營養果種子（本身也有 SEED 標籤，算一顆種子）裡 9 顆：收走包＋前 4 顆，剩下 5 顆跟著包不見，是種子那筆多放的
+            var pack = I("seed_packet", "種子包");
+            var items = new List<SimItem> { pack };
+            items.AddRange(In(pack, "seed_nutrifruit", "種子", 9));
+            var r = ExchangeSim.Run(items, new[] { Seed() });
+            Eq(string.Join(",", Ids(r.Accepted)), "seed_barter", "種子包裡 9 顆：成交");
+            Eq(Names(r.Accepted[0].Taken), "種子包,種子1,種子2,種子3,種子4", "種子包裡 9 顆：包算一顆，收走包＋前 4 顆");
+            Eq(Names(r.Cleared), "種子5,種子6,種子7,種子8,種子9", "種子包裡 9 顆：剩下 5 顆跟著包不見");
+            Eq(Names(r.Accepted[0].Surplus), "種子5,種子6,種子7,種子8,種子9", "種子包裡 9 顆：剩下 5 顆是多放的");
+
+            // 包裡 3 顆：差一點 4/5，包和 3 顆都會被清掉
+            pack = I("seed_packet", "種子包");
+            items = new List<SimItem> { pack };
+            items.AddRange(In(pack, "seed_nutrifruit", "種子", 3));
+            r = ExchangeSim.Run(items, new[] { Seed() });
+            Check(r.Accepted.Count == 0 && r.Partial.Count == 1, "種子包裡 3 顆：差一點");
+            Eq(r.Partial[0].Matched.Count(m => m), 4, "種子包裡 3 顆：配到 4/5（包本身算一顆）");
+            Eq(Names(r.Cleared), "種子包,種子1,種子2,種子3", "種子包裡 3 顆：包和種子都會被清掉");
+
+            // 5 個空的包：包本身就算種子
+            r = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("seed_packet")).ToList(), new[] { Seed() });
+            Eq(string.Join(",", Ids(r.Accepted)), "seed_barter", "空的種子包 ×5：成交");
+            Eq(r.Cleared.Count, 0, "空的種子包 ×5：全部收走");
+
+            // 14. 走私者暗格裡 10 支注射器（垃圾桶直接放的只有暗格）：走私者暗格收走暗格＋8 支，剩的 2 支跟著暗格不見，
+            // 免疫寧看不到它們，不成交、也不是差一點；那 2 支是走私者暗格那筆多放的
+            // （遊戲裡暗格 5×5、注射器佔 1×4，最多放 6 支；這裡只驗規則，放得下的放法是下面的外 5 裡 5）
+            var bay = I("smuggler_bay", "暗格");
+            items = new List<SimItem> { bay };
+            items.AddRange(In(bay, "pink_injector", "注射器", 10));
+            r = ExchangeSim.Run(items, new[] { Immunivax(), Smuggler() });
+            Eq(string.Join(",", Ids(r.Accepted)), "smuggler_barter", "暗格裡 10 支：只有走私者暗格成交");
+            Eq(r.Partial.Count, 0, "暗格裡 10 支：免疫寧不是差一點");
+            Eq(Names(r.Cleared), "注射器9,注射器10", "暗格裡 10 支：剩的 2 支跟著暗格不見");
+            Eq(Names(r.Accepted[0].Surplus), "注射器9,注射器10", "暗格裡 10 支：剩的 2 支是走私者暗格那筆多放的");
+
+            // 暗格外面 5 支、裡面 5 支（遊戲裡放得下）：外面的排在裡面的前面，先被挑走；裡面剩 2 支跟著不見
+            bay = I("smuggler_bay", "暗格");
+            items = new List<SimItem> { bay };
+            items.AddRange(In(null, "pink_injector", "外", 5));
+            items.AddRange(In(bay, "pink_injector", "裡", 5));
+            r = ExchangeSim.Run(items, new[] { Immunivax(), Smuggler() });
+            Eq(string.Join(",", Ids(r.Accepted)), "smuggler_barter", "外 5 裡 5：只有走私者暗格成交");
+            Eq(Names(r.Accepted[0].Taken), "暗格,外1,外2,外3,外4,外5,裡1,裡2,裡3", "外 5 裡 5：收走暗格＋外面 5 支＋裡面 3 支");
+            Eq(r.Partial.Count, 0, "外 5 裡 5：免疫寧不是差一點");
+            Eq(Names(r.Cleared), "裡4,裡5", "外 5 裡 5：裡面剩的 2 支跟著暗格不見");
+            Eq(Names(r.Accepted[0].Surplus), "裡4,裡5", "外 5 裡 5：剩的 2 支是走私者暗格那筆多放的");
+
+            // 暗格裡的危險廢棄物：清潔服務不清，但暗格被收走時跟著不見；垃圾桶直接放的照舊不算
+            bay = I("smuggler_bay", "暗格");
+            items = new List<SimItem> { bay, I("toxic", "外面的廢棄物", hazard: true) };
+            items.AddRange(In(bay, "pink_injector", "注射器", 8));
+            items.Add(I("toxic", "暗格裡的廢棄物", hazard: true, parent: bay));
+            r = ExchangeSim.Run(items, new[] { Smuggler() });
+            Eq(Names(r.Cleared), "暗格裡的廢棄物", "暗格裡的危險廢棄物跟著暗格不見，外面的照舊留著");
+            Eq(r.Surplus().Count, 0, "危險廢棄物不符合條件，不算多放");
+
+            // 走私者暗格（改進）放在被收走的暗格裡：它和裡面的東西清潔服務不清，但跟著暗格不見。
+            // 遊戲裡做不到（走私者暗格不收暗格（改進），ContainerHelper.InitSmugglerBay），這裡只測程式的規則：跟著容器不見的不看 Kept
+            bay = I("smuggler_bay", "暗格");
+            var mod = I("smuggler_bay_mod", "暗格（改進）", kept: true, parent: bay);
+            items = new List<SimItem> { bay, mod };
+            items.AddRange(In(bay, "pink_injector", "注射器", 8));
+            items.Add(I("bottle", "空瓶", kept: true, parent: mod));
+            r = ExchangeSim.Run(items, new[] { Smuggler() });
+            Eq(Names(r.Cleared), "暗格（改進）,空瓶", "暗格（改進）與裡面的東西跟著被收走的暗格不見");
+
+            // 多層：暗格裡放一包種子、包裡 5 顆。走私者暗格先成交，種子包和種子跟著不見，種子那筆看不到、不是差一點
+            bay = I("smuggler_bay", "暗格");
+            pack = I("seed_packet", "種子包", parent: bay);
+            items = new List<SimItem> { bay, pack };
+            items.AddRange(In(bay, "pink_injector", "注射器", 8));
+            items.AddRange(In(pack, "seed_nutrifruit", "種子", 5));
+            r = ExchangeSim.Run(items, new[] { Immunivax(), Smuggler(), Seed() });
+            Eq(string.Join(",", Ids(r.Accepted)), "smuggler_barter", "暗格裡的種子包：只有走私者暗格成交");
+            Eq(r.Partial.Count, 0, "暗格裡的種子包：種子那筆不是差一點");
+            Eq(Names(r.Cleared), "種子包,種子1,種子2,種子3,種子4,種子5", "暗格裡的種子包：包和包裡的種子都跟著不見");
+            Eq(r.Surplus().Count, 0, "暗格裡的種子包：種子那筆沒成交，不算多放");
+
+            // 15. 容器沒被收走時照舊：背包（不是任何條件）裡的彈藥照樣被收走，背包照舊被清掉；多的那個照舊是多放的
+            var bag = I("backpack", "背包");
+            items = new List<SimItem> { bag };
+            items.AddRange(In(bag, "ammo_10mm", "彈藥", 3));
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Accepted[0].Taken), "彈藥1,彈藥2", "背包裡的彈藥照樣被收走");
+            Eq(Names(r.Cleared), "背包,彈藥3", "背包沒被收走：背包和多的彈藥照舊被清掉");
+            Eq(Names(r.Accepted[0].Surplus), "彈藥3", "背包裡多的彈藥照舊是多放的");
+
+            // 16. 清潔服務清掉的容器裡的危險廢棄物跟著不見（PlayerStore.ClearTrash 銷毀外面的容器，整個子樹離開垃圾桶）：
+            // 只有每一層上層也都是清潔服務不清的，才會留在垃圾桶
+            // 背包（不是任何條件）被清掉：裡面的危險廢棄物跟著不見；垃圾桶直接放的照舊留著
+            bag = I("backpack", "背包");
+            items = new List<SimItem> { bag, I("toxic", "外面的廢棄物", hazard: true), I("toxic", "背包裡的廢棄物", hazard: true, parent: bag) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "背包,背包裡的廢棄物", "背包被清掉：裡面的危險廢棄物跟著不見，外面的照舊留著");
+
+            // 沒成交的走私者暗格（只有 3 支注射器，差一點）：暗格被清掉，裡面的危險廢棄物跟著不見；差一點那筆配到的注射器不算多放
+            bay = I("smuggler_bay", "暗格");
+            items = new List<SimItem> { bay, I("toxic", "外面的廢棄物", hazard: true) };
+            items.AddRange(In(bay, "pink_injector", "注射器", 3));
+            items.Add(I("toxic", "暗格裡的廢棄物", hazard: true, parent: bay));
+            r = ExchangeSim.Run(items, new[] { Smuggler() });
+            Check(r.Accepted.Count == 0 && r.Partial.Count == 1, "暗格裡 3 支：走私者暗格差一點");
+            Eq(Names(r.Cleared), "暗格,注射器1,注射器2,注射器3,暗格裡的廢棄物", "沒成交的暗格被清掉：裡面的危險廢棄物跟著不見，外面的照舊留著");
+            Eq(r.Surplus().Count, 0, "沒成交的暗格：沒有多放的");
+
+            // 走私者暗格（改進）（Kept，直接放在垃圾桶）裡的危險廢棄物、Kept 的東西：上層也是不清的，照舊留著
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            items = new List<SimItem> { I("newspaper", "報紙"), mod, I("toxic", "暗格（改進）裡的廢棄物", hazard: true, kept: true, parent: mod),
+                I("bottle", "空瓶", kept: true, parent: mod) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "報紙", "暗格（改進）裡的危險廢棄物與東西照舊留著");
+
+            // 暗格（改進）裡的背包裡的危險廢棄物：背包本身 Kept（直接放在暗格（改進）裡），每一層都不清，照舊留著；背包裡的報紙不 Kept，照樣被清掉
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            bag = I("backpack", "背包", kept: true, parent: mod);
+            items = new List<SimItem> { mod, bag, I("toxic", "背包裡的廢棄物", hazard: true, parent: bag), I("newspaper", "背包裡的報紙", parent: bag) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "背包裡的報紙", "暗格（改進）裡的背包：危險廢棄物留著、報紙被清掉");
+
+            // 17. 跟著容器不見的，只算帶走它的那筆多放的：暗格裡 8 支注射器＋2 發彈藥、外面 2 發彈藥，走私者暗格與彈藥兩筆都成交。
+            // 暗格裡的 2 發跟著暗格不見，但彈藥那筆一晚換兩次也拿不到它們，不是多放的
+            bay = I("smuggler_bay", "暗格");
+            items = new List<SimItem> { bay };
+            items.AddRange(In(null, "ammo_10mm", "外面的彈藥", 2));
+            items.AddRange(In(bay, "pink_injector", "注射器", 8));
+            items.AddRange(In(bay, "ammo_10mm", "暗格裡的彈藥", 2));
+            r = ExchangeSim.Run(items, new[] { Bullet(), Smuggler() });
+            Eq(string.Join(",", Ids(r.Accepted)), "smuggler_barter,bullet_barter", "暗格裡有彈藥：兩筆都成交，走私者暗格先");
+            Eq(Names(r.Accepted[1].Taken), "外面的彈藥1,外面的彈藥2", "暗格裡有彈藥：彈藥那筆收走外面的 2 發");
+            Eq(Names(r.Cleared), "暗格裡的彈藥1,暗格裡的彈藥2", "暗格裡有彈藥：暗格裡的 2 發跟著暗格不見");
+            Eq(r.Surplus().Count, 0, "暗格裡有彈藥：不是任何一筆多放的");
         }
 
         /// <summary>多放的：符合成交那筆的條件、沒被收走、會被清掉的；差一點那筆配到的不算。</summary>
