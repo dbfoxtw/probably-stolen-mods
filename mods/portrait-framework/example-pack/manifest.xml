@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>dbfoxtw.portrait-framework.example</ID>
+  <Name>Portrait Framework Example Pack</Name>
+  <Author>dbfoxtw</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Example and template portrait pack for Portrait Framework (dbfoxtw.portrait-framework), which you also need to install and activate. It replaces the Mentor's portrait, so you can check that portrait packs work; pack makers can copy it to make their own pack. Your save files are never modified.</Description>
+  <Prerequisites>
+    <Mod>dbfoxtw.portrait-framework</Mod>
+  </Prerequisites>
+  <Assemblies>
+    <Assembly>PortraitFrameworkPack.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Manifest>

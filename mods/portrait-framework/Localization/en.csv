@@ -1,0 +1,3 @@
+# Labels and tooltips of this mod's settings (ModHelper.GetLocalized). Format: key,value
+cfg_author,Pack author mode
+cfg_author_tip,"For pack makers: PNG files you change in an active pack are reloaded within a few seconds while you play, and every portrait key the game looks up is written to Player.log."

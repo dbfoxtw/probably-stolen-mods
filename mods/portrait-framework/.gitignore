@@ -1,0 +1,9 @@
+# 建置產物
+bin/
+obj/
+build/
+.vs/
+*.user
+__pycache__/
+# 不放圖：圖包是另外的 mod，從遊戲匯出的立繪也不能散布
+*.png

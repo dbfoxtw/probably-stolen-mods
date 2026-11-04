@@ -1,0 +1,3 @@
+# 本模组设置的标签和说明（ModHelper.GetLocalized）。格式：key,值
+cfg_author,图包作者模式
+cfg_author_tip,给制作图包的人：游戏中改了已激活图包里的 PNG，几秒内会重新读取；游戏查过的每个立绘键名都会写进 Player.log。
