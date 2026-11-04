@@ -26,7 +26,7 @@ Dialogue	dialog_wanted9_arrest_client	e43bf632507c7ef1
 Dialogue	dialog_scavenger_greeting_3	1fe31a1c983f466b	7	8	裡
 Dialogue	dialog_scavenger_request_2	8244ff9b3b8fea5a	6	7	用
 Dialogue	dialog_scavenger_request_3	2ea1a83f5f802ef8	2	3	來
-Dialogue	dialog_selfdefense_request_3	c9768dc0f3d8793e	8	9	裡
+Dialogue	dialog_selfdefense_request_3	3f251d900a53f4e4
 Dialogue	dialog_desperate_addict_request_1	0aa3cef7b60a7db1	3	4	菸
 Dialogue	dialog_worn_spacer_greeting_2	430126726c0a5433	10	11	總
 Dialogue	dialog_water_scavenger_1	9731cc2834fdd9c3	8	9	嗎
@@ -130,7 +130,7 @@ Dialogue	dialog_eleanor4_6	18566d7ee3705561	15	15	老死在	16	19	裡
 Dialogue	dialog_serpico1_8	d7ac01dbd5c1b491	9	10	打
 Dialogue	dialog_serpico4_2	231a48cbed5048a2	8	10	貪汙	12	13		14	14	告
 Dialogue	dialog_serpico5_3	82671983955b350c	3	5	貪汙
-Dialogue	dialog_serpico5_8	906b998e8e749df8	11	12	求
+Dialogue	dialog_serpico5_8	4a6200cae73b54d9
 Dialogue	dialog_serpico6_arrest_sec_3	206af47c17ae90d3	1	3	犯
 Dialogue	dialog_nellis3_3	5deef3d26701d53d	1	2	說
 Dialogue	dialog_landlord_ws_1	18aac2cd168f4a00	2	3	房
@@ -255,7 +255,7 @@ Dialogue	dialog_gun_order_req_reliable_suppressed	978e3d62c06ae190	3	3	一
 Dialogue	dialog_gun_order_req_service	74358e62c9e3a93c	17	18	用
 Dialogue	dialog_gun_order_req_stylish	3ee9f83f4f46d047	3	3	一
 Dialogue	dialog_loan_shark2_intro_8_weeks	8b0a9affca0370a7	19	20	週
-Dialogue	dialog_lou_bomb_2	1f0c8033d87b0e4e	14	15	裡
+Dialogue	dialog_lou_bomb_2	122697dc5753bb0d
 Dialogue	dialog_lou_box_collect_1	248fc819762bc39d	7	7	有沒有	9	11	
 Dialogue	dialog_lou_box_drop_4	2e2fc8488d3f31bf	3	4	顧	5	6	下
 Dialogue	dialog_lou_box_peeked_3	eaf11e0be8296d7b	11	12	嗜
@@ -417,6 +417,17 @@ Dialogue	dialog_eleanor_bail_1	39ff9cfc7430df44	18	20	女孩
 Dialogue	dialog_eleanor_bail_vouched	7dd14c7b02456c5e	0	1	好
 Dialogue	dialog_eleanor_freed_4	ef72b0eb60af4174	0	4		9	9	的
 Dialogue	dialog_georgio_serpico_food_unable_1	8f6b4f0b43c97416	11	14	最近
+Dialogue	dialog_lou_operative_rep_3b	279146672e472f18	7	10	還	12	12	找你	13	15	玩
+Dialogue	sec_shoot_wanted_3	edcfbba026955dad	20	21	當成	23	25	結案
+Dialogue	dialog_lou_operative_ask_1	3e4c62dd585a57e8	21	22	
+Dialogue	dialog_lou_operative_shot_4	7e05510f9e075728	25	25	都	26	27	這個	28	31	進去
+Dialogue	dialog_serpico_end_rev_arrest_sec_1	8101fc44468a5034	8	10	投靠了
+Dialogue	sec_shoot_li_1	8e5fb1c22de1b185	3	7	不是
+Dialogue	sec_shoot_serpico_4	90810a521b4570e2	2	2	底	6	7	，
+Dialogue	sec_shoot_serpico_5	4e54912b3f257627	3	4	當成	6	10	結案
+Dialogue	dialog_lou_operative_ask_3	5b55aec8c46269f1	7	8	得趕	9	11		17	21	不然一定	22	26	好好查	29	30	這件	31	35	裡插了多少手
+Dialogue	dialog_lou_operative_rep_7	0466f15ecf468060	17	18	這件	19	19	一個字都	20	21	准	22	24	別	26	27	
+Dialogue	dialog_lou_operative_shot_6	f701dfdbb8ae34bd	28	29	這件	30	30	一個字都	31	32	准	33	35	別	37	38	
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -539,6 +550,8 @@ Item	item_1ml_dropper_flavor	c1e646d0a80787e8	0	2	能	3	6	準滴取
 Item	item_cat_bar_flavor	ed779451af85c457	10	16	明明	17	19		21	21	裝	22	24	卻	25	26	半	27	28		31	34		35	36	完
 Item	item_food_stamp_flavor	bc6c799a77e2de17	0	1	只	4	5		13	16	屬於	19	23		24	24	一項	28	32	，用來幫助弱勢族群
 Item	item_rubbing_alcohol_flavor	af4e58d53c417cf4	20	21	誤	22	23		28	36		39	40	仍有人把它	41	42	成
+Item	item_lou_etched_round_flavor	8d4535692cafc102	10	11	
+Item	item_lou_locker_flavor	c26540346477621b	15	17	打烊
 MainMenu	credit_ack	6897086dc7b23030	2	3	感
 MainMenu	option_note	8f6c31c270ec6465	5	7	不	9	11	支援	13	16	螢幕	20	23		26	30		31	32	遊戲	34	37	會有
 MainMenu	option_apply	95514e5a7ff65783	0	1	套
@@ -585,6 +598,9 @@ MainMenu	credit_pub_support_manager	4eb3be14b1e914b7	1	4	服
 MainMenu	credit_pub_head_media	1203becf1d89af43	2	3	製
 MainMenu	credit_pub_media_project_manager	3a35e82081ae84ef	2	4	專案
 MainMenu	option_move_bought_to_inventory	214b4d36c49816e1	7	9	物品欄
+MainMenu	load_damaged_lost	0bce4b98b00ffd36	19	19	而	24	24	一天	25	27	存檔	30	33	它的檔案	34	37	在	42	43	裡移到	46	48	沒有
+MainMenu	load_damaged_repaired	59e97e8115eb6801	22	23		24	25	到	32	33	會
+MainMenu	load_save_damaged	b656b0b91647a482	0	1	這個	3	5	檔案	25	28	在	33	34	裡移到
 Mechanic	mech_chem_finisher_btn_configure	148d195e21b05db5	0	2	設定
 Mechanic	mech_vending_tooltip_popular	2710378a91949d6e	7	8	透
 Mechanic	type_evaporator_module	f94eaef7fbeabe49	1	2	發
@@ -709,7 +725,6 @@ Mechanic	mech_lottery_luck_good	4fd0da3337fedab5	11	12
 Mechanic	mech_marking_pen_color_orange	aa1e899dd35771b0	0	1	橘
 Mechanic	mech_nightlog_burglary_grace	29012a635584fbc7	11	12	小偷
 Mechanic	mech_nightlog_insurance_unpaid	944af839596dea2d	3	5	沒有
-Mechanic	mech_nightlog_vandalized_john_smith	41fc841fd1c90d9d	24	25	幾	30	32	約翰·史密斯
 Mechanic	mech_notify_eleanor_drive_bounty	cca89f338c0dbdf6	9	10	碟
 Mechanic	mech_pinned_tooltip	08500e5df465e13a	8	9	下
 Mechanic	mech_ras_waste	9bbf60ed8e041066	1	1	棄
@@ -778,6 +793,11 @@ Mechanic	request_mother_galaxy_desc	80d5fc3941697faf	6	6	在	9	10	，營養夠�
 Mechanic	mech_auto_butcher_info_count_protected	2e5cc95836d09a19	0	3		13	15	，也算進要
 Mechanic	mech_nightlog_serpico_food_extra_day	6eea829875da157c	14	22	還有	25	25	晚可以把剩下的送齊。
 Mechanic	mech_nightlog_alarm_no_power	1b9bf48b089650ec	4	6	沒有	9	10		12	16	的電量不夠	19	21	要用	27	29	
+Mechanic	handler_btn_configure	148d195e21b05db5	0	2	設定
+Mechanic	note_lou_locker_body	cecea9d2f42ef91c	9	10	痛	23	26	女孩子	30	30	嘛	50	52	打烊	87	89	啾
+Mechanic	note_lou_thank_you_body	8b0e09fccbf2504b	27	29	啾
+Mechanic	event_lou_warehouse_desc	e7314cbed9fb6210	8	8	通	9	11		21	22		37	38		53	54	穿	74	75	分
+Mechanic	health_sentinel_collapse_lethal	4e3f2fc39d01dbf6	4	8	已經禁	10	10	再	19	20	晚打	22	26	
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
 NewGame	gunsmith_body	60bb2125ebd052b3	76	77	透	78	79	為
 NewGame	welcome_main	e6fbec78e1effe76	121	123	申請房	124	125	
@@ -979,6 +999,7 @@ UI	ui_mods_prompt_ago_weeks	79295187f1776030	3	4	週
 UI	ui_mods_refused_hint	54b6410383d7bd40	2	5	記錄並	6	7		18	18	回	19	21	裡
 UI	ui_mods_refused_copy_log	7b0cd5489a0c87cb	2	4	記錄
 UI	ui_tooltip_dialogue_bubble_scale_info	41ecbefa1127506e	5	6	裡的	12	13	字標籤	26	29	是原本的
+UI	ui_tooltip_restore_display_after_focus_info	c4270d63b060326d	0	4		12	13		14	15	遊戲	16	16	，如果	18	19		29	30		31	31	自動	32	33		36	37		54	56	畫面	58	58	全	59	60		75	76	這個
 RepPerkTable	rep_perk_UL_TOURISTTRAP_desc	e56baee2601821a8	6	6	較不會	12	18	
 RepPerkTable	rep_perk_SEC_ALARM_IGNORED_flavor	f2208254c0dbda01	13	14	抑
 RepPerkTable	rep_perk_BM_UNINSURABLE_name	2d3df1340205f431	2	3	投
@@ -1037,9 +1058,9 @@ NetworkUpgrade	network_WILD_FIXER3_desc	6b3ba0f40e5beede	21	23	失憶
 NetworkUpgrade	network_subtitle_Referral	c4a159bd09e1c9ed	0	2	介紹
 NetworkUpgrade	network_BREWER_SHAREHOLDER_desc	fb81417a494aaa05	24	26	折扣
 NetworkUpgrade	network_CHEMIST_desc	a198a70b8c44b638	4	5	把	21	23	廉價的違禁藥物，	28	35	用途都有	37	40	會收到	42	42	名片，	43	44	來	46	47	這個	50	53	
-NetworkUpgrade	network_GUN_PERMIT_III_desc	462b8b594df7f404	19	21	只發給	30	32		39	41	讓	42	42	能	56	59		71	72	
-NetworkUpgrade	network_GUN_PERMIT_II_desc	cea3c7e4019ced01	3	4	會	19	21	只發給	26	28		35	37	讓	38	38	能	52	55		67	68	
-NetworkUpgrade	network_GUN_PERMIT_I_desc	ff6f9ba0bcebc08b	3	4	會	19	21	只發給	26	28		35	37	讓	38	38	能	52	55		67	68	
+NetworkUpgrade	network_GUN_PERMIT_III_desc	8b6c7fd3a482ced0	19	21	只發給	30	32	
+NetworkUpgrade	network_GUN_PERMIT_II_desc	f58b827c05a35e3b	19	21	只發給
+NetworkUpgrade	network_GUN_PERMIT_I_desc	4aa0baafd5559372	61	62	，	65	66	就	69	73	；	82	83	取	95	96		97	97	著	98	100	
 NetworkUpgrade	network_MINER_desc	d746e4e5b706664e	4	5	把	21	23	讓	24	24	可以	32	35	會收到	37	37	名片，	38	39	來	41	42	這個	45	48	
 NetworkUpgrade	network_RUINED_MACHINE_UNLOCK_desc	dd3516be8f826df8	0	0	第二天會有	2	3	廢料客來訪，	5	8	怎麼把	17	28	
 NetworkUpgrade	network_WINEMAKER_desc	28903196ed8b4b6f	53	55	內容
