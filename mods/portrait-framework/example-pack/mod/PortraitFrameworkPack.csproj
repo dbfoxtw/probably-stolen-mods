@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 圖包附的小 DLL：遊戲規定每個 mod 都要列一個實作 IMod 的 DLL（只有圖、沒有 DLL 的 mod 遊戲不載入），
+       這個 DLL 只是讓圖包能被載入，什麼都不做；換圖由立繪框架讀圖包的 Portraits\ 做。
+       所有圖包都附這同一個 DLL（作者照範例圖包複製，不用寫程式）。
+       只參考遊戲的 Assembly-CSharp（IMod 在裡面），不參考框架的 DLL：參考別的 mod 的 DLL 會被遊戲的掃描拒絕
+       （Language Framework 的指南），也用不到。
+       編譯時參考正式版遊戲的 Probably Stolen_Data\Managed（只讀、不附進 mod）。遊戲不在預設位置時：dotnet build -p:GameDir="遊戲資料夾" -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>PortraitFrameworkPack</AssemblyName>
+    <RootNamespace>PortraitFrameworkPack</RootNamespace>
+    <!-- 範例圖包自己的版本（manifest.xml 的 ModVersion、打包檔名；tools/modkit.py 的 csproj_version 讀這裡）。
+         組件的版本另外固定在下面，不跟著這個改 -->
+    <Version>1.0.0</Version>
+    <!-- 組件版本固定 1.0.0.0、永遠不改：所有圖包都附這同一個 DLL、共用同一個組件身分（名稱＋版本）。
+         Mono 載入同名組件時沿用先載入的那份，版本不一樣就可能變成兩個不同的組件、或載入衝突；
+         附同一份 DLL 的兩個圖包同時啟用都能載入，實機驗證過。檔案版本、資訊版本也固定，DLL 的內容才不會跟著範例圖包的版本變 -->
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0.0</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- 不產生 PDB：DLL 裡就不會記著建置電腦上的路徑（每個圖包都會散布這個 DLL）；Deterministic 讓重建出來的位元組相同 -->
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GameDir Condition="'$(GameDir)' == ''">D:\SteamLibrary\steamapps\common\Probably Stolen</GameDir>
+    <ManagedDir>$(GameDir)\Probably Stolen_Data\Managed</ManagedDir>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(ManagedDir)\Assembly-CSharp.dll" Private="false" />
+  </ItemGroup>
+
+</Project>

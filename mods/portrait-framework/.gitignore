@@ -5,5 +5,7 @@ build/
 .vs/
 *.user
 __pycache__/
-# 不放圖：圖包是另外的 mod，從遊戲匯出的立繪也不能散布
+# 不放圖：圖包是另外的 mod，從遊戲匯出的立繪也不能散布。
+# 只放行範例圖包的導師示意圖（程式畫的、MIT，不是遊戲素材）
 *.png
+!/example-pack/Portraits/*.png
