@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.1.0（2026-11-05）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+
+- 和[視窗群組](https://www.nexusmods.com/probablystolen/mods/804) 2.1.0 一起用時，叫出群組的那頁一律開在群組存的位置（以前存了群組之後那頁沒換位置就被切到別頁的話，會開在分頁組最後的位置）；分頁組的位置跟著改成那裡。視窗群組是舊版時照舊。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+
+- With [Window Groups](https://www.nexusmods.com/probablystolen/mods/804) 2.1.0, a recalled tab always opens at the group's position (before, if you switched away from that tab without moving it after saving the group, it opened where the tab set was last), and the tab set moves there too. With older versions of Window Groups, nothing changes.
+
 ## v2.0.0（2026-10-30）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）

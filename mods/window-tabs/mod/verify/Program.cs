@@ -599,6 +599,18 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(Rules.OpenedAtGamePosition(false, 0, 0, 123, 456), "遊戲沒記過位置（開在滑鼠旁邊）算遊戲的位置");
             Check(Rules.OpenedAtGamePosition(true, 10, 20, 10.2f, 19.9f), "和遊戲記的位置一樣");
             Check(!Rules.OpenedAtGamePosition(true, 10, 20, 300, 20), "別的 mod 另外擺了位置");
+
+            // 視窗群組 2.1.0 叫出時做的記號（格式和視窗群組的 Rules.RecallMarkerName 一樣：開頭＋幀號）
+            Eq(Rules.RecallMarkerPrefix, "WindowGroups_Recalled:", "記號的開頭和視窗群組約定的一樣");
+            Check(Rules.IsFreshRecallMarker("WindowGroups_Recalled:500", 500), "同一幀的記號：照群組擺的位置");
+            Check(Rules.IsFreshRecallMarker("WindowGroups_Recalled:499", 500), "上一幀的記號也算（執行順序的保險）");
+            Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:498", 500), "更早叫出留下的記號不算（之後遊戲自己打開時照舊）");
+            Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:501", 500), "幀號比現在大（不可能）不算");
+            Check(!Rules.IsFreshRecallMarker("WindowTabs_Strip", 500), "別的物件不算");
+            Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:", 500), "沒有幀號不算");
+            Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:-1", 0), "負的幀號不算");
+            Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:12x", 12), "幀號不是數字不算");
+            Check(!Rules.IsFreshRecallMarker(null, 500), "沒有名字不算");
         }
 
         static void StaleTest()

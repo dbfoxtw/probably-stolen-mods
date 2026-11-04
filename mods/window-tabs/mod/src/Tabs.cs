@@ -287,7 +287,9 @@ namespace ProbablyStolenWindowTabs
         /// 一組只留一個開著的視窗：同一組有兩頁開著（在店裡雙擊了別的組員、視窗群組一次叫出兩頁）時，
         /// 留新打開的那頁（有好幾個新的就留最上面的），其他關掉。
         /// 新打開的那頁：遊戲照自己記的位置開的就移到這組的位置，別的 mod 另外擺了位置就尊重它。
-        /// 這組的位置只在玩家拖著滑鼠時跟著視窗改（不跟著遊戲的 FixBounds：切到比較大的視窗被夾回畫面內時，
+        /// 視窗群組這一幀叫出的（視窗上有它的記號）一律照它擺的位置，不管有沒有剛好等於遊戲記的位置；
+        /// 已經開著、被它移回去的也一樣，這組的位置改成那裡。
+        /// 其他時候這組的位置只在玩家拖著滑鼠時跟著視窗改（不跟著遊戲的 FixBounds：切到比較大的視窗被夾回畫面內時，
         /// 這組的位置不變，切回原本那頁還在原位）。活著的組員不到兩個的組不管（只剩一頁＝沒有分頁）。
         /// </summary>
         static void Reconcile(TabRecord r, Dictionary<int, PixelWindow> byId, Dictionary<int, GameItem> items, bool held)
@@ -312,10 +314,18 @@ namespace ProbablyStolenWindowTabs
                 }
                 var w = byId[keep];
                 var cur = GameWindows.Position(w);
+                // 視窗群組（2.1.0 起）這一幀叫出、擺好的：照它擺的位置，這組的位置跟著改。
+                // 舊版的視窗群組沒有記號，照下面原本的判斷（那個已知限制就只剩舊版會遇到）
+                bool recalled = GameWindows.RecalledByWindowGroups(w);
                 if (!_prevVisible.Contains(keep))
                 {
                     bool hasRemembered = GameWindows.TryRememberedPosition(keep, out var remembered);
-                    if (Rules.OpenedAtGamePosition(hasRemembered, remembered.x, remembered.y, cur.x, cur.y))
+                    if (recalled)
+                    {
+                        SetGroupPos(g, cur);
+                        WindowTabsMod.DebugLog($"視窗群組叫出了 {Name(keep)}：照它擺的位置 ({cur.x:0},{cur.y:0})，這組改用這個位置");
+                    }
+                    else if (Rules.OpenedAtGamePosition(hasRemembered, remembered.x, remembered.y, cur.x, cur.y))
                     {
                         GameWindows.Place(w, new Vector2(g.X, g.Y));
                         WindowTabsMod.DebugLog($"打開了 {Name(keep)}：移到這組的位置 ({g.X:0},{g.Y:0})");
@@ -326,6 +336,13 @@ namespace ProbablyStolenWindowTabs
                         WindowTabsMod.DebugLog($"打開了 {Name(keep)}，位置是別的 mod 擺的 ({cur.x:0},{cur.y:0})：這組改用這個位置");
                     }
                     if (g.Active != keep) { g.Active = keep; _dirty = true; }
+                }
+                else if (recalled)
+                {
+                    // 已經開著、被視窗群組移回群組的位置：這組的位置跟著改，之後切頁開在這裡
+                    if (Math.Abs(cur.x - g.X) >= 0.01f || Math.Abs(cur.y - g.Y) >= 0.01f)
+                        WindowTabsMod.DebugLog($"視窗群組把 {Name(keep)} 移到 ({cur.x:0},{cur.y:0})：這組改用這個位置");
+                    SetGroupPos(g, cur);
                 }
                 else if (held && (_mode == Mode.PressWindow || _mode == Mode.DragWindow) && _dragWindow != null && ReferenceEquals(_dragWindow, w))
                     SetGroupPos(g, cur); // 玩家正在拖這組

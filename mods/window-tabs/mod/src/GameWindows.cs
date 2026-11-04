@@ -108,6 +108,29 @@ namespace ProbablyStolenWindowTabs
         internal static Vector2 Position(PixelWindow w) => w.rectTransform.anchoredPosition;
 
         /// <summary>
+        /// 這個視窗是不是視窗群組 mod 這一幀叫出來、擺好位置的：看視窗 handler 底下有沒有它做的記號物件
+        /// （名稱「WindowGroups_Recalled:幀號」，Rules.IsFreshRecallMarker）。只比物件名稱，不引用它的組件、不用反射；
+        /// 視窗群組沒裝或是舊版（不做記號）時一律是 false，照舊。直屬子物件只有十幾個，每幀對開著的分頁組各看一次。
+        /// </summary>
+        internal static bool RecalledByWindowGroups(PixelWindow w)
+        {
+            try
+            {
+                var handler = w.handler;
+                var parent = handler != null ? handler.rectTransform : null;
+                if (parent == null) return false;
+                int frame = Time.frameCount;
+                for (int i = 0; i < parent.childCount; i++)
+                {
+                    var child = parent.GetChild(i);
+                    if (child != null && Rules.IsFreshRecallMarker(child.name, frame)) return true;
+                }
+            }
+            catch { /* 讀不到就當沒有記號：照舊 */ }
+            return false;
+        }
+
+        /// <summary>
         /// 視窗整塊的範圍（螢幕座標）。PixelWindow.rectTransform（handler）是視窗左上角大小 0 的定位點，視窗的部件都是它的子物件、
         /// 從 (0, 0) 往右往下長，所以整塊＝handler 本地座標的 (0, 0)～(widthPixels, −heightPixels)。
         /// 正式版把外框（outsideBorder）這些部件改成 private，改用公開的大小算：

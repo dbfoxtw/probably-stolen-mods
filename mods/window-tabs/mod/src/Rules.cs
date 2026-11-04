@@ -316,6 +316,25 @@ namespace ProbablyStolenWindowTabs
             !hasRemembered || (Math.Abs(rx - x) < 0.5f && Math.Abs(ry - y) < 0.5f);
 
         /// <summary>
+        /// 視窗群組 mod（2.1.0 起）叫出時在視窗 handler 底下掛的記號物件的名稱開頭，後面接它擺位置那一幀的 Time.frameCount
+        /// （視窗群組、本 mod ；視窗群組的 Rules.RecallMarkerPrefix，兩邊要一致）。
+        /// </summary>
+        internal const string RecallMarkerPrefix = "WindowGroups_Recalled:";
+
+        /// <summary>
+        /// 物件名稱是不是視窗群組這一幀（或上一幀）做的記號。視窗群組在每幀的 Update 叫出、本 mod 在 LateUpdate 整理，
+        /// 正常是同一幀；多收一幀是保險（萬一執行順序不同），再早的是之前叫出留下的，不算。
+        /// 叫出時的位置已經由視窗群組擺好（FixBounds 之後），看到記號就照它擺的、把分頁組的位置改成那裡，不再移到分頁組最後的位置。
+        /// </summary>
+        internal static bool IsFreshRecallMarker(string name, int frame)
+        {
+            if (name == null || !name.StartsWith(RecallMarkerPrefix, StringComparison.Ordinal)) return false;
+            if (!int.TryParse(name.Substring(RecallMarkerPrefix.Length), System.Globalization.NumberStyles.None,
+                              System.Globalization.CultureInfo.InvariantCulture, out int at)) return false;
+            return frame - at >= 0 && frame - at <= 1;
+        }
+
+        /// <summary>
         /// 讀檔後要丟掉的編號（照一鍵關窗 2026-10-13 審查發現的）：遊戲的物品編號計數器（PlayerStore.currentUniqueId，
         /// 先加 1 再回傳，所以發過的編號都 ≤ 它）只在睡覺存檔時寫進存檔。今天才發的編號存進分頁組後沒睡覺就讀檔，
         /// 計數器退回去，之後那個編號會發給別的物品。固定設施是負數編號，不受影響。

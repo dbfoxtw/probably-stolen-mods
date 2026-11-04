@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：把店裡的箱子、機器視窗疊成一個有分頁的視窗。把一個視窗拖到另一個視窗的標題列上就合併成分頁，點分頁切換，把分頁拖出來就拆開。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Tabs 的最新版，標記 `window-tabs-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -74,7 +74,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 
 - [繁中 mod](https://www.nexusmods.com/probablystolen/mods/280)：分頁的名稱和視窗標題一樣是繁中。
 - [一鍵關窗（Close All Windows）](https://www.nexusmods.com/probablystolen/mods/720)：每一頁各自鎖（鎖頭在標題列上，看到的是目前那頁的）。鎖住的那頁被切走後，換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉它（也就是整組）。
-- [視窗群組（Window Groups）](https://www.nexusmods.com/probablystolen/mods/804)：存群組時只存得到目前那頁；叫出時那頁開在群組存的位置、分頁條照樣出現。同一組分頁有兩頁都存在同一個群組裡時，叫出後只留最後打開的那頁。存了群組之後，如果那頁沒換位置就被切到別頁，之後叫出群組時它會開在分頁組最後的位置，不是群組存的位置。
+- [視窗群組（Window Groups）](https://www.nexusmods.com/probablystolen/mods/804)：存群組時只存得到目前那頁；叫出時那頁開在群組存的位置（視窗群組 2.1.0 起）、分頁條照樣出現。同一組分頁有兩頁都存在同一個群組裡時，叫出後只留最後打開的那頁，這組再按一次叫出的鍵也不會關掉（重新儲存這組就好）。
 - 其他 mod 做的舊樣式箱子（標題列是橘色的那種）：分頁照舊用 Demo 版的橘色，視窗左上角的圓角補成直角好讓分頁條接上；補的顏色照遊戲原本的視窗，改了視窗配色的 mod 會讓這一角的顏色對不上。
 - 其他會移動、縮放視窗或改視窗樣式的 mod 沒有測試過。
 
@@ -160,7 +160,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-tabs` folder, and
 
 - [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280): tab names are in Traditional Chinese, like the window titles.
 - [Close All Windows](https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock (the one on the title bar belongs to the current tab). After you switch away from a locked tab, Esc and Close All Windows close the tab you switched to (and so the whole set) unless it's locked too.
-- [Window Groups](https://www.nexusmods.com/probablystolen/mods/804): a group only saves the current tab of a set; recalling opens it at the group's position with its tab strip. If two tabs of one set are saved in the same group, only the one opened last stays open. If that tab was switched away from without being moved after you saved the group, recalling the group opens it where the tab set was last, not at the group's position.
+- [Window Groups](https://www.nexusmods.com/probablystolen/mods/804): a group only saves the current tab of a set; recalling opens it at the group's position (Window Groups 2.1.0 or later) with its tab strip. If two tabs of one set are saved in the same group, only the one opened last stays open, and pressing the group's key again won't close it (just save the group again).
 - Old-style containers from other mods (the kind with an orange title bar): tabs keep the Demo's orange colors, and the window's rounded top-left corner is squared off so the tab strip fits; the patch uses the game's own window colors, so mods that recolor windows will show a mismatched corner.
 - Other mods that move, resize or restyle windows haven't been tested.
 

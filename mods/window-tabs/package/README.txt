@@ -3,7 +3,7 @@ Probably Stolen 視窗分頁 mod（Window Tabs） v{version}
 
 把店裡的箱子、機器視窗疊成一個有分頁的視窗：把一個視窗拖到另一個視窗的標題列上就合併成分頁，
 點分頁切換，把分頁拖出來就拆開。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs
@@ -58,8 +58,8 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：分頁的名稱是繁中。
   一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720）：每一頁各自鎖；鎖住的那頁被切走後，
   換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉整組。
-  視窗群組（https://www.nexusmods.com/probablystolen/mods/804）：存群組時只存得到目前那頁，叫出時分頁條照樣出現。
-  存了群組之後，如果那頁沒換位置就被切到別頁，之後叫出群組時它會開在分頁組最後的位置，不是群組存的位置。
+  視窗群組（https://www.nexusmods.com/probablystolen/mods/804）：存群組時只存得到目前那頁，叫出時那頁開在群組存的位置
+  （視窗群組 2.1.0 起）、分頁條照樣出現。
   其他 mod 做的舊樣式（橘色標題列）箱子：分頁照舊用橘色，左上角的圓角補成直角。
   其他會移動、縮放視窗或改視窗樣式的 mod 沒有測試過。
 
@@ -77,7 +77,7 @@ Probably Stolen Window Tabs mod v{version}
 Stack your shop's container and machine windows into one window with tabs: drag a window onto another
 window's title bar to merge them, click a tab to switch, drag a tab out to split it off.
 Unofficial, in the game's official mod format (no MelonLoader needed).
-Supported game version: full release 1.0 (the main menu shows VERSION 100)
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -146,8 +146,7 @@ Notes
   Close All Windows (https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock; after you
   switch away from a locked tab, Esc and Close All Windows close the set unless the new tab is locked too.
   Window Groups (https://www.nexusmods.com/probablystolen/mods/804): a group only saves the current tab;
-  recalling it brings back the tab strip. If that tab was switched away from without being moved after
-  you saved the group, recalling the group opens it where the tab set was last, not at the group's position.
+  recalling it opens that tab at the group's position (Window Groups 2.1.0 or later) and brings back the tab strip.
   Old-style containers (orange title bar) from other mods: tabs keep the orange colors, and the window's
   rounded top-left corner is squared off.
   Other mods that move, resize or restyle windows haven't been tested.
