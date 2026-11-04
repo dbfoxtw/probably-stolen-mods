@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ProbablyStolenWindowGroups
@@ -109,5 +110,80 @@ namespace ProbablyStolenWindowGroups
         /// 計數器退回去，之後那個編號會發給別的物品，叫出時就會打開不相干的箱子。固定設施是負數編號，不受影響。
         /// </summary>
         internal static bool IsStale(int id, int currentUniqueId) => id > currentUniqueId;
+
+        // ---------------- 再按一次 ----------------
+
+        /// <summary>
+        /// 設定「再按一次」的選項。ModConfig 的下拉選單照字面顯示選項、存的也是這個字串（不能跟著語言換，換了存的值會對不上而回到預設），
+        /// 所以選項用英文，設定的說明欄寫中文對照（Strings.RepeatTip）。順序就是下拉選單的順序；字串存進設定檔，不要改。
+        /// </summary>
+        internal const string RepeatRearrange = "Rearrange", RepeatCloseIfAllOpen = "Close if all open", RepeatCloseIfUnmoved = "Close if unmoved";
+        internal static readonly string[] RepeatChoices = { RepeatRearrange, RepeatCloseIfAllOpen, RepeatCloseIfUnmoved };
+        /// <summary>預設「全開就關」。</summary>
+        internal const string RepeatDefault = RepeatCloseIfAllOpen;
+
+        /// <summary>設定的值 → 選項。不認得的（遊戲的 ModConfig 本來就會把不在清單裡的值換回預設，這裡再保險一次）當成預設。</summary>
+        internal static RepeatMode ParseRepeat(string value) => value switch
+        {
+            RepeatRearrange => RepeatMode.Rearrange,
+            RepeatCloseIfUnmoved => RepeatMode.CloseIfUnmoved,
+            _ => RepeatMode.CloseIfAllOpen,
+        };
+
+        /// <summary>
+        /// 「沒動才關」的容差（視窗的 anchoredPosition 單位，和遊戲記位置的座標一樣）：兩個方向都差不到這麼多就算沒動過。
+        /// 點標題列時手抖拖動一點點不要算成動過；遊戲的視窗是像素圖，1 單位在畫面上是好幾個像素，4 單位已經看得出來是挪過。
+        /// </summary>
+        internal const float UnmovedTolerance = 4f;
+
+        /// <summary>
+        /// 同一組再按一次時要不要關掉這組。只看找得到、打得開的視窗（found：編號 → 現在的位置，沒開著的是 null）；
+        /// 一個都沒有時不會走到這裡（照 只提示）。
+        /// - 重新排好：永遠不關（照 叫出）。
+        /// - 全開就關：全部開著就關，不管位置、不管旁邊多開了什麼。
+        /// - 沒動才關：全部開著，而且每個都在上次叫出這組後實際擺到的位置（recorded；沒有紀錄或少了誰都算動過）的容差以內才關。
+        /// </summary>
+        internal static bool ShouldCloseOnRepeat(RepeatMode mode, IReadOnlyList<(int id, (float x, float y)? pos)> found,
+                                                 IReadOnlyDictionary<int, (float x, float y)> recorded)
+        {
+            if (mode == RepeatMode.Rearrange || found == null || found.Count == 0) return false;
+            foreach (var f in found)
+                if (f.pos == null) return false; // 少了任何一個：照常叫出
+            if (mode == RepeatMode.CloseIfAllOpen) return true;
+            if (recorded == null) return false; // 這次遊戲還沒叫出過、也還沒存過這組（或讀檔後）：當作動過
+            foreach (var f in found)
+            {
+                if (!recorded.TryGetValue(f.id, out var r)) return false;
+                var p = f.pos.Value;
+                if (Math.Abs(p.x - r.x) > UnmovedTolerance || Math.Abs(p.y - r.y) > UnmovedTolerance) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 再按一次關掉這組時，這個視窗關不關：設定「也關鎖住的」開著（預設）時全部關；關著時一鍵關窗鎖住的留著。
+        /// locked 是一鍵關窗現在有作用的鎖（沒在跑、「顯示鎖頭」關著時是空的）。
+        /// </summary>
+        internal static bool ShouldCloseOnRepeatClose(int ownerId, bool closeLockedToo, ISet<int> locked) =>
+            closeLockedToo || !(ownerId != 0 && locked != null && locked.Contains(ownerId));
+
+        /// <summary>
+        /// 一鍵關窗的「顯示鎖頭」：ModConfig 裡 ShowLocks 的值（ConfigEntry.BoxedValue）。
+        /// 沒有這個設定（一鍵關窗 2.0.0 以前沒有）或不是布林時當作開著，鎖照樣算數。
+        /// </summary>
+        internal static bool CloseAllWindowsShowsLocks(object boxed) => !(boxed is bool b) || b;
+
+        // ---------------- 給視窗分頁看的記號 ----------------
+
+        /// <summary>
+        /// 叫出時掛在視窗底下的記號物件的名稱開頭，後面接 Time.frameCount（這一幀擺的）。
+        /// 視窗分頁 mod 照這個名字找（它的 Rules.IsFreshRecallMarker），兩邊要一致，不要改。
+        /// </summary>
+        internal const string RecallMarkerPrefix = "WindowGroups_Recalled:";
+
+        internal static string RecallMarkerName(int frame) => RecallMarkerPrefix + frame.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
+
+    /// <summary>設定「再按一次」。</summary>
+    enum RepeatMode { Rearrange, CloseIfAllOpen, CloseIfUnmoved }
 }

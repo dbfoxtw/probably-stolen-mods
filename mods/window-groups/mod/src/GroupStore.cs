@@ -15,6 +15,11 @@ namespace ProbablyStolenWindowGroups
         [JsonProperty("y")] public float Y { get; set; }
         /// <summary>存的時候的標題，只是方便看資料檔（遊戲原本的語言，繁中 mod 只在顯示時轉）。</summary>
         [JsonProperty("title")] public string Title { get; set; }
+        /// <summary>
+        /// 2.1.0 起：儲存時視窗裡選的內容分頁（儲藏區的標籤頁這類；GameItem.GetContentTabsSelection()，每個分頁元件選第幾個、用逗號連起來）。
+        /// 只在設定「也記儲物標籤頁」開著時記；沒記（null）就不寫進檔案。2.0.0 讀到這個欄位時放進 Extra 原樣保留。
+        /// </summary>
+        [JsonProperty("tabs")] public string Tabs { get; set; }
         [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
     }
 
@@ -137,6 +142,7 @@ namespace ProbablyStolenWindowGroups
     /// 一鍵關窗 mod 鎖住的視窗：讀它的 ModData\dbfoxtw_close-all-windows\slot_&lt;N&gt;.json
     /// （{"slot", "runId", "locked": [編號…]}，兩個 mod 約定好的格式與讀法），不引用它的組件。
     /// 沒在跑、沒檔案、讀不了、壞掉、別場遊戲的都當成沒有鎖，也不改寫它的檔。
+    /// 它的設定「顯示鎖頭」關著時也當成沒有鎖：那個值不在這個檔裡，由 GameState.CloseAllWindowsShowsLocks 讀它的 ModConfig。
     /// </summary>
     static class CloseAllWindowsLocks
     {

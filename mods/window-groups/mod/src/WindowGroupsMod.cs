@@ -50,7 +50,7 @@ namespace ProbablyStolenWindowGroups
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             ModHook.OnGameLoadedLate += Groups.OnGameLoaded;
             LogPatches();
-            Log.Msg($"資料：{DataFolder}\\slot_<N>.json；按鍵（ModConfigs\\{ModId}.json）：{DescribeKeys()}");
+            Log.Msg($"資料：{DataFolder}\\slot_<N>.json；設定（ModConfigs\\{ModId}.json）：{Settings.DescribeOptions()}；按鍵：{DescribeKeys()}");
             Ready = true;
         }
 
@@ -113,7 +113,7 @@ namespace ProbablyStolenWindowGroups
                 EnsureDebugFlag();
                 if (scene.name != GameState.StoreScene) return;
                 InStore = true;
-                DebugLog($"進店鋪畫面；按鍵：{DescribeKeys()}");
+                DebugLog($"進店鋪畫面；{Settings.DescribeOptions()}；按鍵：{DescribeKeys()}");
             }
             catch (Exception e) { Log.Error($"場景 {scene.name} 載入後的處理出錯：{e}"); }
         }
@@ -140,6 +140,7 @@ namespace ProbablyStolenWindowGroups
                 EnsureDebugFlag();
                 Toast.Tick();
                 if (!InStore) return;
+                Groups.Tick(); // 上一幀叫出的那組：記下實際擺到的位置（「沒動才關」比這份）
                 b = Keys.Pressed(); // 選項正在擷取按鍵時（KeyBindHelper.SuppressHotkeys）回傳 null
                 if (b == null) return;
                 if (!GameWindows.CanAct(out var reason))

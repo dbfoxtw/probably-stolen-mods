@@ -1,5 +1,25 @@
 # 版本紀錄（Changelog）
 
+## v2.1.0（2026-11-05）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+
+- **同一組再按一次的預設改了**：新設定「再按一次」，三選一。預設是「全開就關」（Close if all open）：這組找得到、打得開的視窗都開著就關掉這組（多開的留著），少了任何一個就照常叫出。「沒動才關」（Close if unmoved）：都開著、而且叫出後都沒移動過才關。想要以前的「重新排好」，把設定改成 Rearrange。關掉時不跳提示。
+- 新設定「也關鎖住的」（預設開）：再按一次關掉這組時，一鍵關窗鎖住的視窗也關；關掉這個設定時鎖住的留著。
+- 新設定「也記儲物分頁」（預設關）：儲存時也記下每個視窗選的分頁，叫出時切回去。以前存的群組照舊由遊戲套用上次的分頁。
+- 一鍵關窗 2.1.0 的「顯示鎖頭」關掉時，叫出與再按一次都當作沒有鎖。
+- 和視窗分頁 2.1.0 一起用時，叫出的分頁照群組存的位置擺（不再有時開在分頁組最後的位置）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+
+- **Pressing a group's key again works differently by default**: new setting "Press again" with three choices. The default, Close if all open, closes the group if all its windows that can be found and opened are open (other windows stay), and recalls it as usual if any is missing. Close if unmoved closes only if they're all open and none was moved since the recall. For the old behavior, set it to Rearrange. Closing shows no message.
+- New setting "Close locked too" (on by default): when pressing again closes the group, windows locked with Close All Windows close too; turn it off to keep them open.
+- New setting "Remember storage tabs" (off by default): when saving, also remember which tab each window shows, and switch back to it on recall. Groups saved before open on the tab the game remembers, as before.
+- With Close All Windows 2.1.0's "Show locks" turned off, recalling and pressing again treat every window as unlocked.
+- With Window Tabs 2.1.0, a recalled tab opens where the group saved it (it no longer sometimes opens where the tab group was last).
+
 ## v2.0.0（2026-10-30）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）

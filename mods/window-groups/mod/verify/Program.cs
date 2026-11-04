@@ -31,8 +31,11 @@ namespace ProbablyStolenWindowGroups.Verify
             Keymaps();
             RulesTest();
             Locks();
+            Repeat();
+            Marker();
             Texts();
             Store();
+            StoreTabs();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -256,6 +259,71 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(CloseAllWindowsLocks.Parse("{\"version\":1,\"slot\":9,\"runId\":\"abc\",\"locked\":[5],\"future\":{\"x\":1}}", "abc").Contains(5), "有不認得的欄位也讀得到");
         }
 
+        // ── 再按一次 ──
+
+        static void Repeat()
+        {
+            // 設定的值（下拉選單的字串）
+            Eq(Rules.ParseRepeat("Rearrange"), RepeatMode.Rearrange, "Rearrange＝重新排好");
+            Eq(Rules.ParseRepeat("Close if all open"), RepeatMode.CloseIfAllOpen, "Close if all open＝全開就關");
+            Eq(Rules.ParseRepeat("Close if unmoved"), RepeatMode.CloseIfUnmoved, "Close if unmoved＝沒動才關");
+            Eq(Rules.ParseRepeat(null), RepeatMode.CloseIfAllOpen, "沒有值：預設全開就關");
+            Eq(Rules.ParseRepeat("別的"), RepeatMode.CloseIfAllOpen, "不認得的值：預設全開就關");
+            Eq(Rules.RepeatDefault, "Close if all open", "預設是全開就關");
+            Check(Rules.RepeatChoices.SequenceEqual(new[] { "Rearrange", "Close if all open", "Close if unmoved" }), "下拉選單三個選項、順序");
+            Check(Rules.RepeatChoices.Contains(Rules.RepeatDefault), "預設值在選項裡（不然遊戲會一直換回預設）");
+
+            (int, (float, float)?) Open(int id, float x, float y) => (id, (x, y));
+            (int, (float, float)?) Closed(int id) => (id, null);
+            var allOpen = new List<(int, (float, float)?)> { Open(10, 100, -50), Open(-102, 300, 20) };
+            var oneClosed = new List<(int, (float, float)?)> { Open(10, 100, -50), Closed(-102) };
+            var rec = new Dictionary<int, (float, float)> { [10] = (100, -50), [-102] = (300, 20) };
+
+            // 重新排好：永遠照常叫出
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.Rearrange, allOpen, rec), "重新排好：全開也不關");
+            // 全開就關
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, allOpen, null), "全開就關：全部開著就關（不需要叫出後的位置）");
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)> { Open(10, 900, 900), Open(-102, -900, 0) }, rec), "全開就關：位置動過也關");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, oneClosed, rec), "全開就關：少了一個就照常叫出");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)>(), rec), "沒有找得到的視窗：不關（照 只提示）");
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)> { Open(10, 0, 0) }, null), "全開就關：一個視窗的組，開著就關");
+            // 沒動才關
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, allOpen, rec), "沒動才關：全開、位置和叫出後一樣：關");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, allOpen, null), "沒動才關：沒有叫出後的位置（還沒叫出過、讀檔後）：當作動過");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, oneClosed, rec), "沒動才關：少了一個：照常叫出");
+            float t = Rules.UnmovedTolerance;
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, new List<(int, (float, float)?)> { Open(10, 100 + t, -50 - t), Open(-102, 300 - t, 20 + t) }, rec), $"沒動才關：兩個方向都差 {t} 以內不算動過");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, new List<(int, (float, float)?)> { Open(10, 100 + t + 0.5f, -50), Open(-102, 300, 20) }, rec), "沒動才關：x 差超過容差算動過");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, new List<(int, (float, float)?)> { Open(10, 100, -50), Open(-102, 300, 20 - t - 1) }, rec), "沒動才關：y 差超過容差算動過");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, new List<(int, (float, float)?)> { Open(10, 100, -50), Open(-102, 300, 20), Open(77, 0, 0) }, rec), "沒動才關：叫出後的位置裡沒有的視窗（叫出時沒開起來）算動過");
+            Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, new List<(int, (float, float)?)> { Open(10, 100, -50) }, rec), "沒動才關：紀錄裡多的不影響（找不到的不算在內）");
+            Check(t >= 1f && t <= 8f, $"容差 {t} 是幾個單位（拖動一點點不算、明顯挪過算）");
+
+            // 再按一次關掉時，鎖住的關不關
+            var locked = new HashSet<int> { 10 };
+            Check(Rules.ShouldCloseOnRepeatClose(10, true, locked), "也關鎖住的（預設開）：鎖住的也關");
+            Check(!Rules.ShouldCloseOnRepeatClose(10, false, locked), "也關鎖住的關著：鎖住的留著");
+            Check(Rules.ShouldCloseOnRepeatClose(-102, false, locked), "也關鎖住的關著：沒鎖的照關");
+            Check(Rules.ShouldCloseOnRepeatClose(10, false, new HashSet<int>()), "也關鎖住的關著、一鍵關窗沒在跑或顯示鎖頭關著（沒有鎖）：照關");
+            Check(Rules.ShouldCloseOnRepeatClose(0, false, new HashSet<int> { 0 }), "還沒發編號的物品不可能鎖過：照關");
+            Check(Rules.ShouldCloseOnRepeatClose(10, false, null), "鎖的集合是 null：照關");
+
+            // 一鍵關窗的「顯示鎖頭」：它的 ModConfig 裡 ShowLocks 的值
+            Check(Rules.CloseAllWindowsShowsLocks(true), "顯示鎖頭開：鎖算數");
+            Check(!Rules.CloseAllWindowsShowsLocks(false), "顯示鎖頭關：當作沒有鎖");
+            Check(Rules.CloseAllWindowsShowsLocks(null), "一鍵關窗 2.0.0 沒有這個設定：鎖照樣算數");
+            Check(Rules.CloseAllWindowsShowsLocks("false"), "不是布林（不認得的）：鎖照樣算數");
+        }
+
+        // ── 給視窗分頁看的記號 ──
+
+        static void Marker()
+        {
+            Eq(Rules.RecallMarkerName(12345), "WindowGroups_Recalled:12345", "記號的名字＝開頭＋這一幀的編號（視窗分頁照這個格式讀）");
+            Check(Rules.RecallMarkerName(7).StartsWith(Rules.RecallMarkerPrefix, StringComparison.Ordinal), "記號的名字以約定的開頭開始");
+            Eq(Rules.RecallMarkerPrefix, "WindowGroups_Recalled:", "約定的開頭（和視窗分頁的 Rules.RecallMarkerPrefix 一樣）");
+        }
+
         // ── 提示文字 ──
 
         static void Texts()
@@ -297,6 +365,29 @@ namespace ProbablyStolenWindowGroups.Verify
                 }
             }
             Check(!zht.ConfigTip(1, true).Contains("窗口") && !zht.ConfigTip(1, false).Contains("这"), "繁中說明沒有簡體字");
+
+            // 2.1.0 的三個設定（標籤要短，使用者 2026-11-03 定「也關鎖住的」）
+            Eq(zht.CloseLockedLabel, "也關鎖住的", "繁中：也關鎖住的");
+            Eq(zhs.CloseLockedLabel, "也关锁住的", "簡中：也关锁住的");
+            Eq(en.CloseLockedLabel, "Close locked too", "英文：Close locked too");
+            Eq(zht.RepeatLabel, "再按一次", "繁中：再按一次");
+            Eq(zhs.RepeatLabel, "再按一次", "簡中：再按一次");
+            Eq(en.RepeatLabel, "Press again", "英文：Press again");
+            Eq(zht.TabsLabel, "也記儲物分頁", "繁中：也記儲物分頁（繁中 mod 對儲物標籤頁的譯名）");
+            Eq(zhs.TabsLabel, "也记储物标签页", "簡中：也记储物标签页（遊戲的叫法）");
+            Eq(en.TabsLabel, "Remember storage tabs", "英文：Remember storage tabs（遊戲的叫法）");
+            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
+            {
+                var st = Strings.For(lang);
+                foreach (var choice in Rules.RepeatChoices)
+                    Check(st.RepeatTip.Contains(choice), $"{lang}「再按一次」的說明寫出選項 {choice}");
+                Check(st.CloseLockedTip.Contains("Close if all open") && st.CloseLockedTip.Contains("Close if unmoved"), $"{lang}「也關鎖住的」說明寫出有作用的兩個選項");
+                Check(st.RepeatLabel.Length <= 12 && st.CloseLockedLabel.Length <= 16 && st.TabsLabel.Length <= 21, $"{lang} 標籤夠短");
+            }
+            Check(zht.RepeatTip.Contains("全開就關") && zht.RepeatTip.Contains("沒動才關") && zht.RepeatTip.Contains("重新排好"), "繁中說明有中文對照");
+            Check(zhs.RepeatTip.Contains("全开就关") && zhs.RepeatTip.Contains("没动才关") && zhs.RepeatTip.Contains("重新排好"), "簡中說明有中文對照");
+            foreach (var txt in new[] { zht.RepeatTip, zht.CloseLockedTip, zht.TabsTip, zht.RepeatLabel, zht.CloseLockedLabel, zht.TabsLabel })
+                Check(!txt.Contains("窗口") && !txt.Contains("这") && !txt.Contains("关") && !txt.Contains("开") && !txt.Contains("记"), $"繁中新設定的文字沒有簡體字：{txt}");
         }
 
         // ── 資料檔 ──
@@ -382,6 +473,66 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(warnings.Count, 1, "壞掉時警告一次");
             files["slot_2.json"] = "null";
             Eq(store.Load(2, "run-a").Groups.Count, 0, "內容是 null 也改用新的一份");
+        }
+
+        /// <summary>
+        /// 2.1.0 的內容分頁欄位：新版寫的檔加了 tabs；舊版（2.0.0）寫的檔沒有。兩邊互讀都不壞。
+        /// 舊版讀新檔：2.0.0 的 WindowEntry 沒有 tabs，Newtonsoft 放進 [JsonExtensionData]，這裡用一份只有舊欄位的類別模擬。
+        /// </summary>
+        static void StoreTabs()
+        {
+            var files = new Dictionary<string, string>();
+            var store = new GroupStore(name => files.TryGetValue(name, out var t) ? t : null, (name, text) => files[name] = text, _ => { });
+            var r = store.Load(5, "run");
+            r.Set(1, new[]
+            {
+                new WindowEntry { Id = 11, X = 1, Y = 2, Title = "儲藏區", Tabs = "2" },
+                new WindowEntry { Id = 12, X = 3, Y = 4, Title = "箱子" }, // 沒有內容分頁（或設定關著）：不寫 tabs
+            });
+            store.Save(r);
+            var json = JObject.Parse(files["slot_5.json"]);
+            var e0 = (JObject)json["groups"]["1"][0];
+            var e1 = (JObject)json["groups"]["1"][1];
+            Eq((string)e0["tabs"], "2", "新版：記了內容分頁就寫 tabs");
+            Check(e1.Property("tabs") == null, "新版：沒記內容分頁的不寫 tabs（和 2.0.0 的檔一樣）");
+            Check(e0.Properties().Select(p => p.Name).Take(4).SequenceEqual(new[] { "id", "x", "y", "title" }), "新版：原本的欄位名稱與順序不變");
+
+            // 新版讀回來
+            var back = store.Load(5, "run").Get(1);
+            Eq(back[0].Tabs, "2", "新版讀新檔：內容分頁讀回來");
+            Check(back[1].Tabs == null, "新版讀新檔：沒記的是 null（叫出時照遊戲自己套用的）");
+            Check(back[0].Extra == null || !back[0].Extra.ContainsKey("tabs"), "新版讀新檔：tabs 不會跑進不認得的欄位");
+
+            // 新版讀舊檔（2.0.0 寫的，沒有 tabs）
+            files["slot_6.json"] = "{\"version\":1,\"slot\":6,\"runId\":\"run\",\"groups\":{\"2\":[{\"id\":9,\"x\":1,\"y\":2,\"title\":\"箱子\"}]}}";
+            var old = store.Load(6, "run").Get(2);
+            Check(old.Count == 1 && old[0].Id == 9 && old[0].Tabs == null, "新版讀舊檔：讀得到、沒有內容分頁");
+
+            // 舊版讀新檔：2.0.0 的格式（不認得 tabs，放進 Extra）讀得到，寫回時 tabs 還在
+            var oldRec = Newtonsoft.Json.JsonConvert.DeserializeObject<OldRecord>(files["slot_5.json"]);
+            Check(oldRec != null && oldRec.Groups["1"].Count == 2 && oldRec.Groups["1"][0].Id == 11, "舊版讀新檔：讀得到群組");
+            Check(oldRec.Groups["1"][0].Extra != null && oldRec.Groups["1"][0].Extra.ContainsKey("tabs"), "舊版讀新檔：tabs 放進不認得的欄位");
+            var rewritten = Newtonsoft.Json.JsonConvert.SerializeObject(oldRec);
+            Check(JObject.Parse(rewritten)["groups"]["1"][0]["tabs"]?.ToString() == "2", "舊版寫回去 tabs 還在（沒重新存那組的話）");
+        }
+
+        /// <summary>2.0.0 的 GroupRecord／WindowEntry（沒有 tabs），模擬舊版讀新檔。</summary>
+        sealed class OldRecord
+        {
+            [Newtonsoft.Json.JsonProperty("version")] public int Version { get; set; }
+            [Newtonsoft.Json.JsonProperty("slot")] public int Slot { get; set; }
+            [Newtonsoft.Json.JsonProperty("runId")] public string RunId { get; set; }
+            [Newtonsoft.Json.JsonProperty("groups")] public Dictionary<string, List<OldEntry>> Groups { get; set; }
+            [Newtonsoft.Json.JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
+        }
+
+        sealed class OldEntry
+        {
+            [Newtonsoft.Json.JsonProperty("id")] public int Id { get; set; }
+            [Newtonsoft.Json.JsonProperty("x")] public float X { get; set; }
+            [Newtonsoft.Json.JsonProperty("y")] public float Y { get; set; }
+            [Newtonsoft.Json.JsonProperty("title")] public string Title { get; set; }
+            [Newtonsoft.Json.JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
         }
     }
 }

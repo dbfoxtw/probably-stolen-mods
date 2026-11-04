@@ -6,7 +6,8 @@ namespace ProbablyStolenWindowGroups
 {
     /// <summary>
     /// 設定：遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.window-groups.json，
-    /// 主選單的模組管理畫面裡有這個 mod 的設定視窗），20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
+    /// 主選單的模組管理畫面裡有這個 mod 的設定視窗）。最前面是 2.1.0 加的「再按一次」（下拉）、「也關鎖住的」「也記儲物標籤頁」（開關），
+    /// 後面 20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
     /// 寫法和 Demo 的 MelonPreferences 一樣（Ctrl+3、F5、Ctrl+Shift+F1；Hotkey.Parse）。
     /// 不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：它只擷取單一個鍵，表達不了 Ctrl+1 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart）。
@@ -41,10 +42,27 @@ namespace ProbablyStolenWindowGroups
         static readonly List<Entry> _entries = new List<Entry>();
         static List<Key> _keys = new List<Key>();
         static bool _built;
+        static ConfigEntry<string> _repeat;
+        static ConfigEntry<bool> _closeLockedToo, _rememberTabs;
+
+        /// <summary>
+        /// 再按一次（預設全開就關）。下拉選單的值是英文（Rules.RepeatChoices），說明欄寫中文對照。
+        /// 每次用到時才讀，按套用就生效。攔截在 Init 之前就掛上了，那時還沒有設定，用預設。
+        /// </summary>
+        internal static RepeatMode Repeat => Rules.ParseRepeat(_repeat != null ? _repeat.Value : Rules.RepeatDefault);
+        /// <summary>再按一次關掉時一鍵關窗鎖住的也關（預設開）。</summary>
+        internal static bool CloseLockedToo => _closeLockedToo == null || _closeLockedToo.Value;
+        /// <summary>群組也記儲物標籤頁（內容分頁；預設關）。</summary>
+        internal static bool RememberTabs => _rememberTabs != null && _rememberTabs.Value;
 
         internal static void Init()
         {
             var cfg = ModConfig.For(WindowGroupsMod.ModId);
+            // 2.1.0 新增的三個排在 40 個按鍵前面：按鍵在後面拉很長，放後面不好找。設定視窗照定義的順序排，存的值只看 key，換順序不影響
+            _repeat = cfg.Define("RecallAgain", Rules.RepeatDefault, Section, () => GameState.S.RepeatLabel,
+                Rules.RepeatChoices, () => GameState.S.RepeatTip);
+            _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => GameState.S.CloseLockedLabel, () => GameState.S.CloseLockedTip);
+            _rememberTabs = cfg.Define("RememberTabs", false, Section, () => GameState.S.TabsLabel, () => GameState.S.TabsTip);
             foreach (var (name, group, save) in Rules.AllEntries())
             {
                 int g = group;
@@ -136,5 +154,8 @@ namespace ProbablyStolenWindowGroups
             foreach (var k in _keys) parts.Add($"{k.Binding.Group}{(k.Binding.Save ? "存" : "叫")}={k.Binding.Key.Display()}");
             return parts.Count == 0 ? "沒有設定任何按鍵" : string.Join(" ", parts);
         }
+
+        /// <summary>2.1.0 加的三個設定，給 log 看。</summary>
+        internal static string DescribeOptions() => $"再按一次={Repeat}、也關鎖住的={CloseLockedToo}、也記儲物標籤頁={RememberTabs}";
     }
 }

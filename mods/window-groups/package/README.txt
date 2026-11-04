@@ -3,7 +3,7 @@ Probably Stolen 視窗群組 mod（Window Groups） v{version}
 
 把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位。最多 20 組。
 遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
@@ -32,8 +32,11 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   畫面上方會出現「視窗群組 1 已儲存（5 個視窗）」。箱子、機器、背包，以及垃圾桶、檔案箱、
   卡帶播放器都算；日曆、平板、文件這類紙張面板不算。沒開任何箱子、機器視窗時按儲存＝清空那一組。
 - 叫出（預設 Ctrl+1～9）：先關掉不在這一組的箱子、機器視窗（和按 ESC 關的一樣，不動裡面的東西），
-  再把這一組的視窗開在存的位置、照存的上下順序。同一組再按一次＝重新排好。
-  放在別的箱子裡的箱子直接打開。叫出成功時不跳提示。
+  再把這一組的視窗開在存的位置、照存的上下順序。放在別的箱子裡的箱子直接打開。叫出成功時不跳提示。
+- 同一組再按一次（設定「再按一次」，2.1.0 起預設全開就關）：
+  全開就關（Close if all open）＝這組找得到、打得開的視窗都開著就關掉這組（多開的留著），少了任何一個就照常叫出；
+  沒動才關（Close if unmoved）＝都開著、而且上次叫出後都沒移動過才關，動過就先排回原位；
+  重新排好（Rearrange，2.0.0 以前的做法）＝每次都排回原位。關掉時不跳提示；一鍵關窗鎖住的預設也一起關。
 - 找不到的（賣掉、丟掉、帶出門）、暫時打不開的（例如上鎖的）這次跳過，留在群組裡，並提示幾個找不到、
   幾個打不開；全部都開不了時什麼都不動。空的群組只提示「是空的」。
 - 不在店裡、在輸入框打字、拖著物品或面板、框選中、暫停選單或選項開著、在選項裡設定按鍵、結算畫面、
@@ -42,7 +45,14 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
 畫面上的提示是這個 mod 加的，不是遊戲本身的訊息；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-主選單的「Mods」（模組）畫面裡這個 mod 的設定：20 組各有叫出（Group1Recall～Group20Recall）、
+主選單的「Mods」（模組）畫面裡這個 mod 的設定。最上面三個是 2.1.0 加的：
+- 再按一次（RecallAgain，預設 Close if all open）：下拉選單三選一，選項是英文：
+  Close if all open＝全開就關、Close if unmoved＝沒動才關、Rearrange＝重新排好（見【功能】）。
+- 也關鎖住的（CloseLockedToo，預設開）：再按一次關掉這組時，一鍵關窗鎖住的也關；關掉時鎖住的留著。
+  只有「再按一次」是 Close if all open 或 Close if unmoved 時有作用。
+- 也記儲物分頁（RememberTabs，預設關）：儲存時也記下每個視窗選的分頁（儲物分頁等），叫出時切回去。
+  只對打開之後儲存的群組有作用；關掉時連已經記的分頁也不套用。
+接著 20 組各有叫出（Group1Recall～Group20Recall）、
 儲存（Group1Save～Group20Save）兩欄。群組 1～9 預設是 Ctrl+1～9／Ctrl+Shift+1～9，10～20 預設空白（不使用）。
 按套用就生效，不用重開遊戲；「恢復預設設定」回到預設。
 設定存在存檔資料夾的 ModConfigs\dbfoxtw.window-groups.json。
@@ -83,7 +93,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
             {"key": "Group11Save", "value": "Shift+F11"}
         ]
     }
-  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡。遊戲開著時改這個檔沒有用
+  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡；最上面三個設定（再按一次、也關鎖住的、
+  也記儲物分頁）也回到預設。遊戲開著時改這個檔沒有用
   （遊戲只在開遊戲時讀一次，之後按套用還會蓋掉）。格式寫壞了的話整份用預設值、檔案也會被蓋回預設，
   改之前可以先複製一份備份。要回到預設：在設定視窗按「恢復預設設定」。
 
@@ -93,11 +104,13 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   不過遊戲本身會記住每個箱子視窗最後的位置（存在存檔裡）：群組叫出來的視窗被關掉時，
   遊戲照原本的方式記下那時的位置，之後一般雙擊打開也會開在那裡。
 - 提示與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文。
-- 已知限制：只記位置，不記視窗大小；視窗裡的分頁不記（開在那個箱子上次關掉時的分頁）；
+- 已知限制：只記位置，不記視窗大小；視窗裡的分頁預設不記（開在那個箱子上次關掉時的分頁，設定「也記儲物分頁」打開時才記）；
+  「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
   遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉。
 - 相容性：
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：有裝時提示與設定視窗用繁中。
-  一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720，2.0.0 以上）：鎖住的視窗叫出群組時不會被關。
+  一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720，2.0.0 以上）：鎖住的視窗叫出群組時不會被關；
+  再按一次關掉這組時，預設鎖住的也一起關（設定「也關鎖住的」）。一鍵關窗 2.1.0 的「顯示鎖頭」關掉時都當作沒鎖。
   儲物協調器（遊戲的物品）：它的快捷鍵不看 Ctrl、Shift。協調器的某一組設成 1 的話，按 Ctrl+1 叫出群組 1 時，
   協調器那一組也會跟著開（全部開著時跟著關）。兩邊請用不同的數字，或把群組改成 F 鍵。
   其他 mod 用了同一個鍵時兩邊都會動作，請換一個鍵；其他會移動或縮放視窗的 mod 沒有測試過。
@@ -114,7 +127,7 @@ Probably Stolen Window Groups mod v{version}
 Save the container and machine windows you have open, and where they are, as a group; press one key
 to bring them all back in place. Up to 20 groups. Unofficial, in the game's official mod format
 (no MelonLoader needed).
-Supported game version: full release 1.0 (the main menu shows VERSION 100)
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -151,8 +164,12 @@ Features
   (the calendar, tablet, documents) don't. Saving with no container or machine window open clears the group.
 - Recall (Ctrl+1-9 by default): closes the container and machine windows that aren't in the group (the same way
   Esc does; contents untouched), then opens the group's windows where they were saved, stacked the same way.
-  Recalling the same group again puts it back in order. A box inside another box opens directly.
-  A successful recall shows no message.
+  A box inside another box opens directly. A successful recall shows no message.
+- Pressing the same group's key again (setting "Press again"; from 2.1.0 the default is Close if all open):
+  Close if all open = if every window of the group that can be found and opened is open, close the group
+  (other windows stay), otherwise recall as usual; Close if unmoved = close only if they're all open and none
+  was moved since the last recall, otherwise put them back first; Rearrange (the behavior before 2.1.0) =
+  put them back every time. Closing shows no message; windows locked with Close All Windows close too by default.
 - Windows that can't be found (sold, thrown away, taken out) or can't be opened right now (e.g. locked)
   are skipped but stay in the group, with a message saying how many; if nothing can be opened, nothing changes.
   An empty group just says it's empty.
@@ -165,7 +182,15 @@ The messages come from this mod, not the base game; please report problems to th
 not to the game developers.
 
 Settings
-This mod's settings on the Mods screen of the main menu: a recall key (Group1Recall-Group20Recall) and a save key
+This mod's settings on the Mods screen of the main menu. The three at the top were added in 2.1.0:
+- Press again (RecallAgain, default Close if all open): Close if all open, Close if unmoved or Rearrange
+  (see Features).
+- Close locked too (CloseLockedToo, default on): when pressing again closes the group, also close windows
+  locked with Close All Windows; turned off, they stay open. Only matters with Close if all open or Close if unmoved.
+- Remember storage tabs (RememberTabs, default off): when saving, also remember which tab each window shows
+  (storage tabs and other tabs inside a window) and switch back to it on recall. Only for groups saved after
+  turning it on; while it's off, tabs already remembered aren't applied either.
+Then a recall key (Group1Recall-Group20Recall) and a save key
 (Group1Save-Group20Save) for each of the 20 groups. Groups 1-9 default to Ctrl+1-9 / Ctrl+Shift+1-9;
 groups 10-20 are empty (not used). Changes apply when you press Apply, no restart needed;
 Reset to Defaults brings back the defaults. Settings are kept in ModConfigs\dbfoxtw.window-groups.json
@@ -210,7 +235,8 @@ in the save folder.
             {"key": "Group11Save", "value": "Shift+F11"}
         ]
     }
-  Groups 12-20 go back to the defaults (empty), and the mod writes them back into the file when the game starts.
+  Groups 12-20 go back to the defaults (empty), and the mod writes them back into the file when the game starts;
+  the three settings at the top (Press again, Close locked too, Remember storage tabs) go back to their defaults too.
   Editing the file while the game is running does nothing (the game reads it once at startup, and pressing
   Apply later overwrites it). If the file is broken, all the defaults are used and the file is overwritten
   with them; you may want to copy it first. To go back to the defaults, press Reset to Defaults.
@@ -223,14 +249,17 @@ Notes
   a group is closed, the game records its position as usual, so a normal double-click opens it there next time.
 - Messages and the settings window follow the game language: Simplified Chinese for Chinese (Traditional Chinese
   with the Traditional Chinese mod), English for every other language.
-- Known limitations: only positions are saved, not window sizes; tabs inside a window aren't saved (a recalled
-  window opens on the tab it was last closed on); the game keeps at most 25 movable windows open, so with windows
+- Known limitations: only positions are saved, not window sizes; tabs inside a window aren't saved by default
+  (a recalled window opens on the tab it was last closed on, unless "Remember storage tabs" is on);
+  the positions Close if unmoved compares with are only kept in memory, so after restarting or loading,
+  the first press recalls the group as usual; the game keeps at most 25 movable windows open, so with windows
   kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game.
 - Compatibility:
   Traditional Chinese mod (https://www.nexusmods.com/probablystolen/mods/280): messages and the settings window
   in Traditional Chinese.
   Close All Windows (https://www.nexusmods.com/probablystolen/mods/720, 2.0.0 or later): locked windows aren't
-  closed by a recall.
+  closed by a recall; when pressing again closes the group, they close too by default ("Close locked too").
+  With Close All Windows 2.1.0's "Show locks" off, every window counts as unlocked.
   Storage Coordinator (an item in the game): its hotkeys ignore Ctrl and Shift. If one of its presets is set to 1,
   pressing Ctrl+1 to recall group 1 also opens that preset (or closes it if it's all open). Use different digits
   for the two, or switch the groups to F keys.
