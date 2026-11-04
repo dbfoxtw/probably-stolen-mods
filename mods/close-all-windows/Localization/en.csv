@@ -7,3 +7,5 @@ cfg_documents,Close documents
 cfg_documents_tip,"Also close papers opened from Document items (newspaper, notes, guides, business cards…)."
 cfg_others,Close everything else Esc can close
 cfg_others_tip,"Also close everything else Esc can close: calendar, tablet, phone, scanners, End the Day, Wild's Network, and other mods' windows that close on Esc (not the pause menu or Options)."
+cfg_show_locks,Show locks
+cfg_show_locks_tip,"Show the lock left of the close button of container and machine windows. When off, the locks are hidden and every window counts as unlocked: Esc, the close-all key and the 25-window limit close them as usual. The windows you locked are remembered and are locked again when you turn this back on."

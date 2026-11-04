@@ -140,6 +140,7 @@ namespace ProbablyStolenCloseAllWindows
                 EnsureDebugFlag();
                 if (!_inStore) return;
                 EscapeGuard.Restore(); // 保險：ESC 的攔截萬一沒放回鎖住的視窗
+                Locks.SyncVisibility(); // 「顯示鎖頭」在店裡改了：開著的視窗的鎖頭跟著藏起或放回
                 // 選項正在擷取按鍵（和擷取結束的那一幀）時不讀自己的鍵（官方指南要求，遊戲自己的快捷鍵也是這樣）
                 if (KeyBindHelper.SuppressHotkeys) return;
                 var key = Settings.Key;

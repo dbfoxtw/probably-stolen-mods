@@ -7,7 +7,7 @@ namespace ProbablyStolenCloseAllWindows
 {
     /// <summary>
     /// 設定：
-    /// - 三組範圍的開關放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.close-all-windows.json，主選單的模組管理畫面裡
+    /// - 「顯示鎖頭」與三組範圍的開關放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.close-all-windows.json，主選單的模組管理畫面裡
     ///   有這個 mod 的設定視窗）。每次用到時才讀值，玩家按套用就生效，不用重開遊戲（不標 requiresRestart）。
     /// - 一鍵關閉的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
     ///   ModData\dbfoxtw_close-all-windows\settings.json（{"key": "Backspace"}，KeyCode 名稱，人看得懂）。
@@ -26,7 +26,12 @@ namespace ProbablyStolenCloseAllWindows
         /// </summary>
         const string Section = "Close All Windows";
 
-        static ConfigEntry<bool> _containers, _documents, _others;
+        /// <summary>
+        /// 「顯示鎖頭」在 ModConfig 裡的 key。**視窗群組 mod 也照這個名字讀**（ModConfig.Find＋Get），不要改名。
+        /// </summary>
+        internal const string ShowLocksKey = "ShowLocks";
+
+        static ConfigEntry<bool> _containers, _documents, _others, _showLocks;
         static KeyCode _key = DefaultKey;
         /// <summary>settings.json 裡讀到的其他欄位（新版 mod 加的），寫回時保留。</summary>
         static JObject _keyJson;
@@ -39,6 +44,12 @@ namespace ProbablyStolenCloseAllWindows
                                                  _documents != null && _documents.Value,
                                                  _others != null && _others.Value);
 
+        /// <summary>
+        /// 顯示鎖頭（預設開）：關著時鎖頭不顯示、所有視窗都當作沒鎖，鎖的紀錄留著，再打開就回來。
+        /// 每次用到時才讀值，按套用就生效（店裡開著的視窗由 Locks.SyncVisibility 每幀對一次）。還沒讀設定時當作開著。
+        /// </summary>
+        internal static bool ShowLocks => _showLocks == null || _showLocks.Value;
+
         static string L(string key) => ModHelper.GetLocalized(CloseAllWindowsMod.ModId, key);
 
         internal static void Init()
@@ -47,12 +58,14 @@ namespace ProbablyStolenCloseAllWindows
             _containers = cfg.Define("CloseContainers", true, Section, () => L("cfg_containers"), () => L("cfg_containers_tip"));
             _documents = cfg.Define("CloseDocuments", false, Section, () => L("cfg_documents"), () => L("cfg_documents_tip"));
             _others = cfg.Define("CloseOthers", false, Section, () => L("cfg_others"), () => L("cfg_others_tip"));
+            // 2.1.0 新增的排在最後：2.0.0 的三組範圍在設定視窗裡的位置不變
+            _showLocks = cfg.Define(ShowLocksKey, true, Section, () => L("cfg_show_locks"), () => L("cfg_show_locks_tip"));
             LoadKey();
         }
 
         /// <summary>
         /// 讀 settings.json 的按鍵。ReadModDataFileText 只靠 Application.persistentDataPath，Init 時就能用。
-        /// 沒有檔案用預設；壞掉、不是 KeyCode 名稱或不是鍵盤鍵也用預設並警告一次（讀的時候不改檔；下次在選項按套用時寫回成目前的鍵）。
+        /// 沒有檔案用預設；壞掉、不是 KeyCode 名稱或不是綁得了的鍵（見 Bindable）也用預設並警告一次（讀的時候不改檔；下次在選項按套用時寫回成目前的鍵）。
         /// </summary>
         static void LoadKey()
         {
@@ -69,7 +82,7 @@ namespace ProbablyStolenCloseAllWindows
                 _keyJson = JsonConvert.DeserializeObject<JObject>(text);
                 var s = (string)_keyJson?["key"];
                 if (TryParseKey(s, out var k)) _key = k;
-                else CloseAllWindowsMod.Log.Warning($"{KeyFile} 的 key「{s}」不是可以用的鍵盤鍵名稱，改用 {DefaultKey}");
+                else CloseAllWindowsMod.Log.Warning($"{KeyFile} 的 key「{s}」不是可以用的按鍵名稱，改用 {DefaultKey}");
             }
             catch (Exception e)
             {
@@ -79,8 +92,8 @@ namespace ProbablyStolenCloseAllWindows
         }
 
         /// <summary>
-        /// KeyCode 名稱 → 鍵。只收名稱（「Backspace」「F9」），不收數字：Enum.TryParse 會把「12345」這種沒定義的值也收下。
-        /// 只收鍵盤鍵（KeyCode 裡排在 Mouse0 前面的）與 None（不綁鍵）；滑鼠鍵、搖桿鍵不收（遊戲的按鍵綁定也只擷取鍵盤鍵）。
+        /// KeyCode 名稱 → 鍵。只收名稱（「Backspace」「F9」「Mouse3」），不收數字：Enum.TryParse 會把「12345」這種沒定義的值也收下。
+        /// 收 None（不綁鍵）與 Bindable 的鍵。
         /// </summary>
         static bool TryParseKey(string s, out KeyCode key)
         {
@@ -88,10 +101,17 @@ namespace ProbablyStolenCloseAllWindows
             s = (s ?? "").Trim();
             if (s.Length == 0 || char.IsDigit(s[0]) || s[0] == '-') return false;
             if (!Enum.TryParse(s, true, out KeyCode k) || !Enum.IsDefined(typeof(KeyCode), k)) return false;
-            if (k != KeyCode.None && k >= KeyCode.Mouse0) return false;
+            if (k != KeyCode.None && !Bindable(k)) return false;
             key = k;
             return true;
         }
+
+        /// <summary>
+        /// 遊戲的按鍵綁定擷取得到的鍵（KeyBindHelper.CaptureKeys）：鍵盤鍵（KeyCode 裡排在 Mouse0 前面的），
+        /// 遊戲 VERSION 100-Rev9 起再加滑鼠的 Mouse1～Mouse6（左鍵 Mouse0 遊戲保留不給綁）。搖桿鍵不收。
+        /// 在 Rev9 設了滑鼠鍵再切回舊版的遊戲，照樣讀得進來、按了照樣有反應（舊版的選項顯示得出來，只是設不出新的滑鼠鍵）。
+        /// </summary>
+        static bool Bindable(KeyCode k) => k < KeyCode.Mouse0 || (k > KeyCode.Mouse0 && k <= KeyCode.Mouse6);
 
         /// <summary>選項按套用時（遊戲每次按套用都會對每一列叫 setter，沒改這一列也會叫）：記下鍵並寫回 settings.json；寫檔失敗只警告（這次遊戲照樣用新的鍵）。</summary>
         static void SetKey(KeyCode k)
@@ -122,6 +142,6 @@ namespace ProbablyStolenCloseAllWindows
                 () => L("key_close_all"), () => _key, SetKey, () => L("key_close_all_tip"));
         }
 
-        internal static string Describe() => $"按鍵={Key}、{Scope}";
+        internal static string Describe() => $"按鍵={Key}、{Scope}、顯示鎖頭={ShowLocks}";
     }
 }

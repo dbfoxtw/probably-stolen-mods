@@ -88,6 +88,19 @@ namespace ProbablyStolenCloseAllWindows
         internal static bool ShouldClose(Category c, bool locked, Scope scope) => !locked && scope.Includes(c);
 
         /// <summary>
+        /// 這場遊戲的鎖現在有沒有作用（ESC 與 25 個上限的攔截先看這個，沒有就照原版）：設定「顯示鎖頭」關著時一律沒有，
+        /// 鎖的紀錄留著、只是不算數。
+        /// </summary>
+        internal static bool LocksInEffect(bool showLocks, int lockedCount) => showLocks && lockedCount > 0;
+
+        /// <summary>
+        /// 一個視窗算不算鎖住：「顯示鎖頭」關著時都不算；太窄、不放鎖頭的機器樣式視窗不算（畫面上沒有鎖頭就不保護）；
+        /// 編號 0（還沒發編號）的物品不可能鎖過；其他看鎖的紀錄。
+        /// </summary>
+        internal static bool CountsAsLocked(bool showLocks, bool hasRoomForLock, int itemId, bool idLocked) =>
+            showLocks && hasRoomForLock && itemId != 0 && idLocked;
+
+        /// <summary>
         /// 讀檔後要丟掉的鎖：遊戲的物品編號計數器（PlayerStore.currentUniqueId，先加 1 再回傳，所以發過的編號都 ≤ 它）
         /// 只在睡覺存檔時寫進存檔。今天才發的編號鎖住後沒睡覺就讀檔，計數器退回去，之後那個編號會發給別的物品，
         /// 那個物品就會莫名其妙變成鎖住（2026-10-13 審查發現）。所以編號大於計數器的鎖在讀檔後都不算數。

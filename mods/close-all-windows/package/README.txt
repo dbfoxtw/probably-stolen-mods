@@ -2,7 +2,7 @@ Probably Stolen 一鍵關窗 mod（Close All Windows） v{version}
 ==========================================================
 
 按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV1）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
@@ -38,15 +38,17 @@ ModConfigs\dbfoxtw.close-all-windows.json 與 ModData\dbfoxtw_close-all-windows 
   鎖住的視窗不會被一鍵關閉、ESC 關掉（ESC 會改關下一個沒鎖的），遊戲的 25 個視窗上限也會改關最舊、沒鎖的。
   點 ×、雙擊箱子、拖動箱子本身、外出或睡覺時照常關。
   鎖會記住：同一個箱子下次打開、重開遊戲都還是鎖著，每個存檔槽各一份。
+  不想要鎖頭的話，在設定關掉「顯示鎖頭」：鎖頭不顯示、所有視窗都當作沒鎖。
 - 標題太長時遊戲會截成「…」，鎖頭多佔一格，標題會早一點被截。
 鎖頭與一鍵關閉都是這個 mod 加的，不是遊戲本身的功能；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
 - 按鍵：遊戲的「選項 → 按鍵綁定」最後一列「一鍵關閉所有視窗」（預設 Backspace），按套用就生效。
   Esc 和其他列已經用掉的鍵，遊戲會擋下來。
-- 範圍：主選單的「Mods」（模組）畫面選這個 mod、按齒輪打開設定，段落「Close All Windows」有三個開關，
-  改好套用，下次按鍵就生效，不用重開遊戲：
-  關閉容器和機器的視窗（預設開）、關閉文件（預設關）、關閉其他所有能用Esc關閉的（預設關）。
+- 範圍與鎖頭：主選單的「Mods」（模組）畫面選這個 mod、按齒輪打開設定，段落「Close All Windows」有四個開關，
+  改好套用就生效，不用重開遊戲：
+  關閉容器和機器的視窗（預設開）、關閉文件（預設關）、關閉其他所有能用Esc關閉的（預設關）、
+  顯示鎖頭（預設開；關掉時鎖頭不顯示、所有視窗都當作沒鎖，鎖過哪些會記著，再打開時都回來）。
   存在存檔資料夾的 ModConfigs\dbfoxtw.close-all-windows.json。
 
 【說明】
@@ -60,7 +62,10 @@ ModConfigs\dbfoxtw.close-all-windows.json 與 ModData\dbfoxtw_close-all-windows 
   其他 mod 的視窗只有用遊戲官方 mod 介面框架做、而且允許 ESC 關的，才會被「其他」一起關掉。
   鎖住今天才第一次打開的箱子後，沒睡覺就讀檔，這個鎖會被丟掉（讀檔後那個編號可能會發給別的物品）。
   遊戲之後如果改了視窗的做法，要等 mod 更新。
-- 相容性：其他也會改視窗標題列或視窗行為的 mod，可能和鎖頭重疊或互相影響，沒有測試過。
+- 相容性：視窗群組（Window Groups，https://www.nexusmods.com/probablystolen/mods/804）叫出群組時讀這個 mod 的鎖，鎖住的不關；
+  視窗群組 2.1.0 起，「再按一次」關掉整組時預設鎖住的也一起關（視窗群組的設定可以改）；
+  「顯示鎖頭」關掉時，視窗群組也當作都沒鎖（要視窗群組 2.1.0 以上）。
+  其他也會改視窗標題列或視窗行為的 mod，可能和鎖頭重疊或互相影響，沒有測試過。
 
 【授權】
 - 本 mod：MIT 授權（LICENSE.txt）。原始碼：https://github.com/dbfoxtw/probably-stolen-mods/tree/main/mods/close-all-windows
@@ -73,7 +78,7 @@ Probably Stolen Close All Windows mod v{version}
 
 Press one key to close all the container and machine windows in your shop,
 and lock the ones you want to keep open. Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100-REV1)
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -123,6 +128,8 @@ Features
   going outside, and sleeping still close them.
   Locks are remembered: the same container stays locked the next time you open it and after restarting
   the game, separately for each save slot.
+  Don't want the padlock? Turn off "Show locks" in the settings: the padlocks are hidden and every
+  window counts as unlocked.
 - The game shortens long titles with "…"; the padlock takes a little room, so they're shortened a bit earlier.
 The padlock and the hotkey come from this mod, not the base game; please report problems to this mod,
 not to the game developers.
@@ -130,11 +137,11 @@ not to the game developers.
 Settings
 - Key: the last row of the game's Options → Key Binds, "Close all windows" (default Backspace);
   apply to use it. The game won't let you pick Esc or a key another row already uses.
-- Scope: open this mod's settings with the gear button on the Mods screen of the main menu.
-  Under "Close All Windows" there are three switches; apply, and the change takes effect the next time
-  you press the key (no restart needed):
+- Scope and padlock: open this mod's settings with the gear button on the Mods screen of the main menu.
+  Under "Close All Windows" there are four switches; apply, and the change takes effect (no restart needed):
   Close container and machine windows (default on), Close documents (default off),
-  Close everything else Esc can close (default off).
+  Close everything else Esc can close (default off), Show locks (default on; when off, the padlocks are
+  hidden and every window counts as unlocked; which ones you locked is remembered and comes back).
   Kept in ModConfigs\dbfoxtw.close-all-windows.json in the save folder.
 
 Notes
@@ -151,7 +158,11 @@ Notes
   If you lock a container you opened for the first time today and reload without sleeping, that lock
   is dropped (after reloading, its ID may be given to another item). If a game update changes how
   windows work, wait for a mod update.
-- Compatibility: other mods that also change window title bars or window behavior may overlap the padlock
+- Compatibility: Window Groups (https://www.nexusmods.com/probablystolen/mods/804) reads this mod's locks, so locked windows
+  aren't closed when you recall a group. From Window Groups 2.1.0, when pressing a group's key again closes
+  the whole group, locked windows close too by default (you can change that in Window Groups' settings);
+  with "Show locks" off, Window Groups treats every window as unlocked (needs Window Groups 2.1.0 or later).
+  Other mods that also change window title bars or window behavior may overlap the padlock
   or interfere with it; not tested.
 
 License

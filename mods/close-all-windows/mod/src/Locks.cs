@@ -7,6 +7,7 @@ namespace ProbablyStolenCloseAllWindows
 {
     /// <summary>
     /// 鎖頭：箱子／機器視窗的 × 左邊常駐一個鎖，點一下切換。
+    /// 設定「顯示鎖頭」關著時鎖頭藏起來、所有視窗都當作沒鎖（鎖的紀錄留著，再打開就回來；Settings.ShowLocks）。
     /// 鎖住的不會被一鍵關閉、ESC（EscapeGuard）與 25 個上限的自動關閉關掉；×、雙擊、拖動箱子、外出、儲物協調器照常關。
     /// 鎖跟著物品編號記在 mod 自己的檔案（LockStore），不碰存檔。攔截在 Patches.cs。
     /// 正式版的視窗有兩種外觀（PixelWindow.style）：
@@ -55,6 +56,8 @@ namespace ProbablyStolenCloseAllWindows
         static readonly HashSet<string> _errorsLogged = new HashSet<string>();
         static LockStore _store;
         static LockRecord _rec;
+        /// <summary>店裡的鎖頭目前照哪個「顯示鎖頭」的值擺的（SyncVisibility 比對；新建的鎖頭在 OnShow 直接照現在的設定）。</summary>
+        static bool _shownSetting = true;
 
         internal static void Init(LockStore store) => _store = store;
 
@@ -63,6 +66,7 @@ namespace ProbablyStolenCloseAllWindows
         {
             _icons.Clear();
             _rec = null;
+            _shownSetting = Settings.ShowLocks;
         }
 
         /// <summary>
@@ -108,7 +112,7 @@ namespace ProbablyStolenCloseAllWindows
             get
             {
                 var r = Record();
-                return r != null && r.Locked.Count > 0;
+                return r != null && Rules.LocksInEffect(Settings.ShowLocks, r.Locked.Count);
             }
         }
 
@@ -116,16 +120,17 @@ namespace ProbablyStolenCloseAllWindows
         /// 視窗是不是鎖住的箱子／機器。用物品的 uniqueId、不叫 GetUniqueID：編號是 0 的物品叫了會被發一個新編號，
         /// 而沒有編號的物品本來就不可能鎖過（鎖的時候才叫 GetUniqueID）。
         /// 太窄、不放鎖頭的機器樣式視窗（GameWindows.HasRoomForLock）一律不算鎖住：畫面上沒有鎖頭就不保護。
+        /// 「顯示鎖頭」關著時也一律不算（Rules.CountsAsLocked）。
         /// </summary>
         internal static bool IsLockedWindow(PixelWindow w)
         {
+            bool show = Settings.ShowLocks;
             var r = Record();
-            if (r == null || r.Locked.Count == 0) return false;
-            if (!GameWindows.HasRoomForLock(w)) return false;
+            if (r == null || !Rules.LocksInEffect(show, r.Locked.Count)) return false;
             var item = GameWindows.OwnerItem(w);
             if (item == null) return false;
             int id = item.uniqueId;
-            return id != 0 && r.IsLocked(id);
+            return Rules.CountsAsLocked(show, GameWindows.HasRoomForLock(w), id, id != 0 && r.IsLocked(id));
         }
 
         /// <summary>PixelWindow.Show 之後（兩個多載）：可以有鎖頭的視窗建立或更新鎖頭。</summary>
@@ -139,9 +144,62 @@ namespace ProbablyStolenCloseAllWindows
                 var icon = Ensure(w, close, title, headerButtons);
                 if (icon == null) return;
                 Refresh(icon, item);
-                if (!icon.IsMachinery) Place(icon);
+                if (icon.IsMachinery) ApplyHeaderVisibility(icon);
+                else Place(icon);
             }
             catch (Exception e) { LogOnce("加鎖頭", e); }
+        }
+
+        /// <summary>
+        /// 每幀（CloseAllWindowsMod.Tick，在店鋪畫面時）：「顯示鎖頭」改了（玩家在店裡打開 mod 設定視窗按了套用）就把開著的視窗的鎖頭
+        /// 藏起來或放回去，不用重開。關著的視窗下次打開時 OnShow 照當時的設定。只比一個布林，平常馬上結束。
+        /// </summary>
+        internal static void SyncVisibility()
+        {
+            bool show = Settings.ShowLocks;
+            if (show == _shownSetting) return;
+            _shownSetting = show;
+            if (_icons.Count == 0) return;
+            try
+            {
+                int n = 0;
+                foreach (var icon in new List<Icon>(_icons.Values))
+                {
+                    if (!icon.Alive) { _icons.Remove(icon.Window); continue; }
+                    if (icon.IsMachinery)
+                    {
+                        if (show)
+                        {
+                            // 藏著時遊戲把按鈕重設過，換回這個視窗現在該有的圖
+                            icon.ShownLocked = null;
+                            var item = GameWindows.OwnerItem(icon.Window);
+                            if (item != null) Refresh(icon, item);
+                        }
+                        if (ApplyHeaderVisibility(icon)) n++;
+                    }
+                    else
+                    {
+                        Place(icon);
+                        n++;
+                    }
+                }
+                CloseAllWindowsMod.DebugLog($"顯示鎖頭改成 {(show ? "開" : "關")}：{n} 個視窗的鎖頭{(show ? "放回去" : "藏起來")}");
+            }
+            catch (Exception e) { LogOnce("切換顯示鎖頭", e); }
+        }
+
+        /// <summary>
+        /// 機器樣式：照「顯示鎖頭」藏起或顯示遊戲的按鈕（SelectableElement.SetHidden：藏著時不畫、不接點擊、寬度算 0，
+        /// MachineryValidate 排標題列時會跳過它），變了才重排視窗。回傳有沒有變。
+        /// 不用 RemoveHeaderButton：拿掉再加回去，按鈕的物件會被搬到別的父物件底下再搬回來，藏起來比較單純。
+        /// </summary>
+        static bool ApplyHeaderVisibility(Icon icon)
+        {
+            bool hide = !Settings.ShowLocks;
+            if (icon.Header.isHidden == hide) return false;
+            icon.Header.SetHidden(hide);
+            icon.Window.Validate(); // 標題讓出或收回鎖頭的位置
+            return true;
         }
 
         /// <summary>
@@ -255,7 +313,8 @@ namespace ProbablyStolenCloseAllWindows
             rt.anchoredPosition = closeRt.anchoredPosition - new Vector2(size.x + Gap, 0);
             rt.SetAsLastSibling(); // 蓋在標題底色與拖動區上面，點得到
             var closeImg = icon.Close.image;
-            bool show = closeRt.gameObject.activeSelf && (closeImg == null || closeImg.enabled);
+            // 「顯示鎖頭」關著時也藏（FitTitle 會把標題的字型還原成原本的大小）
+            bool show = Settings.ShowLocks && closeRt.gameObject.activeSelf && (closeImg == null || closeImg.enabled);
             if (icon.Go.activeSelf != show) icon.Go.SetActive(show);
             FitTitle(icon);
         }
@@ -323,7 +382,7 @@ namespace ProbablyStolenCloseAllWindows
         {
             try
             {
-                if (!CloseAllWindowsMod.Ready || !_icons.TryGetValue(w, out var icon)) return;
+                if (!CloseAllWindowsMod.Ready || !Settings.ShowLocks || !_icons.TryGetValue(w, out var icon)) return; // 藏著時不會被點到，保險
                 if (!icon.IsMachinery)
                 {
                     // 按完就取消選取：不然之後按空白鍵或 Enter 給遊戲用時，UGUI 會再按一次這顆按鈕

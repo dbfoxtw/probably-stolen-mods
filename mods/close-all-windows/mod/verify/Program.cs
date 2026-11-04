@@ -81,6 +81,19 @@ namespace ProbablyStolenCloseAllWindows.Verify
             Check(!Rules.ShouldClose(Category.Container, false, docOnly), "只開文件：箱子不關");
             Check(Rules.ShouldClose(Category.Document, false, docOnly), "只開文件：文件關");
             Check(!Rules.ShouldClose(Category.Other, false, docOnly), "只開文件：其他不關");
+
+            // 顯示鎖頭：關著時鎖都不算數，紀錄留著
+            Check(Rules.LocksInEffect(true, 2), "顯示鎖頭開、有鎖：鎖有作用（ESC、上限要介入）");
+            Check(!Rules.LocksInEffect(true, 0), "顯示鎖頭開、沒鎖：照原版");
+            Check(!Rules.LocksInEffect(false, 2), "顯示鎖頭關、有鎖：當作沒鎖，照原版");
+            Check(Rules.CountsAsLocked(true, true, 2685, true), "顯示鎖頭開、鎖住：算鎖住");
+            Check(!Rules.CountsAsLocked(false, true, 2685, true), "顯示鎖頭關、鎖住：不算鎖住（ESC、一鍵關閉照關）");
+            Check(!Rules.CountsAsLocked(true, false, 2685, true), "太窄、不放鎖頭的視窗：不算鎖住");
+            Check(!Rules.CountsAsLocked(true, true, 0, true), "還沒發編號的物品：不算鎖住");
+            Check(!Rules.CountsAsLocked(true, true, 2685, false), "沒鎖：不算鎖住");
+            Check(Rules.CountsAsLocked(true, true, -102, true), "固定設施（負數編號）鎖住：算鎖住");
+            // 關掉顯示鎖頭時一鍵關閉也照關（鎖住的判斷先過 CountsAsLocked 再交給 ShouldClose）
+            Check(Rules.ShouldClose(Category.Container, Rules.CountsAsLocked(false, true, 2685, true), def), "顯示鎖頭關：鎖住的箱子也被一鍵關閉");
         }
 
         static void Store()

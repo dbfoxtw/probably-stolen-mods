@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.1.0（2026-11-05）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+
+- 新設定「顯示鎖頭」（預設開）：關掉時鎖頭不顯示、所有視窗都當作沒鎖（一鍵關閉、ESC、25 個上限照常關），只剩一鍵關閉。鎖過哪些會記著，再打開時鎖頭和鎖都回來。
+- 說明加回和[視窗群組](https://www.nexusmods.com/probablystolen/mods/804)一起用的情形：叫出群組時鎖住的不關；視窗群組 2.1.0 的「再按一次」關掉整組時，預設鎖住的也一起關（視窗群組的設定可以改）；「顯示鎖頭」關掉時，視窗群組 2.1.0 也當作都沒鎖。
+- 按鍵可以設成滑鼠鍵（左鍵以外，例如側鍵）：遊戲 VERSION 100-REV9 起「選項 → 按鍵綁定」能設滑鼠鍵，設了以後重開遊戲也會記住。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+
+- New setting "Show locks" (on by default): when off, the padlocks are hidden and every window counts as unlocked (the key, Esc and the 25-window limit close them as usual), leaving just the close-all key. Which windows you locked is remembered, and the padlocks and locks come back when you turn it on again.
+- The description mentions [Window Groups](https://www.nexusmods.com/probablystolen/mods/804) again: locked windows aren't closed when you recall a group; when Window Groups 2.1.0's "Press again" closes a whole group, locked windows close too by default (you can change that in Window Groups' settings); with "Show locks" off, Window Groups 2.1.0 also treats every window as unlocked.
+- The key can be a mouse button (not the left button, e.g. a side button): from game VERSION 100-REV9, Options → Key Binds accepts mouse buttons, and the mod now remembers one after you restart the game.
+
 ## v2.0.0（2026-10-29）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV1）

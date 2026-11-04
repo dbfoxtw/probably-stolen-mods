@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV1）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Close All Windows 的最新版，標記 `close-all-windows-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -27,22 +27,24 @@
   - **鎖會記住**：同一個箱子下次打開、重開遊戲都還是鎖著；每個存檔槽各一份。
   - 標題太長時，遊戲本來就會把標題截成「…」；鎖頭多佔一格，標題會早一點被截。
   - 最窄的容器（單格、一欄寬的）放不下鎖頭，沒有鎖頭，一鍵關閉照常關（見「已知限制」）。
+  - **不想要鎖頭**：在設定關掉「顯示鎖頭」，鎖頭就不顯示、所有視窗都當作沒鎖，只剩一鍵關閉（見「設定」）。
 
 鎖頭與一鍵關閉都是這個 mod 加的，不是遊戲本身的功能；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 ## 設定
 
-**按鍵**：在遊戲的「選項 → 按鍵綁定」（主選單或店裡按 Esc 都打得開選項），最後一列「一鍵關閉所有視窗」，預設 Backspace。點一下再按想用的鍵，按套用就生效。Esc 和其他列已經用掉的鍵，遊戲會擋下來。按鍵存在存檔資料夾的 `ModData\dbfoxtw_close-all-windows\settings.json`。
+**按鍵**：在遊戲的「選項 → 按鍵綁定」（主選單或店裡按 Esc 都打得開選項），最後一列「一鍵關閉所有視窗」，預設 Backspace。點一下再按想用的鍵，按套用就生效（遊戲 VERSION 100-REV9 起也能設滑鼠鍵，左鍵除外）。Esc 和其他列已經用掉的鍵，遊戲會擋下來。按鍵存在存檔資料夾的 `ModData\dbfoxtw_close-all-windows\settings.json`。
 
-**範圍**：在主選單的「Mods」（模組）畫面選這個 mod、按齒輪打開設定：段落「Close All Windows」（不分語言都是英文，遊戲顯示成大寫）底下有三個開關。改好套用，下次按一鍵關閉就生效，不用重開遊戲。
+**範圍與鎖頭**：在主選單的「Mods」（模組）畫面選這個 mod、按齒輪打開設定：段落「Close All Windows」（不分語言都是英文，遊戲顯示成大寫）底下有四個開關。改好套用就生效，不用重開遊戲。
 
 | 設定 | 預設 | 內容 |
 |---|---|---|
 | 關閉容器和機器的視窗（`CloseContainers`） | 開 | 關箱子、機器的視窗（鎖住的不關） |
 | 關閉文件（`CloseDocuments`） | 關 | 也關「文件」類物品打開的紙張 |
 | 關閉其他所有能用Esc關閉的（`CloseOthers`） | 關 | 也關其他所有 ESC 能關的（暫停選單與選項除外） |
+| 顯示鎖頭（`ShowLocks`） | 開 | 在視窗上顯示鎖頭。關掉時鎖頭不顯示、所有視窗都當作沒鎖（一鍵關閉、ESC、25 個上限照常關）；鎖過哪些會記著，再打開時鎖頭和鎖都回來 |
 
-範圍的開關存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.close-all-windows.json`。
+這些開關存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.close-all-windows.json`。
 
 ## 語言
 
@@ -95,6 +97,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## 相容性
 
+- [視窗群組（Window Groups）](https://www.nexusmods.com/probablystolen/mods/804)：叫出群組時讀這個 mod 的鎖，鎖住的視窗不會被關掉。視窗群組 2.1.0 起，「再按一次」叫出鍵關掉整組時，預設鎖住的也一起關（視窗群組的設定可以改）；這個 mod 的「顯示鎖頭」關掉時，視窗群組也當作都沒鎖（要視窗群組 2.1.0 以上）。
 - 其他也會改視窗標題列或視窗行為的 mod（例如在標題列加按鈕、改 ESC 或視窗上限的做法），可能和鎖頭重疊或互相影響，沒有測試過。
 
 ## 從原始碼建置（開發者）
@@ -140,19 +143,21 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - **Locks are remembered**: the same container stays locked the next time you open it and after restarting the game, separately for each save slot.
   - The game already shortens long titles with "…"; the padlock takes a little room, so a long title is shortened a bit earlier.
   - The narrowest containers (one slot or one column wide) have no room for the padlock, so they don't get one and are always closed by the key (see Known limitations).
+  - **Don't want the padlock?** Turn off "Show locks" in the settings: the padlocks are hidden and every window counts as unlocked, leaving just the close-all key (see Settings).
 
 The padlock and the hotkey come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
 **Settings**
 
-- **Key**: in the game's Options → Key Binds (open Options from the main menu, or press Esc in your shop), the last row, "Close all windows", is Backspace by default. Click it, press the key you want, and apply. The game won't let you pick Esc or a key another row already uses. The key is saved in `ModData\dbfoxtw_close-all-windows\settings.json` in the save folder.
-- **Scope**: open this mod's settings with the gear button on the Mods screen of the main menu. Under "Close All Windows" there are three switches. Apply, and the change takes effect the next time you press the key; no restart needed.
+- **Key**: in the game's Options → Key Binds (open Options from the main menu, or press Esc in your shop), the last row, "Close all windows", is Backspace by default. Click it, press the key you want, and apply (from game VERSION 100-REV9 a mouse button works too, except the left button). The game won't let you pick Esc or a key another row already uses. The key is saved in `ModData\dbfoxtw_close-all-windows\settings.json` in the save folder.
+- **Scope and padlock**: open this mod's settings with the gear button on the Mods screen of the main menu. Under "Close All Windows" there are four switches. Apply, and the change takes effect; no restart needed.
 
 | Setting | Default | What it does |
 |---|---|---|
 | Close container and machine windows (`CloseContainers`) | on | Close container and machine windows (except locked ones) |
 | Close documents (`CloseDocuments`) | off | Also close papers opened from Document items |
 | Close everything else Esc can close (`CloseOthers`) | off | Also close everything else Esc can close (not the pause menu or Options) |
+| Show locks (`ShowLocks`) | on | Show the padlock on windows. When off, the padlocks are hidden and every window counts as unlocked (the key, Esc and the 25-window limit close them as usual); which windows you locked is remembered, and the padlocks and locks come back when you turn it on again |
 
 The switches are kept in `ModConfigs\dbfoxtw.close-all-windows.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
@@ -193,6 +198,7 @@ The Demo version (v1.0.1 and earlier, MelonLoader) does not work on the full rel
 
 **Compatibility**
 
+- [Window Groups](https://www.nexusmods.com/probablystolen/mods/804): reads this mod's locks, so locked windows aren't closed when you recall a group. From Window Groups 2.1.0, when pressing a group's recall key again closes the whole group, locked windows close too by default (you can change that in Window Groups' settings); with "Show locks" turned off here, Window Groups treats every window as unlocked (needs Window Groups 2.1.0 or later).
 - Other mods that also change window title bars or window behavior (e.g. add buttons to title bars, or change how Esc or the window limit works) may overlap the padlock or interfere with it; not tested.
 
 **Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\close-all-windows` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time; MelonLoader is not needed). It installs into `Mods\dbfoxtw.close-all-windows\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, the open windows and panels, their group and whether they were closed each time you press the key, plus what the padlocks and Esc did. `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.close-all-windows` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
