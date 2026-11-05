@@ -40,6 +40,32 @@ namespace ProbablyStolenCloseAllWindows
     static class Rules
     {
         /// <summary>
+        /// 營業結束畫面的 EndOfDayUIManager.CloseUI 要傳的參數；認不得的簽名回傳 null（不叫）。
+        /// 遊戲 VERSION 100-REV10 起是 CloseUI(bool restorePaperUI = true)，REV9 以前沒有參數。選用參數是編譯時補上的，
+        /// 程式裡直接寫 eod.CloseUI() 會綁死編譯時那一版的簽名（2.1.0 對 REV9 建置，在 REV10 找不到沒有參數的那個，
+        /// 整個關面板的方法都不能跑），所以照遊戲實際的參數用反射叫，兩版都能用（GameWindows.CloseEndOfDay）。
+        /// restorePaperUI 的值見 EndOfDayRestorePaperUI。
+        /// </summary>
+        internal static object[] EndOfDayCloseArgs(Type[] parameterTypes, bool restorePaperUI)
+        {
+            if (parameterTypes == null) return null;
+            if (parameterTypes.Length == 0) return new object[0];
+            if (parameterTypes.Length == 1 && parameterTypes[0] == typeof(bool)) return new object[] { restorePaperUI };
+            return null;
+        }
+
+        /// <summary>
+        /// 一鍵關閉關營業結束畫面時的 restorePaperUI：一律 true，照 Esc（遊戲 REV10 起才有差）。
+        /// 遊戲睡覺時把 paper 層開著的東西記下來、只 SetActive(false) 收起來，營業結束畫面關掉時傳 true 就開回來，
+        /// 傳 false 不開回來，之後也不會（要進到隔天得再睡一次，那時遊戲把清單清掉重記，PaperUIManager.CloseAllPaperUIForSleep）。
+        /// 開回來以後 WindowCloser 照範圍關：範圍含文件時全部同一幀開了又關，看起來沒跳回來；不含文件時文件留著。
+        /// 不傳 false 的原因（2026-11-05 兩次審查）：false 的話睡前收起來的文件在「不關文件」時回不來，和設定相反；
+        /// 而且漏斗、儲物協調器、鑑定清單這類官方框架的視窗會卡在「看不見、遊戲卻以為開著」（沒走 Close()），
+        /// 再點那台機器第一下會去關看不見的視窗。代價：睡前開著電話的話，開回來再關會響一聲掛電話音。
+        /// </summary>
+        internal const bool EndOfDayRestorePaperUI = true;
+
+        /// <summary>
         /// 遊戲裡「文件」類物品打開的紙張面板（CanvasPaperUI 底下的 GameObject 名稱）。
         /// 只列 Demo 拿得到的（官方規定：公開的程式碼不點名未發布的內容）；其他文件物品（正式版或其他 mod 加的）打開的面板，
         /// 由 DocumentTracker 在物品打開它時記下。

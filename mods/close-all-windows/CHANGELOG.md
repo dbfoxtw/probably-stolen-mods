@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.1.1（2026-11-05）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV10）
+
+- 修正遊戲 VERSION 100-REV10（beta 分支）上一鍵關閉關不掉文件與其他紙張面板（遊戲改了營業結束畫面的關閉方法，2.1.0 找不到它）。REV6 不受影響。
+- 「關閉其他」開著時，在營業結束畫面按一鍵關閉（VERSION 100-REV10 起，遊戲睡覺時把開著的紙張面板收起來，關掉營業結束畫面時再開回來）：遊戲開回來的照設定關掉，「關閉文件」開著時看起來什麼都不會跳回來，關著時文件留著。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV10 beta branch is also supported)
+
+- Fixed: on game VERSION 100-REV10 (beta branch) the key couldn't close documents and other paper panels (the game changed how the end-of-day screen closes, and 2.1.0 couldn't find it). REV6 was not affected.
+- With "Close everything else Esc can close" on, the key on the end-of-day screen (from VERSION 100-REV10 the game puts open paper panels away when you go to bed and brings them back when that screen closes) closes what comes back as set: with "Close documents" on nothing pops back; with it off, documents stay.
+
 ## v2.1.0（2026-11-05）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）

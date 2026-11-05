@@ -2,7 +2,7 @@ Probably Stolen 一鍵關窗 mod（Close All Windows） v{version}
 ==========================================================
 
 按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV10）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
@@ -78,7 +78,7 @@ Probably Stolen Close All Windows mod v{version}
 
 Press one key to close all the container and machine windows in your shop,
 and lock the ones you want to keep open. Unofficial.
-Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV10 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome

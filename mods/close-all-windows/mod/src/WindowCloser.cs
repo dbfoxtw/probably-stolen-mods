@@ -47,24 +47,33 @@ namespace ProbablyStolenCloseAllWindows
                 if (close) Try($"視窗「{Title(w)}」", () => WindowsHandler.CloseWindow(w));
             }
 
-            // 2. 紙張面板：文件物品打開的算「文件」，其他算「其他」；其他 mod 的視窗下面另外處理
+            // 2. 營業結束畫面（算「其他」）：在拍紙張面板的快照之前先關。用遊戲自己的關法，遮罩才會一起拿掉。
+            //    遊戲 REV10 起關它時照 Esc 把睡前收起來的面板與視窗開回來（Rules.EndOfDayRestorePaperUI），
+            //    第 3、4 步再照範圍關掉：範圍含文件時同一幀開了又關、看起來沒跳回來；不含文件時文件留著。
+            //    「結束這一天」的黑畫面進行中不關：遊戲會在黑畫面中間自己關它。
+            var eod = EndOfDayUIManager.Instance;
+            if (scope.Others && eod != null && eod.UI != null && eod.UI.activeSelf)
+            {
+                if (GameWindows.EndOfDayInProgress())
+                    log?.AppendLine("  營業結束 → 結束這一天進行中，不關");
+                else
+                {
+                    log?.AppendLine($"  營業結束 → 關（restorePaperUI={Rules.EndOfDayRestorePaperUI}，REV10 起才有差）");
+                    Try("營業結束", () => GameWindows.CloseEndOfDay(eod, Rules.EndOfDayRestorePaperUI));
+                }
+            }
+
+            // 3. 紙張面板：文件物品打開的算「文件」，其他算「其他」；其他 mod 的視窗下面另外處理
             var modRoots = GameWindows.ModWindowRoots();
             var home = ui != null && ui.paperUICanvasObject != null ? ui.paperUICanvasObject.transform : null;
             foreach (var go in GameWindows.OpenPanels())
             {
                 if (modRoots.Contains(go.GetInstanceID())) continue;
+                if (GameWindows.IsEndOfDay(go)) continue; // 第 2 步處理過（還開著的話是不關或關不掉）
                 var cat = Rules.PanelCategory(go.name, DocumentTracker.IsDocument(go));
                 bool close = Rules.ShouldClose(cat, false, scope);
                 log?.AppendLine($"  面板 {go.name} {cat}{(home != null && go.transform.parent != null && go.transform.parent != home ? " 停靠中" : "")} 焦點={Stamp(go)} → {(close ? "關" : "不關")}");
                 if (close) Try($"面板 {go.name}", () => GameWindows.ClosePanel(go));
-            }
-
-            // 營業結束不在紙張面板底下的話也照樣關（用遊戲自己的關法，遮罩才會一起拿掉）
-            var eod = EndOfDayUIManager.Instance;
-            if (scope.Others && eod != null && eod.UI != null && eod.UI.activeSelf)
-            {
-                log?.AppendLine("  營業結束 → 關");
-                Try("營業結束", () => eod.CloseUI());
             }
 
             // Wild 的人脈網：正式版改成官方 UI 框架的視窗（沒設 closeOnEscape，下面的其他 mod 視窗抓不到），ESC 會關它
@@ -74,7 +83,7 @@ namespace ProbablyStolenCloseAllWindows
                 if (scope.Others) Try("Wild 的人脈網", WildNetworkUI.Close);
             }
 
-            // 3. 其他 mod 用官方介面框架做、允許 ESC 關的視窗
+            // 4. 其他 mod 用官方介面框架做、允許 ESC 關的視窗（遊戲自己 paper 層的漏斗、儲物協調器、鑑定清單也是這種）
             foreach (var mw in GameWindows.ModWindows())
             {
                 log?.AppendLine($"  其他 mod 的視窗 {mw.id}（{mw.layerId}） → {(scope.Others ? "關" : "不關")}");

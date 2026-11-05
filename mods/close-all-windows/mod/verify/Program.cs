@@ -28,9 +28,32 @@ namespace ProbablyStolenCloseAllWindows.Verify
             Console.OutputEncoding = Encoding.UTF8;
             Categories();
             Closing();
+            EndOfDayClose();
             Store();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
+        }
+
+        /// <summary>
+        /// 營業結束畫面 CloseUI 的參數（Rules.EndOfDayCloseArgs）：REV9 以前沒有參數、REV10 起一個 bool，其他簽名不叫；
+        /// restorePaperUI 一律 true。
+        /// </summary>
+        static void EndOfDayClose()
+        {
+            foreach (var restore in new[] { false, true })
+            {
+                var none = Rules.EndOfDayCloseArgs(new Type[0], restore);
+                Check(none != null && none.Length == 0, $"CloseUI()：不帶參數叫（REV9 以前；要的值是 {restore} 也一樣）");
+                var rev10 = Rules.EndOfDayCloseArgs(new[] { typeof(bool) }, restore);
+                Check(rev10 != null && rev10.Length == 1 && rev10[0] is bool b && b == restore, $"CloseUI(bool)：傳 {restore}（REV10 起）");
+            }
+            Check(Rules.EndOfDayCloseArgs(new[] { typeof(int) }, false) == null, "CloseUI(int)：認不得，不叫");
+            Check(Rules.EndOfDayCloseArgs(new[] { typeof(bool), typeof(bool) }, false) == null, "CloseUI(bool, bool)：認不得，不叫");
+            Check(Rules.EndOfDayCloseArgs(null, false) == null, "沒有參數資料：不叫");
+
+            // 一律照 Esc 讓遊戲開回來，再照範圍關：看範圍傳 false 會留下看不見、遊戲卻以為開著的視窗
+            bool restoreValue = Rules.EndOfDayRestorePaperUI;
+            Check(restoreValue, "營業結束畫面一律傳 true（照 Esc），開回來的再照範圍關");
         }
 
         /// <summary>分組：文件面板名單、被文件物品打開過的面板、格子視窗有沒有所屬物品。</summary>

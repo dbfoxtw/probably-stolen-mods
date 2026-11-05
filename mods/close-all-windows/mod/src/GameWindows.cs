@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using UnityEngine;
 
 namespace ProbablyStolenCloseAllWindows
@@ -7,7 +10,7 @@ namespace ProbablyStolenCloseAllWindows
     /// <summary>
     /// 讀遊戲開著的視窗與面板，關法照遊戲 ESC 的
     /// StoreUIManager.CloseTopmostEscapeTarget：格子視窗 WindowsHandler.CloseWindow、交易與電話用各自的 CloseUI、
-    /// 營業結束用 EndOfDayUIManager.CloseUI（直接藏起來會把遮罩留在畫面上）、其他 SetActive(false)。
+    /// 營業結束用 EndOfDayUIManager.CloseUI（直接藏起來會把遮罩留在畫面上；照遊戲這一版的參數叫，CloseEndOfDay）、其他 SetActive(false)。
     /// </summary>
     static class GameWindows
     {
@@ -108,9 +111,75 @@ namespace ProbablyStolenCloseAllWindows
             if (bargain != null && Same(bargain.uiObject, go)) { bargain.CloseUI(); return; }
             var phone = PhoneUIManager.Instance;
             if (phone != null && Same(phone.phonePanel, go)) { phone.CloseUI(); return; }
-            var eod = EndOfDayUIManager.Instance;
-            if (eod != null && Same(eod.UI, go)) { eod.CloseUI(); return; }
+            // 營業結束畫面不在這裡關：WindowCloser 在拍面板快照之前先關它（CloseEndOfDay），快照裡跳過它
             go.SetActive(false);
+        }
+
+        /// <summary>是不是營業結束畫面（WindowCloser 另外處理，面板那一輪跳過）。</summary>
+        internal static bool IsEndOfDay(GameObject go)
+        {
+            var eod = EndOfDayUIManager.Instance;
+            return eod != null && Same(eod.UI, go);
+        }
+
+        /// <summary>
+        /// 「結束這一天」的黑畫面進行中：遊戲按下按鈕時打開「儲存中」的字（StoreUIManager.savingTMP），黑畫面中間自己關掉
+        /// 營業結束畫面、隔天早上把睡前的面板開回來。這段時間一鍵關閉不碰營業結束畫面，免得搶在遊戲前面把那份清單用掉
+        /// （2026-11-05 審查；REV6 也有這個欄位）。
+        /// </summary>
+        internal static bool EndOfDayInProgress()
+        {
+            // 讀欄位放在另一個方法：以後的遊戲拿掉 savingTMP 時，Mono 編譯 SavingShown 才丟 MissingFieldException，
+            // 在這裡的 try 接得到（寫在同一個方法的話，例外在呼叫端編譯這個方法時就丟，try 接不到；2026-11-05 審查）
+            try { return SavingShown(); }
+            catch { return false; }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static bool SavingShown()
+        {
+            var ui = StoreUIManager.Instance;
+            return ui != null && ui.savingTMP != null && ui.savingTMP.gameObject.activeSelf;
+        }
+
+        static MethodInfo _eodClose;
+        static Type[] _eodCloseParams;
+        static bool _eodCloseResolved;
+
+        /// <summary>
+        /// 關營業結束畫面：照遊戲這一版 CloseUI 的參數用反射叫（Rules.EndOfDayCloseArgs；遊戲 REV10 起多了參數，
+        /// 直接呼叫會綁死編譯時那一版）。對 Assembly-CSharp 的反射不用宣告權限。
+        /// restorePaperUI 只在 REV10 起的簽名用得到（呼叫端傳 Rules.EndOfDayRestorePaperUI）。
+        /// 找不到認得的簽名就丟例外，交給呼叫端的 Try 記一行警告，營業結束畫面留著（玩家自己按它的按鈕關）。
+        /// </summary>
+        internal static void CloseEndOfDay(EndOfDayUIManager eod, bool restorePaperUI)
+        {
+            if (!_eodCloseResolved)
+            {
+                _eodCloseResolved = true;
+                // typeof 要直接接在 GetMethods 前面：遊戲的 ModScanner 看到緊接的 ldtoken 才認得是對遊戲自己型別的反射，
+                // 先存進變數或欄位的話會被當成對算出來的型別做反射，要宣告 reflection-external（2026-11-05 審查）
+                foreach (var m in typeof(EndOfDayUIManager).GetMethods(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (m.Name != nameof(EndOfDayUIManager.CloseUI)) continue;
+                    var types = Array.ConvertAll(m.GetParameters(), p => p.ParameterType);
+                    if (Rules.EndOfDayCloseArgs(types, false) == null) continue;
+                    _eodClose = m;
+                    _eodCloseParams = types;
+                    break;
+                }
+                CloseAllWindowsMod.DebugLog(_eodClose == null
+                    ? "營業結束畫面的 CloseUI：找不到認得的簽名，一鍵關閉不關它"
+                    : $"營業結束畫面的 CloseUI：{_eodCloseParams.Length} 個參數");
+            }
+            if (_eodClose == null) throw new MissingMethodException("EndOfDayUIManager", "CloseUI（認不得這一版遊戲的參數）");
+            try { _eodClose.Invoke(eod, Rules.EndOfDayCloseArgs(_eodCloseParams, restorePaperUI)); }
+            catch (TargetInvocationException e)
+            {
+                // 照遊戲自己丟的例外記 log，不是包一層的訊息
+                if (e.InnerException != null) ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                throw;
+            }
         }
 
         static CustomUIManager _orderOwner;
@@ -155,7 +224,8 @@ namespace ProbablyStolenCloseAllWindows
         /// <summary>
         /// 其他 mod 視窗的根物件（paper 層的會是 CanvasPaperUI 的子物件，要從紙張面板裡排除，改用 Close()）。
         /// 正式版的平板（交易）、議價、營業結束也改用這個框架做在 paper 層（closeOnEscape 是 false），但它們是遊戲的面板、
-        /// 要用各自的 CloseUI 關（ClosePanel），所以不排除，照紙張面板處理。
+        /// 要用各自的 CloseUI 關，所以不排除：平板、議價照紙張面板處理（ClosePanel），營業結束在 WindowCloser 第 2 步先關、
+        /// 面板那一輪跳過。
         /// </summary>
         internal static HashSet<int> ModWindowRoots()
         {
