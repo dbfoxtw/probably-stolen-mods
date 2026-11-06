@@ -6,10 +6,11 @@ namespace ProbablyStolenCollectAllWater
 {
     /// <summary>
     /// 一鍵收水：水容器的右鍵選單多出「收集幽靈水 (12400ml)」這類按鈕，按下去把店裡裝著那種水的容器倒進這個容器，倒滿為止
-    /// （CollectMenu、WaterSources）。水種看每個容器裡實際的水質；水分收集器（預設開）、淨水器、自動售水機、
-    /// 冰箱、物品欄裡的容器、展示櫃、垃圾桶各看設定的開關（Settings），櫃台上的一律不收；
+    /// （CollectMenu、WaterSources）。水種看每個容器裡實際的水質；水分收集器（預設開）、淨水器、蒸發器（只收餾出液格）、
+    /// 自動售水機、冰箱、物品欄裡的容器、展示櫃、垃圾桶各看設定的開關（Settings），櫃台上的一律不收；
     /// Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的蓄水箱另有一個開關（預設開），只認物品識別值、不參考那兩個 mod；
-    /// 照層級順序收：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃。
+    /// 水培系統的水格裡的容器另有兩個下拉：收哪些水培系統（預設 Off＝不收）與最低水質（預設基礎水以上）；
+    /// 照層級順序收：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃。
     /// 用遊戲自己手動倒水的方法；不讀寫存檔，倒過來的水和手動倒的一樣，睡覺時由遊戲存下來。
     /// 官方格式的 mod（manifest.xml 與 IMod，照繁中 mod）：遊戲的 mod 載入器先用 id「mod.＋ID」的 Harmony PatchAll（攔截都用屬性，
     /// 見 CollectMenu），再呼叫 Init、OnEnable。設定用官方的 ModConfig、文字放 mod 的 Localization\*.csv，不宣告任何權限。

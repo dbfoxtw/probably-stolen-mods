@@ -7,8 +7,11 @@ namespace ProbablyStolenCollectAllWater
     /// <summary>
     /// 找水源、算水量、收水。只讀遊戲記憶體裡的物品、呼叫遊戲自己手動倒水用的方法，不碰存檔檔案
     /// （水量本來就記在物品上，結果和玩家自己一個一個倒一樣）。
-    /// 水源：水分收集器（預設開）、淨水器、自動售水機、冰箱、物品欄裡的容器、展示櫃、垃圾桶，各看設定的開關（Settings.IsOn）；
+    /// 水源：水分收集器（預設開）、淨水器、蒸發器、自動售水機、冰箱、物品欄裡的容器、展示櫃、垃圾桶，各看設定的開關（Settings.IsOn）；
     /// 另有 Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的蓄水箱（預設開）：只看物品識別值，不參考、不反射那兩個 mod。
+    /// 水培系統（2.3.0）：符合設定種類的（Settings.HydroponicKind，預設 Off＝不收），水格裡的容器水質到設定的門檻以上才收
+    /// （Settings.HydroponicMinPurity，預設基礎水以上）。
+    /// 蒸發器（2.3.0）：只收餾出液格裡的容器，輸入格（容器格）的不收。
     /// 櫃台上的容器一律不收。
     /// 每個容器照它**實際的水質**（WaterHelper.GetWaterPurity）分到四種水（Rules.GradeOf），水分收集器也一樣。
     /// GameItem、GameInventory 系列不是 Unity 物件（一般的 C# 類別），可以用 ?.；EmporiumEntry 是 MonoBehaviour，用 == null 判斷。
@@ -43,8 +46,25 @@ namespace ProbablyStolenCollectAllWater
         const string CapacityTag = "LIQUID_CONTAINER_CAPACITY";
         /// <summary>
         /// 水分收集器、淨水器的容器格（遊戲的 CanRunTonight、自動售水機的 GetWaterSource 都用 MachineHelper.GetSlot(機器, 2)）。
+        /// 水培系統的水格也是這個編號（MachineHydroponic.GetWaterSlot）。
         /// </summary>
         const int ContainerSlot = 2;
+        /// <summary>水培系統（MachineHydroponic.HYDROPONIC_MACHINE_TAG）。</summary>
+        const string HydroponicTag = "HYDROPONIC_MACHINE_TAG";
+        /// <summary>
+        /// 水培系統的種子格（MachineHydroponic.GetInputSlot 用 GetBodyStorage(機器, 3)），一台只種一株。
+        /// 作物輸出格（GetBodyStorage(機器, 4)，GameGridInventory）用遊戲公開的 MachineHydroponic.GetOutputSlot 讀。
+        /// </summary>
+        const int SeedSlot = 3;
+        /// <summary>
+        /// 蒸發器的物品識別值（MachineEvaporator，MACHINE）。損壞的識別值一樣、另外掛 BROKEN_MACHINE_TAG，不算。
+        /// </summary>
+        const string EvaporatorId = "evaporator";
+        /// <summary>
+        /// 蒸發器的餾出液格（視窗照面板順序：0 電池、1 模組、2 容器（輸入）、3 餾出液、4 說明書）。只收這一格：
+        /// 輸入格（2）是化學的產品或要蒸的原料，照舊是「其他機器裡」。
+        /// </summary>
+        const int DistillateSlot = 3;
 
         /// <summary>一個水源容器：哪一層、算哪種水（null＝不屬於任何按鈕）、現在的水量（份數，見 Rules.PartsPerMl）。</summary>
         internal sealed class Found
@@ -137,9 +157,11 @@ namespace ProbablyStolenCollectAllWater
         /// 掃店裡的水源。target（右鍵的容器）本身不算水源。除錯模式把經過記進 log。
         ///
         /// 做法：店裡自己的全部物品（AllItems，含 WaterTowerPlus 場景視窗裡的塔）先去重，再從上往下建幾個集合（GraphUtils.FindAllChildrenType，遊戲自己列舉店裡物品也用它）：
-        /// 每台機器（含兩種水塔）的子孫、自動售水機、展示櫃、垃圾桶、櫃台各自的子孫；水分收集器、淨水器的容器格、冰箱兩區裡的容器、塔裡的蓄水箱另外記。
+        /// 每台機器（含兩種水塔）的子孫、自動售水機、展示櫃、垃圾桶、櫃台各自的子孫；水分收集器、淨水器的容器格、冰箱兩區裡的容器、塔裡的蓄水箱、
+        /// 符合設定種類的水培系統的水格、蒸發器的餾出液格另外記。
         /// 每個水容器照下面的優先順序歸到一層（先符合的算；判斷在 Rules.LayerOf、水源總數在 Rules.SourceCount，離線測試測得到）：
-        /// 自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄裡的容器。
+        /// 自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 水培系統的水格 ＞ 蒸發器的餾出液格 ＞
+        /// 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄裡的容器。
         /// 一個容器先歸層、再看那層的開關：關著的那層不收，但也不會因此掉到下一層（例如水分收集器的開關關了，容器格裡的不會被當成物品欄的收走）。
         /// 自動售水機只收直接放在水箱的水容器，與放在裡面的水分收集器、淨水器的容器；這個開關關著時，
         /// 放在裡面的水分收集器、淨水器也不收、不算台數；開著時它們只看自動售水機的開關，不看自己的（外層優先）。
@@ -179,19 +201,22 @@ namespace ProbablyStolenCollectAllWater
             onCounter.UnionWith(ChildrenOf(entry.backInvinvElementCounter));
             bool fountainOn = Settings.IsOn(Rules.Source.VendingFountain);
 
-            // 機器：子孫、水分收集器與淨水器的容器格、冰箱兩區裡的東西、水塔的蓄水箱
+            // 機器：子孫、水分收集器與淨水器的容器格、冰箱兩區裡的東西、水塔的蓄水箱、水培系統的水格、蒸發器的餾出液格
             var inMachine = new HashSet<GameItem>();
             var inMachineButFountain = new HashSet<GameItem>(); // 自動售水機本身以外的機器的子孫（放在水箱裡的水分收集器、淨水器的也算）
             var farmContainers = new HashSet<GameItem>();
             var purifierContainers = new HashSet<GameItem>();
             var inFridge = new HashSet<GameItem>();
             var towerTanks = new HashSet<GameItem>();
-            int farms = 0, purifiers = 0, fridges = 0, towers = 0, towersPlus = 0;
+            var hydroponicContainers = new HashSet<GameItem>();
+            var evaporatorContainers = new HashSet<GameItem>();
+            int farms = 0, purifiers = 0, fridges = 0, towers = 0, towersPlus = 0, hydroponics = 0, otherHydroponics = 0, evaporators = 0;
+            var hydroponicKind = Settings.HydroponicKind; // 收哪些水培系統，一次掃描讀一次
             foreach (var item in all)
             {
                 bool isFarm = item.identifier == FarmId, isPurifier = item.identifier == PurifierId, isFridge = item.IsTag(FridgeTag);
-                bool isTower = IsTower(item);
-                if (!isFarm && !isPurifier && !isFridge && !isTower && !IsMachine(item)) continue;
+                bool isTower = IsTower(item), isHydroponic = item.IsTag(HydroponicTag), isEvaporator = item.identifier == EvaporatorId;
+                if (!isFarm && !isPurifier && !isFridge && !isTower && !isHydroponic && !isEvaporator && !IsMachine(item)) continue;
                 bool notFountain = !ReferenceEquals(item, fountain);
                 var children = GraphUtils.FindAllChildrenType<GameItem>(item);
                 foreach (var k in children)
@@ -200,9 +225,10 @@ namespace ProbablyStolenCollectAllWater
                     inMachine.Add(k);
                     if (notFountain) inMachineButFountain.Add(k);
                 }
-                if (!isFarm && !isPurifier && !isFridge && !isTower) continue;
+                if (!isFarm && !isPurifier && !isFridge && !isTower && !isHydroponic && !isEvaporator) continue;
                 bool isTowerPlus = isTower && item.identifier == TowerPlusId;
-                var kind = isFarm ? "水分收集器" : isPurifier ? "淨水器" : isFridge ? "冰箱" : isTowerPlus ? "水塔Plus" : "水塔";
+                var kind = isFarm ? "水分收集器" : isPurifier ? "淨水器" : isFridge ? "冰箱" : isTowerPlus ? "水塔Plus" : isTower ? "水塔"
+                    : isEvaporator ? "蒸發器" : "水培系統";
                 void SkipMachine(string why) => debug?.Add($"{kind} {why}");
                 if (!GeneralHelper.IsItemOwned(item)) { SkipMachine("不是自己的"); continue; }
                 if (item.IsTag(BrokenTag)) { SkipMachine("損壞"); continue; }
@@ -225,14 +251,38 @@ namespace ProbablyStolenCollectAllWater
                     foreach (var c in FridgeContents(item, debug)) inFridge.Add(c);
                     continue;
                 }
+                if (isHydroponic)
+                {
+                    // 符合設定種類的才算，而且只拿水格裡直接放的那個容器；不符合的（種類是 Off 時全部）照舊是「其他機器裡」。
+                    // 作物輸出格只在「Hydroreed (incl. harvested)」而且種子格空著時才讀
+                    var plant = SeedPlantId(item, debug);
+                    bool outputSeed = Rules.HydroponicNeedsOutput(hydroponicKind, plant) && OutputHasHydroreedSeed(item, debug);
+                    bool qualifies = Rules.HydroponicQualifies(hydroponicKind, plant, outputSeed);
+                    debug?.Add($"水培系統 {DescribeSeed(hydroponicKind, plant, outputSeed)}，{(qualifies ? "算" : "不算")}（{hydroponicKind}）");
+                    if (!qualifies) { otherHydroponics++; continue; }
+                    hydroponics++;
+                    var water = SlotContainer(item, ContainerSlot, "水格", kind, debug);
+                    if (water != null) hydroponicContainers.Add(water);
+                    continue;
+                }
+                if (isEvaporator)
+                {
+                    // 只拿餾出液格；輸入格的容器沒記進來，照舊是「其他機器裡」。
+                    // 開關關著也照樣記：容器歸在這層（這層不收），不能掉到別層；台數到最後才看開關
+                    evaporators++;
+                    var distillate = SlotContainer(item, DistillateSlot, "餾出液格", kind, debug);
+                    if (distillate != null) evaporatorContainers.Add(distillate);
+                    continue;
+                }
                 if (isFarm) farms++;
                 else purifiers++;
                 // 開關關著也照樣記容器格與台數：容器要歸在這層（這層不收），不能掉到物品欄等層被收走；台數到最後才看開關
-                var container = SlotContainer(item, kind, debug);
+                var container = SlotContainer(item, ContainerSlot, "容器格", kind, debug);
                 if (container != null) (isFarm ? farmContainers : purifierContainers).Add(container);
             }
 
             // 水容器：歸到一層
+            int hydroponicMin = Settings.HydroponicMinPurity; // 水培系統的水質門檻，一次掃描讀一次
             var layerFound = new Dictionary<Rules.Source, int>();
             foreach (var c in all)
             {
@@ -249,6 +299,8 @@ namespace ProbablyStolenCollectAllWater
                     InFarmSlot = farmContainers.Contains(c),
                     InPurifierSlot = purifierContainers.Contains(c),
                     InFridge = inFridge.Contains(c),
+                    InHydroponicSlot = hydroponicContainers.Contains(c),
+                    InEvaporatorSlot = evaporatorContainers.Contains(c),
                     InMachine = inMachine.Contains(c),
                     InMachineButFountain = inMachineButFountain.Contains(c),
                     OnCounter = onCounter.Contains(c),
@@ -259,16 +311,17 @@ namespace ProbablyStolenCollectAllWater
                 var source = layer.Value;
                 layerFound[source] = layerFound.TryGetValue(source, out var n) ? n + 1 : 1;
                 if (!Settings.IsOn(source)) continue;
-                result.Sources.Add(new Found
-                {
-                    Container = c, Source = source, Parts = PartsOf(c),
-                    Grade = Rules.GradeOf(WaterHelper.GetWaterPurity(c)),
-                });
+                int purity = WaterHelper.GetWaterPurity(c);
+                // 水培系統的水到門檻以上才算進那種水的按鈕，幽靈水永遠不算；不到的照樣列進來（水量 log 用），只是不屬於任何按鈕
+                var grade = source == Rules.Source.Hydroponic ? Rules.HydroponicGrade(purity, hydroponicMin) : Rules.GradeOf(purity);
+                if (source == Rules.Source.Hydroponic && grade == null)
+                    debug?.Add($"水培系統 水格裡的 {c.identifier} 水質 {purity}，沒到門檻 {hydroponicMin}，不算");
+                result.Sources.Add(new Found { Container = c, Source = source, Parts = PartsOf(c), Grade = grade });
             }
 
             // 找到的水源總數：機器算台數（水塔算座數）、自動售水機算 1、散放的三種算水容器的個數；只算開著的
             int FoundIn(Rules.Source s) => layerFound.TryGetValue(s, out var n) ? n : 0;
-            result.SourceCount = Rules.SourceCount(farms, purifiers, towers + towersPlus, fridges, fountain != null,
+            result.SourceCount = Rules.SourceCount(farms, purifiers, towers + towersPlus, hydroponics, evaporators, fridges, fountain != null,
                 FoundIn(Rules.Source.Inventory), FoundIn(Rules.Source.DisplayCase), FoundIn(Rules.Source.TrashCan), Settings.IsOn);
 
             if (debug != null)
@@ -276,6 +329,7 @@ namespace ProbablyStolenCollectAllWater
                 if (farms == 0) // 一台都沒有：列出有哪些物品，看識別值對不對、清單有沒有往箱子裡面找
                     debug.Add("物品種類：" + string.Join(",", all.Select(x => x.identifier).Distinct().Take(40)));
                 debug.Add($"水分收集器 {farms} 台、淨水器 {purifiers} 台、冰箱 {fridges} 台、水塔 {towers} 座、水塔Plus {towersPlus} 座、" +
+                    $"水培系統 {hydroponics} 台算（種類 {hydroponicKind}，其他 {otherHydroponics} 台，門檻 {hydroponicMin}）、蒸發器 {evaporators} 台、" +
                     $"自動售水機{(fountain != null ? "有" : "沒有")}");
                 debug.Add("各層的水容器：" + string.Join("、", Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Select(s =>
                     $"{Rules.SourceName(s)} {(layerFound.TryGetValue(s, out var n) ? n : 0)}{(Settings.IsOn(s) ? "" : "（沒開）")}")));
@@ -419,23 +473,75 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 水分收集器、淨水器容器格裡的容器，照遊戲自己的拿法（CanRunTonight、VendingFountainHelper.GetWaterSource）：視窗建好了才拿
-        /// MachineHelper.GetSlot(機器, 2) 的 childItem。GetSlot 裡面是強制轉型，遊戲改了格子的排法會丟例外，當作沒有容器。
-        /// 放的不是水容器（發酵中或釀好的酒瓶）也當沒有（不拿酒當水源）。
+        /// 機器某一格裡的容器：水分收集器、淨水器的容器格（水培系統的水格也是這一格，index 2）、蒸發器的餾出液格（index 3）。
+        /// 照遊戲自己的拿法（CanRunTonight、VendingFountainHelper.GetWaterSource）：視窗建好了才拿
+        /// MachineHelper.GetSlot(機器, index) 的 childItem。GetSlot 裡面是強制轉型，遊戲改了格子的排法會丟例外，當作沒有容器。
+        /// 放的不是水容器（發酵中或釀好的酒瓶）也當沒有（不拿酒當水源）。slot 是格子在遊戲裡的名稱，只用在 log。
         /// </summary>
-        static GameItem SlotContainer(GameItem machine, string kind, List<string> debug)
+        static GameItem SlotContainer(GameItem machine, int index, string slot, string kind, List<string> debug)
         {
             if (machine.contentWindow == null) { debug?.Add($"{kind} 視窗還沒建"); return null; }
             GameItem c;
-            try { c = (MachineHelper.GetSlot(machine, ContainerSlot) as GameSlotInventory)?.childItem; }
+            try { c = (MachineHelper.GetSlot(machine, index) as GameSlotInventory)?.childItem; }
             catch (Exception e)
             {
-                debug?.Add($"{kind} 讀不到容器格（{e.GetType().Name}: {e.Message}）");
+                debug?.Add($"{kind} 讀不到{slot}（{e.GetType().Name}: {e.Message}）");
                 return null;
             }
             if (c == null) return null;
-            if (!IsWaterContainer(c)) { debug?.Add($"{kind} 容器格裡的 {c.identifier} 不是水容器"); return null; }
+            if (!IsWaterContainer(c)) { debug?.Add($"{kind} {slot}裡的 {c.identifier} 不是水容器"); return null; }
             return c;
+        }
+
+        /// <summary>
+        /// 水培系統種子格的植物 ID（判斷在 Rules.HydroponicQualifies）：照遊戲的拿法（MachineHydroponic.GetInputSlot），
+        /// 視窗建好了才拿 MachineHelper.GetSlot(機器, 3) 的 childItem，再用 HydroponicHelper.GetPlantId 讀植物 ID（種子格空著時是空字串）。
+        /// 不是多年生的蘆葦收成時種子被銷毀、種子格空著；多年生的種子留在種子格。
+        /// 讀不到（視窗還沒建、遊戲改了格子的排法）回傳 null：只有種類是 All 時照算。
+        /// </summary>
+        static string SeedPlantId(GameItem hydroponic, List<string> debug)
+        {
+            if (hydroponic.contentWindow == null) { debug?.Add("水培系統 視窗還沒建"); return null; }
+            try { return HydroponicHelper.GetPlantId((MachineHelper.GetSlot(hydroponic, SeedSlot) as GameSlotInventory)?.childItem) ?? ""; }
+            catch (Exception e)
+            {
+                debug?.Add($"水培系統 讀不到種子格（{e.GetType().Name}: {e.Message}）");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 作物輸出格裡直接有沒有水培蘆葦種子（剛收成、還沒重種）。PlantList.HarvestHydroreed 用 ctx.OutputById("hydroreed_seed")
+        /// 放進作物輸出格，物品識別值就是 hydroreed_seed（Rules.IsHydroreedSeedItem）。只看直接放在格子裡的，不往箱子裡找。
+        /// 種子不在格子裡就認不到，照舊不算（接受的限制）：作物輸出格裡放了進料斗（HopperHelper 的 Watch 在物品加進格子時排程搬走，每晚也會搬）、產出格滿了送去出料斗或船上（HopperHelper.TryRouteOverflow）、玩家已經拿走。
+        /// 照種子格的讀法：視窗建好了才讀；GetOutputSlot 裡是強制轉型，遊戲改了格子的排法會丟例外，讀不到當作沒有。
+        /// </summary>
+        static bool OutputHasHydroreedSeed(GameItem hydroponic, List<string> debug)
+        {
+            if (hydroponic.contentWindow == null) return false;
+            try
+            {
+                var items = MachineHydroponic.GetOutputSlot(hydroponic)?.childItems;
+                if (items == null) return false;
+                foreach (var it in items)
+                    if (it != null && Rules.IsHydroreedSeedItem(it.identifier)) return true;
+                return false;
+            }
+            catch (Exception e)
+            {
+                debug?.Add($"水培系統 讀不到作物輸出（{e.GetType().Name}: {e.Message}），當作沒有水培蘆葦種子");
+                return false;
+            }
+        }
+
+        /// <summary>除錯 log 用：種子格裡是什麼（plant 是 SeedPlantId 的值），有讀作物輸出格時一起寫。</summary>
+        static string DescribeSeed(string kind, string plant, bool outputSeed)
+        {
+            if (plant == null) return "種子格讀不到";
+            if (Rules.IsHydroreed(plant)) return "種著水培蘆葦";
+            if (plant != "") return $"種的是 {plant}";
+            if (!Rules.HydroponicNeedsOutput(kind, plant)) return "種子格空著";
+            return outputSeed ? "種子格空著，作物輸出有水培蘆葦種子" : "種子格空著，作物輸出沒有水培蘆葦種子";
         }
 
         /// <summary>
@@ -462,8 +568,8 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 收水：開著的水源裡裝著這種水的容器，照 Rules.CollectOrder 的順序（層級：水分收集器 → 淨水器 → 水塔 → 垃圾桶 →
-        /// 物品欄 → 冰箱 → 自動售水機 → 展示櫃；前三層水多的先、後面水少的先），一個一個用遊戲手動倒水的方法倒進 target，
+        /// 收水：開著的水源裡裝著這種水的容器，照 Rules.CollectOrder 的順序（層級：水分收集器 → 淨水器 → 水塔 →
+        /// 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃；前五層水多的先、後面水少的先），一個一個用遊戲手動倒水的方法倒進 target，
         /// 倒滿或收完為止（剩不到 1 毫升就停，不去下一個搬零頭）。
         /// 不看 target 裡原本是什麼水（後半：看了等於免費驗水），混了就是混了，和手動倒一樣。
         /// 收完照手動倒水播一次聲音，不顯示文字：手動倒水是看**倒出來的那個**是不是濾水壺（water_pitcher）決定播濾水聲，

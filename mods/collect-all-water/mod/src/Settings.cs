@@ -6,8 +6,10 @@ namespace ProbablyStolenCollectAllWater
 {
     /// <summary>
     /// 設定：遊戲官方的 ModConfig（存在 ModConfigs\dbfoxtw.collect-all-water.json，遊戲的 mod 管理畫面裡
-    /// 有這個 mod 的設定視窗）。段落 Right-click menu：每種水一個開關，預設只開幽靈水；段落 Water sources：七個水源開關，
-    /// 只有水分收集器預設開；段落 Mod water sources：別人的 mod 帶來的水源，目前只有水塔（預設開）。
+    /// 有這個 mod 的設定視窗）。段落 Right-click menu：每種水一個開關，預設只開幽靈水；段落 Water sources：八個水源開關，
+    /// 只有水分收集器預設開，「收淨水器」後面另有水培系統的兩個下拉：收哪些水培系統（預設 Off）與水培的最低水質（預設基礎水以上），
+    /// 下拉後面是「收蒸發器」（預設關）；
+    /// 段落 Mod water sources：別人的 mod 帶來的水源，目前只有水塔（預設開）。
     /// 值隨設定視窗即時改變，每次按右鍵都重新讀，所以不用重開遊戲。
     /// 設定視窗照定義的順序排（段落照第一次出現的順序、段落裡照定義的順序：ModConfig.Sections 是 Distinct、ModConfigWindow 照 Entries 列），
     /// 所以先定四種水、再定水源、最後定 mod 的水源。
@@ -26,6 +28,24 @@ namespace ProbablyStolenCollectAllWater
 
         static readonly Dictionary<Rules.Grade, ConfigEntry<bool>> _entries = new Dictionary<Rules.Grade, ConfigEntry<bool>>();
         static readonly Dictionary<Rules.Source, ConfigEntry<bool>> _sources = new Dictionary<Rules.Source, ConfigEntry<bool>>();
+        /// <summary>
+        /// 收水培系統的水與水培的最低水質：兩個下拉，值是 Rules.HydroponicKinds／HydroponicQualities 的英文字串
+        /// （遊戲照字面顯示、存的也是這個字串，照視窗群組的 RecallAgain；中文的說明欄寫對照）。
+        /// </summary>
+        static ConfigEntry<string> _hydroponicKind, _hydroponicQuality;
+
+        /// <summary>
+        /// 收哪些水培系統（Rules.HydroponicKinds 之一，不認得的當 Off）。每次掃描時才讀，按套用就生效。
+        /// 攔截在 Init 之前就掛上了，還沒讀設定時用預設（Off）。
+        /// </summary>
+        internal static string HydroponicKind => Rules.HydroponicKindOf(_hydroponicKind != null ? _hydroponicKind.Value : Rules.HydroponicKindDefault);
+
+        /// <summary>水培的最低水質（Rules.HydroponicQualities 之一，不認得的當預設：基礎水以上）。</summary>
+        internal static string HydroponicQuality =>
+            Rules.HydroponicQualityOf(_hydroponicQuality != null ? _hydroponicQuality.Value : Rules.HydroponicQualityDefault);
+
+        /// <summary>水培系統水格裡的容器的水質門檻（萬分比，Rules.HydroponicMinPurity）。</summary>
+        internal static int HydroponicMinPurity => Rules.HydroponicMinPurity(HydroponicQuality);
 
         internal static void Init()
         {
@@ -43,6 +63,19 @@ namespace ProbablyStolenCollectAllWater
                 _sources[s.Source] = cfg.Define(s.ConfigKey, s.DefaultOn, SourcesSection,
                     () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.LabelKey),
                     () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.TipKey));
+                // 水培系統的兩個下拉放在「收淨水器」後面，產水的放一起：先種類、再最低水質；
+                // Switches 裡淨水器的下一筆是蒸發器，所以「收蒸發器」接在兩個下拉下面
+                if (s.Source == Rules.HydroponicSettingAfter)
+                {
+                    _hydroponicKind = cfg.Define(Rules.HydroponicKindConfigKey, Rules.HydroponicKindDefault, SourcesSection,
+                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicKindLabelKey),
+                        Rules.HydroponicKinds,
+                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicKindTipKey));
+                    _hydroponicQuality = cfg.Define(Rules.HydroponicQualityConfigKey, Rules.HydroponicQualityDefault, SourcesSection,
+                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicQualityLabelKey),
+                        Rules.HydroponicQualities,
+                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicQualityTipKey));
+                }
             }
             // 不管有沒有裝那個 mod 都列出：「偵測到才顯示」要等全部 mod 載完（水塔可能比本 mod 晚載入），
             // 得多攔截遊戲的設定視窗；沒偵測到時名稱加註就好
@@ -104,11 +137,12 @@ namespace ProbablyStolenCollectAllWater
             Rules.Grades.Where(g => _entries.TryGetValue(g, out var e) && e != null ? e.Value : g.DefaultOn).ToList();
 
         /// <summary>
-        /// 這個水源要不要收：看開關（起水分收集器也有開關，起水塔也有）。攔截在 Init 之前就掛上了，還沒讀設定時用預設值
-        /// （水分收集器、水塔開，其他關）。
+        /// 這個水源要不要收：看開關（起水分收集器也有開關，起水塔也有，起蒸發器也有）；水培系統看種類的下拉是不是 Off。
+        /// 攔截在 Init 之前就掛上了，還沒讀設定時用預設值（水分收集器、水塔開，其他關）。
         /// </summary>
         internal static bool IsOn(Rules.Source source)
         {
+            if (source == Rules.Source.Hydroponic) return Rules.HydroponicOn(HydroponicKind);
             if (_sources.TryGetValue(source, out var e) && e != null) return e.Value;
             var sw = Rules.AllSwitches.FirstOrDefault(x => x.Source == source);
             return sw != null && sw.DefaultOn;
@@ -119,6 +153,8 @@ namespace ProbablyStolenCollectAllWater
             var on = Enabled;
             var grades = on.Count == 0 ? "四種水都關了（選單不會多出按鈕）" : "選單上的水：" + string.Join("、", on);
             var sources = Rules.AllSwitches.Where(s => IsOn(s.Source)).Select(s => Rules.SourceName(s.Source)).ToList();
+            if (IsOn(Rules.Source.Hydroponic))
+                sources.Add($"{Rules.SourceName(Rules.Source.Hydroponic)}（種類 {HydroponicKind}，最低水質 {HydroponicQuality}）");
             return grades + "；水源：" + (sources.Count == 0 ? "開關全關（按鈕會寫沒有水源）" : string.Join("、", sources));
         }
     }

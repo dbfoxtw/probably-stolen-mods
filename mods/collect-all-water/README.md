@@ -1,14 +1,14 @@
 # Probably Stolen 一鍵收水 mod（Collect All Water）
 
-*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也會收水塔蓄水箱裡的水。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也會收水塔蓄水箱裡的水。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV11）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Collect All Water 的最新版，標記 `collect-all-water-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, the Vending Fountain, Fridges and more, as well as the tanks of the Water Tower mods. See [English](#english) below.
+> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, Hydroponic Systems, Evaporators, the Vending Fountain, Fridges and more, as well as the tanks of the Water Tower mods. See [English](#english) below.
 
 ## 功能
 
@@ -18,23 +18,34 @@
   - 容器已經滿了、或找不到這種水時，按鈕變灰，按了不動作（和遊戲原本不能按的按鈕一樣）。
   - 快速點一下右鍵（沒有按住）不會收水：靠近畫面邊緣時選單會被推回畫面裡，滑鼠可能剛好落在按鈕上。
 - **看容器裡實際的水質**（2.1.0 起）：哪個容器算哪種水，看它裡面實際裝的水，用遊戲自己判斷水質的標準（幽靈水 96% 以上、基礎水 98% 以上、優質水 99% 以上、純水 99.9% 以上），不再看水分收集器滑鼠提示上的產水品質。水分收集器每晚產的就是提示上那種水，所以平常結果和以前一樣；容器裡原本混了別的水、或換過模組時才會不同。也就是說，括號的水量會透露每個容器裡實際是什麼水。
-- **水源**（設定段落「Water sources」，七個開關，見「設定」）：
+- **水源**（設定段落「Water sources」，八個開關與水培系統的兩個下拉，見「設定」）：
   - **水分收集器**（預設開）：店裡所有自己的水分收集器，包括放在箱子裡、沒打開的；損壞的不算；你右鍵的容器如果就放在某台水分收集器裡，那台不算。
   - 以下預設關，打開的地方也會收：
     - **淨水器**：照水現在的水質收，**還在淨化的水也會被收走**，歸到符合它目前水質的按鈕（例如「收集幽靈水」）。
+    - **蒸發器**（2.3.0 起）：餾出液格裡的容器；**容器格裡的不收**。照實際水質收。基礎水、優質水、純水的按鈕預設關，也要在「Right-click menu」打開對應的水質。
     - **自動售水機**：三個水箱裡直接放的水容器，以及放在裡面的水分收集器、淨水器。留著要賣的水會被收走。
     - **冰箱**：冷藏區和冷凍區裡的水容器。
     - **物品欄裡的容器**：物品欄、箱子裡等不在機器內的水容器。**櫃檯上的不收**：交易時櫃檯上你這一側放的是要給客人的東西，倒空會改到交易。
     - **展示櫃裡的容器**：展示櫃裡不在機器內的水容器。展示櫃裡的商品決定隔天來什麼客人，收走裡面的水可能會影響。
     - **垃圾桶裡的容器**：垃圾桶裡不在機器內的水容器。
-  - 放在展示櫃、垃圾桶、櫃檯上的機器照機器本身算（看水分收集器、淨水器、冰箱各自的開關）。
-  - 其他機器（加熱板、水培系統、循環水養殖系統、蒸發器…）裡的容器、化學品成品一律不收。
+  - 放在展示櫃、垃圾桶、櫃檯上的機器照機器本身算（看水分收集器、淨水器、水培系統、蒸發器、冰箱各自的設定）。
+  - 其他機器（加熱板、水培系統、循環水養殖系統…）裡的容器、化學品成品一律不收；例外是蒸發器的餾出液格（見上面），和設定要收的水培系統（見下一條）。
+- **水培系統**（2.3.0 起，設定段落「Water sources」的「收水培系統的水」與「水培的最低水質」，預設不收）：水培系統水格裡的容器也當水源。
+  - 「收水培系統的水」是下拉，選要收哪些水培系統（選項在遊戲裡是英文）：
+    - Off：不收（預設）。
+    - Hydroreed：種著水培蘆葦的（多年生的蘆葦收成後還留在種子格，照樣收）。
+    - Hydroreed (incl. harvested)：再加上剛收成、種子格空著，但「作物輸出」格裡有水培蘆葦種子的（還沒重新種下）。種子不在作物輸出格裡就認不到：作物輸出格裡放了進料斗（會把種子搬走）、格子滿了，或你已經把種子拿走。
+    - All：所有水培系統，種別的作物、空著的都收。
+  - 「水培的最低水質」也是下拉，選要收的最低水質：基礎水以上（預設）、優質水以上、純水，上面選的每一種都適用。容器裡的水質到這個等級以上才收，歸到符合它目前水質的按鈕。**淨化途中的幽靈水不收**：水培蘆葦會慢慢淨化水格裡的水，途中會經過幽靈水，不擋的話會被預設開的「收集幽靈水」提早收走。
+  - 基礎水、優質水、純水的按鈕預設關，也要在「Right-click menu」打開對應的水質，選單才有那一行。
+  - 和其他水源一樣倒到右鍵的容器滿為止，水格的容器可能被倒空。
+  - 只收水格裡直接放的那個容器，水培系統其他的格子不收。收水和手動把水倒走一樣，不另外改水培系統的狀態。
 - **水塔 mod 的蓄水箱**（2.2.0 起，設定段落「Mod water sources」的「收水塔」，預設開）：裝了 Steam 工作坊上 Hungo1998520 的水塔 mod（[水塔 Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556)、[水塔Plus WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)）時，也從水塔的 600L 蓄水箱收。
   - 塔裡的淨水器每晚會淨化蓄水箱；這裡照水現在的水質收，**淨化中的水也會被收走**（和淨水器一樣）。
   - 塔的取水槽、過濾器格不收。塔工作區裡自己放了容器的水分收集器、淨水器，照它們自己的開關（收水分收集器、收淨水器）。
   - 右鍵蓄水箱本身也有收水按鈕，可以把各處的水集中到塔裡。
   - 沒裝水塔 mod 時這個開關沒有作用，設定裡的名稱後面會註明沒偵測到。
-- **收的順序**：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，容器裝滿就停。水分收集器、淨水器、水塔從最滿的先倒（容器裝不下全部時先清快滿的，免得水分收集器或水塔滿了、隔夜的產量浪費掉）；其他的從最少的先倒（一次清空最多個容器）。
+- **收的順序**：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，容器裝滿就停。水分收集器、淨水器、水塔、水培系統、蒸發器從最滿的先倒（容器裝不下全部時先清快滿的，免得水分收集器或水塔滿了、隔夜的產量浪費掉）；其他的從最少的先倒（一次清空最多個容器）。
 - **放在自動售水機裡的水分收集器、淨水器**：沒打開「收自動售水機」時不收、也不算進括號，特地放進去賣的水不會被倒走。自動售水機水箱裡直接放的水容器，右鍵照樣有收水按鈕（可以拿來補貨）。
 - **哪些容器有這個按鈕**：自己的水容器（桶裝水、瓶裝水、水罐、儲水罐、循環水養殖系統水箱…），以及還沒開始發酵的酒瓶。排水口、水龍頭沒有。發酵中、釀好的酒瓶不會被倒進水，也不會被當成水源。
 - **不檢查右鍵容器裡原本的水**：容器裡原本有別的水時會混在一起，和手動倒一樣。
@@ -64,6 +75,9 @@
 |---|---|---|
 | 收水分收集器（`SourceMoistureFarms`） | 開 | 店裡所有的水分收集器，含箱子裡的 |
 | 收淨水器（`SourcePurifiers`） | 關 | 淨水器裡的水，淨化到一半的也收 |
+| 收水培系統的水（`SourceHydroponics`，2.3.0 起） | 不收（Off） | 下拉：收哪些水培系統水格裡的容器。選項在遊戲裡是英文：Off＝不收、Hydroreed＝種著水培蘆葦的、Hydroreed (incl. harvested)＝再加上剛收成、作物輸出格裡有水培蘆葦種子的、All＝所有水培系統 |
+| 水培的最低水質（`HydroponicMinQuality`，2.3.0 起） | 基礎水以上（Basewater or better） | 下拉：上一項選的水培系統，水質到這個等級以上才收（淨化途中的幽靈水不收）。選項：Basewater or better＝基礎水以上、High-Quality Water or better＝優質水以上、Pure Water＝純水 |
+| 收蒸發器（`SourceEvaporators`，2.3.0 起） | 關 | 蒸發器餾出液格裡的容器（容器格裡的不收），照實際水質收，化學蒸出來的酒精不收 |
 | 收自動售水機（`SourceVendingFountain`） | 關 | 自動售水機三個水箱裡的水，含放在裡面的水分收集器、淨水器 |
 | 收冰箱（`SourceFridges`） | 關 | 冰箱的冷藏區、冷凍區裡的水容器 |
 | 收物品欄裡的容器（`SourceInventory`） | 關 | 物品欄、箱子裡等不在機器內的水容器（櫃檯上的不收） |
@@ -76,7 +90,7 @@
 |---|---|---|
 | 收水塔（`SourceWaterTowers`） | 開 | 水塔 mod（Water Tower、WaterTowerPlus）的蓄水箱，淨化中的水也會被收走。沒裝水塔 mod 時名稱後面會註明沒偵測到 |
 
-水源的開關全部關掉時，按鈕寫「(沒有水源)」。
+水源的開關全部關掉（「收水培系統的水」是 Off）時，按鈕寫「(沒有水源)」。
 
 設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.collect-all-water.json`。**Demo 版在 `MelonPreferences.cfg` 的設定不會搬過來**：正式版從預設（只開幽靈水）開始，Demo 時打開過其他水質的，要在設定視窗重新打開。
 
@@ -150,7 +164,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' tanks. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
+A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' tanks. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV11 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs).
 
@@ -162,23 +176,34 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - When the container is already full, or there's none of that water, the button is greyed out and does nothing (like the game's own disabled buttons).
   - A quick right-click tap (not held) never collects: near the screen edge the menu is pushed back on screen and can open right under the cursor.
 - **Goes by the actual water quality** (from 2.1.0): which water a container counts as depends on what's actually in it, using the game's own thresholds (Ghostwater from 96%, Basewater from 98%, High-Quality Water from 99%, Pure Water from 99.9%), not the quality shown in a Moisture Farm's tooltip. Moisture Farms make the water their tooltip shows every night, so normally nothing changes; it only differs when the container already held other water or the modules were changed. This also means the numbers reveal what's really in each container.
-- **Water sources** (seven switches under "Water sources" in the settings, see Settings):
+- **Water sources** (eight switches and the two Hydroponic System dropdowns under "Water sources" in the settings, see Settings):
   - **Moisture Farms** (on by default): every Moisture Farm you own in the shop, including ones packed in boxes. Broken Moisture Farms don't count, and neither does the one the container you right-clicked is sitting in.
   - The rest are off by default and add more places to collect from:
     - **Water Purifiers**: going by the quality the water has right now, so **water that's still being purified is taken too**, by whichever button matches its current quality (e.g. Collect Ghostwater).
+    - **Evaporators** (from 2.3.0): the container in the Distillate slot; **the one in the Container slot is never taken**. Goes by the water's actual quality. The Basewater, High-Quality Water and Pure Water buttons are off by default; turn on the matching water under "Right-click menu" too.
     - **Vending Fountain**: water containers in its three tanks, and the Moisture Farms and Water Purifiers placed there. Water you set aside to sell will be taken.
     - **Fridges**: water containers in the Chill Zone and the Freeze Zone.
     - **Containers in the inventory**: water containers in the inventory, boxes and so on that aren't inside a machine. **Containers on the counter are never taken**: during a deal, your side of the counter holds what you're offering the customer, and emptying it would change the deal.
     - **Containers in the Display Case**: water containers in the Display Case that aren't inside a machine. What's in the Display Case decides which customers come the next day, so taking the water out can change that.
     - **Containers in the Trash Can**: water containers in the Trash Can that aren't inside a machine.
-  - Machines placed in the Display Case, the Trash Can or on the counter go by their own switches (Moisture Farms, Water Purifiers, Fridges).
-  - Containers in other machines (Heating Plates, Hydroponic Systems, the Recirculating Aquaculture System, Evaporators…) and chemical products are never taken.
+  - Machines placed in the Display Case, the Trash Can or on the counter go by their own settings (Moisture Farms, Water Purifiers, Hydroponic Systems, Evaporators, Fridges).
+  - Containers in other machines (Heating Plates, Hydroponic Systems, the Recirculating Aquaculture System…) and chemical products are never taken; the exceptions are an Evaporator's Distillate slot (above) and the Hydroponic Systems you choose to collect from (next item).
+- **Hydroponic Systems** (from 2.3.0; "Collect from Hydroponic Systems" and "Hydroponics minimum quality" under "Water sources" in the settings, off by default): the container in the water slot of a Hydroponic System is a water source too.
+  - "Collect from Hydroponic Systems" is a dropdown where you pick which ones:
+    - Off: none (default).
+    - Hydroreed: ones growing Hydroreed (perennial Hydroreed stays in the seed slot after harvest, so it keeps counting).
+    - Hydroreed (incl. harvested): also ones just harvested, with an empty seed slot but Hydroreed Seeds in Produce Output (not replanted yet). Not recognized once the seeds have left Produce Output: an Intake Hopper placed there moves them away, Produce Output was full, or you took them out.
+    - All: every Hydroponic System, whatever it grows, empty ones too.
+  - "Hydroponics minimum quality" is a dropdown where you pick the lowest water quality to collect, for whichever of the above you chose: Basewater or better (default), High-Quality Water or better, or Pure Water. A container is only taken once its water reaches that quality, by whichever button matches its current quality. **Ghostwater still being purified is never taken**: Hydroreed slowly purifies the water in its slot and passes through Ghostwater on the way, which the Ghostwater button (on by default) would otherwise take too early.
+  - The Basewater, High-Quality Water and Pure Water buttons are off by default; turn on the matching water under "Right-click menu" too, so the menu gets that line.
+  - Like the other sources, it pours until the right-clicked container is full, so the water slot's container may be emptied.
+  - Only the container placed directly in the water slot is taken, nothing from the Hydroponic System's other slots. Collecting is just like pouring the water out by hand; nothing else about the Hydroponic System is changed.
 - **Water tower tanks** (from 2.2.0; "Collect from Water Towers" under "Mod water sources" in the settings, on by default): with Hungo1998520's water tower mods from the Steam Workshop installed ([Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556), [WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)), it also collects from the towers' 600L tanks.
   - The Water Purifiers in a tower purify its tank every night; this goes by the water's current quality, so **water still being purified is taken too** (as with Water Purifiers).
   - The tower's fill slot and filter slots are left alone. Moisture Farms and Water Purifiers in the tower's work area that hold their own container go by their own switches (Moisture Farms, Water Purifiers).
   - The tank itself gets the Collect button too, so you can gather water from everywhere into the tower.
   - Without a water tower mod the switch does nothing, and its name in the settings says no water tower mod was detected.
-- **Order**: Moisture Farms → Water Purifiers → Water Towers → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case, stopping when the container is full. Moisture Farms, Water Purifiers and Water Towers go fullest first (if the container can't take it all, the ones about to overflow are emptied first, so a Moisture Farm's or a tower's next night's output isn't wasted); the rest go emptiest first, so as many containers as possible end up empty.
+- **Order**: Moisture Farms → Water Purifiers → Water Towers → Hydroponic Systems → Evaporators → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case, stopping when the container is full. Moisture Farms, Water Purifiers, Water Towers, Hydroponic Systems and Evaporators go fullest first (if the container can't take it all, the ones about to overflow are emptied first, so a Moisture Farm's or a tower's next night's output isn't wasted); the rest go emptiest first, so as many containers as possible end up empty.
 - **Moisture Farms and Water Purifiers in the Vending Fountain** are left alone unless the Vending Fountain switch is on: they aren't collected from and aren't counted in the number, so the water you set aside to sell stays there. Water containers placed directly in the Vending Fountain's tanks still get the Collect button (handy for restocking).
 - **Which containers get the button**: your own water containers (Jugs of Water, Bottles of Water, the Water Pitcher, the Water Tank, the RAS Water Tank…) and Wine Bottles that haven't started fermenting. Water Drains and Water Faucets don't. Fermenting or finished wine is never filled, and never used as a source.
 - **The container you right-click isn't checked**: if it already holds a different water, they mix, just like pouring by hand.
@@ -206,6 +231,9 @@ With all four off, the menu is the usual seven buttons.
 |---|---|---|
 | Collect from Moisture Farms (`SourceMoistureFarms`) | on | Every Moisture Farm in your shop, including ones in boxes |
 | Collect from Water Purifiers (`SourcePurifiers`) | off | Water in Water Purifiers, including water still being purified |
+| Collect from Hydroponic Systems (`SourceHydroponics`, from 2.3.0) | Off | Dropdown: which Hydroponic Systems' water slot containers to collect from. Choices: Off, Hydroreed (growing Hydroreed), Hydroreed (incl. harvested) (also just harvested, with Hydroreed Seeds in Produce Output), All |
+| Hydroponics minimum quality (`HydroponicMinQuality`, from 2.3.0) | Basewater or better | Dropdown: the Hydroponic Systems chosen above are only collected from once their water reaches this quality (Ghostwater still being purified is never taken). Choices: Basewater or better, High-Quality Water or better, Pure Water |
+| Collect from Evaporators (`SourceEvaporators`, from 2.3.0) | off | The container in an Evaporator's Distillate slot (never the one in its Container slot), by its actual water quality |
 | Collect from the Vending Fountain (`SourceVendingFountain`) | off | Water in the Vending Fountain's three tanks, including Moisture Farms and Water Purifiers placed there |
 | Collect from Fridges (`SourceFridges`) | off | Water containers in Fridges (Chill Zone and Freeze Zone) |
 | Collect from containers in the inventory (`SourceInventory`) | off | Water containers in the inventory, boxes and so on that aren't inside a machine (not the ones on the counter) |
@@ -218,7 +246,7 @@ With all four off, the menu is the usual seven buttons.
 |---|---|---|
 | Collect from Water Towers (`SourceWaterTowers`) | on | The tanks of the Water Tower and WaterTowerPlus mods, including water still being purified. Without a water tower mod, its name says none was detected |
 
-With every source switched off, the buttons say "(no water sources)".
+With every source switched off (and "Collect from Hydroponic Systems" set to Off), the buttons say "(no water sources)".
 
 The settings are kept in `ModConfigs\dbfoxtw.collect-all-water.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`). **Settings from the Demo's `MelonPreferences.cfg` are not carried over**: the full release starts from the defaults (Ghostwater only), so if you turned on other water types in the Demo, turn them on again in the settings window.
 

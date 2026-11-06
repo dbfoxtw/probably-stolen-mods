@@ -7,7 +7,8 @@ using System.Text;
 namespace ProbablyStolenCollectAllWater.Verify
 {
     /// <summary>
-    /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod 的）、水容器歸哪一層與水源總數、按鈕文字、能不能收、收的順序，
+    /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod 的、蒸發器的）、水培系統的兩個下拉（種類與最低水質）、水容器歸哪一層與水源總數、按鈕文字、能不能收、
+    /// 收的順序，
     /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
@@ -30,6 +31,7 @@ namespace ProbablyStolenCollectAllWater.Verify
             Grades();
             Purity();
             Switches();
+            Hydroponic();
             Layers();
             SourceCounting();
             Labels();
@@ -79,19 +81,27 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 水源開關：Water sources 的七個（順序、鍵都不動，玩家的設定檔要相容）只有水分收集器預設開；
-        /// Mod water sources 的水塔預設開；兩份合起來每個水源剛好一個開關、鍵不重複（也不和四種水的鍵重複）。
+        /// 水源開關：Water sources 的八個（2.1.0 的七個鍵不動，玩家的設定檔要相容；2.3.0 的蒸發器插在淨水器後面）
+        /// 只有水分收集器預設開；Mod water sources 的水塔預設開；兩份合起來每個水源剛好一個開關、鍵不重複（也不和四種水的鍵重複）。
         /// </summary>
         static void Switches()
         {
             Eq(string.Join("|", Rules.Switches.Select(s => s.ConfigKey)),
-                "SourceMoistureFarms|SourcePurifiers|SourceVendingFountain|SourceFridges|SourceInventory|SourceDisplayCase|SourceTrashCan", "水源開關的鍵與順序");
-            Eq(string.Join("|", Rules.Switches.Select(s => s.Source)), "MoistureFarm|Purifier|VendingFountain|Fridge|Inventory|DisplayCase|TrashCan",
+                "SourceMoistureFarms|SourcePurifiers|SourceEvaporators|SourceVendingFountain|SourceFridges|SourceInventory|SourceDisplayCase|SourceTrashCan",
+                "水源開關的鍵與順序（蒸發器在淨水器後面）");
+            Eq(string.Join("|", Rules.Switches.Select(s => s.Source)), "MoistureFarm|Purifier|Evaporator|VendingFountain|Fridge|Inventory|DisplayCase|TrashCan",
                 "水源開關對應的水源");
             Eq(string.Join("|", Rules.Switches.Select(s => s.LabelKey)),
-                "cfg_src_farm|cfg_src_purifier|cfg_src_fountain|cfg_src_fridge|cfg_src_inventory|cfg_src_showcase|cfg_src_trash", "水源開關的文字 key");
+                "cfg_src_farm|cfg_src_purifier|cfg_src_evaporator|cfg_src_fountain|cfg_src_fridge|cfg_src_inventory|cfg_src_showcase|cfg_src_trash", "水源開關的文字 key");
             Eq(string.Join("|", Rules.Switches.Where(s => s.DefaultOn).Select(s => s.Source)), "MoistureFarm", "Water sources 只有水分收集器預設開");
             Check(Rules.Switches.All(s => s.ModIds == null), "Water sources 的開關都是遊戲本身的水源（沒有 ModIds）");
+            // 蒸發器：預設關；在淨水器的下一筆，Settings.Init 定義完「收淨水器」與水培系統的兩個下拉後就是它
+            var evaporator = Rules.Switches.Single(s => s.Source == Rules.Source.Evaporator);
+            Check(!evaporator.DefaultOn, "收蒸發器預設關");
+            Eq(evaporator.ConfigKey, "SourceEvaporators", "收蒸發器的鍵");
+            Eq(evaporator.LabelKey, "cfg_src_evaporator", "收蒸發器的文字 key");
+            Eq(Array.IndexOf(Rules.Switches, evaporator), Array.FindIndex(Rules.Switches, s => s.Source == Rules.HydroponicSettingAfter) + 1,
+                "收蒸發器緊接在水培系統的下拉跟著的那個開關（收淨水器）後面，設定視窗裡排在兩個下拉下面");
 
             // Mod water sources
             Eq(string.Join("|", Rules.ModSwitches.Select(s => s.ConfigKey)), "SourceWaterTowers", "mod 水源開關的鍵");
@@ -108,14 +118,20 @@ namespace ProbablyStolenCollectAllWater.Verify
             Eq(all.Count, Rules.Switches.Length + Rules.ModSwitches.Length, "全部的開關＝Water sources＋Mod water sources");
             Eq(string.Join("|", all.Take(Rules.Switches.Length).Select(s => s.ConfigKey)), string.Join("|", Rules.Switches.Select(s => s.ConfigKey)),
                 "全部的開關先列 Water sources（設定視窗的順序）");
-            Eq(all.Count, Enum.GetValues(typeof(Rules.Source)).Length, "開關和水源一樣多");
-            Eq(all.Select(s => s.Source).Distinct().Count(), Enum.GetValues(typeof(Rules.Source)).Length, "每個水源剛好一個開關（水分收集器、水塔也有）");
+            Eq(all.Count + 1, Enum.GetValues(typeof(Rules.Source)).Length, "開關比水源少一個（水培系統是下拉）");
+            Eq(all.Select(s => s.Source).Distinct().Count(), all.Count, "每個開關對應不同的水源");
+            Check(all.All(s => s.Source != Rules.Source.Hydroponic), "水培系統沒有開關（設定是兩個下拉）");
+            Check(Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().All(x => x == Rules.Source.Hydroponic || all.Any(s => s.Source == x)),
+                "水培系統以外的水源都有開關（水分收集器、水塔也有）");
             Eq(string.Join("|", all.Where(s => s.DefaultOn).Select(s => s.Source)), "MoistureFarm|WaterTower", "預設開的只有水分收集器與水塔");
-            var keys = Rules.Grades.Select(g => g.ConfigKey).Concat(all.Select(s => s.ConfigKey)).ToList();
-            Eq(keys.Distinct().Count(), keys.Count, "設定的鍵不重複（四種水＋八個水源）");
+            var keys = Rules.Grades.Select(g => g.ConfigKey).Concat(all.Select(s => s.ConfigKey))
+                .Append(Rules.HydroponicKindConfigKey).Append(Rules.HydroponicQualityConfigKey).ToList();
+            Eq(keys.Distinct().Count(), keys.Count, "設定的鍵不重複（四種水＋九個水源開關＋水培系統的兩個下拉）");
             Check(keys.Contains("SourceWaterTowers"), "設定的鍵含水塔");
+            Check(keys.Contains("SourceEvaporators"), "設定的鍵含蒸發器");
             Check(keys.All(k => k.All(char.IsLetter)), "設定的鍵只有英文字母");
-            Eq(all.Select(s => s.LabelKey).Distinct().Count(), all.Count, "水源開關的文字 key 不重複");
+            Eq(all.Select(s => s.LabelKey).Append(Rules.HydroponicKindLabelKey).Append(Rules.HydroponicQualityLabelKey).Distinct().Count(), all.Count + 2,
+                "水源開關（與水培系統的兩個下拉）的文字 key 不重複");
             Check(all.All(s => s.TipKey == s.LabelKey + "_tip"), "說明的 key 是名稱加 _tip");
 
             // 沒偵測到水塔 mod 時的名稱
@@ -132,8 +148,140 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
+        /// 水培系統：植物 ID 與作物輸出格的種子的認法、兩個下拉（種類、最低水質）的選項與預設、不認得的值、
+        /// 四個種類 × 種子格的情形算不算、最低水質 × 水種（三種門檻 × 四種水，幽靈水永遠不算）、兩個下拉放在 Water sources 的「收淨水器」後面。
+        /// </summary>
+        static void Hydroponic()
+        {
+            // 植物 ID：只認水培蘆葦（GetPlantId 讀 PLANT_ID_STRING，種子格空著或不是種子時回傳空字串）
+            Check(Rules.IsHydroreed("hydroreed_seed"), "水培蘆葦的植物 ID 算");
+            Check(!Rules.IsHydroreed(""), "種子格空著（空字串）不是水培蘆葦");
+            Check(!Rules.IsHydroreed(null), "null 不是水培蘆葦");
+            Check(!Rules.IsHydroreed("nutrifruit_seed"), "別的作物（營養果）不是水培蘆葦");
+            Check(!Rules.IsHydroreed("HYDROREED_SEED"), "大小寫不同不算（遊戲的 ID 是小寫）");
+            Check(!Rules.IsHydroreed("hydroreed"), "產物識別值（hydroreed）不是植物 ID");
+            Eq(Rules.HydroreedPlantId, "hydroreed_seed", "植物 ID 照遊戲的 PlantList.HYDROREED_SEED");
+            // 作物輸出格的種子：看物品識別值（HarvestHydroreed 用 OutputById("hydroreed_seed")）
+            Eq(Rules.HydroreedSeedItemId, "hydroreed_seed", "作物輸出的種子識別值照遊戲的 OutputById(\"hydroreed_seed\")");
+            Check(Rules.IsHydroreedSeedItem("hydroreed_seed"), "作物輸出格裡的水培蘆葦種子算");
+            Check(!Rules.IsHydroreedSeedItem("hydroreed_filter"), "作物輸出格裡的水培蘆葦濾芯不算");
+            Check(!Rules.IsHydroreedSeedItem("nutrifruit_seed"), "作物輸出格裡別的種子不算");
+            Check(!Rules.IsHydroreedSeedItem(null), "識別值是 null 不算");
+
+            // 種類的下拉：選項（英文，存進設定檔）、預設 Off、鍵與文字 key
+            Eq(string.Join("|", Rules.HydroponicKinds), "Off|Hydroreed|Hydroreed (incl. harvested)|All", "種類下拉的選項與順序");
+            Eq(Rules.HydroponicKindDefault, "Off", "種類預設 Off");
+            Check(Rules.HydroponicKinds.Contains(Rules.HydroponicKindDefault), "種類的預設值在選項裡");
+            Eq(Rules.HydroponicKinds.Distinct().Count(), Rules.HydroponicKinds.Length, "種類的選項不重複");
+            Eq(Rules.HydroponicKindConfigKey, "SourceHydroponics", "種類的設定鍵");
+            Eq(Rules.HydroponicKindLabelKey, "cfg_src_hydroponic", "種類的文字 key");
+            Eq(Rules.HydroponicKindTipKey, Rules.HydroponicKindLabelKey + "_tip", "種類說明的 key 是名稱加 _tip");
+            // 最低水質的下拉：選項、預設基礎水以上
+            Eq(string.Join("|", Rules.HydroponicQualities), "Basewater or better|High-Quality Water or better|Pure Water", "最低水質下拉的選項與順序");
+            Eq(Rules.HydroponicQualityDefault, "Basewater or better", "最低水質預設基礎水以上");
+            Check(Rules.HydroponicQualities.Contains(Rules.HydroponicQualityDefault), "最低水質的預設值在選項裡");
+            Eq(Rules.HydroponicQualities.Distinct().Count(), Rules.HydroponicQualities.Length, "最低水質的選項不重複");
+            Eq(Rules.HydroponicQualityConfigKey, "HydroponicMinQuality", "最低水質的設定鍵");
+            Eq(Rules.HydroponicQualityLabelKey, "cfg_src_hydroponic_quality", "最低水質的文字 key");
+            Eq(Rules.HydroponicQualityTipKey, Rules.HydroponicQualityLabelKey + "_tip", "最低水質說明的 key 是名稱加 _tip");
+            Check(Rules.HydroponicKindConfigKey.All(char.IsLetter) && Rules.HydroponicQualityConfigKey.All(char.IsLetter), "兩個設定鍵只有英文字母");
+            Check(Rules.HydroponicKindConfigKey != "SourceHydroreed" && Rules.HydroponicKindLabelKey != "cfg_src_hydroreed", "舊的單一下拉的鍵換掉了");
+            Eq(Rules.HydroponicSettingAfter, Rules.Source.Purifier, "兩個下拉放在「收淨水器」後面");
+            Check(Rules.Switches.Any(s => s.Source == Rules.HydroponicSettingAfter), "「收淨水器」在 Water sources 段落裡（下拉跟著它定義）");
+
+            // 不認得的值：種類當 Off、最低水質當預設
+            foreach (var k in Rules.HydroponicKinds) Eq(Rules.HydroponicKindOf(k), k, $"種類「{k}」照原樣");
+            foreach (var bad in new[] { null, "", "off", "hydroreed", "All ", "Basewater or better", "SourceHydroreed" })
+                Eq(Rules.HydroponicKindOf(bad), "Off", $"不認得的種類「{bad ?? "null"}」當 Off");
+            foreach (var q in Rules.HydroponicQualities) Eq(Rules.HydroponicQualityOf(q), q, $"最低水質「{q}」照原樣");
+            foreach (var bad in new[] { null, "", "Off", "pure water", "Hydroreed" })
+                Eq(Rules.HydroponicQualityOf(bad), "Basewater or better", $"不認得的最低水質「{bad ?? "null"}」當預設");
+            // 開沒開：種類不是 Off
+            Check(!Rules.HydroponicOn("Off"), "Off：沒開");
+            Check(Rules.HydroponicOn("Hydroreed") && Rules.HydroponicOn("Hydroreed (incl. harvested)") && Rules.HydroponicOn("All"), "Off 以外：開");
+            Check(!Rules.HydroponicOn(null) && !Rules.HydroponicOn("garbage"), "不認得的種類：沒開");
+            Check(!Rules.HydroponicOn(Rules.HydroponicKindDefault), "預設沒開");
+
+            // 種類 × 種子格的情形：種著蘆葦、種別的、空著＋作物輸出有蘆葦種子、空著＋沒有、讀不到（null）
+            var cases = new (string what, string plant, bool output)[]
+            {
+                ("種著水培蘆葦", "hydroreed_seed", false),
+                ("種別的作物", "nutrifruit_seed", false),
+                ("空著、作物輸出有水培蘆葦種子", "", true),
+                ("空著、作物輸出沒有", "", false),
+                ("讀不到種子格", null, false),
+            };
+            var truth = new Dictionary<string, bool[]>
+            {
+                ["Off"] = new[] { false, false, false, false, false },
+                ["Hydroreed"] = new[] { true, false, false, false, false },
+                ["Hydroreed (incl. harvested)"] = new[] { true, false, true, false, false },
+                ["All"] = new[] { true, true, true, true, true },
+                ["garbage"] = new[] { false, false, false, false, false },
+            };
+            foreach (var kv in truth)
+                for (int i = 0; i < cases.Length; i++)
+                    Eq(Rules.HydroponicQualifies(kv.Key, cases[i].plant, cases[i].output), kv.Value[i], $"種類「{kv.Key}」、{cases[i].what}");
+            // 種著東西時作物輸出格的內容不影響（Scan 也不會去讀）
+            Check(!Rules.HydroponicQualifies("Hydroreed (incl. harvested)", "nutrifruit_seed", true), "種別的作物、作物輸出有蘆葦種子：還是不算");
+            Check(!Rules.HydroponicQualifies("Hydroreed", "", true), "種類 Hydroreed：空著、作物輸出有蘆葦種子也不算");
+            // 什麼時候才讀作物輸出格：只有 incl. harvested 而且種子格空著
+            Check(Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", ""), "incl. harvested、空著：讀作物輸出");
+            Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", "hydroreed_seed"), "incl. harvested、種著：不讀");
+            Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", "nutrifruit_seed"), "incl. harvested、種別的：不讀");
+            Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", null), "incl. harvested、讀不到種子格：不讀");
+            foreach (var k in new[] { "Off", "Hydroreed", "All", "garbage" })
+                Check(!Rules.HydroponicNeedsOutput(k, ""), $"種類「{k}」、空著：不讀作物輸出");
+
+            // 最低水質 → 門檻
+            Eq(Rules.HydroponicMinPurity("Basewater or better"), Rules.PurityBase, "基礎水以上");
+            Eq(Rules.HydroponicMinPurity("High-Quality Water or better"), Rules.PurityHighQuality, "優質水以上");
+            Eq(Rules.HydroponicMinPurity("Pure Water"), Rules.PurityPure, "純水");
+            Eq(Rules.HydroponicMinPurity(null), Rules.PurityBase, "null 當預設（基礎水以上）");
+            Eq(Rules.HydroponicMinPurity("Off"), Rules.PurityBase, "不認得的值（舊下拉的 Off）當預設");
+            Eq(Rules.HydroponicMinPurity("basewater or better"), Rules.PurityBase, "不認得的值（大小寫不同）當預設");
+            Check(Rules.HydroponicQualities.All(q => Rules.HydroponicMinPurity(q) > Rules.PurityGhost), "每個選項的門檻都在幽靈水以上");
+
+            // 最低水質 × 水種：四種水各取一個典型的水質（四個種類都用同一個門檻）
+            var waters = new[] { ("Ghostwater", 9700), ("Basewater", 9850), ("High Quality Water", 9950), ("Pure Water", 9995) };
+            string Of(int purity, string quality) => Rules.HydroponicGrade(purity, Rules.HydroponicMinPurity(quality))?.Id ?? "（不收）";
+            var expected = new Dictionary<string, string[]>
+            {
+                // 每個選項下四種水的結果（幽靈水、基礎水、優質水、純水）
+                ["Basewater or better"] = new[] { "（不收）", "Basewater", "High Quality Water", "Pure Water" },
+                ["High-Quality Water or better"] = new[] { "（不收）", "（不收）", "High Quality Water", "Pure Water" },
+                ["Pure Water"] = new[] { "（不收）", "（不收）", "（不收）", "Pure Water" },
+            };
+            foreach (var q in Rules.HydroponicQualities)
+                for (int i = 0; i < waters.Length; i++)
+                    Eq(Of(waters[i].Item2, q), expected[q][i], $"最低水質「{q}」時 {waters[i].Item1}（{waters[i].Item2}）");
+            foreach (var q in Rules.HydroponicQualities)
+            {
+                Eq(Of(9000, q), "（不收）", $"最低水質「{q}」時鐵鏽水不收");
+                Eq(Of(0, q), "（不收）", $"最低水質「{q}」時空的不收");
+                Eq(Of(Rules.PurityGhost, q), "（不收）", $"最低水質「{q}」時幽靈水（9600）不收");
+            }
+            // 邊界：剛好到門檻
+            Eq(Of(Rules.PurityBase, "Basewater or better"), "Basewater", "剛好 9800：基礎水以上收");
+            Eq(Of(Rules.PurityBase - 1, "Basewater or better"), "（不收）", "9799（幽靈水）：基礎水以上不收");
+            Eq(Of(Rules.PurityHighQuality - 1, "High-Quality Water or better"), "（不收）", "9899（基礎水）：優質水以上不收");
+            Eq(Of(Rules.PurityHighQuality, "High-Quality Water or better"), "High Quality Water", "剛好 9900：優質水以上收");
+            Eq(Of(Rules.PurityPure, "Pure Water"), "Pure Water", "剛好 9990：純水收");
+            Eq(Of(10000, "Pure Water"), "Pure Water", "10000：純水收");
+            // 幽靈水永遠不算（就算門檻被寫成幽靈水或更低）
+            Eq(Rules.HydroponicGrade(9700, Rules.PurityGhost)?.Id ?? "（不收）", "（不收）", "門檻是幽靈水時幽靈水也不算");
+            Eq(Rules.HydroponicGrade(9700, 1)?.Id ?? "（不收）", "（不收）", "門檻很低時幽靈水也不算");
+            Eq(Rules.HydroponicGrade(9850, 0)?.Id ?? "（不收）", "（不收）", "門檻是 0 當不收（保險）");
+            Eq(Rules.HydroponicGrade(9850, -1)?.Id ?? "（不收）", "（不收）", "門檻是負數當不收（保險）");
+            // 到門檻時和一般水源算的水種一樣（按鈕不會因為來源不同而對到別的水）
+            foreach (var (_, purity) in waters)
+                if (Rules.HydroponicGrade(purity, Rules.PurityBase) is Rules.Grade g)
+                    Check(ReferenceEquals(g, Rules.GradeOf(purity)), $"水質 {purity}：水培系統算的水種和 GradeOf 一樣");
+        }
+
+        /// <summary>
         /// 水容器歸哪一層（Rules.LayerOf）：自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱 ＞
-        /// 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。Where 的布林照 WaterSources.Scan 實際會同時成立的組合給
+        /// 水培系統的水格 ＞ 蒸發器的餾出液格 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。Where 的布林照 WaterSources.Scan 實際會同時成立的組合給
         /// （例如容器格裡的容器也在那台機器的子孫裡，售水機裡的也在售水機本身的子孫裡）。
         /// </summary>
         static void Layers()
@@ -228,6 +376,36 @@ namespace ProbablyStolenCollectAllWater.Verify
             // 自動售水機仍是最外層（塔放不進售水機，這裡只確認順序照寫的）
             Eq(Of(tank with { InFountain = true }, false), Skip(Rules.SkipFountainOff), "自動售水機排在水塔前面");
 
+            // 水培系統：符合種類的水培系統，水格裡的容器（也在水培的子孫裡）歸水培系統那層；
+            // 不符合種類的（種類是 Off 時全部）、水格以外的格子 Scan 不設 InHydroponicSlot，照舊是「其他機器裡」
+            var hydro = new Rules.Where { InHydroponicSlot = true, InMachine = true, InMachineButFountain = true };
+            Eq(Of(hydro, false), "Hydroponic", "水培系統水格裡的：水培系統那層");
+            Eq(Of(hydro, true), "Hydroponic", "水培系統水格裡的（售水機的開關不影響）：水培系統那層");
+            Eq(Of(hydro with { OnCounter = true }, true), "Hydroponic", "櫃台上的水培系統水格裡的：水培系統那層（機器優先）");
+            Eq(Of(hydro with { InShowcase = true }, true), "Hydroponic", "展示櫃裡的水培系統水格裡的：水培系統那層");
+            Eq(Of(hydro with { InTrash = true }, true), "Hydroponic", "垃圾桶裡的水培系統水格裡的：水培系統那層");
+            Eq(Of(otherMachine, true), Skip(Rules.SkipOtherMachine), "不符合種類的水培水格裡的（不設 InHydroponicSlot）：在其他機器裡，不收");
+            Eq(Of(hydro with { InFountain = true }, true), Skip(Rules.SkipFountainMachine), "自動售水機排在水培系統前面（售水機裡的其他機器不收）");
+            Eq(Of(hydro with { InFountain = true }, false), Skip(Rules.SkipFountainOff), "售水機關著：裡面的不收");
+            Eq(Of(hydro with { InFridge = true }, true), "Fridge", "冰箱排在水培系統前面（只確認順序照寫的）");
+            Eq(Of(hydro with { InTowerTank = true }, true), "WaterTower", "水塔排在水培系統前面（只確認順序照寫的）");
+
+            // 蒸發器：餾出液格裡的容器（也在蒸發器的子孫裡）歸蒸發器那層；
+            // 輸入格（容器格）裡的 Scan 不設 InEvaporatorSlot，照舊是「其他機器裡」
+            var still = new Rules.Where { InEvaporatorSlot = true, InMachine = true, InMachineButFountain = true };
+            Eq(Of(still, false), "Evaporator", "蒸發器餾出液格裡的：蒸發器那層");
+            Eq(Of(still, true), "Evaporator", "蒸發器餾出液格裡的（售水機的開關不影響）：蒸發器那層");
+            Eq(Of(still with { OnCounter = true }, true), "Evaporator", "櫃台上的蒸發器餾出液格裡的：蒸發器那層（機器優先）");
+            Eq(Of(still with { InShowcase = true }, true), "Evaporator", "展示櫃裡的蒸發器餾出液格裡的：蒸發器那層");
+            Eq(Of(still with { InTrash = true }, true), "Evaporator", "垃圾桶裡的蒸發器餾出液格裡的：蒸發器那層");
+            Eq(Of(otherMachine, true), Skip(Rules.SkipOtherMachine), "蒸發器輸入格裡的（不設 InEvaporatorSlot）：在其他機器裡，不收");
+            Eq(Of(otherMachine with { OnCounter = true }, true), Skip(Rules.SkipOtherMachine), "櫃台上的蒸發器輸入格裡的：照其他機器不收");
+            Eq(Of(still with { InFountain = true }, true), Skip(Rules.SkipFountainMachine), "自動售水機排在蒸發器前面（售水機裡的其他機器不收）");
+            Eq(Of(still with { InFountain = true }, false), Skip(Rules.SkipFountainOff), "售水機關著：裡面的不收");
+            Eq(Of(still with { InHydroponicSlot = true }, true), "Hydroponic", "水培系統排在蒸發器前面（只確認順序照寫的）");
+            Eq(Of(still with { InFridge = true }, true), "Fridge", "冰箱排在蒸發器前面（只確認順序照寫的）");
+            Eq(Of(still with { InPurifierSlot = true }, true), "Purifier", "淨水器排在蒸發器前面（只確認順序照寫的）");
+
             // 機器那幾層之間的優先順序（同一個容器不會同時在兩台機器的容器格，這裡只確認順序照寫的）
             Eq(Of(new Rules.Where { InFarmSlot = true, InPurifierSlot = true, InFridge = true, InMachine = true }, true), "MoistureFarm", "水分收集器 ＞ 淨水器 ＞ 冰箱");
             Eq(Of(new Rules.Where { InPurifierSlot = true, InFridge = true, InMachine = true }, true), "Purifier", "淨水器 ＞ 冰箱");
@@ -239,36 +417,55 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 水源總數（Rules.SourceCount）：只算開著的；機器算台數（水塔算座數）、自動售水機有就算 1、物品欄／展示櫃／垃圾桶算水容器個數。
+        /// 水源總數（Rules.SourceCount）：只算開著的；機器算台數（水塔算座數、水培系統算符合種類的台數、蒸發器算台數）、自動售水機有就算 1、
+        /// 物品欄／展示櫃／垃圾桶算水容器個數。
         /// </summary>
         static void SourceCounting()
         {
-            // 參數：水分收集器 3 台、淨水器 2 台、水塔 8 座、冰箱 1 台、有售水機、物品欄 4 個、展示櫃 5 個、垃圾桶 6 個
-            int Count(Func<Rules.Source, bool> isOn, bool hasFountain = true) => Rules.SourceCount(3, 2, 8, 1, hasFountain, 4, 5, 6, isOn);
+            // 參數：水分收集器 3 台、淨水器 2 台、水塔 8 座、水培系統 7 台、蒸發器 9 台、冰箱 1 台、有售水機、物品欄 4 個、展示櫃 5 個、垃圾桶 6 個
+            int Count(Func<Rules.Source, bool> isOn, bool hasFountain = true) => Rules.SourceCount(3, 2, 8, 7, 9, 1, hasFountain, 4, 5, 6, isOn);
             Func<Rules.Source, bool> Only(params Rules.Source[] on) => s => on.Contains(s);
 
             Eq(Count(_ => false), 0, "全關是 0");
-            Eq(Count(_ => true), 3 + 2 + 8 + 1 + 1 + 4 + 5 + 6, "全開：每種都算");
+            Eq(Count(_ => true), 3 + 2 + 8 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "全開：每種都算");
             Eq(Count(Only(Rules.Source.MoistureFarm)), 3, "只開水分收集器：算台數");
-            Eq(Count(s => s != Rules.Source.MoistureFarm), 2 + 8 + 1 + 1 + 4 + 5 + 6, "水分收集器的開關關著：不算它的台數");
+            Eq(Count(s => s != Rules.Source.MoistureFarm), 2 + 8 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水分收集器的開關關著：不算它的台數");
             Eq(Count(Only(Rules.Source.Purifier)), 2, "只開淨水器：算台數");
             Eq(Count(Only(Rules.Source.WaterTower)), 8, "只開水塔：算座數");
-            Eq(Count(s => s != Rules.Source.WaterTower), 3 + 2 + 1 + 1 + 4 + 5 + 6, "水塔的開關關著：不算它的座數");
-            Eq(Rules.SourceCount(0, 0, 1, 0, false, 0, 0, 0, Only(Rules.Source.WaterTower)), 1, "只有一座塔（開著）：1，按鈕寫水量");
-            Eq(Rules.SourceCount(0, 0, 1, 0, false, 0, 0, 0, _ => false), 0, "只有一座塔但開關關著：0，按鈕寫沒有水源");
+            Eq(Count(s => s != Rules.Source.WaterTower), 3 + 2 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水塔的開關關著：不算它的座數");
+            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.WaterTower)), 1, "只有一座塔（開著）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一座塔但開關關著：0，按鈕寫沒有水源");
+            Eq(Count(Only(Rules.Source.Hydroponic)), 7, "只開水培系統：算符合種類的台數");
+            Eq(Count(s => s != Rules.Source.Hydroponic), 3 + 2 + 8 + 9 + 1 + 1 + 4 + 5 + 6, "水培系統的種類是 Off：不算它的台數");
+            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, false, 0, 0, 0, Only(Rules.Source.Hydroponic)), 1, "只有一台符合的水培系統（種類不是 Off）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一台水培系統但種類是 Off：0，按鈕寫沒有水源");
+            // 種類 → 開沒開 → 算不算台數（Settings.IsOn(Hydroponic) 是 Rules.HydroponicOn(種類)）
+            foreach (var kind in Rules.HydroponicKinds)
+            {
+                Func<Rules.Source, bool> isOn = s => s == Rules.Source.Hydroponic && Rules.HydroponicOn(kind);
+                Eq(Rules.SourceCount(0, 0, 0, 2, 0, 0, false, 0, 0, 0, isOn), kind == "Off" ? 0 : 2, $"種類「{kind}」：水培系統 2 台算 {(kind == "Off" ? 0 : 2)}");
+            }
+            Eq(Count(Only(Rules.Source.Evaporator)), 9, "只開蒸發器：算台數");
+            Eq(Count(s => s != Rules.Source.Evaporator), 3 + 2 + 8 + 7 + 1 + 1 + 4 + 5 + 6, "蒸發器的開關關著：不算它的台數");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, false, 0, 0, 0, Only(Rules.Source.Evaporator)), 1, "只有一台蒸發器（開著）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, false, 0, 0, 0, _ => false), 0, "只有一台蒸發器但開關關著：0，按鈕寫沒有水源");
             Eq(Count(Only(Rules.Source.Fridge)), 1, "只開冰箱：算台數");
             Eq(Count(Only(Rules.Source.VendingFountain)), 1, "售水機開著而且有機器：算 1");
             Eq(Count(Only(Rules.Source.VendingFountain), hasFountain: false), 0, "售水機開著但還沒有機器：0");
-            Eq(Count(_ => true, hasFountain: false), 3 + 2 + 8 + 1 + 4 + 5 + 6, "全開但沒有售水機：不算售水機");
+            Eq(Count(_ => true, hasFountain: false), 3 + 2 + 8 + 7 + 9 + 1 + 4 + 5 + 6, "全開但沒有售水機：不算售水機");
             Eq(Count(Only(Rules.Source.Inventory)), 4, "只開物品欄：算水容器個數");
             Eq(Count(Only(Rules.Source.DisplayCase)), 5, "只開展示櫃：算水容器個數");
             Eq(Count(Only(Rules.Source.TrashCan)), 6, "只開垃圾桶：算水容器個數");
             Eq(Count(Only(Rules.Source.MoistureFarm, Rules.Source.Inventory)), 3 + 4, "水分收集器加物品欄");
-            Eq(Rules.SourceCount(0, 0, 0, 0, false, 0, 0, 0, _ => true), 0, "全開但什麼都沒有是 0（按鈕寫沒有水源）");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 0, 0, false, 0, 0, 0, _ => true), 0, "全開但什麼都沒有是 0（按鈕寫沒有水源）");
             Eq(Rules.KindOf(Count(_ => false)), Rules.LabelKind.NoSource, "全關：按鈕寫沒有水源");
-            Eq(Rules.KindOf(Rules.SourceCount(0, 0, 0, 0, true, 0, 0, 0, Only(Rules.Source.VendingFountain))), Rules.LabelKind.Amount,
+            Eq(Rules.KindOf(Rules.SourceCount(0, 0, 0, 0, 0, 0, true, 0, 0, 0, Only(Rules.Source.VendingFountain))), Rules.LabelKind.Amount,
                 "只開售水機、有機器：寫水量");
-            Eq(Count(s => Rules.AllSwitches.First(x => x.Source == s).DefaultOn), 3 + 8, "預設的開關（水分收集器與水塔）：算水分收集器的台數與水塔的座數");
+            // 預設：開關照 DefaultOn，水培系統照種類下拉的預設（Off）
+            bool DefaultOn(Rules.Source s) => s == Rules.Source.Hydroponic
+                ? Rules.HydroponicOn(Rules.HydroponicKindDefault)
+                : Rules.AllSwitches.First(x => x.Source == s).DefaultOn;
+            Eq(Count(DefaultOn), 3 + 8, "預設（水分收集器與水塔開、水培系統 Off、蒸發器關）：算水分收集器的台數與水塔的座數");
         }
 
         /// <summary>按鈕文字：樣板來自 Localization 的 button，查不到或寫壞時退回英文。</summary>
@@ -317,8 +514,17 @@ namespace ProbablyStolenCollectAllWater.Verify
             Check(!Rules.CanCollect(true, 0), "滿了又沒水：灰");
 
             // 0.1.0 實機測試的數字：6 台各自捨去後相加是 17679，先加份數再換算才和實際搬的對得上
-            Eq(Rules.ToMl(3150400L + 3000700L + 2000000L + 3200500L + 3429600L + 2900300L), 17681, "先加份數再換算毫升");
-            Eq(Rules.ToMl(5999999), 5999, "換算毫升無條件捨去（和遊戲一樣）");
+            // 先加份數再換算：共 17681500 份 → 17682；各自先捨去再相加是 17679（0.1.0 實機測試的落差）
+            Eq(Rules.ToMl(3150400L + 3000700L + 2000000L + 3200500L + 3429600L + 2900300L), 17682, "先加份數再換算毫升");
+            // 四捨五入，和正式版水容器的提示框（ToString("F0")）一樣
+            Eq(Rules.ToMl(1939850), 1940, "1939.85ml 顯示 1940（2.3.0 實機測試的水培那瓶）");
+            Eq(Rules.ToMl(1939499), 1939, "1939.499ml 顯示 1939");
+            Eq(Rules.ToMl(1939500), 1940, "0.5 進位");
+            Eq(Rules.ToMl(5999999), 6000, "差 1 份才滿也顯示 6000");
+            Eq(Rules.ToMl(499), 0, "不到 0.5ml 是 0");
+            Eq(Rules.ToMl(500), 1, "0.5ml 是 1");
+            Check(!Rules.CanCollect(false, Rules.ToMl(499)), "只有 0.499ml：灰");
+            Check(Rules.CanCollect(false, Rules.ToMl(600)), "有 0.6ml：可以按");
             Eq(Rules.ToMl(-5), 0, "負數當 0");
             Eq(Rules.ToMl(3_000_000_000_000L), int.MaxValue, "毫升超過 int 不會溢位");
             Check(Rules.IsFull(0), "剛好滿");
@@ -328,18 +534,24 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 收的順序（改了開關的順序與名稱，收的順序不變）：水分收集器 → 淨水器 → 水塔 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃；
-        /// 前三層水多的先、後五層水少的先；同層同量照原順序；沒水的不收。
+        /// 收的順序（改了開關的順序與名稱，收的順序不變）：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 →
+        /// 物品欄 → 冰箱 → 自動售水機 → 展示櫃；前五層水多的先、後五層水少的先；同層同量照原順序；沒水的不收。
         /// </summary>
         static void Order()
         {
             Eq(string.Join(",", Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>()),
-                "MoistureFarm,Purifier,WaterTower,TrashCan,Inventory,Fridge,VendingFountain,DisplayCase", "層級的順序（水塔在淨水器之後、垃圾桶之前）");
+                "MoistureFarm,Purifier,WaterTower,Hydroponic,Evaporator,TrashCan,Inventory,Fridge,VendingFountain,DisplayCase",
+                "層級的順序（水塔在淨水器之後，水培系統在水塔之後，蒸發器在水培系統之後、垃圾桶之前）");
+            Check(Rules.Source.WaterTower < Rules.Source.Hydroponic && Rules.Source.Hydroponic < Rules.Source.TrashCan, "水培系統在水塔之後、垃圾桶之前");
+            Check(Rules.Source.Hydroponic < Rules.Source.Evaporator && Rules.Source.Evaporator < Rules.Source.TrashCan, "蒸發器在水培系統之後、垃圾桶之前");
+            Check(Rules.Source.Hydroponic < Rules.Source.Inventory && Rules.Source.Hydroponic < Rules.Source.DisplayCase, "水培系統在物品欄、展示櫃之前");
+            Eq(Rules.SourceName(Rules.Source.Hydroponic), "水培系統", "水培系統的 log 名稱");
+            Eq(Rules.SourceName(Rules.Source.Evaporator), "蒸發器", "蒸發器的 log 名稱");
             Check(Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().All(x => Rules.SourceName(x) != x.ToString()), "每個水源都有 log 用的中文名稱");
             Eq(Rules.SourceName(Rules.Source.Inventory), "物品欄", "物品欄的 log 名稱");
             Eq(Rules.SourceName(Rules.Source.WaterTower), "水塔", "水塔的 log 名稱");
-            Check(Rules.FullestFirst(Rules.Source.MoistureFarm) && Rules.FullestFirst(Rules.Source.Purifier) && Rules.FullestFirst(Rules.Source.WaterTower),
-                "水分收集器、淨水器、水塔水多的先");
+            Check(Rules.FullestFirst(Rules.Source.MoistureFarm) && Rules.FullestFirst(Rules.Source.Purifier) && Rules.FullestFirst(Rules.Source.WaterTower)
+                && Rules.FullestFirst(Rules.Source.Hydroponic) && Rules.FullestFirst(Rules.Source.Evaporator), "水分收集器、淨水器、水塔、水培系統、蒸發器水多的先");
             Check(new[] { Rules.Source.TrashCan, Rules.Source.Inventory, Rules.Source.Fridge, Rules.Source.VendingFountain, Rules.Source.DisplayCase }
                 .All(s => !Rules.FullestFirst(s)), "其他五層水少的先");
 
@@ -371,11 +583,17 @@ namespace ProbablyStolenCollectAllWater.Verify
                 ("purBig", Rules.Source.Purifier, 8000L),
                 ("towerEmpty", Rules.Source.WaterTower, 0L),
                 ("towerBig", Rules.Source.WaterTower, 600000000L),
+                ("hydroSmall", Rules.Source.Hydroponic, 300L),
+                ("hydroBig", Rules.Source.Hydroponic, 50000000L),
+                ("hydroEmpty", Rules.Source.Hydroponic, 0L),
+                ("stillSmall", Rules.Source.Evaporator, 24000L),
+                ("stillEmpty", Rules.Source.Evaporator, 0L),
+                ("stillBig", Rules.Source.Evaporator, 146000L),
                 ("farmEmpty", Rules.Source.MoistureFarm, 0L),
                 ("farm", Rules.Source.MoistureFarm, 1L),
             });
-            Eq(string.Join(",", mixed), "farm,purBig,purSmall,towerBig,towerSmall,trash,inv,fridgeSmall,fridgeBig,fountain,show",
-                "跨層照層級（水塔在淨水器之後、垃圾桶之前），層內照各自的方向（水塔水多的先）");
+            Eq(string.Join(",", mixed), "farm,purBig,purSmall,towerBig,towerSmall,hydroBig,hydroSmall,stillBig,stillSmall,trash,inv,fridgeSmall,fridgeBig,fountain,show",
+                "跨層照層級（水塔在淨水器之後，水培系統在水塔之後，蒸發器在水培系統之後、垃圾桶之前），層內照各自的方向（水塔、水培系統、蒸發器水多的先）");
             Eq(Rules.CollectOrder(Array.Empty<(string, Rules.Source, long)>()).Count, 0, "沒有水源");
             Eq(Rules.CollectOrder(new[] { ("x", Rules.Source.Inventory, -5L), ("y", Rules.Source.MoistureFarm, -1L) }).Count, 0, "負數當沒水");
         }
@@ -396,7 +614,8 @@ namespace ProbablyStolenCollectAllWater.Verify
             // 每個 key 要的佔位符：{0} 水名、{1} 毫升；水源開關的名稱與說明沒有佔位符（GetLocalized 不帶參數，不代入）；
             // mod 水源開關沒偵測到 mod 時的樣板（_missing）只有 {0}（原本的名稱）
             var withName = new[] { "button", "button_no_source", "cfg_collect", "cfg_collect_tip" };
-            var plain = Rules.AllSwitches.SelectMany(s => new[] { s.LabelKey, s.TipKey }).ToArray();
+            var plain = Rules.AllSwitches.SelectMany(s => new[] { s.LabelKey, s.TipKey })
+                .Concat(new[] { Rules.HydroponicKindLabelKey, Rules.HydroponicKindTipKey, Rules.HydroponicQualityLabelKey, Rules.HydroponicQualityTipKey }).ToArray();
             var missing = Rules.AllSwitches.Where(s => s.ModIds != null).Select(s => s.MissingKey).ToArray();
             Check(missing.Contains("cfg_src_watertower_missing"), "水塔有沒偵測到時的 key");
             foreach (var (name, table) in new[] { ("en.csv", en), ("zh.csv", zh) })
@@ -438,6 +657,45 @@ namespace ProbablyStolenCollectAllWater.Verify
                 Eq(enMissing, Rules.DefaultWaterTowerMissingLabel, "en.csv 的 cfg_src_watertower_missing 和程式退回用的英文一樣");
             if (zh.TryGetValue("cfg_src_watertower", out var zhTower) && zh.TryGetValue("cfg_src_watertower_missing", out var zhMissing))
                 Eq(Rules.MissingLabel(zhMissing, "cfg_src_watertower_missing", zhTower), "收水塔（未检测到水塔 mod）", "zh.csv：沒偵測到水塔 mod 時的名稱");
+            // 水培系統的兩個下拉：名稱照拍板的文字；中文的說明寫英文選項的對照（下拉照字面顯示英文）
+            if (en.TryGetValue(Rules.HydroponicKindLabelKey, out var enHydro)) Eq(enHydro, "Collect from Hydroponic Systems", "en.csv：水培系統種類的名稱");
+            if (zh.TryGetValue(Rules.HydroponicKindLabelKey, out var zhHydro)) Eq(zhHydro, "收水培系统的水", "zh.csv：水培系統種類的名稱");
+            if (en.TryGetValue(Rules.HydroponicQualityLabelKey, out var enQuality)) Eq(enQuality, "Hydroponics minimum quality", "en.csv：水培最低水質的名稱");
+            if (zh.TryGetValue(Rules.HydroponicQualityLabelKey, out var zhQuality)) Eq(zhQuality, "水培的最低水质", "zh.csv：水培最低水質的名稱");
+            if (zh.TryGetValue(Rules.HydroponicKindTipKey, out var zhKindTip))
+            {
+                foreach (var c in Rules.HydroponicKinds)
+                    Check(zhKindTip.Contains(c + "＝"), $"zh.csv 水培系統種類的說明有選項「{c}」的中文對照");
+                foreach (var w in new[] { "水培芦苇", "作物输出" })
+                    Check(zhKindTip.Contains(w), $"zh.csv 水培系統種類的說明有「{w}」");
+                // 說明分行：一個選項一行
+                foreach (var c in Rules.HydroponicKinds)
+                    Check(zhKindTip.Contains("\n" + c + "＝"), $"zh.csv 水培系統種類的說明裡「{c}」自己一行");
+            }
+            if (en.TryGetValue(Rules.HydroponicKindTipKey, out var enKindTip))
+                foreach (var c in Rules.HydroponicKinds)
+                    Check(enKindTip.Contains("\n" + c + " ="), $"en.csv 水培系統種類的說明裡「{c}」自己一行");
+            if (zh.TryGetValue(Rules.HydroponicQualityTipKey, out var zhQualityTip))
+            {
+                foreach (var c in Rules.HydroponicQualities)
+                    Check(zhQualityTip.Contains("\n" + c + "＝"), $"zh.csv 水培最低水質的說明裡選項「{c}」的中文對照自己一行");
+                foreach (var w in new[] { "基础水以上", "优质水以上", "纯水", "幽灵水" })
+                    Check(zhQualityTip.Contains(w), $"zh.csv 水培最低水質的說明有「{w}」");
+            }
+            // 說明不寫遊戲本身的行為（作物沒水會怎樣、化學蒸出來的酒精）與「按鈕默認關」
+            foreach (var (table, name) in new[] { (zh, "zh.csv"), (en, "en.csv") })
+                foreach (var key in new[] { Rules.HydroponicKindTipKey, Rules.HydroponicQualityTipKey, "cfg_src_evaporator_tip" })
+                    if (table.TryGetValue(key, out var t))
+                        foreach (var w in new[] { "不会死", "暂停生长", "酒精", "默认关", "die", "pause", "alcohol", "off by default" })
+                            Check(!t.Contains(w), $"{name} 的 {key} 沒有「{w}」");
+            Check(!en.Keys.Concat(zh.Keys).Any(k => k.StartsWith("cfg_src_hydroreed")), "舊的 cfg_src_hydroreed* 拿掉了");
+            // 蒸發器：名稱照拍板的文字，說明用遊戲的格子名稱（餾出液、容器）
+            if (en.TryGetValue("cfg_src_evaporator", out var enStill)) Eq(enStill, "Collect from Evaporators", "en.csv：蒸發器的名稱");
+            if (zh.TryGetValue("cfg_src_evaporator", out var zhStill)) Eq(zhStill, "收蒸发器", "zh.csv：蒸發器的名稱");
+            if (en.TryGetValue("cfg_src_evaporator_tip", out var enStillTip))
+                Check(enStillTip.Contains("Distillate slot") && enStillTip.Contains("Container slot"), "en.csv 蒸發器的說明用遊戲的格子名稱（Distillate、Container）");
+            if (zh.TryGetValue("cfg_src_evaporator_tip", out var zhStillTip))
+                Check(zhStillTip.Contains("馏出液格") && zhStillTip.Contains("容器格"), "zh.csv 蒸發器的說明用遊戲的格子名稱（馏出液、容器）");
             if (en.TryGetValue("cfg_collect_tip", out var tip))
                 Check(tip.Contains("\"Collect {0}\""), "en.csv 說明裡的雙引號照遊戲的規則解開（\"\" → \"）");
             if (en.TryGetValue("cfg_src_farm_tip", out var farmTip))
@@ -446,6 +704,9 @@ namespace ProbablyStolenCollectAllWater.Verify
             // 常見的繁體字（們這說時會個來過裡顯滿與標的繁體寫法）：zh.csv 一個都不能有
             const string traditional = "們這說時會個來過裡顯滿與標";
             var raw = File.ReadAllText(Path.Combine(dir, "zh.csv"), Encoding.UTF8);
+            // 「格里」：OpenCC（繁中 mod 用的 s2tw）把它當成一個詞（人名的「格里」），「水格里」轉不成「水格裡」
+            // （2026-11-06 實機看到），寫成「格中」
+            Check(!raw.Contains("格里"), "zh.csv 沒有「格里」（OpenCC 轉不成「格裡」，改寫成「格中」）");
             var found = string.Concat(raw.Where(c => traditional.IndexOf(c) >= 0).Distinct());
             Eq(found, "", "zh.csv 是簡體（沒有常見的繁體字）");
             Check(zh.Values.Any(v => v.Contains("收集")), "zh.csv 是中文");

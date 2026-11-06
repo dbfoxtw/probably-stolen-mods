@@ -1,5 +1,29 @@
 # 版本紀錄（Changelog）
 
+## v2.3.0（2026-11-07）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV11）
+
+- **收水培系統的水**：設定段落「Water sources」新增兩個下拉（放在「收淨水器」後面）：水培系統水格裡的容器也當水源。
+- 「收水培系統的水」選要收哪些水培系統（選項是英文）：Off＝不收（預設）、Hydroreed＝種著水培蘆葦的、Hydroreed (incl. harvested)＝再加上剛收成、種子格空著但作物輸出格裡有水培蘆葦種子的、All＝所有水培系統。
+- 「水培的最低水質」選要收的最低水質（基礎水以上（預設）、優質水以上、純水），容器裡的水質到這個等級以上才收；淨化途中的幽靈水不收。基礎水、優質水、純水的按鈕照舊預設關，也要在「Right-click menu」打開對應的水質。
+- 和其他水源一樣倒到容器滿為止，水格的容器可能被倒空。水培系統其他的格子照舊不收。
+- **收蒸發器**：設定段落「Water sources」新增開關「收蒸發器」（放在「水培的最低水質」下面，預設關）：蒸發器餾出液格裡的容器也當水源；容器格裡的不收。照實際水質收。基礎水、優質水、純水的按鈕照舊預設關，也要在「Right-click menu」打開對應的水質。
+- 收的順序：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃；水培系統、蒸發器和水分收集器、淨水器、水塔一樣最滿的先。
+- 按鈕上的毫升數改成四捨五入，和遊戲水容器提示框的數字一樣（原本無條件捨去，有時會少 1ml）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV11 beta branch is also supported)
+
+- **Collect from Hydroponic Systems**: two new dropdowns under "Water sources" in the settings (after Water Purifiers): the container in the water slot of a Hydroponic System is a water source too.
+- "Collect from Hydroponic Systems" picks which ones: Off (default), Hydroreed (growing Hydroreed), Hydroreed (incl. harvested) (also ones just harvested, with an empty seed slot but Hydroreed Seeds in Produce Output), All (every Hydroponic System).
+- "Hydroponics minimum quality" picks the lowest water quality to collect (Basewater or better (default), High-Quality Water or better, Pure Water); a container is only taken once its water reaches that quality, and Ghostwater still being purified never is. The Basewater, High-Quality Water and Pure Water buttons are still off by default; turn on the matching water under "Right-click menu" too.
+- Like the other sources, it pours until the container is full, so the water slot's container may be emptied. The Hydroponic System's other slots are still left alone.
+- **Collect from Evaporators**: new switch "Collect from Evaporators" under "Water sources" in the settings (below "Hydroponics minimum quality", off by default): the container in an Evaporator's Distillate slot is a water source too; the one in its Container slot is never taken. Goes by the water's actual quality. The Basewater, High-Quality Water and Pure Water buttons are still off by default; turn on the matching water under "Right-click menu" too.
+- Order: Moisture Farms → Water Purifiers → Water Towers → Hydroponic Systems → Evaporators → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case; Hydroponic Systems and Evaporators go fullest first, like Moisture Farms, Water Purifiers and Water Towers.
+- The ml shown on the buttons is now rounded, matching the game's container tooltip (it used to round down and could show 1 ml less).
+
 ## v2.2.0（2026-11-03）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）

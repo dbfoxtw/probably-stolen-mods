@@ -1,4 +1,4 @@
-# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 与 Mod water sources 的各项没有占位符，只有 cfg_src_watertower_missing 的 {0} 是选项名称）
+# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 与 Mod water sources 的各项没有占位符，只有 cfg_src_watertower_missing 的 {0} 是选项名称；cfg_src_hydroponic 与 cfg_src_hydroponic_quality 是下拉，选项是程序里固定的英文）
 button,收集{0} ({1}ml)
 button_no_source,收集{0} (没有水源)
 cfg_collect,收集{0}
@@ -7,6 +7,12 @@ cfg_src_farm,收水分收集器
 cfg_src_farm_tip,店里所有的水分收集器，含箱子里的；损坏的不算。
 cfg_src_purifier,收净水器
 cfg_src_purifier_tip,按水现在的水质收，还在净化的也会被收走。
+cfg_src_hydroponic,收水培系统的水
+cfg_src_hydroponic_tip,水培系统水格中的容器。选要收哪些水培系统：\nOff＝不收\nHydroreed＝种着水培芦苇的（多年生的也算）\nHydroreed (incl. harvested)＝再加上刚收获、种子格空着但作物输出中有水培芦苇种子的\nAll＝所有水培系统（种别的作物、空着的都算）
+cfg_src_hydroponic_quality,水培的最低水质
+cfg_src_hydroponic_quality_tip,上一项选的水培系统，水质达到这个等级以上才收（净化途中的幽灵水不收）。\n也要打开右键菜单里对应水质的按钮。\nBasewater or better＝基础水以上\nHigh-Quality Water or better＝优质水以上\nPure Water＝纯水
+cfg_src_evaporator,收蒸发器
+cfg_src_evaporator_tip,蒸发器馏出液格中的容器；容器格中的不收。\n按实际水质收，也要打开右键菜单里对应水质的按钮。
 cfg_src_fountain,收自动售水机
 cfg_src_fountain_tip,三个水箱都收，含放在里面的水分收集器、净水器。要卖的水会被收走。
 cfg_src_fridge,收冰箱
