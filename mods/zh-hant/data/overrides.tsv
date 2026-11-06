@@ -915,6 +915,7 @@ UI	ui_mods_unsubscribe_confirm	6ba5624fae276fcd	21	23	檔案
 UI	ui_mods_unsubscribe_shadowed_confirm	c26d314e0e1b0d65	25	26	機
 UI	ui_mods_cap_links	78607c6d2131edd1	9	11	連結
 UI	ui_mods_cap_steam	5ff98a680037db23	0	1	透	5	6	號
+UI	ui_mods_cap_steam_auth	169dd28bc438fab5	1	2	此	5	6		7	7	上
 UI	ui_mods_note_rescan_undeclared	ca5aebff3b9a6067	16	18	宣告
 UI	ui_mods_note_stopped	d8f9a11175c16cb2	23	24	號
 UI	ui_mods_note_stopped_process	7815c306db318ef9	8	9	式

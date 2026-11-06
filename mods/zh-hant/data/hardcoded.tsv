@@ -94,6 +94,23 @@ Use and activate	(?<=^|\n)Use and activate(?: |\n)(?=<b>|<u>)	使用
 # 名稱可能是含空格的英文自訂名稱，斷行的標籤原樣留在名稱裡；只比對到整段結尾的驚嘆號
 Cannot	(?<=<color=#be514c>)Cannot(?: |</color>\n<color=#be514c>)activate(?: |</color>\n<color=#be514c>)((?:(?!</color>).|</color>\n<color=#be514c>)+?)!(?=</color>$)	無法啟用$1！
 
+# DNA 資料碟的提示框最後一行（PlantGeneticsHelper.CreateDiskTooltip，灰色 #88948a，字串表 Mechanic/mech_dna_trait_no_effect_on）代入的作物名稱，
+# 和 DNA 編輯器擋下操作的理由（Mechanic/mech_dna_block_no_effect_on_crop 的「{0}對{1}無效」；機器提示的淺紅行、拖曳被拒的紅字）代入的作物名稱，
+# 都是 PlantDefinition.displayName：PlantList 寫死的英文 7 種，原版簡中也是英文（2026-11-06 使用者回報 Coffee）。
+# 提示框那行是好幾個名稱用「, 」接起來（IncompatibleCropNames），寬度 40（中文 26）放不下時在空格斷行、每行各包一組灰色標籤；
+# 所以名稱前面接受冒號、逗號＋空格、逗號＋斷行，後面只接受逗號或標籤結尾。擋下的理由前後緊接「對」「無效」，不在提示框的那行裡。
+# 收成物和作物同名的照字串表的物品名稱；韌棉、咖啡、水培蘆葦是作物本身，照物品名稱拿掉「纖維」「豆」「種子」。
+# Dream Cap 中間的斷行一起拿掉（譯名比原文短很多，兩段合成一行還放得下）；其他斷行留著，免得一行超過寬度
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Nutrifruit(?=,|</color>)|(?<=對)Nutrifruit(?=無效)	=Item/item_nutrifruit_name
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Kotton(?=,|</color>)|(?<=對)Kotton(?=無效)	韌棉
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Dream(?: |</color>\n<color=#88948a>)Cap(?=,|</color>)|(?<=對)Dream(?: |</color>\n<color=#[0-9a-f]{6}>)Cap(?=無效)	=Item/item_dream_cap_name
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Coffee(?=,|</color>)|(?<=對)Coffee(?=無效)	咖啡
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Fillerweed(?=,|</color>)|(?<=對)Fillerweed(?=無效)	=Item/item_fillerweed_name
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Hydroreed(?=,|</color>)|(?<=對)Hydroreed(?=無效)	水培蘆葦
+無效	(?<=<color=#88948a>對以下對象無效(?:[：]|[：](?:[^<\n]|</color>\n<color=#88948a>)*(?:, |,</color>\n<color=#88948a>)))Bloomberry(?=,|</color>)|(?<=對)Bloomberry(?=無效)	=Item/item_wine_berry_name
+# 名稱換好以後，提示框那行的「, 」換成頓號（斷在逗號後面時保留斷行）
+無效	(?<=<color=#88948a>對以下對象無效[：](?:[^<\n]|</color>\n<color=#88948a>)*),(?: |(?=</color>\n<color=#88948a>))	、
+
 # 彩券說明頁（PaperUIManager.OpenLotteryInfo 打開的 _LotteryInfographic，level1 場景裡序列化好的文字，2026-10-31 實機看到）：
 # 獎品表右欄的獎金寫死成「1000000 Credits」等五個（字型設成全大寫，畫面上是 CREDITS），左欄「中6個」等走字串表。
 # 照字串表「{0}信用點」緊接數字；只列這五個金額、整段剛好是「數字 Credits」才換，免得換到玩家自己打的字
