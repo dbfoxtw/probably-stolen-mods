@@ -8,7 +8,7 @@ cfg_src_farm_tip,"Every Moisture Farm in your shop, including ones in boxes. Bro
 cfg_src_purifier,Collect from Water Purifiers
 cfg_src_purifier_tip,"Goes by the water's current quality, so water still being purified is taken too."
 cfg_src_hydroponic,Collect from Hydroponic Systems
-cfg_src_hydroponic_tip,"The container in the water slot of Hydroponic Systems. Pick which ones:\nOff = none\nHydroreed = ones growing Hydroreed (perennial ones too)\nHydroreed (incl. harvested) = also ones just harvested, with an empty seed slot but Hydroreed Seeds in Produce Output\nAll = every Hydroponic System (any crop, or empty)"
+cfg_src_hydroponic_tip,"The container in the water slot of Hydroponic Systems. Pick which ones:\nOff = none\nHydroreed = ones growing Hydroreed (perennial ones too)\nHydroreed (incl. harvested) = also ones just harvested, with an empty seed slot but Hydroreed Seeds in Produce Output\nPinned = ones whose water slot container is pinned (right-click > Pin; any crop, or empty)\nAll = every Hydroponic System (any crop, or empty)"
 cfg_src_hydroponic_quality,Hydroponics minimum quality
 cfg_src_hydroponic_quality_tip,"The Hydroponic Systems picked above are only collected from once their water reaches this quality (Ghostwater still being purified is never taken).\nAlso turn on the matching water under Right-click menu."
 cfg_src_evaporator,Collect from Evaporators

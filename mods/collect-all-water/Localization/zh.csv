@@ -8,7 +8,7 @@ cfg_src_farm_tip,店里所有的水分收集器，含箱子里的；损坏的不
 cfg_src_purifier,收净水器
 cfg_src_purifier_tip,按水现在的水质收，还在净化的也会被收走。
 cfg_src_hydroponic,收水培系统的水
-cfg_src_hydroponic_tip,水培系统水格中的容器。选要收哪些水培系统：\nOff＝不收\nHydroreed＝种着水培芦苇的（多年生的也算）\nHydroreed (incl. harvested)＝再加上刚收获、种子格空着但作物输出中有水培芦苇种子的\nAll＝所有水培系统（种别的作物、空着的都算）
+cfg_src_hydroponic_tip,水培系统水格中的容器。选要收哪些水培系统：\nOff＝不收\nHydroreed＝种着水培芦苇的（多年生的也算）\nHydroreed (incl. harvested)＝再加上刚收获、种子格空着但作物输出中有水培芦苇种子的\nPinned＝水格中的容器右键「固定」的（任何作物、空着都算）\nAll＝所有水培系统（任何作物、空着的都算）
 cfg_src_hydroponic_quality,水培的最低水质
 cfg_src_hydroponic_quality_tip,上一项选的水培系统，水质达到这个等级以上才收（净化途中的幽灵水不收）。\n也要打开右键菜单里对应水质的按钮。\nBasewater or better＝基础水以上\nHigh-Quality Water or better＝优质水以上\nPure Water＝纯水
 cfg_src_evaporator,收蒸发器

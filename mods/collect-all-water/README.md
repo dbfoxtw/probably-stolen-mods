@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也會收水塔蓄水箱裡的水。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV11）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Collect All Water 的最新版，標記 `collect-all-water-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -35,7 +35,8 @@
     - Off：不收（預設）。
     - Hydroreed：種著水培蘆葦的（多年生的蘆葦收成後還留在種子格，照樣收）。
     - Hydroreed (incl. harvested)：再加上剛收成、種子格空著，但「作物輸出」格裡有水培蘆葦種子的（還沒重新種下）。種子不在作物輸出格裡就認不到：作物輸出格裡放了進料斗（會把種子搬走）、格子滿了，或你已經把種子拿走。
-    - All：所有水培系統，種別的作物、空著的都收。
+    - Pinned：水格裡的容器有右鍵「固定」的（2.4.0 起；任何作物、空著都算）。
+    - All：所有水培系統，任何作物、空著的都收。
   - 「水培的最低水質」也是下拉，選要收的最低水質：基礎水以上（預設）、優質水以上、純水，上面選的每一種都適用。容器裡的水質到這個等級以上才收，歸到符合它目前水質的按鈕。**淨化途中的幽靈水不收**：水培蘆葦會慢慢淨化水格裡的水，途中會經過幽靈水，不擋的話會被預設開的「收集幽靈水」提早收走。
   - 基礎水、優質水、純水的按鈕預設關，也要在「Right-click menu」打開對應的水質，選單才有那一行。
   - 和其他水源一樣倒到右鍵的容器滿為止，水格的容器可能被倒空。
@@ -75,9 +76,9 @@
 |---|---|---|
 | 收水分收集器（`SourceMoistureFarms`） | 開 | 店裡所有的水分收集器，含箱子裡的 |
 | 收淨水器（`SourcePurifiers`） | 關 | 淨水器裡的水，淨化到一半的也收 |
-| 收水培系統的水（`SourceHydroponics`，2.3.0 起） | 不收（Off） | 下拉：收哪些水培系統水格裡的容器。選項在遊戲裡是英文：Off＝不收、Hydroreed＝種著水培蘆葦的、Hydroreed (incl. harvested)＝再加上剛收成、作物輸出格裡有水培蘆葦種子的、All＝所有水培系統 |
+| 收水培系統的水（`SourceHydroponics`，2.3.0 起） | 不收（Off） | 下拉：收哪些水培系統水格裡的容器。選項在遊戲裡是英文：Off＝不收、Hydroreed＝種著水培蘆葦的、Hydroreed (incl. harvested)＝再加上剛收成、作物輸出格裡有水培蘆葦種子的、Pinned＝水格裡的容器有右鍵「固定」的（2.4.0 起；任何作物、空著都算）、All＝所有水培系統 |
 | 水培的最低水質（`HydroponicMinQuality`，2.3.0 起） | 基礎水以上（Basewater or better） | 下拉：上一項選的水培系統，水質到這個等級以上才收（淨化途中的幽靈水不收）。選項：Basewater or better＝基礎水以上、High-Quality Water or better＝優質水以上、Pure Water＝純水 |
-| 收蒸發器（`SourceEvaporators`，2.3.0 起） | 關 | 蒸發器餾出液格裡的容器（容器格裡的不收），照實際水質收，化學蒸出來的酒精不收 |
+| 收蒸發器（`SourceEvaporators`，2.3.0 起） | 關 | 蒸發器餾出液格裡的容器（容器格裡的不收），照實際水質收 |
 | 收自動售水機（`SourceVendingFountain`） | 關 | 自動售水機三個水箱裡的水，含放在裡面的水分收集器、淨水器 |
 | 收冰箱（`SourceFridges`） | 關 | 冰箱的冷藏區、冷凍區裡的水容器 |
 | 收物品欄裡的容器（`SourceInventory`） | 關 | 物品欄、箱子裡等不在機器內的水容器（櫃檯上的不收） |
@@ -164,7 +165,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' tanks. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV11 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
+A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' tanks. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV12). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs).
 
@@ -193,6 +194,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
     - Off: none (default).
     - Hydroreed: ones growing Hydroreed (perennial Hydroreed stays in the seed slot after harvest, so it keeps counting).
     - Hydroreed (incl. harvested): also ones just harvested, with an empty seed slot but Hydroreed Seeds in Produce Output (not replanted yet). Not recognized once the seeds have left Produce Output: an Intake Hopper placed there moves them away, Produce Output was full, or you took them out.
+    - Pinned: ones whose water slot container is pinned (right-click > Pin; from 2.4.0), whatever is growing, empty ones too.
     - All: every Hydroponic System, whatever it grows, empty ones too.
   - "Hydroponics minimum quality" is a dropdown where you pick the lowest water quality to collect, for whichever of the above you chose: Basewater or better (default), High-Quality Water or better, or Pure Water. A container is only taken once its water reaches that quality, by whichever button matches its current quality. **Ghostwater still being purified is never taken**: Hydroreed slowly purifies the water in its slot and passes through Ghostwater on the way, which the Ghostwater button (on by default) would otherwise take too early.
   - The Basewater, High-Quality Water and Pure Water buttons are off by default; turn on the matching water under "Right-click menu" too, so the menu gets that line.
@@ -231,7 +233,7 @@ With all four off, the menu is the usual seven buttons.
 |---|---|---|
 | Collect from Moisture Farms (`SourceMoistureFarms`) | on | Every Moisture Farm in your shop, including ones in boxes |
 | Collect from Water Purifiers (`SourcePurifiers`) | off | Water in Water Purifiers, including water still being purified |
-| Collect from Hydroponic Systems (`SourceHydroponics`, from 2.3.0) | Off | Dropdown: which Hydroponic Systems' water slot containers to collect from. Choices: Off, Hydroreed (growing Hydroreed), Hydroreed (incl. harvested) (also just harvested, with Hydroreed Seeds in Produce Output), All |
+| Collect from Hydroponic Systems (`SourceHydroponics`, from 2.3.0) | Off | Dropdown: which Hydroponic Systems' water slot containers to collect from. Choices: Off, Hydroreed (growing Hydroreed), Hydroreed (incl. harvested) (also just harvested, with Hydroreed Seeds in Produce Output), Pinned (water slot container is pinned with right-click > Pin, whatever is growing or empty; from 2.4.0), All |
 | Hydroponics minimum quality (`HydroponicMinQuality`, from 2.3.0) | Basewater or better | Dropdown: the Hydroponic Systems chosen above are only collected from once their water reaches this quality (Ghostwater still being purified is never taken). Choices: Basewater or better, High-Quality Water or better, Pure Water |
 | Collect from Evaporators (`SourceEvaporators`, from 2.3.0) | off | The container in an Evaporator's Distillate slot (never the one in its Container slot), by its actual water quality |
 | Collect from the Vending Fountain (`SourceVendingFountain`) | off | Water in the Vending Fountain's three tanks, including Moisture Farms and Water Purifiers placed there |

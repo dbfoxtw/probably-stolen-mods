@@ -228,11 +228,13 @@ namespace ProbablyStolenCollectAllWater
         /// <summary>
         /// 設定「收水培系統的水」的下拉選項。ModConfig 的下拉照字面顯示選項、存的也是這個字串（不能跟著語言換，
         /// 換了存的值會對不上而回到預設；照視窗群組的 RecallAgain），所以選項用英文，中文的說明欄寫對照（的理由）。
-        /// 順序就是下拉的順序；字串存進設定檔，發布後不要改。
+        /// 順序就是下拉的順序；字串存進設定檔，發布後不要改。2.4.0 加的 Pinned 插在 harvested 和 All 中間：
+        /// 存的是字串、不是索引，插在中間不影響玩家已經選好的值。
         /// </summary>
         internal const string HydroponicOff = "Off", HydroponicHydroreed = "Hydroreed",
-            HydroponicHydroreedHarvested = "Hydroreed (incl. harvested)", HydroponicAll = "All";
-        internal static readonly string[] HydroponicKinds = { HydroponicOff, HydroponicHydroreed, HydroponicHydroreedHarvested, HydroponicAll };
+            HydroponicHydroreedHarvested = "Hydroreed (incl. harvested)", HydroponicPinned = "Pinned", HydroponicAll = "All";
+        internal static readonly string[] HydroponicKinds =
+            { HydroponicOff, HydroponicHydroreed, HydroponicHydroreedHarvested, HydroponicPinned, HydroponicAll };
         /// <summary>預設不收（Workshop 會自動更新，新水源預設關，和 一樣）。</summary>
         internal const string HydroponicKindDefault = HydroponicOff;
         /// <summary>設定（ModConfig）裡的鍵。2.3.0 發布前從單一下拉 SourceHydroreed 換過來，沒有玩家的舊設定要相容。</summary>
@@ -242,7 +244,7 @@ namespace ProbablyStolenCollectAllWater
         internal const string HydroponicKindTipKey = HydroponicKindLabelKey + "_tip";
 
         /// <summary>
-        /// 設定「水培的最低水質」的下拉選項，四個種類都適用。英文的理由同上；水的名稱照遊戲的英文
+        /// 設定「水培的最低水質」的下拉選項，Off 以外的種類都適用（2.4.0 的 Pinned 也是）。英文的理由同上；水的名稱照遊戲的英文
         /// （Basewater、High-Quality Water、Pure Water）。沒有「不收」：要不要收由種類那個下拉決定。
         /// </summary>
         internal const string QualityBase = "Basewater or better", QualityHighQuality = "High-Quality Water or better", QualityPure = "Pure Water";
@@ -272,24 +274,34 @@ namespace ProbablyStolenCollectAllWater
 
         /// <summary>
         /// 種類是「Hydroreed (incl. harvested)」而且種子格空著時，才要讀作物輸出格：其他情況用不到，不多讀。
+        /// Pinned 不看作物，所以也不讀。
         /// </summary>
         internal static bool HydroponicNeedsOutput(string kind, string plantId) =>
             HydroponicKindOf(kind) == HydroponicHydroreedHarvested && plantId == "";
 
         /// <summary>
+        /// 種類是 Pinned 時看的是水格裡的容器有沒有固定，不讀種子格；其他種類看作物、不看固定。
+        /// </summary>
+        internal static bool HydroponicByPin(string kind) => HydroponicKindOf(kind) == HydroponicPinned;
+
+        /// <summary>
         /// 一台水培系統算不算這個水源。呼叫的一方先排除不是自己的、損壞的、在關著的自動售水機裡的。
-        /// plantId 是種子格的植物 ID：""＝空著，null＝讀不到（視窗還沒建、遊戲改了格子的排法）；
-        /// outputHasHydroreedSeed 是作物輸出格裡直接有水培蘆葦種子（只在 HydroponicNeedsOutput 時讀，其他時候傳 false）。
+        /// plantId 是種子格的植物 ID：""＝空著，null＝讀不到（視窗還沒建、遊戲改了格子的排法；Pinned 時不讀，傳什麼都一樣）；
+        /// outputHasHydroreedSeed 是作物輸出格裡直接有水培蘆葦種子（只在 HydroponicNeedsOutput 時讀，其他時候傳 false）；
+        /// waterPinned 是水格裡的水容器有遊戲的「固定」（只在 HydroponicByPin 時讀，水格沒有水容器時是 false，其他時候傳 false）。
         /// Off：都不算。Hydroreed：種著水培蘆葦（生長中、多年生收成後都算）。
         /// Hydroreed (incl. harvested)：再加上種子格空著、作物輸出格裡有水培蘆葦種子的（剛收成、還沒重種；種子不在作物輸出格裡就認不到，照舊不算：
-        /// 格子裡放了進料斗會把種子搬走、產出格滿了送去別處、玩家已經拿走）。All：每台都算（種別的、空著的、讀不到種子格的也算）。
+        /// 格子裡放了進料斗會把種子搬走、產出格滿了送去別處、玩家已經拿走）。
+        /// Pinned：只看水格的容器有沒有固定，種什麼作物、空著都算；看容器、不看水培系統本身的固定（機器的固定玩家可能拿來排版面）。
+        /// All：每台都算（種別的、空著的、讀不到種子格的也算）。
         /// </summary>
-        internal static bool HydroponicQualifies(string kind, string plantId, bool outputHasHydroreedSeed)
+        internal static bool HydroponicQualifies(string kind, string plantId, bool outputHasHydroreedSeed, bool waterPinned)
         {
             switch (HydroponicKindOf(kind))
             {
                 case HydroponicHydroreed: return IsHydroreed(plantId);
                 case HydroponicHydroreedHarvested: return IsHydroreed(plantId) || (plantId == "" && outputHasHydroreedSeed);
+                case HydroponicPinned: return waterPinned;
                 case HydroponicAll: return true;
                 default: return false;
             }

@@ -32,7 +32,7 @@ MOD = modkit.OfficialMod(
     description=("Adds buttons such as \"Collect Ghostwater (12400ml)\" to the right-click menu of water containers. "
                  "Each one pours that water into the container until it is full, going by the actual water quality "
                  "in each container: from your Moisture Farms (on by default) and, if switched on in the mod settings, "
-                 "from Water Purifiers, Hydroponic Systems (all, or only ones growing Hydroreed; once the water reaches the chosen quality), "
+                 "from Water Purifiers, Hydroponic Systems (all, only ones growing Hydroreed, or ones whose water container you pinned; once the water reaches the chosen quality), "
                  "Evaporators (the Distillate slot), "
                  "the Vending Fountain, Fridges, and containers in the inventory, the Display Case "
                  "and the Trash Can. Containers on the counter are never taken. "

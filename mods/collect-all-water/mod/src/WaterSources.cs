@@ -10,7 +10,7 @@ namespace ProbablyStolenCollectAllWater
     /// 水源：水分收集器（預設開）、淨水器、蒸發器、自動售水機、冰箱、物品欄裡的容器、展示櫃、垃圾桶，各看設定的開關（Settings.IsOn）；
     /// 另有 Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的蓄水箱（預設開）：只看物品識別值，不參考、不反射那兩個 mod。
     /// 水培系統（2.3.0）：符合設定種類的（Settings.HydroponicKind，預設 Off＝不收），水格裡的容器水質到設定的門檻以上才收
-    /// （Settings.HydroponicMinPurity，預設基礎水以上）。
+    /// （Settings.HydroponicMinPurity，預設基礎水以上）。2.4.0 的種類 Pinned看水格的容器有沒有遊戲的「固定」（ItemPinHelper.IsPinned），不看作物。
     /// 蒸發器（2.3.0）：只收餾出液格裡的容器，輸入格（容器格）的不收。
     /// 櫃台上的容器一律不收。
     /// 每個容器照它**實際的水質**（WaterHelper.GetWaterPurity）分到四種水（Rules.GradeOf），水分收集器也一樣。
@@ -254,10 +254,24 @@ namespace ProbablyStolenCollectAllWater
                 if (isHydroponic)
                 {
                     // 符合設定種類的才算，而且只拿水格裡直接放的那個容器；不符合的（種類是 Off 時全部）照舊是「其他機器裡」。
-                    // 作物輸出格只在「Hydroreed (incl. harvested)」而且種子格空著時才讀
+                    if (Rules.HydroponicByPin(hydroponicKind))
+                    {
+                        // Pinned：先讀水格的容器，有容器而且遊戲的「固定」掛著才算，不讀種子格（種什麼都算）。
+                        // 看的是容器、不是水培系統本身；水格沒有水容器的不算、不算台數。
+                        // 不算的照舊歸「其他機器裡」（容器沒記進 hydroponicContainers，不收）；水質門檻在後面歸層時照樣套用
+                        var pinWater = SlotContainer(item, ContainerSlot, "水格", kind, debug);
+                        bool pinned = pinWater != null && ItemPinHelper.IsPinned(pinWater);
+                        bool pinQualifies = Rules.HydroponicQualifies(hydroponicKind, null, false, pinned);
+                        debug?.Add($"水培系統 {DescribePin(pinWater, pinned)}，{(pinQualifies ? "算" : "不算")}（{hydroponicKind}）");
+                        if (!pinQualifies) { otherHydroponics++; continue; }
+                        hydroponics++;
+                        hydroponicContainers.Add(pinWater);
+                        continue;
+                    }
+                    // 其他種類看種子格；作物輸出格只在「Hydroreed (incl. harvested)」而且種子格空著時才讀
                     var plant = SeedPlantId(item, debug);
                     bool outputSeed = Rules.HydroponicNeedsOutput(hydroponicKind, plant) && OutputHasHydroreedSeed(item, debug);
-                    bool qualifies = Rules.HydroponicQualifies(hydroponicKind, plant, outputSeed);
+                    bool qualifies = Rules.HydroponicQualifies(hydroponicKind, plant, outputSeed, false);
                     debug?.Add($"水培系統 {DescribeSeed(hydroponicKind, plant, outputSeed)}，{(qualifies ? "算" : "不算")}（{hydroponicKind}）");
                     if (!qualifies) { otherHydroponics++; continue; }
                     hydroponics++;
@@ -542,6 +556,16 @@ namespace ProbablyStolenCollectAllWater
             if (plant != "") return $"種的是 {plant}";
             if (!Rules.HydroponicNeedsOutput(kind, plant)) return "種子格空著";
             return outputSeed ? "種子格空著，作物輸出有水培蘆葦種子" : "種子格空著，作物輸出沒有水培蘆葦種子";
+        }
+
+        /// <summary>
+        /// 除錯 log 用（種類 Pinned）：水格的容器有沒有固定（water 是 SlotContainer 的值，pinned 是 ItemPinHelper.IsPinned）。
+        /// 水格讀不到、放的不是水容器時 SlotContainer 已經另外記了原因，這裡一律寫「沒有水容器」。
+        /// </summary>
+        static string DescribePin(GameItem water, bool pinned)
+        {
+            if (water == null) return "水格沒有水容器";
+            return pinned ? $"水格的 {water.identifier} 有固定" : $"水格的 {water.identifier} 沒固定";
         }
 
         /// <summary>

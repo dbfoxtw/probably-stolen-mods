@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.4.0（2026-11-07）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+
+- 「收水培系統的水」新增選項 Pinned（放在 Hydroreed (incl. harvested) 和 All 中間）：只收水格裡的容器有右鍵「固定」的水培系統，任何作物、空著都算。「水培的最低水質」照樣適用。
+- 對應遊戲版本改成 VERSION 100-REV12。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV12)
+
+- "Collect from Hydroponic Systems" has a new choice, Pinned (between Hydroreed (incl. harvested) and All): only Hydroponic Systems whose water slot container is pinned (right-click > Pin), whatever is growing, empty ones too. "Hydroponics minimum quality" still applies.
+- Supported game version is now VERSION 100-REV12.
+
 ## v2.3.0（2026-11-07）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV11）

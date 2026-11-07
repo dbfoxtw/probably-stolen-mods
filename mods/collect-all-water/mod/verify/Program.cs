@@ -149,7 +149,7 @@ namespace ProbablyStolenCollectAllWater.Verify
 
         /// <summary>
         /// 水培系統：植物 ID 與作物輸出格的種子的認法、兩個下拉（種類、最低水質）的選項與預設、不認得的值、
-        /// 四個種類 × 種子格的情形算不算、最低水質 × 水種（三種門檻 × 四種水，幽靈水永遠不算）、兩個下拉放在 Water sources 的「收淨水器」後面。
+        /// 五個種類 × 種子格的情形 × 水格的容器有沒有固定算不算、最低水質 × 水種（三種門檻 × 四種水，幽靈水永遠不算）、兩個下拉放在 Water sources 的「收淨水器」後面。
         /// </summary>
         static void Hydroponic()
         {
@@ -169,7 +169,8 @@ namespace ProbablyStolenCollectAllWater.Verify
             Check(!Rules.IsHydroreedSeedItem(null), "識別值是 null 不算");
 
             // 種類的下拉：選項（英文，存進設定檔）、預設 Off、鍵與文字 key
-            Eq(string.Join("|", Rules.HydroponicKinds), "Off|Hydroreed|Hydroreed (incl. harvested)|All", "種類下拉的選項與順序");
+            Eq(string.Join("|", Rules.HydroponicKinds), "Off|Hydroreed|Hydroreed (incl. harvested)|Pinned|All", "種類下拉的選項與順序（Pinned 在 harvested 和 All 中間）");
+            Eq(Rules.HydroponicPinned, "Pinned", "Pinned 的字面（存進設定檔，發布後不改）");
             Eq(Rules.HydroponicKindDefault, "Off", "種類預設 Off");
             Check(Rules.HydroponicKinds.Contains(Rules.HydroponicKindDefault), "種類的預設值在選項裡");
             Eq(Rules.HydroponicKinds.Distinct().Count(), Rules.HydroponicKinds.Length, "種類的選項不重複");
@@ -191,7 +192,7 @@ namespace ProbablyStolenCollectAllWater.Verify
 
             // 不認得的值：種類當 Off、最低水質當預設
             foreach (var k in Rules.HydroponicKinds) Eq(Rules.HydroponicKindOf(k), k, $"種類「{k}」照原樣");
-            foreach (var bad in new[] { null, "", "off", "hydroreed", "All ", "Basewater or better", "SourceHydroreed" })
+            foreach (var bad in new[] { null, "", "off", "hydroreed", "All ", "Basewater or better", "SourceHydroreed", "pinned", "Pin" })
                 Eq(Rules.HydroponicKindOf(bad), "Off", $"不認得的種類「{bad ?? "null"}」當 Off");
             foreach (var q in Rules.HydroponicQualities) Eq(Rules.HydroponicQualityOf(q), q, $"最低水質「{q}」照原樣");
             foreach (var bad in new[] { null, "", "Off", "pure water", "Hydroreed" })
@@ -199,38 +200,59 @@ namespace ProbablyStolenCollectAllWater.Verify
             // 開沒開：種類不是 Off
             Check(!Rules.HydroponicOn("Off"), "Off：沒開");
             Check(Rules.HydroponicOn("Hydroreed") && Rules.HydroponicOn("Hydroreed (incl. harvested)") && Rules.HydroponicOn("All"), "Off 以外：開");
+            Check(Rules.HydroponicOn("Pinned"), "Pinned：開");
             Check(!Rules.HydroponicOn(null) && !Rules.HydroponicOn("garbage"), "不認得的種類：沒開");
             Check(!Rules.HydroponicOn(Rules.HydroponicKindDefault), "預設沒開");
 
-            // 種類 × 種子格的情形：種著蘆葦、種別的、空著＋作物輸出有蘆葦種子、空著＋沒有、讀不到（null）
-            var cases = new (string what, string plant, bool output)[]
+            // 種類 × 種子格的情形 × 水格的容器有沒有固定：種著蘆葦、種別的、空著＋作物輸出有蘆葦種子、空著＋沒有、讀不到（null），
+            // 每種各一個沒固定、一個有固定。Pinned 只看固定、不看作物；其他種類不看固定（waterPinned 只在 Pinned 時有作用）
+            var cases = new (string what, string plant, bool output, bool pinned)[]
             {
-                ("種著水培蘆葦", "hydroreed_seed", false),
-                ("種別的作物", "nutrifruit_seed", false),
-                ("空著、作物輸出有水培蘆葦種子", "", true),
-                ("空著、作物輸出沒有", "", false),
-                ("讀不到種子格", null, false),
+                ("種著水培蘆葦", "hydroreed_seed", false, false),
+                ("種別的作物", "nutrifruit_seed", false, false),
+                ("空著、作物輸出有水培蘆葦種子", "", true, false),
+                ("空著、作物輸出沒有", "", false, false),
+                ("讀不到種子格", null, false, false),
+                ("種著水培蘆葦、水格的容器有固定", "hydroreed_seed", false, true),
+                ("種別的作物、水格的容器有固定", "nutrifruit_seed", false, true),
+                ("空著、作物輸出有水培蘆葦種子、水格的容器有固定", "", true, true),
+                ("空著、作物輸出沒有、水格的容器有固定", "", false, true),
+                ("讀不到種子格、水格的容器有固定", null, false, true),
             };
             var truth = new Dictionary<string, bool[]>
             {
-                ["Off"] = new[] { false, false, false, false, false },
-                ["Hydroreed"] = new[] { true, false, false, false, false },
-                ["Hydroreed (incl. harvested)"] = new[] { true, false, true, false, false },
-                ["All"] = new[] { true, true, true, true, true },
-                ["garbage"] = new[] { false, false, false, false, false },
+                ["Off"] = new[] { false, false, false, false, false, false, false, false, false, false },
+                ["Hydroreed"] = new[] { true, false, false, false, false, true, false, false, false, false },
+                ["Hydroreed (incl. harvested)"] = new[] { true, false, true, false, false, true, false, true, false, false },
+                ["Pinned"] = new[] { false, false, false, false, false, true, true, true, true, true },
+                ["All"] = new[] { true, true, true, true, true, true, true, true, true, true },
+                ["garbage"] = new[] { false, false, false, false, false, false, false, false, false, false },
             };
+            Check(Rules.HydroponicKinds.All(truth.ContainsKey), "每個種類都在真值表裡");
             foreach (var kv in truth)
                 for (int i = 0; i < cases.Length; i++)
-                    Eq(Rules.HydroponicQualifies(kv.Key, cases[i].plant, cases[i].output), kv.Value[i], $"種類「{kv.Key}」、{cases[i].what}");
+                    Eq(Rules.HydroponicQualifies(kv.Key, cases[i].plant, cases[i].output, cases[i].pinned), kv.Value[i], $"種類「{kv.Key}」、{cases[i].what}");
             // 種著東西時作物輸出格的內容不影響（Scan 也不會去讀）
-            Check(!Rules.HydroponicQualifies("Hydroreed (incl. harvested)", "nutrifruit_seed", true), "種別的作物、作物輸出有蘆葦種子：還是不算");
-            Check(!Rules.HydroponicQualifies("Hydroreed", "", true), "種類 Hydroreed：空著、作物輸出有蘆葦種子也不算");
+            Check(!Rules.HydroponicQualifies("Hydroreed (incl. harvested)", "nutrifruit_seed", true, false), "種別的作物、作物輸出有蘆葦種子：還是不算");
+            Check(!Rules.HydroponicQualifies("Hydroreed", "", true, false), "種類 Hydroreed：空著、作物輸出有蘆葦種子也不算");
+            // Pinned：固定＝算（種什麼都算）、沒固定＝不算（就算種著蘆葦）；水格沒有水容器時 Scan 傳 false，不算
+            Check(!Rules.HydroponicQualifies("Pinned", "hydroreed_seed", false, false), "Pinned：種著水培蘆葦、沒固定，不算");
+            Check(!Rules.HydroponicQualifies("Pinned", "hydroreed_seed", true, false), "Pinned：種著蘆葦、作物輸出也有種子、沒固定，還是不算");
+            Check(Rules.HydroponicQualifies("Pinned", "", false, true), "Pinned：空著、有固定，算");
+            // 其他種類不受 waterPinned 影響
+            Check(!Rules.HydroponicQualifies("Hydroreed", "nutrifruit_seed", false, true), "Hydroreed：沒種蘆葦，有固定也不算");
+            Check(!Rules.HydroponicQualifies("Off", "hydroreed_seed", false, true), "Off：有固定也不算");
+            Check(Rules.HydroponicQualifies("All", "nutrifruit_seed", false, false) && Rules.HydroponicQualifies("All", "nutrifruit_seed", false, true), "All：不管固定都算");
+            // 什麼時候看水格的固定：只有 Pinned（Scan 這時才先讀水格、不讀種子格）
+            Check(Rules.HydroponicByPin("Pinned"), "Pinned：看水格的容器有沒有固定");
+            foreach (var k in new[] { "Off", "Hydroreed", "Hydroreed (incl. harvested)", "All", "garbage", null, "pinned" })
+                Check(!Rules.HydroponicByPin(k), $"種類「{k ?? "null"}」：不看固定");
             // 什麼時候才讀作物輸出格：只有 incl. harvested 而且種子格空著
             Check(Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", ""), "incl. harvested、空著：讀作物輸出");
             Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", "hydroreed_seed"), "incl. harvested、種著：不讀");
             Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", "nutrifruit_seed"), "incl. harvested、種別的：不讀");
             Check(!Rules.HydroponicNeedsOutput("Hydroreed (incl. harvested)", null), "incl. harvested、讀不到種子格：不讀");
-            foreach (var k in new[] { "Off", "Hydroreed", "All", "garbage" })
+            foreach (var k in new[] { "Off", "Hydroreed", "Pinned", "All", "garbage" })
                 Check(!Rules.HydroponicNeedsOutput(k, ""), $"種類「{k}」、空著：不讀作物輸出");
 
             // 最低水質 → 門檻
@@ -242,7 +264,7 @@ namespace ProbablyStolenCollectAllWater.Verify
             Eq(Rules.HydroponicMinPurity("basewater or better"), Rules.PurityBase, "不認得的值（大小寫不同）當預設");
             Check(Rules.HydroponicQualities.All(q => Rules.HydroponicMinPurity(q) > Rules.PurityGhost), "每個選項的門檻都在幽靈水以上");
 
-            // 最低水質 × 水種：四種水各取一個典型的水質（四個種類都用同一個門檻）
+            // 最低水質 × 水種：四種水各取一個典型的水質（Off 以外的種類都用同一個門檻）
             var waters = new[] { ("Ghostwater", 9700), ("Basewater", 9850), ("High Quality Water", 9950), ("Pure Water", 9995) };
             string Of(int purity, string quality) => Rules.HydroponicGrade(purity, Rules.HydroponicMinPurity(quality))?.Id ?? "（不收）";
             var expected = new Dictionary<string, string[]>
@@ -666,15 +688,19 @@ namespace ProbablyStolenCollectAllWater.Verify
             {
                 foreach (var c in Rules.HydroponicKinds)
                     Check(zhKindTip.Contains(c + "＝"), $"zh.csv 水培系統種類的說明有選項「{c}」的中文對照");
-                foreach (var w in new[] { "水培芦苇", "作物输出" })
+                foreach (var w in new[] { "水培芦苇", "作物输出", "「固定」" })
                     Check(zhKindTip.Contains(w), $"zh.csv 水培系統種類的說明有「{w}」");
                 // 說明分行：一個選項一行
                 foreach (var c in Rules.HydroponicKinds)
                     Check(zhKindTip.Contains("\n" + c + "＝"), $"zh.csv 水培系統種類的說明裡「{c}」自己一行");
             }
             if (en.TryGetValue(Rules.HydroponicKindTipKey, out var enKindTip))
+            {
                 foreach (var c in Rules.HydroponicKinds)
                     Check(enKindTip.Contains("\n" + c + " ="), $"en.csv 水培系統種類的說明裡「{c}」自己一行");
+                // Pinned 那行要寫遊戲右鍵選單按鈕的名稱（英文 handler_btn_pin＝Pin）
+                Check(enKindTip.Contains("right-click > Pin"), "en.csv 水培系統種類的說明有「right-click > Pin」");
+            }
             if (zh.TryGetValue(Rules.HydroponicQualityTipKey, out var zhQualityTip))
             {
                 foreach (var c in Rules.HydroponicQualities)
@@ -682,11 +708,12 @@ namespace ProbablyStolenCollectAllWater.Verify
                 foreach (var w in new[] { "基础水以上", "优质水以上", "纯水", "幽灵水" })
                     Check(zhQualityTip.Contains(w), $"zh.csv 水培最低水質的說明有「{w}」");
             }
-            // 說明不寫遊戲本身的行為（作物沒水會怎樣、化學蒸出來的酒精）與「按鈕默認關」
+            // 說明不寫遊戲本身的行為（作物沒水會怎樣、化學蒸出來的酒精；：固定的物品整理、卸下時留在原位）與「按鈕默認關」
             foreach (var (table, name) in new[] { (zh, "zh.csv"), (en, "en.csv") })
                 foreach (var key in new[] { Rules.HydroponicKindTipKey, Rules.HydroponicQualityTipKey, "cfg_src_evaporator_tip" })
                     if (table.TryGetValue(key, out var t))
-                        foreach (var w in new[] { "不会死", "暂停生长", "酒精", "默认关", "die", "pause", "alcohol", "off by default" })
+                        foreach (var w in new[] { "不会死", "暂停生长", "酒精", "默认关", "整理", "卸下", "卸载", "原位",
+                            "die", "pause", "alcohol", "off by default", "sort", "unload", "stays put" })
                             Check(!t.Contains(w), $"{name} 的 {key} 沒有「{w}」");
             Check(!en.Keys.Concat(zh.Keys).Any(k => k.StartsWith("cfg_src_hydroreed")), "舊的 cfg_src_hydroreed* 拿掉了");
             // 蒸發器：名稱照拍板的文字，說明用遊戲的格子名稱（餾出液、容器）
