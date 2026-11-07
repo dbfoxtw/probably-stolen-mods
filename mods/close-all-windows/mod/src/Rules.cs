@@ -133,5 +133,12 @@ namespace ProbablyStolenCloseAllWindows
         /// 固定設施是負數編號，不受影響。
         /// </summary>
         internal static bool IsStale(int id, int currentUniqueId) => id > currentUniqueId;
+
+        /// <summary>
+        /// 多選時一鍵關閉要不要擋（GameWindows.CanAct）：hasSelection＝ItemMultiSelectHandler.HasSelection（不是 Idle），
+        /// mouseHeld＝多選的鍵（滑鼠左鍵）按著。拉框、準備拉框、準備拖、拖一組都要一直按著，這時擋（拖一組時關掉會把來源視窗關掉）；
+        /// 選好、放開（Selected）時鍵沒按著，照常一鍵關（遊戲的儲物協調器也不管選取）。
+        /// </summary>
+        internal static bool MultiSelectBlocks(bool hasSelection, bool mouseHeld) => hasSelection && mouseHeld;
     }
 }

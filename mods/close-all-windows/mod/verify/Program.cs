@@ -117,6 +117,12 @@ namespace ProbablyStolenCloseAllWindows.Verify
             Check(Rules.CountsAsLocked(true, true, -102, true), "固定設施（負數編號）鎖住：算鎖住");
             // 關掉顯示鎖頭時一鍵關閉也照關（鎖住的判斷先過 CountsAsLocked 再交給 ShouldClose）
             Check(Rules.ShouldClose(Category.Container, Rules.CountsAsLocked(false, true, 2685, true), def), "顯示鎖頭關：鎖住的箱子也被一鍵關閉");
+
+            // 多選（Workshop 留言：選好物品後要能換一批視窗）：只有按著多選的鍵時擋（拉框、準備拖、拖一組）
+            Check(!Rules.MultiSelectBlocks(false, false), "沒有選取：照常");
+            Check(!Rules.MultiSelectBlocks(false, true), "沒有選取、按著滑鼠（點東西）：照常");
+            Check(Rules.MultiSelectBlocks(true, true), "拉框、準備拖、拖一組（按著）：不動作");
+            Check(!Rules.MultiSelectBlocks(true, false), "選好、放開（Selected）：照常一鍵關");
         }
 
         static void Store()

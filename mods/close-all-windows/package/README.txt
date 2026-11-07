@@ -2,7 +2,7 @@ Probably Stolen 一鍵關窗 mod（Close All Windows） v{version}
 ==========================================================
 
 按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV10）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
@@ -36,7 +36,7 @@ ModConfigs\dbfoxtw.close-all-windows.json 與 ModData\dbfoxtw_close-all-windows 
   暫停選單與選項不會關。關法和按 ESC 一樣（賣出確認關掉等於按「否」，結束營業關掉就是不睡覺）。
 - 鎖頭：每個箱子、機器視窗標題列的 × 左邊多一個鎖頭，點一下切換（淡色開鎖＝沒鎖，金色上鎖＝鎖住）。
   鎖住的視窗不會被一鍵關閉、ESC 關掉（ESC 會改關下一個沒鎖的），遊戲的 25 個視窗上限也會改關最舊、沒鎖的。
-  點 ×、雙擊箱子、拖動箱子本身、外出或睡覺時照常關。
+  點 ×、雙擊箱子、拖動箱子本身、外出時照常關。
   鎖會記住：同一個箱子下次打開、重開遊戲都還是鎖著，每個存檔槽各一份。
   不想要鎖頭的話，在設定關掉「顯示鎖頭」：鎖頭不顯示、所有視窗都當作沒鎖。
 - 標題太長時遊戲會截成「…」，鎖頭多佔一格，標題會早一點被截。
@@ -78,7 +78,7 @@ Probably Stolen Close All Windows mod v{version}
 
 Press one key to close all the container and machine windows in your shop,
 and lock the ones you want to keep open. Unofficial.
-Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV10 beta branch is also supported)
+Supported game version: full release 1.0 (VERSION 100-REV12)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -125,7 +125,7 @@ Features
   to toggle (faint open padlock = unlocked, gold closed padlock = locked). Locked windows aren't closed
   by the key or by Esc (Esc closes the next unlocked one instead), and the game's 25-window limit closes
   the oldest unlocked one instead. The ×, double-clicking the container, dragging the container itself,
-  going outside, and sleeping still close them.
+  and going outside still close them.
   Locks are remembered: the same container stays locked the next time you open it and after restarting
   the game, separately for each save slot.
   Don't want the padlock? Turn off "Show locks" in the settings: the padlocks are hidden and every

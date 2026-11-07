@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-07）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+
+- 選好一組物品、放開滑鼠以後也能一鍵關閉（以前選了一組物品就不動作）。拉框、拖著物品或一組物品時照舊不動作。
+- 對應遊戲版本改成 VERSION 100-REV12。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV12)
+
+- The key now also works with a group of items selected (after you release the mouse); before, it did nothing with items selected. It still does nothing while you draw the selection box or drag an item or a group of items.
+- Supported game version is now VERSION 100-REV12.
+
 ## v2.1.1（2026-11-05）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV10）

@@ -249,7 +249,7 @@ namespace ProbablyStolenCloseAllWindows
         }
 
         /// <summary>
-        /// 一鍵關閉現在能不能動：打字中、拖著物品或面板、框選或選了一組物品、暫停選單或選項開著、結算畫面，
+        /// 一鍵關閉現在能不能動：打字中、拖著物品或面板、框選中或準備、正在拖一組物品（選好、放開時照常）、暫停選單或選項開著、結算畫面，
         /// 以及會吃掉 ESC 的幾種挑選模式（按鍵擷取、圖釘、儲物協調器、漏斗）時不動作。原因給除錯 log。
         /// </summary>
         internal static bool CanAct(out string reason)
@@ -265,10 +265,13 @@ namespace ProbablyStolenCloseAllWindows
                 if (ui.IsTyping()) { reason = "輸入框打字中"; return false; }
                 var drag = ItemMouseDragHandler.current;
                 if (drag != null && drag.IsDraggingItem) { reason = "拖著物品"; return false; }
-                // 多選：框選中、選了一組、準備拖或正在拖一組物品。這時 ItemMouseDragHandler 不算拖曳中，
-                // 按下去會把被拖物品原本所在的視窗關掉（2026-10-13 審查發現）
+                // 多選：拉框、準備拉框、準備拖或正在拖一組物品時不動作。拖一組時 ItemMouseDragHandler 不算拖曳中，
+                // 按下去會把被拖物品原本所在的視窗關掉（2026-10-13 審查發現）。這幾種都要一直按著多選的鍵
+                // （遊戲的 OnEventUpdate 發現沒按著就重設），所以看鍵有沒有按著（Rules.MultiSelectBlocks）。
+                // 選好、放開（Selected）以後照常一鍵關（Workshop 留言：選好以後想換一批視窗再拖過去；遊戲的儲物協調器也不管選取），
+                // 被選的物品所在的視窗被關掉時，選取照遊戲留著
                 var multi = ItemMultiSelectHandler.current;
-                if (multi != null && multi.HasSelection) { reason = "框選或選了一組物品"; return false; }
+                if (multi != null && Rules.MultiSelectBlocks(multi.HasSelection, Input.GetKey(multi.key))) { reason = "框選中或準備、正在拖一組物品"; return false; }
                 if (UIDragHandler.isDraggingAnyUI) { reason = "拖著面板"; return false; }
                 var esc = ui.escapeUIManager;
                 if (esc != null && esc.menuPanel != null && esc.menuPanel.activeInHierarchy) { reason = "暫停選單開著"; return false; }

@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV10）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Close All Windows 的最新版，標記 `close-all-windows-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -23,7 +23,7 @@
   - 沒鎖是淡色的開鎖，鎖住是金色的上鎖；滑鼠移上去會變清楚。
   - 鎖住的視窗**不會被一鍵關閉、ESC 關掉**：ESC 會改關下一個沒鎖的；全部都鎖住時，ESC 照原本的做法（例如打開暫停選單）。
   - 遊戲同時最多開 25 個視窗，超過時會自動關掉最舊的；這個 mod 讓它改關最舊、沒鎖的那個。
-  - 點 ×、雙擊箱子、拖動箱子本身、外出或睡覺時，鎖住的視窗照常關。
+  - 點 ×、雙擊箱子、拖動箱子本身、外出時，鎖住的視窗照常關。
   - **鎖會記住**：同一個箱子下次打開、重開遊戲都還是鎖著；每個存檔槽各一份。
   - 標題太長時，遊戲本來就會把標題截成「…」；鎖頭多佔一格，標題會早一點被截。
   - 最窄的容器（單格、一欄寬的）放不下鎖頭，沒有鎖頭，一鍵關閉照常關（見「已知限制」）。
@@ -122,7 +122,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV10 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Close All Windows, tagged `close-all-windows-v…`).
+A mod for *Probably Stolen*: press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV12). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Close All Windows, tagged `close-all-windows-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/720?tab=bugs).
 
@@ -139,7 +139,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - Unlocked is a faint open padlock; locked is a gold closed padlock. Both brighten when you hover over them.
   - Locked windows **aren't closed by the key or by Esc**: Esc closes the next unlocked one instead. When everything is locked, Esc works as usual (e.g. opens the pause menu).
   - The game keeps at most 25 windows open and closes the oldest when you go over; with this mod it closes the oldest unlocked one instead.
-  - The ×, double-clicking the container, dragging the container itself, going outside, and sleeping still close locked windows.
+  - The ×, double-clicking the container, dragging the container itself, and going outside still close locked windows.
   - **Locks are remembered**: the same container stays locked the next time you open it and after restarting the game, separately for each save slot.
   - The game already shortens long titles with "…"; the padlock takes a little room, so a long title is shortened a bit earlier.
   - The narrowest containers (one slot or one column wide) have no room for the padlock, so they don't get one and are always closed by the key (see Known limitations).
