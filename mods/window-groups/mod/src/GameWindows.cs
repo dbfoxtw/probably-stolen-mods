@@ -112,9 +112,11 @@ namespace ProbablyStolenWindowGroups
 
         /// <summary>
         /// 現在能不能動作：照一鍵關窗正式版的 CanAct——結算畫面、選項正在設定按鍵、打字中、
-        /// 拖著物品或面板、框選或選了一組物品、暫停選單或選項開著、圖釘模式、儲物協調器與漏斗的挑選模式——加上外出。原因給除錯 log。
+        /// 拖著面板、暫停選單或選項開著、圖釘模式、儲物協調器與漏斗的挑選模式——加上外出。原因給除錯 log。
+        /// 多選與拖物品另外看這次是儲存還是叫出（save）：拉框、準備拖一組時都不動作；選好、放開時照常；
+        /// 拖著一組或單一物品時只叫出、不儲存（Rules.DragBlockReason）。
         /// </summary>
-        internal static bool CanAct(out string reason)
+        internal static bool CanAct(bool save, out string reason)
         {
             reason = null;
             var ui = StoreUIManager.Instance;
@@ -128,11 +130,17 @@ namespace ProbablyStolenWindowGroups
                 if (KeyBindHelper.IsCapturing) { reason = "選項正在設定按鍵"; return false; }
                 // 正式版的 IsTyping 已經包含任何 TMP／舊版輸入框有焦點（Demo 時 mod 自己補的那段拿掉了）
                 if (ui.IsTyping()) { reason = "輸入框打字中"; return false; }
-                var drag = ItemMouseDragHandler.current;
-                if (drag != null && drag.IsDraggingItem) { reason = "拖著物品"; return false; }
-                // 多選：框選中、選了一組、準備拖或正在拖一組物品（Demo 時讀私有的 state，正式版有公開的 HasSelection）
+                // 多選與拖物品（Demo 時讀私有的 state，正式版有公開的 HasSelection、IsGroupDragging）。
+                // 拉框、準備拉框、準備拖一組都要一直按著多選的鍵（遊戲的 OnEventUpdate 發現沒按著就重設），
+                // 所以「有選取、不是拖一組、鍵按著」就是這三種；選好、放開（Selected）時鍵沒按著，照常動作
                 var multi = ItemMultiSelectHandler.current;
-                if (multi != null && multi.HasSelection) { reason = "框選或選了一組物品"; return false; }
+                bool hasSelection = multi != null && multi.HasSelection;
+                bool groupDragging = hasSelection && multi.IsGroupDragging;
+                bool mouseHeld = hasSelection && UnityEngine.Input.GetKey(multi.key);
+                var drag = ItemMouseDragHandler.current;
+                bool draggingItem = drag != null && drag.IsDraggingItem;
+                reason = Rules.DragBlockReason(hasSelection, groupDragging, mouseHeld, draggingItem, save);
+                if (reason != null) return false;
                 if (UIDragHandler.isDraggingAnyUI) { reason = "拖著面板"; return false; }
                 var esc = ui.escapeUIManager;
                 if (esc != null && esc.menuPanel != null && esc.menuPanel.activeInHierarchy) { reason = "暫停選單開著"; return false; }
@@ -144,6 +152,41 @@ namespace ProbablyStolenWindowGroups
             }
             catch (Exception e) { WindowGroupsMod.DebugLog($"判斷能不能動作時出錯（照樣動作）：{e.Message}"); }
             return true;
+        }
+
+        /// <summary>
+        /// 拖單一物品時讓遊戲重算放下的目標；沒在拖回傳 false（什麼都不做）。例外不接，交給呼叫的人（Groups 只警告一次）。
+        /// 遊戲的 ItemMouseDragHandler 只在滑鼠移動時（OnEventMouseMove → Drag）重新打射線、更新放下的目標（lastItem、
+        /// lastInventory），放開時（EndDrag）直接用記著的，不看那個視窗還開不開著。拖著停在視窗 A 上、叫出別組把 A 關掉，
+        /// 滑鼠完全不動就放開的話，物品會被放進已經關掉的 A（或對 A 裡的物品做了動作）。
+        /// 這裡叫它公開的 UpdateMouseMove，帶一個很小的位移（位移是 0 時遊戲不處理）：走遊戲自己的 Drag，
+        /// 影子挪 0.01、重新打射線、更新高亮與提示框，和玩家動了一下滑鼠一樣。只處理拖單一物品：拖一組放下時遊戲會重新打射線。
+        /// </summary>
+        internal static bool RefreshItemDragTarget()
+        {
+            var drag = ItemMouseDragHandler.current;
+            if (drag == null || !drag.IsDraggingItem) return false;
+            drag.UpdateMouseMove(UnityEngine.Input.mousePosition, new UnityEngine.Vector3(0.01f, 0f, 0f));
+            return true;
+        }
+
+        /// <summary>
+        /// 這個物品正被拖著：拖單一物品（ItemMouseDragHandler 的目前物品）或在拖著的一組裡（IsGroupDraggingItem）。
+        /// 拖著時遊戲把它的視窗藏起來（不能把箱子放進自己裡面），叫出時不要把它打開。
+        /// 物品拖著時還在原本的格子裡（只是畫成影子），FindAllItem 照樣找得到，所以要另外挑出來。出錯當作沒在拖。
+        /// </summary>
+        internal static bool IsBeingDragged(GameItem item)
+        {
+            if (item == null) return false;
+            try
+            {
+                var drag = ItemMouseDragHandler.current;
+                // 按下、還沒拖起來時 GetCurrentItem 已經是按著的物品（視窗還沒被藏起來），先看是不是正在拖
+                if (drag != null && drag.IsDraggingItem && ReferenceEquals(item, drag.GetCurrentItem())) return true;
+                var multi = ItemMultiSelectHandler.current;
+                return multi != null && multi.IsGroupDraggingItem(item);
+            }
+            catch { return false; }
         }
     }
 }

@@ -143,7 +143,8 @@ namespace ProbablyStolenWindowGroups
                 Groups.Tick(); // 上一幀叫出的那組：記下實際擺到的位置（「沒動才關」比這份）
                 b = Keys.Pressed(); // 選項正在擷取按鍵時（KeyBindHelper.SuppressHotkeys）回傳 null
                 if (b == null) return;
-                if (!GameWindows.CanAct(out var reason))
+                // 拖著物品時只放行叫出、儲存不動作，所以要告訴 CanAct 這次是哪一種
+                if (!GameWindows.CanAct(b.Save, out var reason))
                 {
                     DebugLog($"按了 {b.Key.Display()}（{b.Entry}），但{reason}，不動作");
                     return;

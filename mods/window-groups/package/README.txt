@@ -3,7 +3,7 @@ Probably Stolen 視窗群組 mod（Window Groups） v{version}
 
 把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位。最多 20 組。
 遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
@@ -33,14 +33,16 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   卡帶播放器都算；日曆、平板、文件這類紙張面板不算。沒開任何箱子、機器視窗時按儲存＝清空那一組。
 - 叫出（預設 Ctrl+1～9）：先關掉不在這一組的箱子、機器視窗（和按 ESC 關的一樣，不動裡面的東西），
   再把這一組的視窗開在存的位置、照存的上下順序。放在別的箱子裡的箱子直接打開。叫出成功時不跳提示。
+  拖著物品（或選好的一組物品）時按另一組的鍵：第 1 組關掉、第 2 組打開，直接放進去。
 - 同一組再按一次（設定「再按一次」，2.1.0 起預設全開就關）：
   全開就關（Close if all open）＝這組找得到、打得開的視窗都開著就關掉這組（多開的留著），少了任何一個就照常叫出；
   沒動才關（Close if unmoved）＝都開著、而且上次叫出後都沒移動過才關，動過就先排回原位；
   重新排好（Rearrange，2.0.0 以前的做法）＝每次都排回原位。關掉時不跳提示；一鍵關窗鎖住的預設也一起關。
 - 找不到的（賣掉、丟掉、帶出門）、暫時打不開的（例如上鎖的）這次跳過，留在群組裡，並提示幾個找不到、
   幾個打不開；全部都開不了時什麼都不動。空的群組只提示「是空的」。
-- 不在店裡、在輸入框打字、拖著物品或面板、框選中、暫停選單或選項開著、在選項裡設定按鍵、結算畫面、
-  固定模式、儲物協調器或料斗正在挑選物品時，按鍵不動作。
+- 不在店裡、在輸入框打字、拖著面板、拉框選取物品、暫停選單或選項開著、在選項裡設定按鍵、結算畫面、
+  固定模式、儲物協調器或料斗正在挑選物品時，按鍵不動作。拖著物品或一組物品時只能叫出、不能儲存；
+  選好一組物品、放開滑鼠以後照常（被選的物品所在的視窗被關掉時，選取照樣留著）。
 - 群組的鍵按下時，遊戲的工具箱快捷鍵（數字鍵）與操作提示（O）不會一起動作（在遊戲選項改過鍵也一樣）。
 畫面上的提示是這個 mod 加的，不是遊戲本身的訊息；有問題請回報給本 mod，不要回報給遊戲開發者。
 
@@ -106,7 +108,9 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
 - 提示與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文。
 - 已知限制：只記位置，不記視窗大小；視窗裡的分頁預設不記（開在那個箱子上次關掉時的分頁，設定「也記儲物分頁」打開時才記）；
   「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
-  遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉。
+  遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉；
+  拖著物品的途中把物品原本所在的視窗關掉再打開，拖著的物品圖案會消失、只剩選取的框，照樣放得下
+  （遊戲的儲物協調器也是這樣）。
 - 相容性：
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：有裝時提示與設定視窗用繁中。
   一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720，2.0.0 以上）：鎖住的視窗叫出群組時不會被關；
@@ -127,7 +131,7 @@ Probably Stolen Window Groups mod v{version}
 Save the container and machine windows you have open, and where they are, as a group; press one key
 to bring them all back in place. Up to 20 groups. Unofficial, in the game's official mod format
 (no MelonLoader needed).
-Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+Supported game version: full release 1.0 (VERSION 100-REV12)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -165,6 +169,8 @@ Features
 - Recall (Ctrl+1-9 by default): closes the container and machine windows that aren't in the group (the same way
   Esc does; contents untouched), then opens the group's windows where they were saved, stacked the same way.
   A box inside another box opens directly. A successful recall shows no message.
+  While dragging an item (or a selected group of items), press another group's key: group 1 closes,
+  group 2 opens, and you can drop them straight in.
 - Pressing the same group's key again (setting "Press again"; from 2.1.0 the default is Close if all open):
   Close if all open = if every window of the group that can be found and opened is open, close the group
   (other windows stay), otherwise recall as usual; Close if unmoved = close only if they're all open and none
@@ -173,9 +179,11 @@ Features
 - Windows that can't be found (sold, thrown away, taken out) or can't be opened right now (e.g. locked)
   are skipped but stay in the group, with a message saying how many; if nothing can be opened, nothing changes.
   An empty group just says it's empty.
-- The keys do nothing away from the shop, while typing in a text box, while dragging an item or panel,
-  while box-selecting, with the pause menu or options open, while setting a key in the options,
+- The keys do nothing away from the shop, while typing in a text box, while dragging a panel,
+  while drawing a selection box, with the pause menu or options open, while setting a key in the options,
   on the run summary, in Pin mode, or while the Storage Coordinator or a hopper is picking items.
+  While dragging an item or a group of items, they recall but don't save; with a group of items selected
+  (after you release the mouse), they work as usual (the selection stays when its window closes).
 - When a group key fires, the game's Toolbox shortcuts (number keys) and the control hints (O) stay quiet,
   even if you rebound them in the game's options.
 The messages come from this mod, not the base game; please report problems to this mod,
@@ -253,7 +261,10 @@ Notes
   (a recalled window opens on the tab it was last closed on, unless "Remember storage tabs" is on);
   the positions Close if unmoved compares with are only kept in memory, so after restarting or loading,
   the first press recalls the group as usual; the game keeps at most 25 movable windows open, so with windows
-  kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game.
+  kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game;
+  if the window a dragged item came from is closed and reopened mid-drag, the dragged item's image
+  disappears and only the selection highlight remains, but you can still drop it (the game's Storage
+  Coordinator does the same).
 - Compatibility:
   Traditional Chinese mod (https://www.nexusmods.com/probablystolen/mods/280): messages and the settings window
   in Traditional Chinese.

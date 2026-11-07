@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-07）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+
+- 選好一組物品、放開滑鼠以後，叫出與儲存照常動作；被選的物品所在的視窗被關掉時，選取照樣留著。以前選了一組物品就不動作；拉框時照舊不動作。
+- 拖著物品或一組物品時也能叫出群組（再按一次關掉這組也可以），儲存照舊不動作：拿著東西按另一組的鍵，第 1 組關掉、第 2 組打開，直接放進去。
+- 對應遊戲版本改成 VERSION 100-REV12。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV12)
+
+- With a group of items selected (after you release the mouse), recalling and saving work as usual, and the selection stays when the window holding the selected items closes. Before, the keys did nothing with items selected; they still do nothing while you draw the selection box.
+- While dragging an item or a group of items, you can now recall a group (pressing again to close it works too), but not save: hold the items, press another group's key, and group 1 closes and group 2 opens, so you can drop them straight in.
+- Supported game version is now VERSION 100-REV12.
+
 ## v2.1.0（2026-11-05）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）

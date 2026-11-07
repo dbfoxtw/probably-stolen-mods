@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ProbablyStolenWindowGroups
 {
-    /// <summary>不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號、多選與拖物品時能不能動作。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>
@@ -110,6 +110,27 @@ namespace ProbablyStolenWindowGroups
         /// 計數器退回去，之後那個編號會發給別的物品，叫出時就會打開不相干的箱子。固定設施是負數編號，不受影響。
         /// </summary>
         internal static bool IsStale(int id, int currentUniqueId) => id > currentUniqueId;
+
+        // ---------------- 多選與拖物品時能不能動作 ----------------
+
+        /// <summary>
+        /// 多選與拖物品時這次按鍵要不要擋（GameWindows.CanAct 的其中一段）；回傳原因，不擋回傳 null。輸入：
+        /// hasSelection＝ItemMultiSelectHandler.HasSelection（不是 Idle）、groupDragging＝IsGroupDragging、
+        /// mouseHeld＝多選的鍵（滑鼠左鍵）按著、draggingItem＝ItemMouseDragHandler.IsDraggingItem、save＝這次是儲存（不是叫出）。
+        /// - 拉框、準備拉框、準備拖一組（有選取、不是拖一組、滑鼠按著）：都擋。這時放開滑鼠的結果還沒定（選哪些、拖不拖），
+        ///   叫出把視窗換掉的話框選的範圍、按著的物品會跟著不見。
+        /// - 選好、放開（Selected，滑鼠沒按著）：照常（Workshop 留言：選好以後要叫出另一組視窗把東西拖過去；
+        ///   遊戲的儲物協調器也不管選取）。被選的物品所在的視窗被關掉時，選取照遊戲留著，不處理。
+        /// - 拖一組、拖單一物品：只放行叫出（拖到另一組視窗裡放下；包括再按一次關掉這組），儲存擋掉——
+        ///   遊戲拖著時把被拖箱子的視窗藏起來，這時存會漏掉它。
+        /// 先看拉框與準備拖：拖一組的那一幀滑鼠一定按著，但 groupDragging 已經是 true，不會被當成準備拖。
+        /// </summary>
+        internal static string DragBlockReason(bool hasSelection, bool groupDragging, bool mouseHeld, bool draggingItem, bool save)
+        {
+            if (hasSelection && !groupDragging && mouseHeld) return "框選中或準備拖一組物品";
+            if ((groupDragging || draggingItem) && save) return "拖著物品時不儲存（拖到一半存會漏掉被拖的箱子）";
+            return null;
+        }
 
         // ---------------- 再按一次 ----------------
 

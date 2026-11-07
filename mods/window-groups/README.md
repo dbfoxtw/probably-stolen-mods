@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位。最多 20 組。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Groups 的最新版，標記 `window-groups-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -24,9 +24,12 @@
     - 關掉時不跳提示。一鍵關窗鎖住的視窗預設也一起關（設定「也關鎖住的」可以改成留著）。
   - 放在別的箱子裡的箱子直接打開，不用先開外層。
   - 一次開好幾個視窗只響一次開啟音效。叫出成功時不跳提示，視窗排好就是結果。
+  - **拖著物品時也能叫出**：拖著物品（或選好的一組物品）時按另一組的鍵，第 1 組關掉、第 2 組打開，直接放進去。
 - **找不到、打不開的**：賣掉、丟掉或帶出門的箱子這次跳過，但留在群組裡，之後帶回店裡下次叫出又會出現；暫時打不開的（例如上鎖的）也會跳過。提示「視窗群組 1：1 個找不到」或「1 個打不開」。全部都開不了時什麼都不動，開著的視窗不會被關掉。
 - **空的群組**（沒存過或清空了）：只提示「視窗群組 3 是空的」，什麼都不動。
-- **什麼時候不動作**：不在店裡（出門時）、在輸入框打字時（遊戲的或其他 mod 的）、拖著物品或面板、框選或選了一組物品、暫停選單或選項開著、在選項裡設定按鍵時、結算畫面、固定模式、儲物協調器或料斗正在挑選物品時。
+- **什麼時候不動作**：不在店裡（出門時）、在輸入框打字時（遊戲的或其他 mod 的）、拖著面板、拉框選取物品時、暫停選單或選項開著、在選項裡設定按鍵時、結算畫面、固定模式、儲物協調器或料斗正在挑選物品時。
+  - 拖著物品或一組物品時只能叫出，不能儲存。
+  - 選好一組物品、放開滑鼠以後，叫出與儲存照常；被選的物品所在的視窗被關掉時，選取照樣留著。
 - **數字鍵**：遊戲的數字鍵 1～9 是工具箱的快捷鍵（拿起工具箱第 N 格的工具），O 是顯示或隱藏操作提示，這兩個都不看 Ctrl、Shift。群組的鍵按下時這兩個會讓開（在遊戲選項改過鍵也一樣），按 Ctrl+1 不會同時拿起工具；Shift+1、Ctrl+Alt+1 這類沒設的組合照原版。
 
 畫面上的提示是這個 mod 加的，開頭都是「視窗群組」，不是遊戲本身的訊息；有問題請回報給本 mod，不要回報給遊戲開發者。
@@ -135,6 +138,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 - 「沒動才關」比的位置只記在這次開遊戲的記憶體裡：重開遊戲、讀檔之後，第一次再按會先照常叫出，再按一次才關。
 - 遊戲同時最多開 25 個可以移動的視窗，超過時會關掉最舊的。群組本身不會超過（叫出時先關掉不在群組的），但加上一鍵關窗鎖住、留著的視窗就可能超過，這時群組裡最下面的那個會被遊戲關掉，沒有提示。
 - 拖著視窗的標題列時按鍵沒有擋：拖到一半的視窗可能被移回去或關掉，不會壞東西。
+- 拖著物品的途中把物品原本所在的視窗關掉再打開（例如拖著按第 2 組、再按回第 1 組），拖著的物品圖案會消失、只剩選取的框，照樣放得下。遊戲的儲物協調器也是這樣。
 
 ## 相容性
 
@@ -166,7 +170,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place. Up to 20 groups. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (the main menu shows VERSION 100). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Groups, tagged `window-groups-v…`).
+A mod for *Probably Stolen*: save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place. Up to 20 groups. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (VERSION 100-REV12). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Groups, tagged `window-groups-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/804?tab=bugs).
 
@@ -184,9 +188,12 @@ The code was written by AI (Claude); the feature design and in-game testing were
     - Closing shows no message. Windows locked with Close All Windows close too by default (turn off "Close locked too" to keep them open).
   - A box inside another box opens directly, without opening the outer one first.
   - You hear the opening sound once, however many windows open. A successful recall shows no message: the windows are the result.
+  - **Recall while dragging**: while dragging an item (or a selected group of items), press another group's key: group 1 closes, group 2 opens, and you can drop them straight in.
 - **Not found / can't be opened**: a box you sold, threw away or took out of the shop is skipped this time but stays in the group, so it comes back once it's in the shop again. Ones that can't be opened right now (e.g. locked) are skipped too. You'll see "Window group 1: 1 not found" or "1 can't be opened". If nothing in the group can be opened, nothing changes and your open windows stay.
 - **Empty group** (never saved, or cleared): just shows "Window group 3 is empty"; nothing changes.
-- **When the keys do nothing**: away from the shop, while typing in a text box (the game's or another mod's), while dragging an item or panel, while box-selecting or with a group of items selected, with the pause menu or options open, while setting a key in the options, on the run summary, in Pin mode, or while the Storage Coordinator or a hopper is picking items.
+- **When the keys do nothing**: away from the shop, while typing in a text box (the game's or another mod's), while dragging a panel, while drawing a selection box around items, with the pause menu or options open, while setting a key in the options, on the run summary, in Pin mode, or while the Storage Coordinator or a hopper is picking items.
+  - While dragging an item or a group of items, the keys can recall but not save.
+  - With a group of items selected (after you release the mouse), recalling and saving work as usual, and the selection stays when the window holding the selected items closes.
 - **Number keys**: in the game, 1–9 pick up a tool from your Toolbox and O toggles the control hints, both regardless of Ctrl and Shift. When a group key fires, those stay quiet (even if you rebound them in the options), so Ctrl+1 doesn't also pick up a tool. Combinations you haven't set, like Shift+1 or Ctrl+Alt+1, work as usual.
 
 The messages come from this mod, not the base game (they all start with "Window group"); please report problems to this mod, not to the game developers.
@@ -281,6 +288,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-groups` folder, a
 - The positions Close if unmoved compares with are only kept in memory: after restarting the game or loading a save, the first press recalls it as usual and the next one closes it.
 - The game keeps at most 25 movable windows open and closes the oldest beyond that. A group alone never goes over (recalling closes the others first), but windows kept open by Close All Windows' padlock can push it over; then the game closes the bottom window of the group, without a message.
 - Keys aren't blocked while you drag a window by its title bar: that window may jump back or close. Nothing breaks.
+- If the window a dragged item came from is closed and reopened mid-drag (e.g. pressing group 2, then group 1 again), the dragged item's image disappears and only the selection highlight remains; you can still drop it. The game's Storage Coordinator does the same.
 
 **Compatibility**
 

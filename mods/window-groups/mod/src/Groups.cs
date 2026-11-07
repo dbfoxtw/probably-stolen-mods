@@ -32,7 +32,12 @@ namespace ProbablyStolenWindowGroups
         static readonly List<(int id, PixelWindow w)> _pendingWindows = new List<(int id, PixelWindow w)>();
         /// <summary>每個視窗掛的記號物件（給視窗分頁看），重複叫出時改名重用，一個視窗只會有一個。</summary>
         static readonly Dictionary<PixelWindow, GameObject> _markers = new Dictionary<PixelWindow, GameObject>();
-        static bool _markErrorLogged, _tabsErrorLogged;
+        static bool _markErrorLogged, _tabsErrorLogged, _dragRefreshErrorLogged;
+        /// <summary>
+        /// 拖著單一物品時叫出或關掉了視窗的那一幀（0＝沒有）：下一幀的 Tick 再讓遊戲重算一次放下的目標
+        /// （新開的視窗這一幀的版面可能還沒更新，射線打不準）。
+        /// </summary>
+        static int _dragRefreshFrame;
 
         internal static void Init(GroupStore store) => _store = store;
 
@@ -42,6 +47,34 @@ namespace ProbablyStolenWindowGroups
             _rec = null;
             ForgetRecalls();
             _markers.Clear();
+            _dragRefreshFrame = 0;
+        }
+
+        /// <summary>
+        /// 叫出或關掉這組、真的開關或移動了視窗之後：拖著單一物品的話，馬上讓遊戲重算放下的目標
+        /// （GameWindows.RefreshItemDragTarget；藏起來的視窗射線打不到了，打開的位置已經設好），下一幀（Tick）再一次。
+        /// 不然滑鼠不動就放開，物品會放進剛被關掉的視窗。
+        /// </summary>
+        static void RefreshDragAfterWindowsChanged()
+        {
+            if (TryRefreshDrag("叫出／關掉視窗之後")) _dragRefreshFrame = Time.frameCount;
+        }
+
+        /// <summary>讓遊戲重算拖單一物品放下的目標；回傳有沒有在拖。出錯只警告一次，不影響叫出本身。</summary>
+        static bool TryRefreshDrag(string when)
+        {
+            try
+            {
+                if (!GameWindows.RefreshItemDragTarget()) return false;
+                WindowGroupsMod.DebugLog($"拖著物品：{when}讓遊戲重算放下的目標");
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (!_dragRefreshErrorLogged) WindowGroupsMod.Log.Warning($"讓遊戲重算拖曳物品放下的目標失敗（滑鼠不動就放開時，物品可能放進剛關掉的視窗；之後同類錯誤不再記）：{e.Message}");
+                _dragRefreshErrorLogged = true;
+                return false;
+            }
         }
 
         /// <summary>丟掉「上次叫出後的位置」（全部的組）與還沒記的那組。</summary>
@@ -55,9 +88,15 @@ namespace ProbablyStolenWindowGroups
         /// <summary>
         /// 每幀（WindowGroupsMod.Tick，在店鋪畫面、處理按鍵之前）：上一幀叫出的那組，記下它的視窗現在實際的位置
         /// （FixBounds 與別的 mod 調整之後；沒開著的不記，之後就算成動過）。
+        /// 上一幀拖著物品時開關了視窗的話，先再讓遊戲重算一次放下的目標（已經放下、不在拖了就不做）。
         /// </summary>
         internal static void Tick()
         {
+            if (_dragRefreshFrame != 0 && Time.frameCount > _dragRefreshFrame)
+            {
+                _dragRefreshFrame = 0;
+                TryRefreshDrag("下一幀");
+            }
             if (_pendingGroup == 0 || Time.frameCount <= _pendingFrame) return;
             int group = _pendingGroup;
             _pendingGroup = 0;
@@ -225,6 +264,7 @@ namespace ProbablyStolenWindowGroups
         /// 移到存的位置。已經開著的照樣移回去、拉到上面。找不到、打不開（上鎖）的跳過、留在群組裡，並提示；
         /// 一個都開不了時什麼都不動（不然等於全部關掉）。
         /// 2.1.0 起先看設定「再按一次」：全開就關／沒動才關的條件成立時改成關掉這組（CloseGroup），不叫出。
+        /// 拖著物品時也可以叫出（拖到另一組的視窗裡放下）：正在被拖的箱子跳過，不開、不算進提示。
         /// </summary>
         internal static void Recall(int group)
         {
@@ -245,12 +285,22 @@ namespace ProbablyStolenWindowGroups
             foreach (var e in entries)
             {
                 if (!items.TryGetValue(e.Id, out var item) || item.contentWindow == null) { missing++; log?.Add($"「{e.Title}」#{e.Id} 找不到"); }
+                // 拖著的箱子（單一或一組裡的）：遊戲拖著時故意把它的視窗藏起來，這裡不開；不算找不到、也不算打不開（不進提示），
+                // 也不進 found，所以「再按一次」只看其他的
+                else if (GameWindows.IsBeingDragged(item)) log?.Add($"「{e.Title}」#{e.Id} 正在被拖，不開");
                 // 上鎖的容器、被機器的格子鎖住的箱子：遊戲的 Show 在 isLocked 時不開
                 else if (item.contentWindow.isLocked) { lockedOut++; log?.Add($"「{e.Title}」#{e.Id} 鎖著，打不開"); }
                 else found.Add((e, item));
             }
             if (found.Count == 0)
             {
+                if (missing + lockedOut == 0)
+                {
+                    // 這組只剩正在被拖的那個：什麼都不做、不提示（提示「0 個找不到」沒有意義）
+                    log?.Add("只剩正在被拖的，不動作");
+                    WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
+                    return;
+                }
                 Toast.Show(GameState.S.Skipped(group, missing, lockedOut));
                 log?.Add("一個都開不了，不關別的視窗");
                 WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
@@ -284,6 +334,7 @@ namespace ProbablyStolenWindowGroups
             // 1. 關掉不在這組的（一鍵關窗鎖住的不關）
             var groupIds = new HashSet<int>(found.Select(f => f.entry.Id));
             var locked = CloseAllWindowsLocked(log);
+            int closedOthers = 0;
             foreach (var w in GameWindows.VisibleWindows())
             {
                 if (!GameWindows.IsGroupWindow(w)) continue;
@@ -296,6 +347,7 @@ namespace ProbablyStolenWindowGroups
                 try
                 {
                     WindowsHandler.CloseWindow(w); // 和 ESC、一鍵關窗同一個關法
+                    closedOthers++;
                     log?.Add($"關「{Title(w)}」#{id}");
                 }
                 catch (Exception ex) { WindowGroupsMod.Log.Warning($"關視窗「{Title(w)}」失敗：{ex.Message}"); }
@@ -365,6 +417,8 @@ namespace ProbablyStolenWindowGroups
             }
             if (missing > 0 || lockedOut > 0) Toast.Show(GameState.S.Skipped(group, missing, lockedOut));
             if (log != null) WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log)}");
+            // 拖著單一物品時：關掉、打開、移動過視窗，滑鼠底下可能換了東西，讓遊戲重算放下的目標
+            if (closedOthers > 0 || placed.Count > 0) RefreshDragAfterWindowsChanged();
 
             // 下一幀記下實際擺到的位置（Tick）；記好之前這組沒有紀錄，再按也是照常叫出
             _recalled.Remove(group);
@@ -402,6 +456,8 @@ namespace ProbablyStolenWindowGroups
             }
             _recalled.Remove(group);
             if (log != null) WindowGroupsMod.DebugLog($"再按一次（{mode}，也關鎖住的={closeLocked}）：關掉群組 {group} 的 {closed} 個視窗；{string.Join("；", log)}");
+            // 拖著單一物品時：滑鼠底下的視窗可能剛被關掉，讓遊戲重算放下的目標
+            if (closed > 0) RefreshDragAfterWindowsChanged();
         }
 
         /// <summary>

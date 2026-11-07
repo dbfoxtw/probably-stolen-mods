@@ -8,7 +8,7 @@ namespace ProbablyStolenWindowGroups.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：按鍵的寫法與比對、遊戲也用的鍵與操作提示讓開、
-    /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、提示與設定的文字。任何一項失敗就回傳非 0。
+    /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、多選與拖物品時能不能動作、提示與設定的文字。任何一項失敗就回傳非 0。
     /// 執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -31,6 +31,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Keymaps();
             RulesTest();
             Locks();
+            DragRules();
             Repeat();
             Marker();
             Texts();
@@ -257,6 +258,33 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(files.Count == 1 && files["slot_9.json"] == json, "讀鎖不改寫一鍵關窗的檔");
             // 一鍵關窗 2.0.0（Newtonsoft）寫的檔，多了不認得的欄位
             Check(CloseAllWindowsLocks.Parse("{\"version\":1,\"slot\":9,\"runId\":\"abc\",\"locked\":[5],\"future\":{\"x\":1}}", "abc").Contains(5), "有不認得的欄位也讀得到");
+        }
+
+        // ── 多選與拖物品時能不能動作（Workshop 留言：選好物品後要能叫出另一組） ──
+
+        /// <summary>
+        /// Rules.DragBlockReason 的每一列（hasSelection、groupDragging、mouseHeld、draggingItem），叫出與儲存各測一次。
+        /// 遊戲的多選狀態對應：Idle＝沒有選取；PendingBand／Banding／PendingGroupDrag＝有選取、不是拖一組、按著；
+        /// Selected＝有選取、沒按著；GroupDragging＝拖一組（正常一定按著，沒按著的那一幀遊戲接著就重設）。
+        /// </summary>
+        static void DragRules()
+        {
+            void Case(string what, bool sel, bool group, bool held, bool item, bool recallOk, bool saveOk)
+            {
+                Eq(Rules.DragBlockReason(sel, group, held, item, false) == null, recallOk, $"{what}：叫出{(recallOk ? "照常" : "不動作")}");
+                Eq(Rules.DragBlockReason(sel, group, held, item, true) == null, saveOk, $"{what}：儲存{(saveOk ? "照常" : "不動作")}");
+            }
+            Case("沒有選取、沒拖東西", false, false, false, false, true, true);
+            Case("沒有選取、按著滑鼠（點東西）", false, false, true, false, true, true);
+            Case("拉框、準備拉框、準備拖一組（按著）", true, false, true, false, false, false);
+            Case("選好、放開（Selected）", true, false, false, false, true, true);
+            Case("拖一組", true, true, true, false, true, false);
+            Case("拖一組、滑鼠剛放開的那一幀", true, true, false, false, true, false);
+            Case("拖單一物品", false, false, true, true, true, false);
+            Case("拖單一物品、滑鼠剛放開的那一幀", false, false, false, true, true, false);
+            Case("拉框中又在拖單一物品（不該同時發生，照拉框擋）", true, false, true, true, false, false);
+            Check(Rules.DragBlockReason(true, false, true, false, false).Contains("框選"), "拉框不動作的原因寫框選");
+            Check(Rules.DragBlockReason(false, false, true, true, true).Contains("不儲存"), "拖著時儲存不動作的原因寫不儲存");
         }
 
         // ── 再按一次 ──
