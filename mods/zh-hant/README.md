@@ -4,7 +4,7 @@
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
-下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Traditional Chinese Translation 的最新版，標記 `zh-hant-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
+下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Traditional Chinese Translation 的最新版，標記 `zh-hant-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。遊戲裡的名稱怎麼翻，見[術語表](GLOSSARY.md)（繁中、英文、簡中對照，含劇透）。
 
 簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs)的 Bugs 分頁）。
 
@@ -65,7 +65,7 @@
 
 ## 不含遊戲檔與字串表
 
-依遊戲社群的 mod 規範，這個 mod 的原始碼與發布檔都不附遊戲的字串表或其他素材。`data/` 只有翻譯規則：
+依遊戲社群的 mod 規範，這個 mod 的原始碼與發布檔都不附遊戲的字串表或其他素材。唯一的例外是[術語表](GLOSSARY.md)：為了對照，列了遊戲裡的名稱（英文、簡中）和我們的譯名，只有名稱、沒有句子，遊戲開發者同意過（2026-11-07）。`data/` 只有翻譯規則：
 
 | 檔案 | 內容 |
 |---|---|
@@ -74,6 +74,7 @@
 | `fills.tsv` | 簡中缺翻的條目：我們的譯文，或參照字串表裡另一條的譯文。沒有這個檔時，缺翻的條目改顯示遊戲的英文 |
 | `args.tsv` | 簡中漏了英文有的佔位符的少數條目（例如以物易物的「換取：」後面沒有物品）：補上佔位符的譯文，遊戲代入參數時改用 |
 | `hardcoded.tsv` | 寫死在遊戲程式裡、字串表沒有的少數英文（例如一次性電池的「無法充電」）的翻譯規則，只在中文模式套用。為了比對，規則裡保留了英文原句 |
+| `indent.tsv` | 導師筆記的段落縮排：每篇的行數與要縮排的行號（照英文哪幾段開頭有縮排）。只有編號與數字；簡中的行數和英文不同時，那一篇照原樣 |
 | `tables.txt` | 要讀取的字串表名稱 |
 
 OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`）。
@@ -143,7 +144,7 @@ To update, close the game, delete the old `Mods\dbfoxtw.zh-hant` folder and repe
 **Known conflicts:** other translation mods, and mods that change TextMeshPro text or fonts. Simplified Chinese text from other mods is also converted automatically, without per-line proofreading; text not displayed through TextMeshPro is left as is. Enhanced Trade Display v1.2.0 was confirmed compatible on the demo (from v1.1.4 of this mod); not yet tested on the full release.
 
 - **Display-only.** Text is converted right before TextMeshPro displays it. Game files, string tables, and saves are never modified, and removing the mod restores the original Simplified Chinese.
-- **No game files or string tables are included.** The mod reads the game's own Simplified Chinese string tables at runtime and converts each entry with OpenCC (s2tw), a glossary, and per-entry corrections. The corrections are stored only as changed fragments and positions. Entries missing from the Simplified Chinese table get our translation, or fall back to the game's English text. A few English lines hard-coded in the game (not in any string table) are kept verbatim in the rules (`hardcoded.tsv`) for matching.
+- **No game files or string tables are included.** The only exception is the [glossary](GLOSSARY.md), which lists the game's names (English and Simplified Chinese) next to our translations for reference: names only, no sentences, with the developer's permission (2026-11-07). The mod reads the game's own Simplified Chinese string tables at runtime and converts each entry with OpenCC (s2tw), a glossary, and per-entry corrections. The corrections are stored only as changed fragments and positions. Entries missing from the Simplified Chinese table get our translation, or fall back to the game's English text. A few English lines hard-coded in the game (not in any string table) are kept verbatim in the rules (`hardcoded.tsv`) for matching.
 - The game's official mod loader loads the mod, which hooks the game through the game's bundled Harmony. It declares no capabilities: it reads its translation data from its own mod folder through the game's mod API.
 - Handwritten text (signatures and notes) uses Yuji Syuku, a brush font close to the original, with the few missing Traditional Chinese glyphs added (SIL OFL 1.1).
 - Build from source (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\zh-hant` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed game, whose `Probably Stolen_Data\Managed` is referenced at build time).

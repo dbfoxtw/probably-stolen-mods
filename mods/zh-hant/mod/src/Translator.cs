@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,7 +11,8 @@ namespace ProbablyStolenZhHant
     /// <summary>
     /// 把字串表的一條簡中原文轉成繁中譯文，和 tools/psmod/convert.py 產生 text/zh-Hant 的流程相同：
     /// OpenCC s2tw → 引號改「」『』 → 術語表（長詞優先）；標記語法（&lt;wave&gt;、{0}）原樣保留。
-    /// 有逐條修正時，在自動轉換結果上套用修正的片段（自動轉換結果的雜湊要相符）。
+    /// 有逐條修正時，在自動轉換結果上套用修正的片段（自動轉換結果的雜湊要相符）；導師筆記再照英文加段落縮排（indent.tsv）。
+    /// 打開導師筆記時另外認篇、換成現在的內文（PrepareNote，見 MentorNote.cs）；每日新聞的開頭空白換成縮排（IndentNews，見 News.cs）。
     /// 玩家把單位改成英文時（Units），最後再把譯文裡數字後面的中文單位換回英文；預設都用中文，結果和 text/zh-Hant 相同。
     /// mod 附的資料只有 OpenCC 字典、術語表、修正片段，不含遊戲原文；原文在執行時才從字串表讀取。
     /// </summary>
@@ -130,7 +132,205 @@ namespace ProbablyStolenZhHant
                 var p = line.Split('\t');
                 if (p.Length >= 3) t._args[p[0] + "/" + p[1]] = t._units.Apply(Unescape(p[2]));
             }
+            // 表<Tab>key<Tab>英文的行數<Tab>要縮排的行號（逗號分隔，可以空）（可以沒有這個檔：導師筆記照原樣）。
+            // 讀不懂的行只略過那一行（記進 IndentBadLines，ZhHantMod 印警告），不丟例外：縮排只是排版，
+            // 不能因為這個檔被編輯器改壞（拿掉行尾的 Tab、行號多了空白）就讓 Load 失敗、整場不翻譯
+            foreach (var line in OpenCC.Lines(read("indent.tsv")))
+            {
+                if (line.Trim().Length == 0 || line.TrimStart().StartsWith("#")) continue;
+                if (TryParseIndent(line.Split('\t'), out var name, out var ind)) t._indents[name] = ind;
+                else t.IndentBadLines.Add(line);
+            }
+            // 每篇內文對應的標題（UI/intel_mentor_note_X_body → UI/intel_mentor_note_X_title）：打開筆記時用標題認篇
+            foreach (var name in t._indents.Keys)
+                if (name.EndsWith(BodySuffix, StringComparison.Ordinal))
+                    t._noteTitleNames[name.Substring(0, name.Length - BodySuffix.Length) + TitleSuffix] = name;
             return t;
+        }
+
+        /// <summary>indent.tsv 的一行；欄數不對、行數或行號不是數字、行號超出行數時傳回 false。</summary>
+        static bool TryParseIndent(string[] p, out string name, out (int lines, int[] rows) ind)
+        {
+            name = null;
+            ind = default;
+            // 少了第 4 欄（散彈槍那種沒有要縮的行，行尾的 Tab 被拿掉）當成空的
+            if (p.Length < 3 || p.Length > 4) return false;
+            var table = p[0].Trim();
+            var key = p[1].Trim();
+            if (table.Length == 0 || key.Length == 0
+                || !int.TryParse(p[2].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var lines) || lines <= 0) return false;
+            var rows = new List<int>();
+            if (p.Length == 4)
+                foreach (var s in p[3].Split(','))
+                {
+                    if (s.Trim().Length == 0) continue; // 「0, 1」「0,1,」的空白與多餘逗號
+                    if (!int.TryParse(s.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r) || r < 0 || r >= lines) return false;
+                    if (!rows.Contains(r)) rows.Add(r);
+                }
+            name = table + "/" + key;
+            ind = (lines, rows.ToArray());
+            return true;
+        }
+
+        /// <summary>indent.tsv 裡讀不懂、略過的行（其他行照用）。</summary>
+        public readonly List<string> IndentBadLines = new List<string>();
+
+        // 導師筆記的段落縮排（2026-11-07）：英文幾乎每段開頭空一格當縮排，簡中只有第一段開頭有一個半形空格，中文看不出分段。
+        // 只有英文那一段有縮的，中文的同一段才縮一個字寬（使用者 2026-11-07 實機看過，兩個字太寬）；哪幾段由 tools/export_mod_data.py
+        // 從英文算好（indent.tsv），遊戲裡不必載入英文字串表。用 TMP 的 <space=1em>：全形空格要字型有 U+3000，缺字會變方框，<space> 不靠字型。
+        // 規則和 tools/psmod/convert.py 的 apply_indent 相同（離線驗證比對 text/zh-Hant）。
+        //
+        // 縮排加在翻譯層（Translate），議價平板「批發優惠」的提示框直接用筆記的同一條字串（intel_mentor_note_wholesale_body），也跟著縮
+        // （使用者看過不縮的樣子後定的）。另外打開筆記時（MentorNote.cs 呼叫 PrepareNote）：筆記是物品，拿到時把當下的標題、內文存進存檔，
+        // Rev12 以前拿到的筆記存的是舊版簡中，整句查表對不到、被逐行後備轉換，逐條修正與縮排都套不上。打開時用標題認出是哪一篇
+        // （18 篇的標題 Rev12 前後相同），換成現在字串表的內文再翻譯（已經帶縮排，IndentNote 先拿掉再加，不會縮兩次），
+        // 舊存檔看到的就和新開局一樣（內文有佔位符的違禁品那篇例外，見 PrepareNote）。存檔不動，只改顯示。
+        public const string IndentTag = "<space=1em>";
+        // 拿掉再縮時也認得的舊縮排：2.10.0 開發時用過兩個字寬，人工譯文或舊資料可能還帶著
+        static readonly string[] OldIndentTags = { "<space=2em>" };
+        static readonly char[] IndentStrip = { ' ', '　', '\t' };
+        const string BodySuffix = "_body", TitleSuffix = "_title";
+        readonly Dictionary<string, (int lines, int[] rows)> _indents = new Dictionary<string, (int, int[])>(StringComparer.Ordinal);
+        // 標題的 表/key → 內文的 表/key（Load 時從 indent.tsv 推）
+        readonly Dictionary<string, string> _noteTitleNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        // 載入字串表時記下的現在的簡中：內文的 表/key → 內文；標題 → 內文的 表/key
+        readonly Dictionary<string, string> _noteBodies = new Dictionary<string, string>(StringComparer.Ordinal);
+        readonly Dictionary<string, string> _noteByTitle = new Dictionary<string, string>(StringComparer.Ordinal);
+        // 兩篇的標題相同時認不出是哪一篇，那個標題就不認（照遊戲原樣顯示）
+        readonly HashSet<string> _ambiguousTitles = new HashSet<string>(StringComparer.Ordinal);
+        // 現在的內文有 {0} 這類佔位符的篇（遊戲代入數字後才存進物品，打開時不換內文，見 PrepareNote）
+        readonly HashSet<string> _notesWithArgs = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>indent.tsv 列了幾篇。</summary>
+        public int IndentCount => _indents.Count;
+        /// <summary>縮排套上了的（有要縮的段落）。</summary>
+        public readonly HashSet<string> IndentApplied = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>段數相同、但英文沒有一段縮排的（照原樣）。</summary>
+        public readonly HashSet<string> IndentNone = new HashSet<string>(StringComparer.Ordinal);
+        /// <summary>簡中的段數和英文不同、照原樣不縮排的（每篇只記一次；遊戲改了筆記時會有）。</summary>
+        public readonly List<string> IndentMismatched = new List<string>();
+        readonly HashSet<string> _indentMismatchSeen = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>載入字串表時記下的導師筆記篇數（認得出標題、有現在的內文的）。</summary>
+        public int NoteCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var name in _noteByTitle.Values)
+                    if (_noteBodies.ContainsKey(name)) n++;
+                return n;
+            }
+        }
+
+        /// <summary>Translate 經過導師筆記的內文與標題時記下現在的簡中，內文另外記進 IndentApplied 這幾個統計（縮排由 Translate 接著加）。</summary>
+        void RecordNote(string name, string src, string translated)
+        {
+            if (_indents.TryGetValue(name, out var ind))
+            {
+                _noteBodies[name] = src;
+                if (NotePlaceholder.IsMatch(src)) _notesWithArgs.Add(name);
+                else _notesWithArgs.Remove(name);
+                var parts = translated.Split('\n');
+                if (parts.Length != ind.lines) { if (_indentMismatchSeen.Add(name)) IndentMismatched.Add(name); }
+                else if (ind.rows.Length == 0) IndentNone.Add(name);
+                else IndentApplied.Add(name);
+            }
+            if (_noteTitleNames.TryGetValue(name, out var bodyName) && !_ambiguousTitles.Contains(src))
+            {
+                if (_noteByTitle.TryGetValue(src, out var other) && other != bodyName)
+                {
+                    _noteByTitle.Remove(src);
+                    _ambiguousTitles.Add(src);
+                }
+                else _noteByTitle[src] = bodyName;
+            }
+        }
+
+        /// <summary>
+        /// 打開導師筆記時的標題（簡中原文）→ 是哪一篇（內文的 表/key）與現在字串表的簡中內文。
+        /// 只認完全相同的標題；字串表還沒載入、英文標題、遊戲沒在用的「Todo List」、官方改了標題時都傳回 false。
+        /// </summary>
+        public bool TryFindNote(string title, out string name, out string body)
+        {
+            body = null;
+            name = null;
+            if (string.IsNullOrEmpty(title) || !_noteByTitle.TryGetValue(title, out var n) || !_noteBodies.TryGetValue(n, out body)) return false;
+            name = n;
+            return true;
+        }
+
+        /// <summary>
+        /// 照 indent.tsv 縮排一篇（text 是譯文）。不在 indent.tsv、段數和英文不同、英文都沒縮的照原樣傳回。
+        /// 空行不動；開頭原有的空白與已有的縮排（&lt;space=1em&gt;、舊的 &lt;space=2em&gt;）先拿掉；開頭是 &lt;b&gt; 這類標籤的，縮排放在標籤前面。
+        /// 已經縮過的再縮一次結果不變（PrepareNote 翻譯出來的已經帶縮排）。
+        /// </summary>
+        public string IndentNote(string name, string text)
+        {
+            if (text == null || name == null || !_indents.TryGetValue(name, out var ind)) return text;
+            var parts = text.Split('\n');
+            if (parts.Length != ind.lines || ind.rows.Length == 0) return text;
+            foreach (var i in ind.rows)
+            {
+                var line = StripIndent(parts[i]);
+                if (line.Length > 0) parts[i] = IndentTag + line;
+            }
+            return string.Join("\n", parts);
+        }
+
+        static readonly Regex NotePlaceholder = new Regex(@"\{\d+", RegexOptions.Compiled);
+
+        /// <summary>
+        /// 打開導師筆記：要顯示什麼、讀回時的原文是什麼、算不算換掉了舊版內文，全在這裡決定（MentorNote.cs 只接到遊戲）。
+        /// title、savedBody 是 OpenUI 收到的標題與內文（存檔裡的）；translate 是顯示層的轉換（TextConverter.Convert）。
+        /// - 認不出標題（英文介面時拿到的、遊戲沒在用的「Todo List」、官方改了標題）：傳回 null，照遊戲原樣顯示。
+        /// - 現在的內文有佔位符（違禁品那篇的 {0}～{3}：遊戲代入利潤率之後才存進物品）：不換內文，翻譯存檔裡代入好數字的內文
+        ///   （顯示層的樣板會翻好、含逐條修正與縮排）再縮排；換成現在的內文的話畫面會出現 {0}。replaced 是 false。
+        /// - 其他：換成現在字串表的內文再翻譯、縮排；replaced＝存檔裡的內文和現在的不同（Rev12 以前拿到的）。
+        /// 翻譯的結果本來就帶縮排（Translate 加的），這裡再縮一次是給整句查表對不到、走後備轉換的情況；已經縮過的結果不變。
+        /// original 一律是 savedBody：讀回 body.text 時還原成遊戲自己設的內文（ShownText 的慣例），不是我們換上的。
+        /// </summary>
+        public string PrepareNote(string title, string savedBody, Func<string, string> translate,
+                                  out string name, out string original, out bool replaced)
+        {
+            original = savedBody;
+            replaced = false;
+            if (!TryFindNote(title, out name, out var current)) return null;
+            if (_notesWithArgs.Contains(name))
+                return string.IsNullOrEmpty(savedBody) ? null : IndentNote(name, translate(savedBody));
+            replaced = !string.Equals(savedBody, current, StringComparison.Ordinal);
+            return IndentNote(name, translate(current));
+        }
+
+        /// <summary>拿掉開頭的空白（半形、全形空格、Tab）與我們加過的縮排（現在的與舊的）：已經帶著縮排時不會縮兩次。</summary>
+        static string StripIndent(string line)
+        {
+            while (true)
+            {
+                var s = line.TrimStart(IndentStrip);
+                if (s.StartsWith(IndentTag, StringComparison.Ordinal)) s = s.Substring(IndentTag.Length);
+                foreach (var old in OldIndentTags)
+                    if (s.StartsWith(old, StringComparison.Ordinal)) s = s.Substring(old.Length);
+                if (s == line) return s;
+                line = s;
+            }
+        }
+
+        /// <summary>遊戲在每日新聞內文前面接的半形空格數（NewsUIElement.PopulateUI 的 "     " ＋ newsDescription）。</summary>
+        public const int NewsSpaces = 5;
+
+        /// <summary>
+        /// 每日新聞的內文（畫面上的字）：開頭是 5 個以上的半形空格（遊戲接上去的段落縮排）時換成縮一個字（IndentTag），後面不動
+        /// （包括遊戲接在後面的「\n&lt;color=…&gt;[剩 N 天]&lt;/color&gt;」）。中文字型的半形空格很窄，5 個看起來只有半個字左右，
+        /// 英文約一個半字。只有 1～4 個空格、或空白後面什麼都沒有的不動：可能不是遊戲加的縮排。
+        /// </summary>
+        public static string IndentNews(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            int n = 0;
+            while (n < text.Length && text[n] == ' ') n++;
+            if (n < NewsSpaces || n == text.Length) return text;
+            return IndentTag + text.Substring(n);
         }
 
         readonly Dictionary<string, List<string>> _fillRefs = new Dictionary<string, List<string>>(StringComparer.Ordinal); // 被參照的 表/key → 缺翻的 表/key
@@ -156,6 +356,10 @@ namespace ProbablyStolenZhHant
                 }
                 else StaleOverrides.Add(name);
             }
+            // 導師筆記：記下現在的簡中標題與內文（打開筆記時認篇用，見 PrepareNote），再照英文加段落縮排。
+            // 縮排也在逐條修正之後（同上，不能先改）；單位英文、中文兩個版本都要有
+            RecordNote(name, src, r);
+            r = IndentNote(name, r);
             chinese = r;
             // 單位改成英文：在逐條修正之後才換（逐條修正比對的是自動轉換結果的雜湊，不能先換）
             r = _units.Apply(r);

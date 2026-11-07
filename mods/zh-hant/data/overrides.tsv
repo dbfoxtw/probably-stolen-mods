@@ -381,7 +381,7 @@ Dialogue	dialog_merchant_5	578b13061d87a8de	0	0	而	2	4	算
 Dialogue	dialog_minor_conspiracy_4	77c6e79e0e2b525f	2	3	在	10	13	研究完就	23	24	了
 Dialogue	dialog_minor_farmer_2	751f26d2215bf8ee	1	2	種	7	8		9	10	又抗	11	14	又抗	15	21	
 Dialogue	dialog_minor_patrol_2	4aac5d4dac62aae6	0	0	或者	5	6	、	10	11	。
-Dialogue	dialog_minor_salvage_pilot_4	0797e522e91226ec	4	5	者
+Dialogue	dialog_minor_salvage_pilot_4	f3483513d062beaf
 Dialogue	dialog_nellis2_9	809d2167aff8341c	0	4		7	10	那邊又沒半點
 Dialogue	dialog_nellis4_4	15ca7a666b19f211	7	8	完全不了解	14	15		16	17	際狀	18	23	
 Dialogue	dialog_reaction_strong_1	46a01443f0aec508	3	3	真夠	4	7		15	16	
@@ -439,6 +439,7 @@ Dialogue	dialog_minor_salvage_pilot_5	9d270e89ff55e8f6	6	10	搶來搶去
 Dialogue	dialog_nellis1_7	db65e7abd42e248d	7	11	破破爛爛
 Dialogue	dialog_sec_inspect_seizure_3	059751916f6dde85	2	4	今天
 Dialogue	dialog_sec_revoke_3	059751916f6dde85	2	4	今天
+Dialogue	dialog_wanted5_4	ee24feceab876d21	3	4	鉛	6	7	廚
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -778,10 +779,10 @@ Mechanic	mech_nightlog_upgrade_tip	b3c4f2925852478c	4	5		13	19	把錢拿去
 Mechanic	mech_nightlog_vandalism_cleaned	3a61e950768aec98	5	8	經收拾好	10	14	店鋪被	16	17	
 Mechanic	mech_rent_landlord	e779130cb06bfab4	2	4		7	7	會	9	10	
 Mechanic	mech_rent_landlord_missed	2cd26f0000bd1adc	2	4		7	7	會	9	10	
-Mechanic	mech_rent_loan_shark	0bcd4f012306fd6a	9	10	會	14	19		25	25	的還款
+Mechanic	mech_rent_loan_shark	0bcd4f012306fd6a	7	10	者會	14	19		25	25	的還款
 Mechanic	mech_scav_scanner_upgrade	3cc03a83c9473865	1	2		7	9	
 Mechanic	mech_turbo_hypertech_speed	36a170149e9478ae	29	30	
-Mechanic	note_serpico_letter_body_1	1e3f678b421c6292	10	11		12	13		14	14	槍	15	16		19	20	人	32	33	者	35	37	處理	44	46		50	51	送去
+Mechanic	note_serpico_letter_body_1	9db7d129f2fb8f66	10	11		12	13		14	14	槍	15	16		19	20	人	35	37	處理	44	46		50	51	送去
 Mechanic	note_serpico_letter_body_2	d826f45843495dd3	4	8	拿	20	23		25	26		27	28	但	29	31	有食物
 Mechanic	rep_esteemed	a2d492d661d897ac	0	1	備
 Mechanic	sec_data_investigation_fast	95408b4e5144c2d5	3	7		12	12	增加	23	27		29	31	了
@@ -815,7 +816,7 @@ NewGame	organ_trader_body	9d54dec717fcdf78	40	42	正當	59	59	體病
 NewGame	rancher_body	e9e1a195ecd12ef3	26	27	來
 NewGame	aquafarmer_body	46cd02efa45f9ba1	14	15	在	17	17	裡	19	20		21	23		30	32		47	49		50	51	
 NewGame	generalist_body	e9e7dfcac812db07	11	13		14	15	哪一	16	18		20	24	都沒有特別感	26	30		31	33	反而花了更多	35	39		43	44		45	48		49	50		51	52		58	62	錢
-NewGame	junker_body	5389c29f57baafb7	17	18		22	22	，	28	30		35	35	以後	45	47	連	53	55	都	57	61	一下，拿來做	63	64	這一	65	67	
+NewGame	junker_body	eab95c970855da43	17	18		22	22	，	28	30		35	35	以後	45	47	連	53	55	都	57	61	一下，拿來做	63	64	這一	65	67	
 NewGame	moonshiner_body	e10c0946986277eb	29	29	，	38	40	私酒	45	47		51	52	很	57	60	既不受管制，	61	77	不合	78	80	
 NewGame	pharmacist_body	15d206b2f3ab4443	32	33	局
 NewGame	rock_bottom_body	6861ab01ace5952c	0	0	導師	12	14	什麼都	15	17	幫	18	24	
@@ -1001,6 +1002,7 @@ UI	book_fuel_p1_body4	3408c6c8b728cebd	5	6	製
 UI	ui_run_summary_hl_best_find	0da1a1bdbcea441d	2	4	收穫
 UI	ui_run_summary_nights_went	f2fc4e96393667b0	2	4	去哪
 UI	ui_run_summary_where_money_went	048280f6c8d4afd9	1	4	花在哪
+UI	book_chem_p3_caffeine_pill_recipe	c2f94b7530994f49	3	3	藥
 RepPerkTable	rep_perk_UL_TOURISTTRAP_desc	e56baee2601821a8	6	6	較不會	12	18	
 RepPerkTable	rep_perk_SEC_ALARM_IGNORED_flavor	f2208254c0dbda01	13	14	抑
 RepPerkTable	rep_perk_BM_UNINSURABLE_name	2d3df1340205f431	2	3	投
@@ -1091,7 +1093,6 @@ Hint	start_day_hover	182186e29d0f2fe9	0	6	還	11	11	在排隊時	12	14	就
 Hint	start_day	3eb5aa1b48a13293	1	2	店	3	7	打烊
 ClientName	name_food_bank_supplier	1a7ff935e40ff3a9	0	2	食物銀行
 ClientName	name_foodie_tourist	5c43198851d0d905	0	2	老饕
-ClientName	name_leroy	2bfd9dbb94bf4c6d	1	3	羅伊
 ClientName	name_scrap_buyer	d01e5cbbc6315635	1	2	料	4	5	商
 ClientName	name_off_duty_officer	bcdd442a6df19aaf	0	1	下
 ClientName	name_mercenary	a598c5f59bbfabe9	0	1	
@@ -1099,6 +1100,7 @@ ClientName	name_shopping_mercenary	c28dcc8a196fe58c	5	6
 ClientName	name_scalper	5e3625caabcf4e00	2	4	
 ClientName	name_upper_levels_pharmacist	a59e08d47a5f0578	4	5	劑師
 Interactable	door_crackdown	b7db093738a3ad07	2	4	
+Interactable	vending_fountain_tooltip	eb00c30e06393baf	0	0	自動
 Tutorial	tuto_shutter	6f46d6e64652fbbd
 Tutorial	tuto_display_case	55e8094ab7f37e79
 Tutorial	tuto_drag_select	e1b0350ef730d1a9	7	8	曳

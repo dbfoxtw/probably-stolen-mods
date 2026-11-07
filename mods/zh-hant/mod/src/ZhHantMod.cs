@@ -67,7 +67,7 @@ namespace ProbablyStolenZhHant
             _reported = true;
         }
 
-        /// <summary>PatchAll 是遊戲做的，這裡只把結果寫進 log（TAnimCore 找不到時只少那一個，其他照常）。</summary>
+        /// <summary>PatchAll 是遊戲做的，這裡只把結果寫進 log（TAnimCore、PaperUIManager.OpenUI、NewsUIElement.PopulateUI 找不到時只少那一個，其他照常）。</summary>
         static void LogPatches()
         {
             try
@@ -90,11 +90,13 @@ namespace ProbablyStolenZhHant
             }
             catch (Exception e) { Warning($"列出攔截的方法失敗：{e.Message}"); }
             if (!TextAnimatorPatch.Found) Warning($"找不到 Text Animator 的 {TextAnimatorPatch.Target}，打字機效果可能失效");
+            if (!MentorNotePatch.Found) Warning($"找不到 {MentorNotePatch.Target.Replace(':', '.')}，導師筆記的行距不調整");
+            if (!NewsPatch.Found) Warning($"找不到 {NewsPatch.Target.Replace(':', '.')}，每日新聞的開頭不縮排");
         }
 
-        static void Msg(string s) => _log?.Log(s);
-        static void Warning(string s) => _log?.Warning(s);
-        static void Error(string s) => _log?.Error(s);
+        internal static void Msg(string s) => _log?.Log(s);
+        internal static void Warning(string s) => _log?.Warning(s);
+        internal static void Error(string s) => _log?.Error(s);
 
         /// <summary>mod 資料夾的 data\ 底下的檔（相對路徑以 / 分隔）；不存在傳回 null。</summary>
         static string ReadData(string rel) => ModHelper.ReadModFileText(ModId, DataDir + "/" + rel);
@@ -123,7 +125,10 @@ namespace ProbablyStolenZhHant
                 MissingTranslations.Init(tr, _log);
                 _data = DataState.Ready;
                 Msg($"載入翻譯資料：OpenCC {tr.OpenCCEntries} 詞、術語 {tr.TermCount}、逐條修正 {tr.OverrideCount}、" +
-                    $"缺翻補譯文 {tr.Fills.Count} 條＋參照字串表 {tr.FillRefCount} 條、補佔位符 {tr.ArgCount} 條（{sw.ElapsedMilliseconds} ms）{(_debug ? "；除錯模式" : "")}");
+                    $"缺翻補譯文 {tr.Fills.Count} 條＋參照字串表 {tr.FillRefCount} 條、補佔位符 {tr.ArgCount} 條、導師筆記縮排 {tr.IndentCount} 篇（{sw.ElapsedMilliseconds} ms）{(_debug ? "；除錯模式" : "")}");
+                // indent.tsv 讀不懂的行：只略過那一行（那一篇照原樣不縮排），其他照用；Load 只跑一次，每行只記一次
+                foreach (var bad in tr.IndentBadLines)
+                    Warning($"indent.tsv 有一行讀不懂，略過（那一篇照原樣不縮排）：{bad.Replace("\t", "<Tab>")}");
             }
             catch (Exception e)
             {
@@ -155,11 +160,45 @@ namespace ProbablyStolenZhHant
             if (Conv == null) return;
             try
             {
+                if (_preparedShown != null && ReferenceEquals(s, _preparedShown) && t.GetInstanceID() == _preparedId)
+                {
+                    // 已經轉好的（導師筆記的內文）：不再轉一次，只記下遊戲原本要設的內文，讀回時換回它
+                    var prepared = _preparedOriginal;
+                    ClearPrepared();
+                    Shown.Record(t.GetInstanceID(), prepared, s);
+                    return;
+                }
                 var original = s;
                 s = Conv.Convert(original);
                 Shown.Record(t.GetInstanceID(), original, s);
             }
             catch (Exception e) { Error($"轉換失敗：{e.Message}"); }
+        }
+
+        // 下一次設定這個 TMP（_preparedId）的文字、而且剛好是這個字串（同一個參照）時，當成已經轉好、原文是 _preparedOriginal（只用一次）。
+        // 物件與參照都要對：交出去的可能就是整句對照裡的譯文實體（打開筆記時整句查到的），只比參照的話，
+        // 別的 TMP 剛好設同一句譯文時會被當成筆記、記錯原文。其他 TMP 就算內容一樣也照常轉換
+        static string _preparedShown, _preparedOriginal;
+        static long _preparedId = ShownText.NoId;
+
+        /// <summary>
+        /// 導師筆記（MentorNotePatch）與每日新聞（NewsPatch）用：id 是那個 TMP 的 GetInstanceID()，shown 是已經翻譯、縮排好的字，
+        /// original 是遊戲原本要設的字（筆記是 OpenUI 收到的、存檔裡的內文；新聞是 PopulateUI 設的簡中）。把 shown 設給那個 TMP 時，
+        /// TMP 的攔截不再轉換（已經是我們要的樣子，再轉一次可能被改掉），只記下 original，讀回時換回它。
+        /// </summary>
+        internal static void PrepareNext(long id, string shown, string original)
+        {
+            _preparedId = id;
+            _preparedShown = shown;
+            _preparedOriginal = original;
+        }
+
+        /// <summary>沒用到的話（OpenUI 中途出錯）在 OpenUI 結束後清掉，不留到下一次。</summary>
+        internal static void ClearPrepared()
+        {
+            _preparedId = ShownText.NoId;
+            _preparedShown = null;
+            _preparedOriginal = null;
         }
 
         /// <summary>TMP 讀取文字：讀到的是轉換結果就換回原文。</summary>
@@ -170,8 +209,8 @@ namespace ProbablyStolenZhHant
             catch (Exception e) { Error($"讀取時還原原文失敗：{e.Message}"); }
         }
 
-        /// <summary>讀畫面上實際顯示的文字（不換回原文）。</summary>
-        static string RawText(TMP_Text t)
+        /// <summary>讀畫面上實際顯示的文字（不換回原文）；每日新聞的 patch（NewsPatch）也用。</summary>
+        internal static string RawText(TMP_Text t)
         {
             _rawRead = true;
             try { return t.text; }
@@ -299,6 +338,13 @@ namespace ProbablyStolenZhHant
                 $"遊戲啟動後 {Time.realtimeSinceStartup:F1} 秒）");
             if (Tr.StaleOverrides.Count > 0)
                 Warning($"原文已變動、暫停套用的逐條修正 {Tr.StaleOverrides.Count} 條：{string.Join("、", Tr.StaleOverrides.GetRange(0, Math.Min(10, Tr.StaleOverrides.Count)))}");
+            // 導師筆記的段落縮排：使用者發版前從 log 確認篇數（正式版 100-Rev12 是套用 17 篇、英文沒縮排 1 篇）。
+            // 縮排在逐條翻譯時加（Translate）；打開筆記時另外認篇、換成現在的內文（MentorNotePatch）。
+            // 段數和英文不同的（遊戲改了筆記）照原樣顯示，每篇只列一次。
+            // 「認得出標題」是打開筆記時能認篇、換內文、縮排的篇數（100-Rev12 是 18）：官方改了標題時這個數字會變少，從 log 看得出來
+            Msg($"導師筆記段落縮排 {Tr.IndentApplied.Count} 篇（共 {Tr.IndentCount} 篇；英文沒縮排的 {Tr.IndentNone.Count} 篇、段數和英文不同的 {Tr.IndentMismatched.Count} 篇照原樣），認得出標題的 {Tr.NoteCount} 篇");
+            if (Tr.IndentMismatched.Count > 0)
+                Warning($"導師筆記的段數和英文不同、照原樣不縮排 {Tr.IndentMismatched.Count} 篇：{string.Join("、", Tr.IndentMismatched)}");
 
             // 暫用轉換器轉過、還在畫面上的字：設回原文，讓攔截用正式的轉換器重轉（逐條修正、短詞等可能不同）
             int refreshed = 0;
