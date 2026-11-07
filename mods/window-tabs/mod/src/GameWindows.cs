@@ -264,10 +264,12 @@ namespace ProbablyStolenWindowTabs
         }
 
         /// <summary>
-        /// 現在能不能接受分頁的操作：外出時、暫停選單或選項開著時、拖著面板、框選或選了一組物品時不動作
-        /// （照視窗群組的 CanAct；拖著單一物品另外處理：停在分頁上要切頁）。原因給除錯 log。
-        /// 框選：Demo 看 state ≥ 2（框選中、選取中、拖一組物品）；正式版 state 改 private，改用公開的 HasSelection（不是 Idle），
-        /// 多擋了「按下、還沒開始框選」（PendingBand）。那時按下的地方不是視窗的可拖處也不是分頁（不然遊戲不會準備框選），本 mod 本來就沒事做。
+        /// 現在能不能接受分頁的操作：外出時、暫停選單或選項開著時、拖著面板、框選中或準備拖一組物品時不動作
+        /// （照視窗群組的 CanAct；拖著單一物品或一組物品另外處理：停在分頁上要切頁）。原因給除錯 log。
+        /// 框選：Demo 看 state ≥ 2（框選中、選取中、拖一組物品）；正式版 state 改 private，改用公開的 HasSelection（不是 Idle）、
+        /// IsGroupDragging 與多選的鍵有沒有按著（Rules.MultiSelectBlocks）：擋拉框、準備拉框（PendingBand）、準備拖一組。
+        /// 準備拉框時按下的地方不是視窗的可拖處也不是分頁（不然遊戲不會準備框選），本 mod 本來就沒事做。
+        /// 選好、放開（Selected）時照常（Workshop 留言：選好以後要能換別的視窗再拖過去，視窗群組、一鍵關窗也一起放行）；拖一組時當成拖物品。
         /// </summary>
         internal static bool CanAct(out string reason)
         {
@@ -279,7 +281,9 @@ namespace ProbablyStolenWindowTabs
                 var map = MapUIManager.Instance;
                 if (map != null && map.isOutside) { reason = "外出中"; return false; }
                 var multi = ItemMultiSelectHandler.current;
-                if (multi != null && multi.HasSelection) { reason = "框選或選了一組物品"; return false; }
+                // 拉框、準備拉框、準備拖一組都要一直按著多選的鍵（遊戲的 OnEventUpdate 發現沒按著就重設）
+                if (multi != null && Rules.MultiSelectBlocks(multi.HasSelection, multi.IsGroupDragging, Input.GetKey(multi.key)))
+                { reason = "框選中或準備拖一組物品"; return false; }
                 if (UIDragHandler.isDraggingAnyUI) { reason = "拖著面板"; return false; }
                 var esc = ui.escapeUIManager;
                 if (esc != null && esc.menuPanel != null && esc.menuPanel.activeInHierarchy) { reason = "暫停選單開著"; return false; }
@@ -328,6 +332,37 @@ namespace ProbablyStolenWindowTabs
                 return drag != null ? drag.GetCurrentItem() : null;
             }
             catch { return null; }
+        }
+
+        /// <summary>
+        /// 正在拖一組框選的物品（ItemMultiSelectHandler.IsGroupDragging）。拖一組時 ItemMouseDragHandler 不算拖曳中，
+        /// 但遊戲一樣把被拖箱子的視窗藏起來、影子畫在 overlayRoot，和拖單一物品一樣處理（停在分頁上切頁）。
+        /// </summary>
+        internal static bool GroupDragging()
+        {
+            try
+            {
+                var multi = ItemMultiSelectHandler.current;
+                return multi != null && multi.IsGroupDragging;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// 這個物品正被拖著：拖單一物品的那個，或在拖著的一組裡。遊戲拖它時把它的視窗藏起來（不能把箱子放進自己裡面），
+        /// 停在它的分頁上不切過去。出錯當作沒在拖。
+        /// </summary>
+        internal static bool IsBeingDragged(GameItem item)
+        {
+            if (item == null) return false;
+            try
+            {
+                // 按下、還沒拖起來時 DraggedItem 已經是按著的物品，先看是不是正在拖
+                if (DraggingItem() && ReferenceEquals(item, DraggedItem())) return true;
+                var multi = ItemMultiSelectHandler.current;
+                return multi != null && multi.IsGroupDraggingItem(item);
+            }
+            catch { return false; }
         }
     }
 }

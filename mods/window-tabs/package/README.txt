@@ -3,7 +3,7 @@ Probably Stolen 視窗分頁 mod（Window Tabs） v{version}
 
 把店裡的箱子、機器視窗疊成一個有分頁的視窗：把一個視窗拖到另一個視窗的標題列上就合併成分頁，
 點分頁切換，把分頁拖出來就拆開。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs
@@ -36,7 +36,7 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
   只剩一頁時分頁條消失。
 - 分頁寫物品的名稱（用藍色標籤印表機改過名字的就用改的名字），同一組裡同名的加編號（儲藏區 1、儲藏區 2），
   編號跟著箱子走。一排放不下就換行成好幾排。目前那頁和深灰的標題列接成一塊，其他頁比較暗。
-- 拖著物品停在分頁上約半秒就切到那頁（停著時字變黃）。
+- 拖著物品（或框選的一組物品）停在分頁上約半秒就切到那頁（停著時字變黃）。
 - 視窗的 ×、ESC 關掉整組；在店裡雙擊組裡的箱子，整組在上次的位置打開，雙擊的那個是目前那頁。
 - 可以組的：店裡的箱子、機器、背包，以及垃圾桶、檔案箱、卡帶播放器（紙張面板、客人的箱子不行）。
 - 賣掉、丟掉或帶出門的分頁先不顯示，帶回店裡又會出現。不在店裡時不動作。
@@ -54,6 +54,8 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 - 已知限制：快速轉移（Ctrl＋點擊）只會放進目前那頁。
   儲物協調器的一個預設集裡有同一個分頁組的兩個以上的箱子時，按那個預設集的鍵只會開、不會關（要用 ESC 或 × 關）；
   打開時留下最後開的那頁，擺在分頁組的位置。
+  拖著物品從 A 頁切到 B 頁再切回 A 頁，拖著的物品圖案會消失、只剩選取的框，照樣放得下
+  （用遊戲的儲物協調器把來源視窗關掉再打開也是這樣）。
 - 相容性：
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：分頁的名稱是繁中。
   一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720）：每一頁各自鎖；鎖住的那頁被切走後，
@@ -77,7 +79,7 @@ Probably Stolen Window Tabs mod v{version}
 Stack your shop's container and machine windows into one window with tabs: drag a window onto another
 window's title bar to merge them, click a tab to switch, drag a tab out to split it off.
 Unofficial, in the game's official mod format (no MelonLoader needed).
-Supported game version: full release 1.0 (VERSION 100-REV6; the 100-REV9 beta branch is also supported)
+Supported game version: full release 1.0 (VERSION 100-REV12)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -118,7 +120,8 @@ Features
 - Tabs show the item's name (or the name you gave it with the Blue Labeler), numbered when names repeat
   in a set (Storage Bay 1, Storage Bay 2); a number stays with its container. Tabs wrap into more rows.
   The current tab joins the dark gray title bar; the others are darker.
-- Hold a dragged item over a tab for about half a second to switch to it (its text turns yellow).
+- Hold a dragged item (or a box-selected group of items) over a tab for about half a second to switch to it
+  (its text turns yellow).
 - The window's × or Esc closes the whole set; double-click one of its containers in your shop to open
   the set where it was, with that container as the current tab.
 - Works with your shop's containers, machines and backpacks, and the Trash Can, the Dossier and the
@@ -141,6 +144,9 @@ Notes
 - Known limitations: Quick Transfer (Ctrl + Click) only goes into the current tab.
   If one of the Storage Coordinator's presets has two or more containers from the same tab set, its key only
   opens, never closes (close with Esc or ×); the tab opened last stays, at the tab set's position.
+  If you drag an item from tab A to tab B and back to A, the dragged item's image disappears and only the
+  selection highlight remains; you can still drop it (the same happens if you close and reopen the source
+  window with the game's Storage Coordinator).
 - Compatibility:
   Traditional Chinese mod (https://www.nexusmods.com/probablystolen/mods/280): tab names in Traditional Chinese.
   Close All Windows (https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock; after you

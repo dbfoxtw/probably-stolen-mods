@@ -39,6 +39,7 @@ namespace ProbablyStolenWindowTabs.Verify
             LayoutTest();
             LiftedReorderTest();
             PositionTest();
+            MultiSelectTest();
             StaleTest();
             StoreTest();
             DemoFileTest();
@@ -611,6 +612,21 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:-1", 0), "負的幀號不算");
             Check(!Rules.IsFreshRecallMarker("WindowGroups_Recalled:12x", 12), "幀號不是數字不算");
             Check(!Rules.IsFreshRecallMarker(null, 500), "沒有名字不算");
+        }
+
+        /// <summary>
+        /// 多選時分頁的操作要不要擋（Rules.MultiSelectBlocks；Workshop 留言：選好物品後要能換別的視窗）。
+        /// 遊戲的多選狀態：Idle＝沒有選取；PendingBand／Banding／PendingGroupDrag＝有選取、不是拖一組、按著；
+        /// Selected＝有選取、沒按著；GroupDragging＝拖一組。
+        /// </summary>
+        static void MultiSelectTest()
+        {
+            Check(!Rules.MultiSelectBlocks(false, false, false), "沒有選取：照常");
+            Check(!Rules.MultiSelectBlocks(false, false, true), "沒有選取、按著滑鼠（點分頁、拖視窗）：照常");
+            Check(Rules.MultiSelectBlocks(true, false, true), "拉框、準備拉框、準備拖一組：不動作");
+            Check(!Rules.MultiSelectBlocks(true, false, false), "選好、放開（Selected）：照常");
+            Check(!Rules.MultiSelectBlocks(true, true, true), "拖一組：照常（當成拖物品，停在分頁上切頁）");
+            Check(!Rules.MultiSelectBlocks(true, true, false), "拖一組、滑鼠剛放開的那一幀：照常");
         }
 
         static void StaleTest()

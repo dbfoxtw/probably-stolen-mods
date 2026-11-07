@@ -363,7 +363,8 @@ namespace ProbablyStolenWindowTabs
         {
             var mouse = (Vector2)Input.mousePosition;
             bool down = held && !_wasHeld;
-            bool draggingItem = GameWindows.DraggingItem();
+            // 拖單一物品或拖一組框選的物品都算：遊戲兩種都把被拖箱子的視窗藏起來、影子畫在 overlayRoot，停在分頁上一樣切頁
+            bool draggingItem = GameWindows.DraggingItem() || GameWindows.GroupDragging();
             switch (_mode)
             {
                 case Mode.Idle:
@@ -698,8 +699,8 @@ namespace ProbablyStolenWindowTabs
         }
 
         /// <summary>
-        /// 拖著物品停在分頁上約半秒就切過去：停著的那個分頁先變亮（UpdateStrips 畫）。
-        /// 不切到「正被拖的那個箱子」：遊戲拖它時故意把它的視窗藏起來（不能把箱子放進自己裡面）。
+        /// 拖著物品（單一或框選的一組）停在分頁上約半秒就切過去：停著的那個分頁先變亮（UpdateStrips 畫）。
+        /// 不切到「正被拖的那個箱子」（拖一組時是組裡任何一個）：遊戲拖它時故意把它的視窗藏起來（不能把箱子放進自己裡面）。
         /// </summary>
         static void HoverWhileDraggingItem(TabRecord r, Vector2 mouse)
         {
@@ -716,8 +717,8 @@ namespace ProbablyStolenWindowTabs
             _hoverSince = float.MaxValue; // 切過去後不再重複觸發；滑鼠移開再回來才會再算
             var g = r.Find(id);
             if (g == null || g.Active == id) return;
-            var dragged = GameWindows.DraggedItem();
-            if (dragged != null && Items().TryGetValue(id, out var item) && ReferenceEquals(item, dragged)) return;
+            // 拖一組時，組裡任何一個箱子的分頁都不切
+            if (Items().TryGetValue(id, out var item) && GameWindows.IsBeingDragged(item)) return;
             Switch(r, g, strip.Window, id);
         }
 

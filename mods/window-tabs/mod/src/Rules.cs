@@ -340,5 +340,14 @@ namespace ProbablyStolenWindowTabs
         /// 計數器退回去，之後那個編號會發給別的物品。固定設施是負數編號，不受影響。
         /// </summary>
         internal static bool IsStale(int id, int currentUniqueId) => id > currentUniqueId;
+
+        /// <summary>
+        /// 多選時分頁的操作要不要擋（GameWindows.CanAct）：hasSelection＝ItemMultiSelectHandler.HasSelection（不是 Idle）、
+        /// groupDragging＝IsGroupDragging、mouseHeld＝多選的鍵（滑鼠左鍵）按著。
+        /// 拉框、準備拉框、準備拖一組（有選取、不是拖一組、按著）擋；選好、放開（Selected）照常；
+        /// 拖一組不擋，當成拖物品（停在分頁上切頁，Tabs.HandleInput 的 DragItem）。
+        /// </summary>
+        internal static bool MultiSelectBlocks(bool hasSelection, bool groupDragging, bool mouseHeld) =>
+            hasSelection && !groupDragging && mouseHeld;
     }
 }

@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-07）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+
+- 拖著框選的一組物品停在分頁上約半秒，也會切到那頁（以前只有拖單一物品會切）。
+- 選好一組物品、放開滑鼠以後，點分頁、拖視窗照常（以前選了一組物品就不動作）；拉框時照舊不動作。
+- 對應遊戲版本改成 VERSION 100-REV12。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV12)
+
+- Holding a box-selected group of items over a tab for about half a second now switches to it too (before, only a single dragged item did).
+- With a group of items selected (after you release the mouse), clicking tabs and dragging windows work as usual (before, nothing happened with items selected); still nothing while you draw the selection box.
+- Supported game version is now VERSION 100-REV12.
+
 ## v2.1.0（2026-11-05）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）

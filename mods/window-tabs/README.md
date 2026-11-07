@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：把店裡的箱子、機器視窗疊成一個有分頁的視窗。把一個視窗拖到另一個視窗的標題列上就合併成分頁，點分頁切換，把分頁拖出來就拆開。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV6，也支援 beta 分支的 100-REV9）
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Tabs 的最新版，標記 `window-tabs-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -22,12 +22,12 @@
   - 目前那頁和深灰的標題列同色、接成一塊；沒在看的比較暗、字比較淡。
   - 一排放不下就換行成好幾排，名稱全部看得到；點上排的分頁只會變成目前那頁的顏色，不和標題列接起來。
   - 分頁條會跑出畫面上緣時，視窗會被往下推。
-- **拖著物品停在分頁上**：分頁先變亮、字變黃，約半秒後切到那頁，接著把物品放進去。
+- **拖著物品停在分頁上**（單一物品或框選的一組物品都可以）：分頁先變亮、字變黃，約半秒後切到那頁，接著把物品放進去。
 - **關掉與打開**：視窗的 ×、ESC 會關掉整組（畫面上本來就只開著目前那頁）。之後在店裡雙擊組裡任何一個箱子，整組在上次的位置打開，雙擊的那個是目前那頁。整組開著時雙擊組裡另一個＝切到它，位置不動。
 - **可以組的**：店裡的箱子、機器、背包，以及垃圾桶、檔案箱、卡帶播放器。日曆、平板、文件這類紙張面板，客人的箱子，和店裡固定不能移動的格子都不行。
 - **賣掉、丟掉或帶出門的**：它的分頁先不顯示，但留在組裡，帶回店裡又會出現。暫時打不開的（例如上鎖的）切不過去，也拖不出來。
 - **和儲藏區的分頁不同**：遊戲的儲藏區擴建套件會在儲藏區的視窗裡面加分頁（「分頁1」「分頁2」…），那是同一個儲藏區裡的幾頁格子；這個 mod 的分頁是把不同的視窗疊在一起。兩個可以一起用：擴建過的儲藏區也能當這個 mod 的一頁，切走再切回來，它選的那個分頁會保持。
-- **什麼時候不動作**：不在店裡（出門時分頁條藏起來）、暫停選單或選項開著、拖著面板、框選或選了一組物品。
+- **什麼時候不動作**：不在店裡（出門時分頁條藏起來）、暫停選單或選項開著、拖著面板、拉框選取物品時。選好一組物品、放開滑鼠以後照常。
 
 沒有設定、不用按鍵，全部用滑鼠操作。分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
 
@@ -69,6 +69,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 - 沒在看的分頁是關著的視窗：快速轉移（Ctrl＋點擊）只會放進目前那頁；拖物品進別頁要先停在分頁上切過去。
 - 大小不同的箱子切換時，視窗的左上角不動。
 - **儲物協調器**（遊戲的物品）的一個預設集裡有同一個分頁組的兩個以上的箱子時，按那個預設集的鍵只會開、不會關（要用 ESC 或 × 關）；打開時留下最後開的那頁，擺在分頁組的位置。
+- 拖著物品從 A 頁切到 B 頁、再切回 A 頁，拖著的物品圖案會消失、只剩選取的框，照樣放得下。用遊戲的儲物協調器把來源視窗關掉再打開也是這樣。
 
 ## 相容性
 
@@ -104,7 +105,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (the main menu shows VERSION 100). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
+A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (VERSION 100-REV12). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs).
 
@@ -120,12 +121,12 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - The current tab is the same dark gray as the title bar and joins it; the others are darker, with dimmer text.
   - Tabs that don't fit in one row wrap into more rows, so every name shows; clicking a tab in an upper row gives it the current tab's color but doesn't join it to the title bar.
   - If the tab strip would go off the top of the screen, the window is pushed down.
-- **Hover with an item**: while dragging an item, hold it over a tab; the tab lights up with yellow text and switches after about half a second, so you can drop the item in.
+- **Hover with an item**: while dragging an item (or a box-selected group of items), hold it over a tab; the tab lights up with yellow text and switches after about half a second, so you can drop the item in.
 - **Close and open**: the window's ×, or Esc, closes the whole set (only the current tab is really open). Double-click any container of the set in your shop to open the set where it was, with that container as the current tab. While the set is open, double-clicking another container of it switches to that tab in place.
 - **What can be tabbed**: your shop's containers, machines and backpacks, and the Trash Can, the Dossier and the Cassette Player. Paper panels (the calendar, tablet, documents), a customer's box, and the shop's fixed storage that can't be moved can't.
 - **Sold, thrown away or taken out**: its tab is hidden but stays in the set, and comes back once the container is in the shop again. A container that can't be opened right now (e.g. locked) can't be switched to or dragged out.
 - **Not the Storage Bay's tabs**: the game's Storage Bay Expansion Kit adds tabs inside a Storage Bay's window (Tab 1, Tab 2…), pages of the same Storage Bay; this mod's tabs stack different windows together. The two work together: an expanded Storage Bay can be a tab of this mod too, and the tab it's on stays the same when you switch away and back.
-- **When it does nothing**: away from the shop (the tab strips are hidden), with the pause menu or options open, while dragging a panel, or while box-selecting or with a group of items selected.
+- **When it does nothing**: away from the shop (the tab strips are hidden), with the pause menu or options open, while dragging a panel, or while drawing a selection box around items. With a group of items selected (after you release the mouse), it works as usual.
 
 No settings, no keys: everything is done with the mouse. The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
@@ -155,6 +156,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-tabs` folder, and
 - Tabs you aren't looking at are closed windows: Quick Transfer (Ctrl + Click) only goes into the current tab, and to drag an item into another tab, hold it over that tab first.
 - When containers of different sizes switch, the window's top-left corner stays put.
 - **Storage Coordinator** (an item in the game): if one of its presets has two or more containers from the same tab set, its key only opens, never closes (close with Esc or ×); the tab opened last stays, at the tab set's position.
+- If you drag an item from tab A to tab B and back to A, the dragged item's image disappears and only the selection highlight remains; you can still drop it. The same happens if you close and reopen the source window with the game's Storage Coordinator.
 
 **Compatibility**
 
