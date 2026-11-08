@@ -1,0 +1,49 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized). Format: key,value
+key_show_info,Show item info
+key_show_info_tip,"Hold to show item info on the items on screen, based on your settings and the item type. Release to hide. With Key mode set to Toggle, press once to show and again to hide."
+cfg_container_name,Show container names
+cfg_container_name_tip,"Show the name you gave a box, backpack, storage bay or other item that opens its own window, in light blue."
+cfg_machine_name,Show machine names
+cfg_machine_name_tip,"Show the name you gave a machine, in light blue."
+cfg_item_name,Show other item names
+cfg_item_name_tip,"Show the name you gave any other item (for example a Jug of Water or a Metal Ingot), in light blue."
+cfg_name_position,Name position
+cfg_name_position_tip,Where names are shown.\nTop = centered at the top of the item\nLabel = first line of the label
+cfg_name_text_size,Name text size
+cfg_name_text_size_tip,"Size of the names: Small, Medium or Large, the same sizes as Text size."
+cfg_water_volume,Show water volume
+cfg_water_volume_tip,"Show how much water a container holds, in ml.\nShort: W 4000ml\nLong: Vol 4000ml"
+cfg_water_purity,Show water purity
+cfg_water_purity_tip,"Show the purity of the water in a container (not for empty ones).\nShort: Q 98.52%\nLong: Pur 98.52%"
+cfg_real_purity,Always show real water purity
+cfg_real_purity_tip,"Off: scanned water shows the exact %, other water shows ?.\nOn: every container shows its real purity, no testing needed (you can also tell when a client lies).\nNeeds Show water purity on."
+cfg_battery_charge,Show battery charge
+cfg_battery_charge_tip,"Show how much energy a battery has left, for example 8kJ."
+cfg_battery_tonight_charge,Show tonight's charge
+cfg_battery_tonight_charge_tip,"Show in green how much a battery will be charged tonight, for example +4kJ. Hidden when it is full or won't be charged."
+cfg_machine_power,Show machine power
+cfg_machine_power_tip,"Show the energy left in a machine's battery. The line turns red when it is not enough for tonight.\nShort: E 87kJ\nLong: Pwr 87kJ"
+cfg_machine_tonight_net,Show tonight's net energy
+cfg_machine_tonight_net_tip,"Show how much a machine's battery will change tonight (charged minus used), under the power line.\nUp: green, for example +4kJ\nDown: orange, for example -8kJ\nHidden when it won't change or the power line is red."
+cfg_machine_reason,Show why a machine won't run tonight
+cfg_machine_reason_tip,"Show a short reason in orange when a machine won't run tonight, for example No input, No power or Output full."
+cfg_machine_progress,Show machine progress
+cfg_machine_progress_tip,"Show how many days a machine still needs, at its current Progress Speed. Later changes from module effects like Overcharged or Degrading are not predicted. Hidden when it won't run tonight.\nShort: 3d\nLong: 3day"
+cfg_machine_output,Show output count
+cfg_machine_output_tip,Show how many items are in a machine's output (Intake and Outlet Hoppers don't count).\nShort: Out 7\nLong: Output 7
+cfg_machine_water,Show water info in machines
+cfg_machine_water_tip,Show the volume and purity of the water inside a machine. The two lines also follow Show water volume and Show water purity.\nShort: W / Q\nLong: Vol / Pur
+cfg_stolen_heat,Show stolen heat
+cfg_stolen_heat_tip,"Show the heat of a stolen item in red.\nShort: H 45%\nLong: Heat 45%"
+cfg_use_count,Show uses left
+cfg_use_count_tip,"Show how many uses an item has left. Red when used up.\nShort: U 3\nLong: Uses 3"
+cfg_durability,Show durability
+cfg_durability_tip,"Show an item's durability. Orange at 1/4 or less.\nShort: D 320\nLong: Dur 320"
+cfg_ingot_purity,Show ingot purity
+cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example High Purity."
+cfg_key_mode,Key mode
+cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
+cfg_text_size,Text size
+cfg_text_size_tip,"Size of the label text (names follow Name text size): Small, Medium or Large. One item cell is 16 units; the text is 3.5, 4.5 or 6 units tall."
+cfg_prefix,Line prefixes
+cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that label uses short words.\nShort: W, Q, E, 3d, Out, H, U, D\nLong: Vol, Pur, Pwr, 3day, Output, Heat, Uses, Dur"

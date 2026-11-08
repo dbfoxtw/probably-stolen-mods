@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 離線測試：標籤的數字格式、分段、掃描結果的解析、行序、顏色與開關、每台機器的判斷（MachineLogic）、三語字串（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\src\Rules.cs" Link="Rules.cs" />
+    <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+    <Compile Include="..\src\MachineLogic.cs" Link="MachineLogic.cs" />
+  </ItemGroup>
+
+</Project>

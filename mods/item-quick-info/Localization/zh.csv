@@ -1,0 +1,49 @@
+# 本模组设置与按键绑定的标签和说明（ModHelper.GetLocalized）。格式：key,值
+key_show_info,显示物品信息
+key_show_info_tip,按住时根据设置和物品种类显示物品信息，放开就消失。设置改成 Toggle 时，按一下显示、再按一下消失。
+cfg_container_name,显示箱子名称
+cfg_container_name_tip,在箱子、背包、储藏区等打得开、有自己窗口的物品上，用浅蓝色显示你取的名称。
+cfg_machine_name,显示机器名称
+cfg_machine_name_tip,在机器上用浅蓝色显示你取的名称。
+cfg_item_name,显示其他物品名称
+cfg_item_name_tip,在箱子、机器以外的物品上（例如水桶、金属锭），用浅蓝色显示你取的名称。
+cfg_name_position,名称位置
+cfg_name_position_tip,名称显示的位置。\nTop＝物品上方置中\nLabel＝标签的第一行
+cfg_name_text_size,名称文字大小
+cfg_name_text_size_tip,名称的文字大小：Small（小）、Medium（中）、Large（大），大小和“文字大小”的三级一样。
+cfg_water_volume,显示水量
+cfg_water_volume_tip,显示容器里有多少水，单位毫升。\nShort：水 4000ml\nLong：水量 4000ml
+cfg_water_purity,显示水质
+cfg_water_purity_tip,显示容器里的水的纯度（空的容器不显示）。\nShort：质 98.52%\nLong：水质 98.52%
+cfg_real_purity,总是显示真实水质
+cfg_real_purity_tip,关闭：扫描过的显示百分比，其他显示 ?。\n打开：全部显示真实水质，不用再检测（客人谎报也看得出来）。\n要先打开“显示水质”。
+cfg_battery_charge,显示电池电量
+cfg_battery_charge_tip,显示电池剩下的能量，例如 8kJ。
+cfg_battery_tonight_charge,显示今晚会充多少电
+cfg_battery_tonight_charge_tip,电池今晚会充电时，在下面用绿字显示会充多少，例如 +4kJ。充满或今晚不会充时不显示。
+cfg_machine_power,显示电量
+cfg_machine_power_tip,显示机器里电池剩下的能量。不够今晚用时这一行变红。\nShort：电 87kJ\nLong：电力 87kJ
+cfg_machine_tonight_net,显示今晚的电力收支
+cfg_machine_tonight_net_tip,显示机器今晚的电量会变多少（会充进来的减掉会用掉的），在电力那行下面。\n增加：绿字，例如 +4kJ\n减少：橙字，例如 -8kJ\n不变或电力那行变红时不显示。
+cfg_machine_reason,显示今晚不会运作的原因
+cfg_machine_reason_tip,机器今晚不会运作时，用橙色显示简短的原因，例如缺料、缺电、产出满了。
+cfg_machine_progress,显示进度
+cfg_machine_progress_tip,显示机器还要几天完成，按现在的作业速度算，不推算过载、退化等模组效果之后的变化。今晚不会运作时不显示。\nShort：3天\nLong：剩3天
+cfg_machine_output,显示输出区的成品数
+cfg_machine_output_tip,机器的输出区有东西时，显示一共有几个（进料斗、出料斗不算）。\nShort：成 7\nLong：成品 7
+cfg_machine_water,显示机器里的水信息
+cfg_machine_water_tip,显示机器里面的水的水量和水质。这两行另外按“显示水量”“显示水质”两个设置显示。\nShort：水／质\nLong：水量／水质
+cfg_stolen_heat,显示赃物热度
+cfg_stolen_heat_tip,用红色显示赃物的热度。\nShort：热 45%\nLong：热度 45%
+cfg_use_count,显示使用次数
+cfg_use_count_tip,显示还能用几次。用完时变红。\nShort：剩 3\nLong：剩余 3
+cfg_durability,显示耐久度
+cfg_durability_tip,显示耐久度。剩 1/4 以下时变成橙色。\nShort：耐 320\nLong：耐久 320
+cfg_ingot_purity,显示金属锭纯度
+cfg_ingot_purity_tip,在金属锭上显示纯度的等级，例如“高纯度”。
+cfg_key_mode,按键方式
+cfg_key_mode_tip,选择“显示物品信息”这个键要按住，还是按一下切换。\nHold＝按住时显示，放开就消失\nToggle＝按一下显示，再按一下消失；读档、回主菜单时自动关闭
+cfg_text_size,文字大小
+cfg_text_size_tip,标签的文字大小（名称另外看“名称文字大小”）：Small（小）、Medium（中）、Large（大）。一个物品格是 16 单位，文字高 3.5、4.5 或 6 单位。
+cfg_prefix,每行开头的字
+cfg_prefix_tip,每行开头用短的字还是长的词。Long 放不下物品宽度时，那个标签改用短的。\nShort：水、质、电、3天、成、热、剩、耐\nLong：水量、水质、电力、剩3天、成品、热度、剩余、耐久
