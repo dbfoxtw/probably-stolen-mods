@@ -30,7 +30,7 @@ MOD = modkit.OfficialMod(
     root=HERE.parent,
     mod_id="dbfoxtw.window-groups",  # 和 mod/src/WindowGroupsMod.cs 的 ModId 一致
     name="Window Groups",
-    description=("Unofficial. Save the container and machine windows you have open, and where they are, as a group; "
+    description=("Save the container and machine windows you have open, and where they are, as a group; "
                  "press one key to bring that group back and put every window where it was. "
                  "By default Ctrl+Shift+1 to 9 saves and Ctrl+1 to 9 recalls, 20 groups in all; "
                  "Ctrl+0 opens a list of your groups to recall, rename or delete them. "
