@@ -35,8 +35,16 @@ namespace ProbablyStolenWindowGroups
         [JsonProperty("slot")] public int Slot { get; set; }
         [JsonProperty("runId")] public string RunId { get; set; } = "";
         [JsonProperty("groups")] public Dictionary<string, List<WindowEntry>> Groups { get; set; } = new Dictionary<string, List<WindowEntry>>();
+        /// <summary>
+        /// 2.3.0 起：群組的名字（群組清單裡取的），key 是群組編號（"2"）。沒名字的組不寫，整個空就不寫這個欄位
+        /// （ShouldSerializeNames），和 2.2.0 的檔一模一樣，version 照舊是 1。2.2.0 讀到這個欄位時放進 Extra 原樣保留。
+        /// </summary>
+        [JsonProperty("names")] public Dictionary<string, string> Names { get; set; }
         /// <summary>不認得的欄位原樣保留（新版 mod 加的欄位，換回舊版時不丟）。</summary>
         [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
+
+        /// <summary>Newtonsoft 的慣例：Names 是空的就不寫進檔案。</summary>
+        public bool ShouldSerializeNames() => Names != null && Names.Count > 0;
 
         static string Key(int group) => group.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
@@ -44,7 +52,9 @@ namespace ProbablyStolenWindowGroups
         public List<WindowEntry> Get(int group) =>
             Groups.TryGetValue(Key(group), out var list) && list != null ? list : new List<WindowEntry>();
 
-        /// <summary>整組換掉（儲存＝覆蓋）。同一個編號只留第一個。</summary>
+        /// <summary>
+        /// 整組換掉（儲存＝覆蓋）。同一個編號只留第一個。名字不動（重存同一組多半是同一個用途、調位置）。
+        /// </summary>
         public void Set(int group, IEnumerable<WindowEntry> entries)
         {
             var list = new List<WindowEntry>();
@@ -54,20 +64,51 @@ namespace ProbablyStolenWindowGroups
             Groups[Key(group)] = list;
         }
 
-        /// <summary>清空一組，回傳原本有沒有東西。</summary>
+        /// <summary>清空一組，名字一起清掉，回傳原本有沒有東西。</summary>
         public bool Clear(int group)
         {
             bool had = Get(group).Count > 0;
             Groups.Remove(Key(group));
+            if (Names != null) Names.Remove(Key(group));
             return had;
         }
 
-        /// <summary>讀檔後丟掉「存檔裡還沒發過」的編號（Rules.IsStale），回傳丟了幾個。</summary>
+        /// <summary>第 group 組的名字；沒取名回傳 null。資料檔手改過也照 Rules.NormalizeName 整理（去空白、上限）。</summary>
+        public string GetName(int group) =>
+            Names != null && Names.TryGetValue(Key(group), out var n) ? Rules.NormalizeName(n) : null;
+
+        /// <summary>改名（Rules.NormalizeName 整理過；空的＝拿掉名字，變回「群組 N」）。回傳整理後的名字。</summary>
+        public string SetName(int group, string name)
+        {
+            name = Rules.NormalizeName(name);
+            if (name == null)
+            {
+                if (Names != null) Names.Remove(Key(group));
+            }
+            else
+            {
+                if (Names == null) Names = new Dictionary<string, string>();
+                Names[Key(group)] = name;
+            }
+            return name;
+        }
+
+        /// <summary>
+        /// 讀檔後丟掉「存檔裡還沒發過」的編號（Rules.IsStale），回傳丟了幾個。一組的視窗因此全被丟掉、變空的時候，
+        /// 那組的名字一起刪（和清空一致：空的組不會出現在群組清單，名字留著的話之後存同一組會冒出不相干的舊名字）。
+        /// </summary>
         public int PruneStale(int currentUniqueId)
         {
             int n = 0;
-            foreach (var list in Groups.Values)
-                if (list != null) n += list.RemoveAll(e => e == null || Rules.IsStale(e.Id, currentUniqueId));
+            foreach (var kv in Groups)
+            {
+                var list = kv.Value;
+                if (list == null) continue;
+                int before = list.Count;
+                int removed = list.RemoveAll(e => e == null || Rules.IsStale(e.Id, currentUniqueId));
+                n += removed;
+                if (removed > 0 && removed == before && Names != null) Names.Remove(kv.Key);
+            }
             return n;
         }
     }

@@ -1,8 +1,8 @@
 Probably Stolen 視窗群組 mod（Window Groups） v{version}
 ==========================================================
 
-把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位。最多 20 組。
-遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位；
+也可以打開群組清單，點名字叫出。最多 20 組。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
@@ -38,6 +38,13 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   全開就關（Close if all open）＝這組找得到、打得開的視窗都開著就關掉這組（多開的留著），少了任何一個就照常叫出；
   沒動才關（Close if unmoved）＝都開著、而且上次叫出後都沒移動過才關，動過就先排回原位；
   重新排好（Rearrange，2.0.0 以前的做法）＝每次都排回原位。關掉時不跳提示；一鍵關窗鎖住的預設也一起關。
+- 群組清單（預設 Ctrl+0，2.3.0 起）：在滑鼠旁邊打開小視窗，列出存過的群組（名字、叫出的鍵、視窗數）。
+  點名字＝按那組的叫出鍵，清單留著，可以接著點別組；滑鼠停在名字上會列出這組的視窗。
+  「改名」最多 16 字（Enter 或「確定」存、Esc 取消），提示也會帶名字，例如「視窗群組 2「倉庫」已儲存（5 個視窗）」；
+  「刪除」點兩次確認，和沒開視窗時按儲存一樣清空那組。按住標題列可以拖到別處。
+  點清單外面不會關；被箱子蓋住時點清單露出來的地方就回到最上面。關掉：×、再按一次清單的鍵、Esc
+  （Esc 照遊戲的順序：先取消選取、拖曳，再關最上面的視窗，清單在最上面才關清單；改名時只取消改名）。
+  拖著物品、固定模式、儲物協調器或料斗正在挑選物品時開不了；清單開著時進入這些模式，清單留著但點名字不叫出。
 - 找不到的（賣掉、丟掉、帶出門）、暫時打不開的（例如上鎖的）這次跳過，留在群組裡，並提示幾個找不到、
   幾個打不開；全部都開不了時什麼都不動。空的群組只提示「是空的」。
 - 不在店裡、在輸入框打字、拖著面板、拉框選取物品、暫停選單或選項開著、在選項裡設定按鍵、結算畫面、
@@ -54,6 +61,10 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   只有「再按一次」是 Close if all open 或 Close if unmoved 時有作用。
 - 也記儲物分頁（RememberTabs，預設關）：儲存時也記下每個視窗選的分頁（儲物分頁等），叫出時切回去。
   只對打開之後儲存的群組有作用；關掉時連已經記的分頁也不套用。
+接著兩個是 2.3.0 加的：
+- 群組清單（GroupList，預設 Ctrl+0）：打開群組清單的鍵，留空＝不使用。和某一組的鍵相同時清單優先。
+- 清單再按一次（ListAgain，預設 Close）：清單開著時再按一次清單的鍵，Close＝關掉清單、
+  Move to mouse＝不關，把清單移到滑鼠旁邊。
 接著 20 組各有叫出（Group1Recall～Group20Recall）、
 儲存（Group1Save～Group20Save）兩欄。群組 1～9 預設是 Ctrl+1～9／Ctrl+Shift+1～9，10～20 預設空白（不使用）。
 按套用就生效，不用重開遊戲；「恢復預設設定」回到預設。
@@ -62,7 +73,7 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   主要的鍵用 Unity 的 KeyCode 名稱（F1、Z、Keypad3…），單寫一個數字是鍵盤上排的數字。留空＝不使用。
 - 修飾鍵要完全一樣才算（設了 Ctrl+3，按 Ctrl+Shift+3 不會觸發）。
 - 寫錯的、重複的、和遊戲自己的鍵重疊的，會在存檔資料夾的 Player.log 留警告（開頭是 [Window Groups]:）。
-- 實機測過的按鍵：預設的 Ctrl+1～9／Ctrl+Shift+1～9，和下面的 F1～F11（群組 1～11）。
+- 實機測過的按鍵：預設的 Ctrl+1～9／Ctrl+Shift+1～9、群組清單的 Ctrl+0，和下面的 F1～F11（群組 1～11）。
   其他按鍵與群組 12～20 沒有實機測過，請自行測試。有些組合鍵可能被別的程式攔走、進不到遊戲，
   按了沒反應就換一個鍵。F12 是 Steam 的截圖鍵，不建議用。
 - Demo 版在 MelonPreferences.cfg 的設定不會搬過來。
@@ -95,26 +106,29 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
             {"key": "Group11Save", "value": "Shift+F11"}
         ]
     }
-  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡；最上面三個設定（再按一次、也關鎖住的、
-  也記儲物分頁）也回到預設。遊戲開著時改這個檔沒有用
+  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡；最上面五個設定（再按一次、也關鎖住的、
+  也記儲物分頁、群組清單、清單再按一次）也回到預設。遊戲開著時改這個檔沒有用
   （遊戲只在開遊戲時讀一次，之後按套用還會蓋掉）。格式寫壞了的話整份用預設值、檔案也會被蓋回預設，
   改之前可以先複製一份備份。要回到預設：在設定視窗按「恢復預設設定」。
 
 【說明】
-- 不讀寫遊戲的存檔檔案。群組存在存檔資料夾的 ModData\dbfoxtw_window-groups\slot_<存檔編號>.json，
+- 不讀寫遊戲的存檔檔案。群組（連同名字）存在存檔資料夾的 ModData\dbfoxtw_window-groups\slot_<存檔編號>.json，
   每個存檔各一套，不會跟著 Steam 雲端同步。Demo 版在 UserData\WindowGroups\ 的群組不會搬過來。
   不過遊戲本身會記住每個箱子視窗最後的位置（存在存檔裡）：群組叫出來的視窗被關掉時，
   遊戲照原本的方式記下那時的位置，之後一般雙擊打開也會開在那裡。
-- 提示與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文。
+- 提示、群組清單與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文。
 - 已知限制：只記位置，不記視窗大小；視窗裡的分頁預設不記（開在那個箱子上次關掉時的分頁，設定「也記儲物分頁」打開時才記）；
   「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
   遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉；
   拖著物品的途中把物品原本所在的視窗關掉再打開，拖著的物品圖案會消失、只剩選取的框，照樣放得下
-  （遊戲的儲物協調器也是這樣）。
+  （遊戲的儲物協調器也是這樣）；
+  群組清單：Esc 看的是誰最後被打開或點到（和遊戲一樣），不是畫面上誰在上面；固定模式中按 Esc 退出時，
+  清單在最上面的話會一起關（用 P 或右鍵退出就留著）；超過 12 組時清單改成捲動（沒有實機測過）。
 - 相容性：
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：有裝時提示與設定視窗用繁中。
   一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720，2.0.0 以上）：鎖住的視窗叫出群組時不會被關；
   再按一次關掉這組時，預設鎖住的也一起關（設定「也關鎖住的」）。一鍵關窗 2.1.0 的「顯示鎖頭」關掉時都當作沒鎖。
+  一鍵關窗的「關閉其他所有能用Esc關閉的」打開時，按它的鍵也會關掉群組清單。
   儲物協調器（遊戲的物品）：它的快捷鍵不看 Ctrl、Shift。協調器的某一組設成 1 的話，按 Ctrl+1 叫出群組 1 時，
   協調器那一組也會跟著開（全部開著時跟著關）。兩邊請用不同的數字，或把群組改成 F 鍵。
   其他 mod 用了同一個鍵時兩邊都會動作，請換一個鍵；其他會移動或縮放視窗的 mod 沒有測試過。
@@ -129,7 +143,7 @@ Probably Stolen Window Groups mod v{version}
 --------------------------------------------
 
 Save the container and machine windows you have open, and where they are, as a group; press one key
-to bring them all back in place. Up to 20 groups. Unofficial, in the game's official mod format
+to bring them all back in place, or open the group list and click a name. Up to 20 groups. Unofficial, in the game's official mod format
 (no MelonLoader needed).
 Supported game version: full release 1.0 (VERSION 100-REV12)
 
@@ -176,6 +190,16 @@ Features
   (other windows stay), otherwise recall as usual; Close if unmoved = close only if they're all open and none
   was moved since the last recall, otherwise put them back first; Rearrange (the behavior before 2.1.0) =
   put them back every time. Closing shows no message; windows locked with Close All Windows close too by default.
+- Group list (Ctrl+0 by default, from 2.3.0): opens a small window next to the mouse listing your saved groups
+  (name, recall key, number of windows). Clicking a name is the same as pressing that group's recall key;
+  the list stays open, so you can click another. Hover a name to see the group's windows.
+  Rename a group (up to 16 characters; Enter or OK saves, Esc cancels), and messages show the name, e.g.
+  Window group 2 "Storage" saved (5 windows); Delete (click twice) clears the group. Drag the title bar to move it.
+  Clicking outside doesn't close it; if a container covers it, click the part that shows to bring it back on top.
+  Close it with the x, its key again or Esc (Esc follows the game's order: it cancels a selection or drag first,
+  then closes the topmost window, the list only when it's on top; while renaming, Esc only cancels the rename).
+  It can't be opened while dragging items, in Pin mode, or while the Storage Coordinator or a hopper is picking
+  items; if you enter one of these with the list open, it stays, but clicking a name doesn't recall.
 - Windows that can't be found (sold, thrown away, taken out) or can't be opened right now (e.g. locked)
   are skipped but stay in the group, with a message saying how many; if nothing can be opened, nothing changes.
   An empty group just says it's empty.
@@ -198,6 +222,11 @@ This mod's settings on the Mods screen of the main menu. The three at the top we
 - Remember storage tabs (RememberTabs, default off): when saving, also remember which tab each window shows
   (storage tabs and other tabs inside a window) and switch back to it on recall. Only for groups saved after
   turning it on; while it's off, tabs already remembered aren't applied either.
+The next two were added in 2.3.0:
+- Group list (GroupList, default Ctrl+0): the key that opens the group list; empty = not used.
+  If a group uses the same key, the list wins.
+- List: press again (ListAgain, default Close): pressing the list's key again while it's open:
+  Close closes the list, Move to mouse keeps it open and moves it next to the mouse.
 Then a recall key (Group1Recall-Group20Recall) and a save key
 (Group1Save-Group20Save) for each of the 20 groups. Groups 1-9 default to Ctrl+1-9 / Ctrl+Shift+1-9;
 groups 10-20 are empty (not used). Changes apply when you press Apply, no restart needed;
@@ -208,7 +237,7 @@ in the save folder.
 - Modifiers must match exactly (with Ctrl+3 set, Ctrl+Shift+3 doesn't trigger it).
 - Unreadable, duplicate and game-reserved keys leave a warning in Player.log in the save folder
   (lines starting with [Window Groups]:).
-- Tested in-game: the default Ctrl+1-9 / Ctrl+Shift+1-9, and F1-F11 (groups 1-11) below. Other keys and
+- Tested in-game: the default Ctrl+1-9 / Ctrl+Shift+1-9, the group list's Ctrl+0, and F1-F11 (groups 1-11) below. Other keys and
   groups 12-20 haven't been tested in-game; please try them yourself. Some key combinations may be taken by
   another program before they reach the game; if a key does nothing, pick another one.
   F12 is Steam's screenshot key and isn't recommended.
@@ -244,18 +273,19 @@ in the save folder.
         ]
     }
   Groups 12-20 go back to the defaults (empty), and the mod writes them back into the file when the game starts;
-  the three settings at the top (Press again, Close locked too, Remember storage tabs) go back to their defaults too.
+  the five settings at the top (Press again, Close locked too, Remember storage tabs, Group list,
+  List: press again) go back to their defaults too.
   Editing the file while the game is running does nothing (the game reads it once at startup, and pressing
   Apply later overwrites it). If the file is broken, all the defaults are used and the file is overwritten
   with them; you may want to copy it first. To go back to the defaults, press Reset to Defaults.
 
 Notes
-- Your save files are never read or written. Groups are kept in
+- Your save files are never read or written. Groups (and their names) are kept in
   ModData\dbfoxtw_window-groups\slot_<save number>.json in the save folder, one set per save, and aren't synced
   by Steam Cloud. Groups from the Demo's UserData\WindowGroups\ aren't carried over.
   The game itself remembers where each container's window was last (in your save): when a window opened by
   a group is closed, the game records its position as usual, so a normal double-click opens it there next time.
-- Messages and the settings window follow the game language: Simplified Chinese for Chinese (Traditional Chinese
+- Messages, the group list and the settings window follow the game language: Simplified Chinese for Chinese (Traditional Chinese
   with the Traditional Chinese mod), English for every other language.
 - Known limitations: only positions are saved, not window sizes; tabs inside a window aren't saved by default
   (a recalled window opens on the tab it was last closed on, unless "Remember storage tabs" is on);
@@ -264,13 +294,16 @@ Notes
   kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game;
   if the window a dragged item came from is closed and reopened mid-drag, the dragged item's image
   disappears and only the selection highlight remains, but you can still drop it (the game's Storage
-  Coordinator does the same).
+  Coordinator does the same); group list: Esc goes by which window was opened or clicked last (like the game),
+  not by what's drawn on top; leaving Pin mode with Esc also closes the list if it's on top (leave with P or
+  a right-click to keep it); with more than 12 groups the list scrolls (not tested in-game).
 - Compatibility:
   Traditional Chinese mod (https://www.nexusmods.com/probablystolen/mods/280): messages and the settings window
   in Traditional Chinese.
   Close All Windows (https://www.nexusmods.com/probablystolen/mods/720, 2.0.0 or later): locked windows aren't
   closed by a recall; when pressing again closes the group, they close too by default ("Close locked too").
-  With Close All Windows 2.1.0's "Show locks" off, every window counts as unlocked.
+  With Close All Windows 2.1.0's "Show locks" off, every window counts as unlocked. With its
+  "Close everything else Esc can close" on, its key closes the group list too.
   Storage Coordinator (an item in the game): its hotkeys ignore Ctrl and Shift. If one of its presets is set to 1,
   pressing Ctrl+1 to recall group 1 also opens that preset (or closes it if it's all open). Use different digits
   for the two, or switch the groups to F keys.

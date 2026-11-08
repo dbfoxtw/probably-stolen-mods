@@ -8,7 +8,7 @@ namespace ProbablyStolenWindowGroups
 {
     /// <summary>
     /// 視窗群組：把店裡開著的箱子、機器視窗與位置存成群組（預設 Ctrl+Shift＋數字），之後一鍵叫出、排回原位（預設 Ctrl＋數字），
-    /// 共 20 組（Groups、Keys、Settings）。
+    /// 共 20 組（Groups、Keys、Settings）。2.3.0 起另有群組清單小視窗（GroupList，預設 Ctrl+0）。
     /// 官方格式的 mod（manifest.xml 與 IMod，照一鍵關窗）：遊戲的 mod 載入器先用自己的 Harmony PatchAll（攔截都在 Patches.cs），
     /// 再呼叫 Init、OnEnable；結束遊戲時呼叫 OnDisable。攔截在 Init 跑完之前一律放行（Ready）。
     /// 群組記在存檔資料夾的 ModData\dbfoxtw_window-groups\slot_&lt;N&gt;.json（存檔槽位＋這場遊戲的 runID），
@@ -73,7 +73,8 @@ namespace ProbablyStolenWindowGroups
 
         /// <summary>
         /// PatchAll 是遊戲做的，這裡只把結果寫進 log：預期 Patches.Expected 個方法（ToolboxHelper.HandleHotkeys、
-        /// StoreUIManager.ToggleControlHintOverlay）。目標不見了 PatchAll 會丟例外、整個 mod 不能啟用，所以數到的不同只會是
+        /// StoreUIManager.ToggleControlHintOverlay、StoreUIManager.ResolveEscape、StoreUIManager.CloseTopmostEscapeTarget、
+        /// CustomUIManager.HandleEscape、InputActionHandler.UpdatePress、StoreUIManager.TryTrashHoveredItem）。目標不見了 PatchAll 會丟例外、整個 mod 不能啟用，所以數到的不同只會是
         /// 遊戲改了 Harmony 的行為，寫警告。
         /// </summary>
         static void LogPatches()
@@ -124,13 +125,14 @@ namespace ProbablyStolenWindowGroups
             {
                 if (scene.name != GameState.StoreScene) return;
                 InStore = false;
+                GroupList.Close("離開店鋪畫面");
                 Groups.Reset();
                 Toast.Hide();
             }
             catch (Exception e) { Log.Error($"場景 {scene.name} 卸載時的處理出錯：{e}"); }
         }
 
-        /// <summary>每幀（WindowGroupsRunner.Update）：提示淡出；店鋪畫面裡讀群組的鍵，交給 Groups。</summary>
+        /// <summary>每幀（WindowGroupsRunner.Update）：提示淡出；店鋪畫面裡讀群組的鍵，交給 Groups（群組清單的鍵交給 GroupList）。</summary>
         internal static void Tick()
         {
             if (!Ready) return;
@@ -141,24 +143,37 @@ namespace ProbablyStolenWindowGroups
                 Toast.Tick();
                 if (!InStore) return;
                 Groups.Tick(); // 上一幀叫出的那組：記下實際擺到的位置（「沒動才關」比這份）
+                GroupList.Tick(); // 清單開著時：Esc、點了清單就排回最上面、改名的焦點、刪除的確認（自己接例外）
                 b = Keys.Pressed(); // 選項正在擷取按鍵時（KeyBindHelper.SuppressHotkeys）回傳 null
                 if (b == null) return;
+                if (b.IsList) { GroupList.Toggle(b); return; }
                 // 拖著物品時只放行叫出、儲存不動作，所以要告訴 CanAct 這次是哪一種
-                if (!GameWindows.CanAct(b.Save, out var reason))
-                {
-                    DebugLog($"按了 {b.Key.Display()}（{b.Entry}），但{reason}，不動作");
-                    return;
-                }
-                if (b.Save) Groups.Save(b.Group);
-                else Groups.Recall(b.Group);
+                Act(b.Save ? KeyAction.Save : KeyAction.Recall, b.Group, $"按了 {b.Key.Display()}（{b.Entry}）");
             }
             catch (Exception e)
             {
                 // 沒按鍵時的部分每幀都會跑：同一個錯只記一次，免得洗版。儲存、叫出只在按了群組的鍵時才跑，
                 // 每次出錯都記（照 Demo），不然玩家回報「某次叫出沒反應」時 log 只剩更早一個不相干的錯
-                if (b != null) Log.Error($"{(b.Save ? "儲存" : "叫出")}群組 {b.Group} 出錯：{e}");
+                if (b != null) Log.Error($"{(b.IsList ? "群組清單" : b.Save ? "儲存群組 " + b.Group : "叫出群組 " + b.Group)} 出錯：{e}");
                 else if (!_tickError) { Log.Error($"每幀的處理出錯（只記這一次）：{e}"); _tickError = true; }
             }
+        }
+
+        /// <summary>
+        /// 儲存或叫出一組：先看現在能不能動作（GameWindows.CanAct），不行的話除錯 log 寫原因。按鍵與群組清單點名字都走這裡
+        /// （點名字＝按那組的叫出鍵，含「再按一次」、一鍵關窗的鎖、 的拖曳規則）。例外交給呼叫的人。
+        /// </summary>
+        internal static void Act(KeyAction action, int group, string source)
+        {
+            if (!GameWindows.CanAct(action, out var reason))
+            {
+                DebugLog($"{source}，但{reason}，不動作");
+                return;
+            }
+            if (action == KeyAction.Save) Groups.Save(group);
+            else Groups.Recall(group);
+            // 清單開著的話排回最上面：叫出打開或拉上來的箱子視窗會蓋住它
+            GroupList.BringToFront();
         }
 
         internal static void DebugLog(string msg)

@@ -1,5 +1,33 @@
 # 版本紀錄（Changelog）
 
+## v2.3.0（2026-11-08）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+
+- 新增群組清單（預設 Ctrl+0，設定「群組清單」可以改或留空不用）：在滑鼠旁邊打開一個小視窗，列出存過的群組（名字、叫出的鍵、視窗數），點名字就叫出那組（清單留著，可以接著點別組）；滑鼠停在名字上會列出這組的視窗。
+- 群組可以取名（清單裡的「改名」，最多 16 字），提示也會帶名字，例如「視窗群組 2「倉庫」已儲存（5 個視窗）」；重新儲存同一組時名字保留，清空時一起清掉。
+- 清單裡可以刪除群組（點兩次確認），和沒開視窗時按儲存一樣清空那組。
+- 清單開著時可以拖標題列移到別處（下次照樣開在滑鼠旁邊）。
+- 新設定「清單再按一次」：清單開著時再按一次清單的鍵，可以改成不關、把清單移到滑鼠旁邊（Move to mouse）。
+- 點清單外面不會關掉清單；點了箱子視窗、它蓋過清單時，點清單就回到最上面。
+- 按 Esc 照遊戲的順序：先取消選取、拖曳這些，再關最上面的視窗；清單在最上面時只關清單。改名時按 Esc 只取消改名。
+- 原本把某一組的鍵設成 Ctrl+0 的話，清單的鍵優先、那組的鍵會失效（log 有警告），請改其中一個。
+- 設定的說明改寫得比較好讀（分行、選項一個一行）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV12)
+
+- New group list (Ctrl+0 by default; change it or leave it empty in the "Group list" setting): opens a small window next to the mouse listing your saved groups (name, recall key, number of windows); click a name to recall that group (the list stays open, so you can click another). Hover a name to see the group's windows.
+- Groups can have names (Rename in the list, up to 16 characters), and the messages show them, e.g. Window group 2 "Storage" saved (5 windows). Saving the group again keeps the name; clearing it removes the name.
+- You can delete a group from the list (click twice to confirm), which clears it like saving with no windows open.
+- While the list is open you can drag its title bar to move it (it still opens next to the mouse next time).
+- New setting "List: press again": when the list is open, pressing its key again can keep it open and move it next to the mouse (Move to mouse) instead of closing it.
+- Clicking outside the list doesn't close it. If a window you clicked covers the list, click the list to bring it back on top.
+- Esc works in the game's usual order: it cancels a selection or drag first, then closes the topmost window; when the list is on top, Esc only closes the list. While renaming, Esc only cancels the rename.
+- If you had set a group's key to Ctrl+0, the list's key takes priority and that group's key stops working (the log warns about it); change one of them.
+- The setting descriptions are rewritten to be easier to read (split into lines, one option per line).
+
 ## v2.2.0（2026-11-07）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）

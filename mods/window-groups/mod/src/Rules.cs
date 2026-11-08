@@ -3,7 +3,10 @@ using System.Collections.Generic;
 
 namespace ProbablyStolenWindowGroups
 {
-    /// <summary>不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號、多選與拖物品時能不能動作。離線測試（mod\verify）直接測。</summary>
+    /// <summary>
+    /// 不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號、多選與拖物品時能不能動作；
+    /// 2.3.0 起群組清單的按鍵、名字的整理、清單的列與位置。離線測試（mod\verify）直接測。
+    /// </summary>
     static class Rules
     {
         /// <summary>
@@ -125,10 +128,21 @@ namespace ProbablyStolenWindowGroups
         ///   遊戲拖著時把被拖箱子的視窗藏起來，這時存會漏掉它。
         /// 先看拉框與準備拖：拖一組的那一幀滑鼠一定按著，但 groupDragging 已經是 true，不會被當成準備拖。
         /// </summary>
-        internal static string DragBlockReason(bool hasSelection, bool groupDragging, bool mouseHeld, bool draggingItem, bool save)
+        internal static string DragBlockReason(bool hasSelection, bool groupDragging, bool mouseHeld, bool draggingItem, bool save) =>
+            DragBlockReason(hasSelection, groupDragging, mouseHeld, draggingItem, save ? KeyAction.Save : KeyAction.Recall);
+
+        /// <summary>
+        /// 同上，多一種「打開群組清單」：拉框、準備拖時和叫出一樣不動作；拖著單一物品或一組物品時也不開——
+        /// 點清單的按鈕要先放開滑鼠，東西就被放掉了。選好、放開時照常開。
+        /// </summary>
+        internal static string DragBlockReason(bool hasSelection, bool groupDragging, bool mouseHeld, bool draggingItem, KeyAction action)
         {
             if (hasSelection && !groupDragging && mouseHeld) return "框選中或準備拖一組物品";
-            if ((groupDragging || draggingItem) && save) return "拖著物品時不儲存（拖到一半存會漏掉被拖的箱子）";
+            if (groupDragging || draggingItem)
+            {
+                if (action == KeyAction.Save) return "拖著物品時不儲存（拖到一半存會漏掉被拖的箱子）";
+                if (action == KeyAction.List) return "拖著物品時不開群組清單（點清單時東西會被放掉）";
+            }
             return null;
         }
 
@@ -203,8 +217,216 @@ namespace ProbablyStolenWindowGroups
         internal const string RecallMarkerPrefix = "WindowGroups_Recalled:";
 
         internal static string RecallMarkerName(int frame) => RecallMarkerPrefix + frame.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        // ---------------- 群組清單（2.3.0 起） ----------------
+
+        /// <summary>群組清單的按鍵在設定裡的名稱（ModConfig 的 key；存進設定檔，不要改）。</summary>
+        internal const string ListEntryName = "GroupList";
+        /// <summary>群組清單的預設按鍵。留空＝不使用。</summary>
+        internal const string DefaultListKey = "Ctrl+0";
+        /// <summary>Binding.Group 是這個值時是群組清單的鍵（群組從 1 開始，不會撞到）。</summary>
+        internal const int ListGroup = 0;
+
+        /// <summary>
+        /// 讀成按鍵（Keymap.Build）的全部設定，照設定視窗的順序：群組清單排在 40 個群組的鍵前面（設定視窗裡排在
+        /// 2.1.0 的三個設定後面、40 個按鍵前面），所以和群組的鍵撞到時清單的鍵有效（Keymap 照順序，前面的有效）。
+        /// groupEntries 是 40 個群組的鍵（AllEntries 的順序，加上設定的字串）。
+        /// </summary>
+        internal static IEnumerable<(string entry, int group, bool save, string raw)> WithListEntry(
+            string listRaw, IEnumerable<(string entry, int group, bool save, string raw)> groupEntries)
+        {
+            yield return (ListEntryName, ListGroup, false, listRaw ?? "");
+            foreach (var e in groupEntries) yield return e;
+        }
+
+        /// <summary>
+        /// 設定「清單再按一次」的選項：清單開著時再按一次清單的鍵。和「再按一次」一樣，下拉選單照字面顯示、存的也是這個字串，
+        /// 所以選項用英文、說明欄寫中文對照；字串存進設定檔，不要改。
+        /// </summary>
+        internal const string ListAgainClose = "Close", ListAgainMove = "Move to mouse";
+        internal static readonly string[] ListAgainChoices = { ListAgainClose, ListAgainMove };
+        /// <summary>預設「關掉清單」（2.3.0 原本的行為）。</summary>
+        internal const string ListAgainDefault = ListAgainClose;
+        /// <summary>設定「清單再按一次」的 ModConfig key（存進設定檔，不要改）。</summary>
+        internal const string ListAgainEntryName = "ListAgain";
+
+        /// <summary>設定的值 → 選項；不認得的值（遊戲本來就會換回預設，這裡再保險一次）當成關掉清單。</summary>
+        internal static ListAgainMode ParseListAgain(string value) => value == ListAgainMove ? ListAgainMode.MoveToMouse : ListAgainMode.Close;
+
+        /// <summary>群組的名字最多幾個字（「字數上限約 16 字」；輸入框的 characterLimit 也是這個數，算的是 UTF-16 的字元數）。</summary>
+        internal const int NameMaxLength = 16;
+
+        /// <summary>
+        /// 整理玩家打的名字：控制字元（換行、Tab）拿掉、前後空白去掉（含全形空白）、超過 NameMaxLength 截掉（不切斷代理對），
+        /// 剩下空字串就是沒有名字（null，顯示成「群組 N」）。資料檔被手改過也照這個整理。
+        /// </summary>
+        internal static string NormalizeName(string raw)
+        {
+            if (raw == null) return null;
+            var sb = new System.Text.StringBuilder(raw.Length);
+            foreach (var c in raw)
+                if (!char.IsControl(c)) sb.Append(c);
+            var s = sb.ToString().Trim();
+            if (s.Length > NameMaxLength)
+            {
+                int n = NameMaxLength;
+                if (char.IsHighSurrogate(s[n - 1])) n--; // 不把一個字（代理對）切成兩半
+                s = s.Substring(0, n).TrimEnd();
+            }
+            return s.Length == 0 ? null : s;
+        }
+
+        /// <summary>
+        /// 把文字裡的「&lt;」包進 TMP 的 &lt;noparse&gt;，讓名字、視窗標題照字面顯示，不會被當成 rich text 的標籤
+        /// （遊戲的提示框是共用的 TMP、richText 開著，不能改它的設定）。TMP 讀標籤時遇到下一個「&lt;」就放棄，
+        /// 所以 &lt;noparse&gt;&lt;&lt;/noparse&gt; 會顯示成一個「&lt;」。自己建的 TMP（清單的按鈕、提示）直接關掉 richText，不用這個。
+        /// </summary>
+        internal static string EscapeRichText(string s) =>
+            string.IsNullOrEmpty(s) ? s ?? "" : s.Replace("<", "<noparse><</noparse>");
+
+        /// <summary>清單的一列：存過視窗的一組。</summary>
+        internal sealed class ListRow
+        {
+            public int Group;
+            /// <summary>玩家取的名字；沒取名是 null（顯示成「群組 N」）。</summary>
+            public string Name;
+            /// <summary>這組存了幾個視窗。</summary>
+            public int Count;
+            /// <summary>叫出鍵給玩家看的寫法（Hotkey.Display）；沒設或設錯（Keymap 沒收）是 null，顯示成「—」。</summary>
+            public string Key;
+            /// <summary>這組每個視窗存的標題（提示框列出來；沒標題的略過）。</summary>
+            public List<string> Titles = new List<string>();
+        }
+
+        /// <summary>叫出鍵那欄沒有鍵時顯示的字。</summary>
+        internal const string NoKey = "—";
+
+        /// <summary>
+        /// 群組清單的列：照編號排，只列存了視窗的組。count／name／titles 讀這場遊戲的群組，
+        /// recallKeys 是 Keymap 收下的叫出鍵（群組 → 顯示的寫法），沒有的組（沒設、寫錯、和別的鍵重複）鍵那欄寫「—」。
+        /// 沒設叫出鍵的組也列出來，從清單照樣叫得出。
+        /// </summary>
+        internal static List<ListRow> BuildListRows(Func<int, int> count, Func<int, string> name, Func<int, IEnumerable<string>> titles,
+                                                    IReadOnlyDictionary<int, string> recallKeys)
+        {
+            var rows = new List<ListRow>();
+            for (int g = 1; g <= GroupCount; g++)
+            {
+                int n = count(g);
+                if (n <= 0) continue;
+                var row = new ListRow { Group = g, Name = NormalizeName(name(g)), Count = n };
+                if (recallKeys != null && recallKeys.TryGetValue(g, out var k) && !string.IsNullOrEmpty(k)) row.Key = k;
+                var ts = titles != null ? titles(g) : null;
+                if (ts != null)
+                    foreach (var t in ts)
+                        if (!string.IsNullOrWhiteSpace(t)) row.Titles.Add(t);
+                rows.Add(row);
+            }
+            return rows;
+        }
+
+        /// <summary>
+        /// 每組的叫出鍵給玩家看的寫法（群組清單的鍵那欄）：只拿 Keymap 收下的叫出鍵（沒設、寫錯、和別的鍵重複的組沒有，
+        /// 清單寫「—」）；群組清單自己的鍵、儲存鍵不算。Settings.RecallKeys 把目前的 Keymap 傳進來。
+        /// </summary>
+        internal static Dictionary<int, string> RecallKeyDisplays(IEnumerable<Binding> bindings)
+        {
+            var map = new Dictionary<int, string>();
+            if (bindings == null) return map;
+            foreach (var b in bindings)
+                if (b != null && !b.IsList && !b.Save && b.Key != null && !map.ContainsKey(b.Group)) map[b.Group] = b.Key.Display();
+            return map;
+        }
+
+        /// <summary>這一幀的 Esc 要不要被群組清單用掉（GroupList.ConsumeEscape）。</summary>
+        internal enum EscapeChoice
+        {
+            /// <summary>不管，照遊戲原本的處理。</summary>
+            Ignore,
+            /// <summary>輸入框這一幀已經自己取消了改名：用掉（遊戲的 Esc 不動作），清單留著。</summary>
+            AlreadyCanceled,
+            /// <summary>改名中：取消改名、用掉，清單留著。</summary>
+            CancelRename,
+        }
+
+        /// <summary>
+        /// Esc 的判斷表（改名中 Esc 只取消改名），照順序：沒按 Esc → 不管；輸入框這一幀已經取消了改名 → 用掉；
+        /// 清單沒開 → 不管；改名中 → 取消改名；其他 → 不管。
+        /// 只有改名的 Esc 由清單自己用掉；其他的照遊戲 ResolveEscape 的順序（先取消確認框、選取、多選、拖曳……），
+        /// 關清單在它最後的 CloseTopmostEscapeTarget 那一步做（GroupList.CloseIfTopmost，的後續）。
+        /// </summary>
+        internal static EscapeChoice DecideEscape(bool backDown, bool renameCanceledThisFrame, bool listOpen, bool editing)
+        {
+            if (!backDown) return EscapeChoice.Ignore;
+            if (renameCanceledThisFrame) return EscapeChoice.AlreadyCanceled;
+            if (!listOpen) return EscapeChoice.Ignore;
+            if (editing) return EscapeChoice.CancelRename;
+            return EscapeChoice.Ignore;
+        }
+
+        /// <summary>
+        /// 清單開著時，遊戲的狀態變成這些就直接關掉清單（GroupList.Tick；回傳原因給除錯 log，不用關回傳 null）——改名中的照存：
+        /// - 外出。
+        /// - 結算畫面、選項正在設定按鍵、暫停選單、選項開著（和 CanAct 一致）：點外面不關以後，清單會留著疊在它們上面，
+        ///   改名、刪除也還能用。
+        /// 點清單外面、別的輸入框拿到焦點都不關（別的輸入框原本是代替讀不到的「點外面」）。
+        /// 圖釘模式、儲物協調器或漏斗開始挑選也不關；這些模式中照舊開不了清單、點名字不叫出（GameWindows.CanAct）。
+        /// 用 Esc 退出它們時，遊戲的 QuickChooseHandler 照樣叫 ResolveEscape（不看它們有沒有用掉 Esc），清單在最上面就一起關，
+        /// 和遊戲最上面的箱子一樣；照遊戲，不另外處理（用 P 或右鍵退出時清單留著）。
+        /// </summary>
+        internal static string ListCloseReason(bool outside, bool runSummary, bool capturingKey, bool pauseMenu, bool options)
+        {
+            if (outside) return "外出";
+            if (runSummary) return "結算畫面開著";
+            if (capturingKey) return "選項正在設定按鍵";
+            if (pauseMenu) return "暫停選單開著";
+            if (options) return "選項開著";
+            return null;
+        }
+
+        /// <summary>清單超過這麼多列時改用捲動區。</summary>
+        internal const int ListMaxRowsWithoutScroll = 12;
+
+        /// <summary>清單的左上角在滑鼠位置右下多少單位、離畫面邊緣至少留多少（往內推的時候）。</summary>
+        internal const float ListMouseOffset = 12f, ListEdgeMargin = 8f;
+
+        /// <summary>
+        /// 清單打開的位置：左上角在滑鼠的右下 ListMouseOffset；超出畫面就往內推，離邊緣 ListEdgeMargin。
+        /// 座標是圖層 RectTransform 的本地座標（y 往上），min／max 是那個 RectTransform 的範圍；回傳左上角。
+        /// </summary>
+        internal static (float left, float top) PlaceList(float mouseX, float mouseY, float width, float height,
+                                                          float minX, float minY, float maxX, float maxY) =>
+            ClampTopLeft(mouseX + ListMouseOffset, mouseY - ListMouseOffset, width, height, minX, minY, maxX, maxY);
+
+        /// <summary>
+        /// 左上角往內推，讓整個清單在範圍裡、離邊緣 ListEdgeMargin。右邊、下面超出先往回推；清單比畫面還大時以左上角為準
+        /// （標題列與 × 一定看得到）。重畫清單（存了、清空了）時也用它：左上角不動，變高了超出畫面才往上推。
+        /// </summary>
+        internal static (float left, float top) ClampTopLeft(float left, float top, float width, float height,
+                                                             float minX, float minY, float maxX, float maxY)
+        {
+            float m = ListEdgeMargin;
+            if (left + width > maxX - m) left = maxX - m - width;
+            if (left < minX + m) left = minX + m;
+            if (top - height < minY + m) top = minY + m + height;
+            if (top > maxY - m) top = maxY - m;
+            return (left, top);
+        }
+
+        /// <summary>
+        /// 位置對齊螢幕像素（照遊戲 UIDragHandler.SnapToPixelGrid：乘上 Canvas 的 scaleFactor 取整數再除回去），
+        /// 機器樣式的 2 倍 sprite 才不會糊。scaleFactor 不合理（0 以下）時不動。
+        /// </summary>
+        internal static float SnapToPixel(float v, float scaleFactor) =>
+            scaleFactor > 0f ? (float)Math.Round(v * scaleFactor) / scaleFactor : v;
     }
 
     /// <summary>設定「再按一次」。</summary>
     enum RepeatMode { Rearrange, CloseIfAllOpen, CloseIfUnmoved }
+
+    /// <summary>設定「清單再按一次」。</summary>
+    enum ListAgainMode { Close, MoveToMouse }
+
+    /// <summary>按鍵或清單要做的事：叫出、儲存、打開群組清單（分別判斷多選與拖物品時能不能做）。</summary>
+    enum KeyAction { Recall, Save, List }
 }

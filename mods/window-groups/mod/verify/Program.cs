@@ -8,7 +8,8 @@ namespace ProbablyStolenWindowGroups.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：按鍵的寫法與比對、遊戲也用的鍵與操作提示讓開、
-    /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、多選與拖物品時能不能動作、提示與設定的文字。任何一項失敗就回傳非 0。
+    /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、多選與拖物品時能不能動作、提示與設定的文字；
+    /// 2.3.0 起群組清單：清單的鍵、名字的整理與存檔、提示帶名字、清單的列與位置。任何一項失敗就回傳非 0。
     /// 執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -37,6 +38,14 @@ namespace ProbablyStolenWindowGroups.Verify
             Texts();
             Store();
             StoreTabs();
+            ListKeys();
+            Names();
+            StoreNames();
+            ListTexts();
+            ListRows();
+            ListPlacement();
+            ListEscape();
+            ListAgainAndTips();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -285,6 +294,23 @@ namespace ProbablyStolenWindowGroups.Verify
             Case("拉框中又在拖單一物品（不該同時發生，照拉框擋）", true, false, true, true, false, false);
             Check(Rules.DragBlockReason(true, false, true, false, false).Contains("框選"), "拉框不動作的原因寫框選");
             Check(Rules.DragBlockReason(false, false, true, true, true).Contains("不儲存"), "拖著時儲存不動作的原因寫不儲存");
+
+            // 打開群組清單：拉框、準備拖時和叫出一樣不動作；拖著單一物品或一組時也不開（點清單時東西會被放掉）
+            void ListCase(string what, bool sel, bool group, bool held, bool item, bool ok) =>
+                Eq(Rules.DragBlockReason(sel, group, held, item, KeyAction.List) == null, ok, $"{what}：群組清單{(ok ? "照常開" : "不開")}");
+            ListCase("沒有選取、沒拖東西", false, false, false, false, true);
+            ListCase("拉框、準備拉框、準備拖一組（按著）", true, false, true, false, false);
+            ListCase("選好、放開（Selected）", true, false, false, false, true);
+            ListCase("拖一組", true, true, true, false, false);
+            ListCase("拖單一物品", false, false, true, true, false);
+            ListCase("拖單一物品、滑鼠剛放開的那一幀", false, false, false, true, false);
+            Check(Rules.DragBlockReason(false, false, true, true, KeyAction.List).Contains("清單"), "拖著時不開清單的原因寫清單");
+            // bool 的舊寫法和 KeyAction 的一樣（叫出、儲存）
+            foreach (var (sel, grp, held, item) in new[] { (false, false, false, false), (true, false, true, false), (true, false, false, false), (true, true, true, false), (false, false, true, true) })
+            {
+                Eq(Rules.DragBlockReason(sel, grp, held, item, false), Rules.DragBlockReason(sel, grp, held, item, KeyAction.Recall), $"叫出：bool 與 KeyAction 一樣（{sel},{grp},{held},{item}）");
+                Eq(Rules.DragBlockReason(sel, grp, held, item, true), Rules.DragBlockReason(sel, grp, held, item, KeyAction.Save), $"儲存：bool 與 KeyAction 一樣（{sel},{grp},{held},{item}）");
+            }
         }
 
         // ── 再按一次 ──
@@ -542,6 +568,344 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(oldRec.Groups["1"][0].Extra != null && oldRec.Groups["1"][0].Extra.ContainsKey("tabs"), "舊版讀新檔：tabs 放進不認得的欄位");
             var rewritten = Newtonsoft.Json.JsonConvert.SerializeObject(oldRec);
             Check(JObject.Parse(rewritten)["groups"]["1"][0]["tabs"]?.ToString() == "2", "舊版寫回去 tabs 還在（沒重新存那組的話）");
+        }
+
+        // ── 群組清單（2.3.0 起） ──
+
+        /// <summary>群組清單的鍵和 40 個鍵一起讀成 Keymap：撞鍵檢查、工具箱與操作提示讓開照群組的鍵。</summary>
+        static void ListKeys()
+        {
+            Eq(Rules.DefaultListKey, "Ctrl+0", "群組清單的預設鍵是 Ctrl+0");
+            Eq(Rules.ListEntryName, "GroupList", "設定的名稱");
+            var entries = Rules.WithListEntry(Rules.DefaultListKey, Defaults()).ToList();
+            Eq(entries.Count, 41, "清單＋40 個鍵");
+            Eq(entries[0].entry, "GroupList", "清單排在最前面（設定視窗：2.1.0 的三個設定後面、40 個鍵前面）");
+            Eq(entries[1].entry, "Group1Recall", "接著是群組 1 叫出");
+            Eq(Rules.WithListEntry(null, Defaults()).First().raw, "", "清單的值是 null 時當成空的");
+
+            var map = Keymap.Build(entries, Resolve, GameDefaults());
+            Eq(map.Warnings.Count, 0, "預設（含 Ctrl+0）沒有警告");
+            Eq(map.Bindings.Count, 19, "預設 19 個按鍵（清單＋群組 1～9 各兩個）");
+            var list = map.Bindings.FirstOrDefault(b => b.IsList);
+            Check(list != null && list.Key.Display() == "Ctrl+0" && list.Key.Key == "Alpha0", "清單的鍵是 Ctrl+0（上排的 0）");
+            Check(list != null && list.Group == Rules.ListGroup && list.Entry == "GroupList", "清單的 Binding：Group 是 0、名稱 GroupList");
+            Check(map.Bindings.Count(b => b.IsList) == 1, "只有清單是 IsList");
+            Check(list != null && list.Key.ModifiersMatch(true, false, false) && !list.Key.ModifiersMatch(true, true, false), "修飾鍵完全相同才算：Ctrl+Shift+0 不會開清單");
+
+            // 和群組的鍵撞到：清單排在前面，清單的有效、群組的不使用並警告
+            map = Keymap.Build(Rules.WithListEntry("Ctrl+1", Defaults()), Resolve, GameDefaults());
+            Check(map.Bindings.Any(b => b.IsList && b.Key.Display() == "Ctrl+1"), "撞鍵時清單的有效");
+            Check(!map.Bindings.Any(b => b.Entry == "Group1Recall"), "撞鍵時群組 1 叫出不使用");
+            Check(map.Warnings.Any(w => w.Contains("Group1Recall") && w.Contains("GroupList")), "撞鍵警告兩個設定的名稱");
+            // 群組 10 設成 Ctrl+0：和清單撞，清單的有效
+            var g10 = Defaults().Select(e => e.Item1 == "Group10Recall" ? (e.Item1, e.Item2, e.Item3, "Ctrl+0") : e).ToList();
+            map = Keymap.Build(Rules.WithListEntry(Rules.DefaultListKey, g10), Resolve, GameDefaults());
+            Check(map.Bindings.Any(b => b.IsList) && !map.Bindings.Any(b => b.Entry == "Group10Recall") && map.Warnings.Any(w => w.Contains("Group10Recall")), "群組 10 設成 Ctrl+0：清單的有效、群組 10 警告");
+            // 留空＝不使用、寫錯的警告、遊戲也用的鍵照用並警告
+            map = Keymap.Build(Rules.WithListEntry("", Defaults()), Resolve, GameDefaults());
+            Check(!map.Bindings.Any(b => b.IsList) && map.Warnings.Count == 0, "清單留空＝不使用，不警告");
+            map = Keymap.Build(Rules.WithListEntry("Ctrl+Nope", Defaults()), Resolve, GameDefaults());
+            Check(!map.Bindings.Any(b => b.IsList) && map.Warnings.Any(w => w.Contains("GroupList")), "清單寫錯：不使用並警告");
+            map = Keymap.Build(Rules.WithListEntry("Delete", Defaults()), Resolve, GameDefaults());
+            Check(map.Bindings.Any(b => b.IsList && b.Key.Key == "Delete") && map.Warnings.Any(w => w.Contains("GroupList") && w.Contains("trash_item")), "清單設成 Delete：照用並警告");
+            // 操作提示讓開（Keys.HintPrefix 對清單的鍵也一樣比主要的鍵）：操作提示改綁 0 時 Ctrl+0 要讓開；預設 O 時不用
+            Check(Rules.BlocksControlHints("Alpha0", "Alpha0"), "操作提示綁 0、清單是 Ctrl+0：讓開");
+            Check(!Rules.BlocksControlHints("Alpha0", "O"), "操作提示是預設的 O、清單是 Ctrl+0：不用讓");
+            Check(Rules.GameKeyUse("Alpha0", GameDefaults()) == null, "上排 0 不是遊戲在用的鍵（預設 Ctrl+0 沒有警告）");
+        }
+
+        /// <summary>名字的整理（去空白、空＝沒有名字、上限 16、控制字元拿掉）與照字面顯示（rich text 跳脫）。</summary>
+        static void Names()
+        {
+            string fullSpace = ((char)0x3000).ToString();
+            Eq(Rules.NormalizeName("倉庫"), "倉庫", "一般的名字照原樣");
+            Eq(Rules.NormalizeName("  倉庫  "), "倉庫", "前後空白去掉");
+            Eq(Rules.NormalizeName(fullSpace + "倉庫" + fullSpace), "倉庫", "全形空白也去掉");
+            Eq(Rules.NormalizeName("倉 庫"), "倉 庫", "中間的空白留著");
+            Eq(Rules.NormalizeName(""), null, "空字串＝沒有名字");
+            Eq(Rules.NormalizeName("   "), null, "只有空白＝沒有名字");
+            Eq(Rules.NormalizeName(null), null, "null＝沒有名字");
+            Eq(Rules.NormalizeName("a" + (char)10 + "b" + (char)9 + "c"), "abc", "換行、Tab 拿掉（資料檔被手改過）");
+            Eq(Rules.NormalizeName(new string('字', 20)), new string('字', 16), "超過 16 字截掉");
+            Eq(Rules.NormalizeName(new string('x', 16)), new string('x', 16), "剛好 16 字不截");
+            Eq(Rules.NormalizeName("123456789012345 7"), "123456789012345", "截掉後尾巴的空白也去掉");
+            var emoji = new string('a', 15) + char.ConvertFromUtf32(0x1F600); // 15＋代理對 2＝17 個 UTF-16 字元
+            Eq(Rules.NormalizeName(emoji), new string('a', 15), "不把代理對切成兩半");
+            Eq(Rules.NameMaxLength, 16, "上限 16");
+            Eq(Rules.NormalizeName("<b>粗</b>"), "<b>粗</b>", "標籤照字面存（顯示時才處理）");
+
+            Eq(Rules.EscapeRichText("<b>粗</b>"), "<noparse><</noparse>b>粗<noparse><</noparse>/b>", "提示框的 < 包進 noparse");
+            Eq(Rules.EscapeRichText("倉庫"), "倉庫", "沒有 < 照原樣");
+            Eq(Rules.EscapeRichText(null), "", "null 變空字串");
+            Check(!Rules.EscapeRichText("</noparse><color=red>x").Contains("<color"), "名字裡的 </noparse> 也被包住，後面的標籤不會生效");
+        }
+
+        /// <summary>slot_N.json 的 names：沒名字不寫、Set 保留、Clear 刪除、舊檔相容、2.2.0 讀新檔放進 Extra 保留。</summary>
+        static void StoreNames()
+        {
+            var files = new Dictionary<string, string>();
+            var store = new GroupStore(name => files.TryGetValue(name, out var t) ? t : null, (name, text) => files[name] = text, _ => { });
+            var r = store.Load(3, "run");
+            r.Set(2, new[] { new WindowEntry { Id = 1, X = 0, Y = 0, Title = "箱子" } });
+            Eq(r.GetName(2), null, "沒取名是 null");
+            store.Save(r);
+            var json = JObject.Parse(files["slot_3.json"]);
+            Check(json.Property("names") == null, "沒有名字時不寫 names（和 2.2.0 的檔一樣）");
+
+            Eq(r.SetName(2, "  倉庫 "), "倉庫", "改名回傳整理後的名字");
+            Eq(r.GetName(2), "倉庫", "讀得到名字");
+            store.Save(r);
+            json = JObject.Parse(files["slot_3.json"]);
+            Eq((string)json["names"]?["2"], "倉庫", "寫成 names: {\"2\": \"倉庫\"}");
+            Check(json.Properties().Select(p => p.Name).Take(4).SequenceEqual(new[] { "version", "slot", "runId", "groups" }), "原本的欄位與順序不變");
+            Eq((int)json["version"], 1, "版本號不變");
+            Check(files["slot_3.json"].Contains("倉庫"), "中文名字照原樣寫");
+
+            var back = store.Load(3, "run");
+            Eq(back.GetName(2), "倉庫", "讀回來有名字");
+            Check(back.Extra == null || !back.Extra.ContainsKey("names"), "names 不會跑進不認得的欄位");
+            back.Set(2, new[] { new WindowEntry { Id = 5, X = 1, Y = 1 } });
+            Eq(back.GetName(2), "倉庫", "重存同一組（Set）名字保留");
+            Eq(back.SetName(2, "   "), null, "改成空白＝拿掉名字");
+            Eq(back.GetName(2), null, "拿掉後沒有名字（變回群組 N）");
+            store.Save(back);
+            Check(JObject.Parse(files["slot_3.json"]).Property("names") == null, "名字都拿掉後不寫 names");
+
+            back.SetName(2, "倉庫");
+            back.SetName(4, "機器");
+            Check(back.Clear(2), "清空有東西的組");
+            Eq(back.GetName(2), null, "清空（Clear）連名字一起刪");
+            Eq(back.GetName(4), "機器", "別組的名字留著");
+            back.SetName(9, "沒存過視窗");
+            Check(!back.Clear(9) && back.GetName(9) == null, "清空沒有視窗的組也刪名字");
+
+            // 讀檔後丟掉 stale 編號：一組變空時名字一起刪（和清空一致），還有視窗的組名字留著
+            var pr = store.Load(11, "run");
+            pr.Set(1, new[] { new WindowEntry { Id = 150 }, new WindowEntry { Id = 160 } }); // 全部 stale
+            pr.Set(2, new[] { new WindowEntry { Id = 50 }, new WindowEntry { Id = 170 } });  // 一半 stale
+            pr.Set(3, new[] { new WindowEntry { Id = 60 } });                                 // 沒有 stale
+            pr.SetName(1, "全丟");
+            pr.SetName(2, "丟一半");
+            pr.SetName(3, "沒丟");
+            pr.SetName(4, "沒存過視窗");
+            Eq(pr.PruneStale(100), 3, "丟掉 3 個 stale 編號");
+            Eq(pr.GetName(1), null, "整組變空：名字一起刪");
+            Eq(pr.GetName(2), "丟一半", "還有視窗：名字留著");
+            Eq(pr.GetName(3), "沒丟", "沒丟東西：名字留著");
+            Eq(pr.GetName(4), "沒存過視窗", "本來就空的組不受影響（不是這次丟空的）");
+
+            // 舊檔（2.2.0 寫的，沒有 names）照常讀
+            files["slot_7.json"] = "{\"version\":1,\"slot\":7,\"runId\":\"run\",\"groups\":{\"2\":[{\"id\":9,\"x\":1,\"y\":2,\"title\":\"箱子\"}]}}";
+            var old = store.Load(7, "run");
+            Check(old.Get(2).Count == 1 && old.GetName(2) == null && old.Names == null, "舊檔照常讀、沒有名字");
+            old.SetName(2, "x");
+            Eq(old.GetName(2), "x", "舊檔讀進來之後可以改名");
+            // 資料檔被手改：名字太長、前後空白、空字串照整理讀
+            files["slot_8.json"] = "{\"version\":1,\"slot\":8,\"runId\":\"run\",\"groups\":{},\"names\":{\"1\":\"  \",\"2\":\"" + new string('a', 30) + "\",\"3\":\" b \"}}";
+            var hand = store.Load(8, "run");
+            Check(hand.GetName(1) == null && hand.GetName(2) == new string('a', 16) && hand.GetName(3) == "b", "手改的名字照規則整理");
+
+            // 2.2.0 讀新檔：不認得 names，放進 Extra，寫回時還在
+            r.SetName(2, "倉庫");
+            store.Save(r);
+            var oldRec = Newtonsoft.Json.JsonConvert.DeserializeObject<OldRecord>(files["slot_3.json"]);
+            Check(oldRec.Extra != null && oldRec.Extra.ContainsKey("names"), "2.2.0 讀新檔：names 放進不認得的欄位");
+            Check(JObject.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(oldRec))["names"]?["2"]?.ToString() == "倉庫", "2.2.0 寫回去 names 還在");
+        }
+
+        /// <summary>提示帶名字（三語系）、清單的字、設定的標籤與說明。</summary>
+        static void ListTexts()
+        {
+            var en = Strings.For(Lang.En);
+            var zht = Strings.For(Lang.ZhHant);
+            var zhs = Strings.For(Lang.ZhHans);
+            // 沒名字照舊（null 與不給一樣）
+            Eq(zht.Saved(2, 5, null), "視窗群組 2 已儲存（5 個視窗）", "繁中：沒名字照舊");
+            Eq(en.Cleared(2, null), "Window group 2 cleared", "英文：沒名字照舊");
+            // 有名字
+            Eq(zht.Saved(2, 5, "倉庫"), "視窗群組 2「倉庫」已儲存（5 個視窗）", "繁中：已儲存帶名字（的例子）");
+            Eq(zht.Saved(2, 1, "倉庫"), "視窗群組 2「倉庫」已儲存（1 個視窗）", "繁中：1 個視窗");
+            Eq(zht.Cleared(2, "倉庫"), "視窗群組 2「倉庫」已清空", "繁中：已清空帶名字");
+            Eq(zht.Empty(2, "倉庫"), "視窗群組 2「倉庫」是空的", "繁中：是空的帶名字");
+            Eq(zht.Skipped(2, 1, 2, "倉庫"), "視窗群組 2「倉庫」：1 個找不到、2 個打不開", "繁中：找不到、打不開帶名字");
+            Eq(zhs.Saved(2, 5, "仓库"), "窗口组 2“仓库”已保存（5 个窗口）", "簡中：已儲存帶名字（中文彎引號）");
+            Eq(zhs.Cleared(2, "仓库"), "窗口组 2“仓库”已清空", "簡中：已清空帶名字");
+            Eq(zhs.Skipped(2, 3, 0, "仓库"), "窗口组 2“仓库”：3 个找不到", "簡中：找不到帶名字");
+            Eq(en.Saved(2, 5, "Storage"), "Window group 2 \"Storage\" saved (5 windows)", "英文：已儲存帶名字");
+            Eq(en.Saved(2, 1, "Storage"), "Window group 2 \"Storage\" saved (1 window)", "英文：1 個視窗用單數");
+            Eq(en.Empty(2, "Storage"), "Window group 2 \"Storage\" is empty", "英文：是空的帶名字");
+            Eq(en.Skipped(2, 0, 1, "Storage"), "Window group 2 \"Storage\": 1 can't be opened", "英文：打不開帶名字");
+            Eq(zht.Saved(2, 5, "{0}{1}"), "視窗群組 2「{0}{1}」已儲存（5 個視窗）", "名字裡的大括號照字面（不是格式）");
+
+            // 清單的字
+            Eq(zht.ListTitle, "視窗群組", "繁中標題");
+            Eq(zhs.ListTitle, "窗口组", "簡中標題");
+            Eq(en.ListTitle, "Window Groups", "英文標題");
+            Eq(zht.DisplayName(3, null), "群組 3", "繁中：沒取名寫群組 N");
+            Eq(zhs.DisplayName(3, null), "窗口组 3", "簡中：沒取名寫窗口组 N（和標題、提示一致）");
+            Eq(en.DisplayName(3, null), "Group 3", "英文：沒取名寫 Group N");
+            Eq(zht.DisplayName(3, "倉庫"), "倉庫", "有名字寫名字");
+            Eq(zht.WindowCount(3), "3 個", "繁中：N 個");
+            Eq(zhs.WindowCount(3), "3 个", "簡中：N 个");
+            Eq(en.WindowCount(3), "3 windows", "英文：N windows");
+            Eq(en.WindowCount(1), "1 window", "英文：1 window");
+            Eq(zht.TooltipHead("倉庫", 4), "倉庫：4 個視窗", "繁中：提示框第一行");
+            Eq(zhs.TooltipHead("群组 3", 2), "群组 3：2 个窗口", "簡中：提示框第一行");
+            Eq(en.TooltipHead("Storage", 4), "Storage: 4 windows", "英文：提示框第一行");
+            Eq(en.TooltipHead("Storage", 1), "Storage: 1 window", "英文：提示框第一行單數");
+            Check(zht.Rename == "改名" && zht.RenameOk == "確定" && zht.Delete == "刪除" && zht.DeleteSure == "確定？", "繁中：改名、確定、刪除、確定？");
+            Check(zhs.Rename == "改名" && zhs.RenameOk == "确定" && zhs.Delete == "删除" && zhs.DeleteSure == "确定？", "簡中：改名、确定、删除、确定？");
+            Check(en.Rename == "Rename" && en.RenameOk == "OK" && en.Delete == "Delete" && en.DeleteSure == "Sure?", "英文：Rename、OK、Delete、Sure?");
+            Eq(zht.ListEmpty, "還沒有存過的群組", "繁中：沒有群組");
+            Eq(zhs.ListEmpty, "还没有保存过的窗口组", "簡中：沒有群組");
+            Eq(en.ListEmpty, "No saved groups yet", "英文：沒有群組");
+
+            // 設定的標籤與說明
+            Eq(zht.ListLabel, "群組清單", "繁中：設定標籤");
+            Eq(zhs.ListLabel, "窗口组列表", "簡中：設定標籤");
+            Eq(en.ListLabel, "Group list", "英文：設定標籤");
+            Eq(zht.ListTip, "打開群組清單的按鍵：列出存過的群組，點名字叫出那組，也能改名、刪除。\n例如 Ctrl+0；留空＝不使用", "繁中：設定說明（例子另起一行）");
+            Eq(en.ListTip, "Key that opens the group list: shows the saved groups; click a name to recall that group, or rename or delete it.\nE.g. Ctrl+0; empty = not used", "英文：設定說明（例子另起一行）");
+            Check(zhs.ListTip.Contains("调出") && zhs.ListTip.Contains("保存") && zhs.ListTip.Contains("删除") && zhs.ListTip.Contains("Ctrl+0"), "簡中：設定說明用簡中用語（调出、保存、删除）");
+            foreach (var txt in new[] { zht.ListLabel, zht.ListTip, zht.ListTitle, zht.ListEmpty, zht.DisplayName(1, null), zht.WindowCount(2), zht.Delete, zht.DeleteSure, zht.RenameOk, zht.TooltipHead("x", 2), zht.Saved(1, 2, "x") })
+                Check(!txt.Contains("窗口") && !txt.Contains("组") && !txt.Contains("个") && !txt.Contains("删") && !txt.Contains("确") && !txt.Contains("开"), $"繁中清單的字沒有簡體字：{txt}");
+        }
+
+        /// <summary>清單的列：只列有視窗的組、照編號排、鍵的顯示與「—」、名字與標題。</summary>
+        static void ListRows()
+        {
+            var counts = new Dictionary<int, int> { [5] = 6, [1] = 3, [3] = 2, [2] = 0, [20] = 1 };
+            var names = new Dictionary<int, string> { [1] = "櫃台", [2] = "沒視窗的組", [5] = "  機器  " };
+            var titles = new Dictionary<int, List<string>> { [1] = new List<string> { "燈牌", "", null, "食物", "  " } };
+            var keys = new Dictionary<int, string> { [1] = "Ctrl+1", [3] = "Ctrl+3", [5] = "F1", [7] = "Ctrl+7" };
+            var rows = Rules.BuildListRows(g => counts.TryGetValue(g, out var c) ? c : 0, g => names.TryGetValue(g, out var n) ? n : null,
+                                           g => titles.TryGetValue(g, out var t) ? t : null, keys);
+            Check(rows.Select(r => r.Group).SequenceEqual(new[] { 1, 3, 5, 20 }), $"只列有視窗的組、照編號排：{string.Join(",", rows.Select(r => r.Group))}");
+            Eq(rows[0].Name, "櫃台", "名字");
+            Eq(rows[1].Name, null, "沒取名是 null");
+            Eq(rows[2].Name, "機器", "名字照整理（去空白）");
+            Eq(rows[0].Count, 3, "視窗數");
+            Eq(rows[0].Key, "Ctrl+1", "叫出鍵的顯示");
+            Eq(rows[2].Key, "F1", "F 鍵照顯示");
+            Eq(rows[3].Key, null, "沒設叫出鍵（或寫錯、重複）是 null");
+            Eq(Rules.NoKey, "—", "沒有鍵時寫「—」");
+            Check(rows[0].Titles.SequenceEqual(new[] { "燈牌", "食物" }), "標題略過空的");
+            Eq(rows[1].Titles.Count, 0, "沒有標題時是空的清單");
+            Eq(Rules.BuildListRows(_ => 0, _ => null, null, null).Count, 0, "一組都沒有存過：沒有列");
+            Eq(Rules.BuildListRows(g => g == 20 ? 1 : 0, _ => null, null, null).Single().Key, null, "沒有叫出鍵的資料也不壞");
+            Eq(Rules.ListMaxRowsWithoutScroll, 12, "超過 12 列才捲動");
+
+            // 和 Keymap 接起來：重複、寫錯的叫出鍵沒有收下，清單那欄寫「—」（Settings.RecallKeys 只拿 Keymap 收下的叫出鍵）
+            var custom = Defaults().ToList();
+            custom[2] = ("Group2Recall", 2, false, "Ctrl+1"); // 和群組 1 重複
+            var map = Keymap.Build(Rules.WithListEntry(Rules.DefaultListKey, custom), Resolve, GameDefaults());
+            var recall = Rules.RecallKeyDisplays(map.Bindings); // Settings.RecallKeys 用的同一個函式
+            Check(recall.ContainsKey(1) && !recall.ContainsKey(2) && !recall.ContainsKey(0), "重複的叫出鍵不在；清單的鍵不算叫出鍵");
+            Eq(recall[1], "Ctrl+1", "叫出鍵的顯示");
+            Check(!recall.ContainsKey(10), "沒設叫出鍵的組不在");
+            Eq(recall.Count, 8, "預設 9 組裡群組 2 的重複了：8 個叫出鍵（儲存鍵不算）");
+            Eq(Rules.RecallKeyDisplays(null).Count, 0, "沒有 Keymap 時是空的");
+        }
+
+        /// <summary>清單的位置：滑鼠右下 12，超出畫面往內推（離邊 8）。座標是圖層的本地座標（y 往上），範圍 -960～960、-540～540。</summary>
+        static void ListPlacement()
+        {
+            const float minX = -960, minY = -540, maxX = 960, maxY = 540;
+            Eq(Rules.PlaceList(0, 0, 400, 300, minX, minY, maxX, maxY), (12f, -12f), "平常：左上角在滑鼠右下 12");
+            Eq(Rules.PlaceList(800, 0, 400, 300, minX, minY, maxX, maxY), (552f, -12f), "靠右邊：往左推到離邊 8");
+            Eq(Rules.PlaceList(0, -400, 400, 300, minX, minY, maxX, maxY), (12f, -232f), "靠下面：往上推到離邊 8");
+            Eq(Rules.PlaceList(900, -500, 400, 300, minX, minY, maxX, maxY), (552f, -232f), "右下角：兩個方向都推");
+            Eq(Rules.PlaceList(-955, 535, 400, 300, minX, minY, maxX, maxY), (-943f, 523f), "左上角附近：照滑鼠右下（沒超出）");
+            Eq(Rules.PlaceList(-2000, 2000, 400, 300, minX, minY, maxX, maxY), (-952f, 532f), "滑鼠在範圍外（左上）：推回離邊 8");
+            Eq(Rules.PlaceList(0, 0, 3000, 2000, minX, minY, maxX, maxY), (-952f, 532f), "清單比畫面大：以左上角為準（標題列與 × 看得到）");
+            Eq(Rules.ClampTopLeft(100, 200, 400, 300, minX, minY, maxX, maxY), (100f, 200f), "重畫：沒超出就不動");
+            Eq(Rules.ClampTopLeft(100, -300, 400, 300, minX, minY, maxX, maxY), (100f, -232f), "重畫：變高了超出下面才往上推");
+            Check(Rules.ListMouseOffset == 12f && Rules.ListEdgeMargin == 8f, "滑鼠右下 12、離邊 8");
+
+            // 對齊螢幕像素（照遊戲 UIDragHandler.SnapToPixelGrid）
+            Eq(Rules.SnapToPixel(10.3f, 1f), 10f, "scaleFactor 1：取整數");
+            Eq(Rules.SnapToPixel(10.3f, 2f), 10.5f, "scaleFactor 2：對齊半個單位");
+            Eq(Rules.SnapToPixel(-7.8f, 1f), -8f, "負數也對齊");
+            Eq(Rules.SnapToPixel(10.3f, 0f), 10.3f, "scaleFactor 不合理時不動");
+        }
+
+        /// <summary>Esc 的判斷表（GroupList.ConsumeEscape）、清單開著時要直接關的狀態（GroupList.Tick）。</summary>
+        static void ListEscape()
+        {
+            // 只有改名的 Esc 由清單用掉；關清單照遊戲的順序，在 CloseTopmostEscapeTarget 那一步（GroupList.CloseIfTopmost，離線測不到）
+            Eq(Rules.DecideEscape(false, false, true, false), Rules.EscapeChoice.Ignore, "沒按 Esc：不管");
+            Eq(Rules.DecideEscape(false, true, true, true), Rules.EscapeChoice.Ignore, "沒按 Esc 時其他都不看");
+            Eq(Rules.DecideEscape(true, false, false, false), Rules.EscapeChoice.Ignore, "清單沒開：不管（遊戲照常）");
+            Eq(Rules.DecideEscape(true, false, true, false), Rules.EscapeChoice.Ignore, "清單開著、沒改名：不用掉（照遊戲的順序，關清單在 CloseTopmostEscapeTarget）");
+            Eq(Rules.DecideEscape(true, false, true, true), Rules.EscapeChoice.CancelRename, "改名中（輸入框還沒處理）：取消改名、清單留著");
+            Eq(Rules.DecideEscape(true, true, true, false), Rules.EscapeChoice.AlreadyCanceled, "輸入框這一幀已經取消改名：用掉、清單留著");
+            Eq(Rules.DecideEscape(true, true, false, false), Rules.EscapeChoice.AlreadyCanceled, "已經取消改名的那一幀，就算清單已經不在也用掉");
+            Eq(Rules.DecideEscape(true, true, true, true), Rules.EscapeChoice.AlreadyCanceled, "已經取消改名優先於改名中");
+
+            // 參數順序：外出、結算畫面、設定按鍵、暫停選單、選項。圖釘、協調器、漏斗開始挑選時不關，不在參數裡
+            string R(int on) => Rules.ListCloseReason(on == 0, on == 1, on == 2, on == 3, on == 4);
+            Eq(R(-1), null, "全部 false：不關（點外面、別的輸入框拿到焦點都不關）");
+            Check(R(0) != null && R(0).Contains("外出"), "外出：關");
+            Check(R(1) != null && R(1).Contains("結算"), "結算畫面開著：關");
+            Check(R(2) != null && R(2).Contains("設定按鍵"), "選項正在設定按鍵：關");
+            Check(R(3) != null && R(3).Contains("暫停選單"), "暫停選單開著：關");
+            Check(R(4) != null && R(4).Contains("選項開著"), "選項開著：關");
+        }
+
+        /// <summary>設定「清單再按一次」與設定說明的寫法（換行、{0}、不寫預設）。</summary>
+        static void ListAgainAndTips()
+        {
+            Eq(Rules.ParseListAgain("Close"), ListAgainMode.Close, "Close＝關掉清單");
+            Eq(Rules.ParseListAgain("Move to mouse"), ListAgainMode.MoveToMouse, "Move to mouse＝移到滑鼠旁邊");
+            Eq(Rules.ParseListAgain(null), ListAgainMode.Close, "沒有值：關掉清單");
+            Eq(Rules.ParseListAgain("move to mouse"), ListAgainMode.Close, "不認得的值（大小寫不同也算）：關掉清單");
+            Eq(Rules.ParseListAgain("別的"), ListAgainMode.Close, "不認得的值：關掉清單");
+            Check(Rules.ListAgainChoices.SequenceEqual(new[] { "Close", "Move to mouse" }), "下拉兩個選項、順序");
+            Eq(Rules.ListAgainDefault, "Close", "預設關掉清單（原本的行為）");
+            Check(Rules.ListAgainChoices.Contains(Rules.ListAgainDefault), "預設值在選項裡（不然遊戲會一直換回預設）");
+            Eq(Rules.ListAgainEntryName, "ListAgain", "設定的名稱");
+
+            var en = Strings.For(Lang.En);
+            var zht = Strings.For(Lang.ZhHant);
+            var zhs = Strings.For(Lang.ZhHans);
+            Eq(zht.ListAgainLabel, "清單再按一次", "繁中：清單再按一次");
+            Eq(zhs.ListAgainLabel, "列表再按一次", "簡中：列表再按一次");
+            Eq(en.ListAgainLabel, "List: press again", "英文：List: press again");
+            Eq(zht.ListAgainTip, "清單開著時再按一次群組清單的鍵：\nClose＝關掉清單\nMove to mouse＝不關，把清單移到滑鼠旁邊", "繁中：清單再按一次的說明（定稿）");
+            Eq(en.ListAgainTip, "When the group list is open, pressing its key again:\nClose = close the list\nMove to mouse = keep it open and move it next to the mouse", "英文：清單再按一次的說明（定稿）");
+            Eq(zhs.ListAgainTip, "列表打开时再按一次窗口组列表的按键：\nClose＝关掉列表\nMove to mouse＝不关，把列表移到鼠标旁边", "簡中：清單再按一次的說明（定稿）");
+            Eq(zht.ConfigTip(3, false), "叫出視窗群組 3 的按鍵：先關掉其他箱子、機器視窗，再把這組的視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "繁中：叫出的說明（{0} 套得進去、例子另起一行）");
+            Eq(en.ConfigTip(12, true), "Key that saves the open container/machine windows as group 12; with none open, it clears the group.\nE.g. Ctrl+Shift+3, Shift+F5; empty = not used", "英文：儲存的說明（{0} 套得進去）");
+            Eq(zhs.ConfigTip(7, false), "调出窗口组 7 的按键：先关掉其他箱子、机器窗口，再把这一组的窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "簡中：叫出的說明");
+            Eq(zht.CloseLockedTip, "有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。", "繁中：也關鎖住的（開頭寫要有一鍵關窗 mod）");
+            Eq(en.CloseLockedTip, "Only works with the Close All Windows mod installed.\nWhen pressing the recall key again closes the group, also close its locked windows; only when \"Press again\" is Close if all open or Close if unmoved.", "英文：也關鎖住的");
+            Eq(zht.TabsTip, "儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對打開這個設定後儲存的群組有作用。", "繁中：也記儲物分頁（縮短）");
+
+            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
+            {
+                var st = Strings.For(lang);
+                int Lines(string t) => t.Split('\n').Length;
+                Eq(Lines(st.RepeatTip), 4, $"{lang}「再按一次」：開頭一行＋三個選項各一行");
+                Eq(Lines(st.ListAgainTip), 3, $"{lang}「清單再按一次」：開頭一行＋兩個選項各一行");
+                foreach (var choice in Rules.ListAgainChoices)
+                    Check(st.ListAgainTip.Split('\n').Any(l => l.StartsWith(choice, StringComparison.Ordinal)), $"{lang}「清單再按一次」的選項 {choice} 一個一行");
+                foreach (var choice in Rules.RepeatChoices)
+                    Check(st.RepeatTip.Split('\n').Any(l => l.StartsWith(choice, StringComparison.Ordinal)), $"{lang}「再按一次」的選項 {choice} 一個一行");
+                Eq(Lines(st.CloseLockedTip), 2, $"{lang}「也關鎖住的」兩行");
+                Eq(Lines(st.TabsTip), 2, $"{lang}「也記儲物分頁」兩行");
+                Eq(Lines(st.ListTip), 2, $"{lang}「群組清單」：例子另起一行");
+                foreach (var save in new[] { false, true })
+                {
+                    var tip = st.ConfigTip(5, save);
+                    Eq(Lines(tip), 2, $"{lang} 按鍵的說明：例子另起一行（{(save ? "儲存" : "叫出")}）");
+                    Check(tip.Contains("5") && !tip.Contains("{0}"), $"{lang} 按鍵的說明：{{0}} 換成群組編號");
+                }
+                Check(st.CloseLockedTip.Contains("mod"), $"{lang}「也關鎖住的」寫明一鍵關窗是 mod");
+                foreach (var t in new[] { st.RepeatTip, st.CloseLockedTip, st.TabsTip, st.ListTip, st.ListAgainTip, st.ConfigTip(1, false), st.ConfigTip(1, true) })
+                    Check(!t.Contains("預設") && !t.Contains("默认") && !t.Contains("default", StringComparison.OrdinalIgnoreCase), $"{lang} 說明不寫哪個是預設：{t.Split('\n')[0]}");
+            }
+            foreach (var txt in new[] { zht.ListAgainLabel, zht.ListAgainTip })
+                Check(!txt.Contains("窗口") && !txt.Contains("关") && !txt.Contains("开") && !txt.Contains("鼠标"), $"繁中清單再按一次的字沒有簡體字：{txt}");
         }
 
         /// <summary>2.0.0 的 GroupRecord／WindowEntry（沒有 tabs），模擬舊版讀新檔。</summary>

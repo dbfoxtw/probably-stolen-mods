@@ -10,6 +10,7 @@ namespace ProbablyStolenWindowGroups
     /// 開視窗照遊戲雙擊的 OpenContentAction 的步驟，位置照遊戲記的同一種座標。
     /// 2.1.0 起：同一組再按一次照設定「再按一次」關掉這組、可以記內容分頁、
     /// 叫出時在視窗上做記號給視窗分頁 mod 看。
+    /// 2.3.0 起群組可以取名（群組清單）：名字跟著群組存在同一個檔，提示有名字時帶名字；清單的改名、刪除也走這裡。
     /// </summary>
     static class Groups
     {
@@ -132,6 +133,7 @@ namespace ProbablyStolenWindowGroups
             if (!WindowGroupsMod.Ready) return;
             try
             {
+                GroupList.Close("讀檔"); // 清單列的是上一份的群組
                 _rec = null;
                 ForgetRecalls();
                 var r = Record();
@@ -143,6 +145,9 @@ namespace ProbablyStolenWindowGroups
             }
             catch (Exception e) { WindowGroupsMod.Log.Error($"讀檔後整理群組出錯：{e}"); }
         }
+
+        /// <summary>目前這場遊戲的群組（群組清單讀列用；遊戲還沒載入時回傳 null）。</summary>
+        internal static GroupRecord Current() => Record();
 
         /// <summary>目前這場遊戲的群組（槽位或 runID 變了就換一份）。遊戲還沒載入時回傳 null。</summary>
         static GroupRecord Record()
@@ -209,18 +214,58 @@ namespace ProbablyStolenWindowGroups
             var skippedNote = skipped.Count > 0 ? $"；不是店裡自己的，不存：{string.Join("、", skipped)}" : "";
             if (entries.Count == 0)
             {
-                r.Clear(group);
-                Persist(r);
-                Toast.Show(GameState.S.Cleared(group));
-                WindowGroupsMod.DebugLog($"儲存群組 {group}：沒開箱子／機器視窗，清空{skippedNote}");
+                ClearGroup(r, group, $"儲存群組 {group}：沒開箱子／機器視窗，清空{skippedNote}");
                 return;
             }
-            r.Set(group, entries);
+            r.Set(group, entries); // 名字保留
             Persist(r);
             int count = r.Get(group).Count;
-            Toast.Show(GameState.S.Saved(group, count));
+            Toast.Show(GameState.S.Saved(group, count, r.GetName(group)));
             WindowGroupsMod.DebugLog($"儲存群組 {group}（{count} 個，下面的先）：{string.Join("、", entries.Select(e => $"「{e.Title}」#{e.Id} ({e.X:0},{e.Y:0}){(e.Tabs != null ? $" 分頁 {e.Tabs}" : "")}"))}{skippedNote}");
+            GroupList.OnGroupsChanged(); // 清單開著的話重畫（位置不變）
         }
+
+        /// <summary>
+        /// 清空一組，名字一起清：沒開視窗時按儲存、群組清單裡刪除都走這裡，提示「已清空」（用清空前的名字）。
+        /// 「再按一次」的紀錄也丟掉（內容沒了）。
+        /// </summary>
+        static void ClearGroup(GroupRecord r, int group, string debug)
+        {
+            var name = r.GetName(group);
+            r.Clear(group);
+            Persist(r);
+            _recalled.Remove(group);
+            if (_pendingGroup == group) { _pendingGroup = 0; _pendingWindows.Clear(); }
+            Toast.Show(GameState.S.Cleared(group, name));
+            WindowGroupsMod.DebugLog($"{debug}{(name != null ? $"（名字「{name}」一起清掉）" : "")}");
+            GroupList.OnGroupsChanged();
+        }
+
+        /// <summary>群組清單的「刪除」（點兩次確認之後）：和沒開視窗時按儲存一樣清空這組。</summary>
+        internal static void ClearFromList(int group)
+        {
+            var r = Record();
+            if (r == null) { WindowGroupsMod.DebugLog($"清單刪除群組 {group}：遊戲還沒載入，不動作"); return; }
+            ClearGroup(r, group, $"清單刪除群組 {group}：清空 {r.Get(group).Count} 個視窗");
+        }
+
+        /// <summary>
+        /// 群組清單的改名：名字照 Rules.NormalizeName 整理（去前後空白、上限 16 字；空的＝沒有名字），有變才寫檔。
+        /// 回傳整理後的名字（沒有名字是 null）。不跳提示：清單上那列馬上換字就是回饋。
+        /// </summary>
+        internal static string Rename(int group, string raw)
+        {
+            var r = Record();
+            if (r == null) { WindowGroupsMod.DebugLog($"改名群組 {group}：遊戲還沒載入，不動作"); return null; }
+            var old = r.GetName(group);
+            var now = r.SetName(group, raw);
+            if (old == now) { WindowGroupsMod.DebugLog($"改名群組 {group}：沒變（{Quote(old)}）"); return now; }
+            Persist(r);
+            WindowGroupsMod.DebugLog($"改名群組 {group}：{Quote(old)} → {Quote(now)}");
+            return now;
+        }
+
+        static string Quote(string name) => name == null ? "沒有名字" : $"「{name}」";
 
         /// <summary>視窗裡選的內容分頁（GameItem.GetContentTabsSelection）；沒有分頁元件（空字串）或讀不到回傳 null（不寫進檔案）。</summary>
         static string TabsOf(GameItem item)
@@ -273,7 +318,7 @@ namespace ProbablyStolenWindowGroups
             var entries = r.Get(group);
             if (entries.Count == 0)
             {
-                Toast.Show(GameState.S.Empty(group));
+                Toast.Show(GameState.S.Empty(group, r.GetName(group)));
                 WindowGroupsMod.DebugLog($"叫出群組 {group}：是空的，不動作");
                 return;
             }
@@ -301,7 +346,7 @@ namespace ProbablyStolenWindowGroups
                     WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
                     return;
                 }
-                Toast.Show(GameState.S.Skipped(group, missing, lockedOut));
+                Toast.Show(GameState.S.Skipped(group, missing, lockedOut, r.GetName(group)));
                 log?.Add("一個都開不了，不關別的視窗");
                 WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
                 return;
@@ -415,7 +460,7 @@ namespace ProbablyStolenWindowGroups
                 }
                 catch (Exception ex) { WindowGroupsMod.DebugLog($"播開啟音效失敗：{ex.Message}"); }
             }
-            if (missing > 0 || lockedOut > 0) Toast.Show(GameState.S.Skipped(group, missing, lockedOut));
+            if (missing > 0 || lockedOut > 0) Toast.Show(GameState.S.Skipped(group, missing, lockedOut, r.GetName(group)));
             if (log != null) WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log)}");
             // 拖著單一物品時：關掉、打開、移動過視窗，滑鼠底下可能換了東西，讓遊戲重算放下的目標
             if (closedOthers > 0 || placed.Count > 0) RefreshDragAfterWindowsChanged();

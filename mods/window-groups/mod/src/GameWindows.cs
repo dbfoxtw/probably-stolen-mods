@@ -113,10 +113,11 @@ namespace ProbablyStolenWindowGroups
         /// <summary>
         /// 現在能不能動作：照一鍵關窗正式版的 CanAct——結算畫面、選項正在設定按鍵、打字中、
         /// 拖著面板、暫停選單或選項開著、圖釘模式、儲物協調器與漏斗的挑選模式——加上外出。原因給除錯 log。
-        /// 多選與拖物品另外看這次是儲存還是叫出（save）：拉框、準備拖一組時都不動作；選好、放開時照常；
-        /// 拖著一組或單一物品時只叫出、不儲存（Rules.DragBlockReason）。
+        /// 多選與拖物品另外看這次要做什麼（action）：拉框、準備拖一組時都不動作；選好、放開時照常；
+        /// 拖著一組或單一物品時只叫出、不儲存，也不開群組清單（Rules.DragBlockReason）。
+        /// 從群組清單點名字叫出也走這裡（和按叫出鍵一樣）。
         /// </summary>
-        internal static bool CanAct(bool save, out string reason)
+        internal static bool CanAct(KeyAction action, out string reason)
         {
             reason = null;
             var ui = StoreUIManager.Instance;
@@ -139,7 +140,7 @@ namespace ProbablyStolenWindowGroups
                 bool mouseHeld = hasSelection && UnityEngine.Input.GetKey(multi.key);
                 var drag = ItemMouseDragHandler.current;
                 bool draggingItem = drag != null && drag.IsDraggingItem;
-                reason = Rules.DragBlockReason(hasSelection, groupDragging, mouseHeld, draggingItem, save);
+                reason = Rules.DragBlockReason(hasSelection, groupDragging, mouseHeld, draggingItem, action);
                 if (reason != null) return false;
                 if (UIDragHandler.isDraggingAnyUI) { reason = "拖著面板"; return false; }
                 var esc = ui.escapeUIManager;

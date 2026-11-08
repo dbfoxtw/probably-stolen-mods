@@ -109,6 +109,7 @@ namespace ProbablyStolenWindowGroups
             _text.fontSize = FontSize;
             _text.color = Cream;
             _text.richText = false;
+            _text.parseCtrlCharacters = false; // 名字裡的「\n」這類照字面（群組清單取的名字，2.3.0 起）
             _text.enableWordWrapping = false;
             _text.alignment = TextAlignmentOptions.Center;
             _text.raycastTarget = false;

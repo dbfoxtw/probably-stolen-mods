@@ -33,7 +33,8 @@ MOD = modkit.OfficialMod(
     description=("Unofficial. Save the container and machine windows you have open, and where they are, as a group; "
                  "press one key to bring that group back and put every window where it was. "
                  "By default Ctrl+Shift+1 to 9 saves and Ctrl+1 to 9 recalls, 20 groups in all; "
-                 "change the keys in the mod settings. Your save files are never modified."),
+                 "Ctrl+0 opens a list of your groups to recall, rename or delete them. "
+                 "Change the keys in the mod settings. Your save files are never modified."),
     assembly="ProbablyStolenWindowGroups",
     zip_name="ProbablyStolen-WindowGroups",
     debug_note=("這個檔存在時，mod 會把每次儲存、叫出群組時每個視窗的經過（找到沒有、開了沒有、位置）、按了鍵但不動作的原因"

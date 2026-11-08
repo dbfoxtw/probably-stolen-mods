@@ -74,11 +74,13 @@ namespace ProbablyStolenWindowGroups
         string Prefix() => (Ctrl ? "Ctrl+" : "") + (Shift ? "Shift+" : "") + (Alt ? "Alt+" : "");
     }
 
-    /// <summary>一個群組的一個動作綁的鍵。</summary>
+    /// <summary>一個群組的一個動作綁的鍵；2.3.0 起也可能是群組清單的鍵（Group 是 Rules.ListGroup）。</summary>
     sealed class Binding
     {
-        /// <summary>群組編號 1～20。</summary>
+        /// <summary>群組編號 1～20；群組清單的鍵是 Rules.ListGroup（0）。</summary>
         public int Group;
+        /// <summary>群組清單的鍵：撞鍵檢查、工具箱與操作提示讓開都和群組的鍵一樣。</summary>
+        public bool IsList => Group == Rules.ListGroup;
         /// <summary>true＝儲存、false＝叫出。</summary>
         public bool Save;
         public Hotkey Key;
@@ -87,8 +89,8 @@ namespace ProbablyStolenWindowGroups
     }
 
     /// <summary>
-    /// 全部 40 個設定（20 組×叫出、儲存）讀成可以用的按鍵：空的不使用；寫錯的不使用並警告；同一個鍵設給兩個動作時，
-    /// 照設定的順序（群組 1 叫出、群組 1 儲存、群組 2 叫出…）只有第一個有效並警告；遊戲自己也用的鍵照用並警告
+    /// 全部 40 個設定（20 組×叫出、儲存；2.3.0 起前面多一個群組清單，Rules.WithListEntry）讀成可以用的按鍵：空的不使用；寫錯的不使用並警告；
+    /// 同一個鍵設給兩個動作時，照設定的順序（群組清單、群組 1 叫出、群組 1 儲存、群組 2 叫出…）只有第一個有效並警告；遊戲自己也用的鍵照用並警告
     /// （Rules.GameKeyUse；gameBindings 是遊戲按鍵綁定的 id 與目前綁的 KeyCode 名稱）。
     /// </summary>
     sealed class Keymap

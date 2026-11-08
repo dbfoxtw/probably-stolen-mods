@@ -7,7 +7,7 @@ namespace ProbablyStolenWindowGroups
     /// <summary>
     /// 設定：遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.window-groups.json，
     /// 主選單的模組管理畫面裡有這個 mod 的設定視窗）。最前面是 2.1.0 加的「再按一次」（下拉）、「也關鎖住的」「也記儲物標籤頁」（開關），
-    /// 後面 20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
+    /// 2.3.0 加的「群組清單」（文字欄，預設 Ctrl+0），後面 20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
     /// 寫法和 Demo 的 MelonPreferences 一樣（Ctrl+3、F5、Ctrl+Shift+F1；Hotkey.Parse）。
     /// 不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：它只擷取單一個鍵，表達不了 Ctrl+1 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart）。
@@ -44,12 +44,20 @@ namespace ProbablyStolenWindowGroups
         static bool _built;
         static ConfigEntry<string> _repeat;
         static ConfigEntry<bool> _closeLockedToo, _rememberTabs;
+        /// <summary>群組清單的鍵；和 40 個鍵一起讀成 Keymap（撞鍵檢查、工具箱與操作提示讓開都一樣）。</summary>
+        static ConfigEntry<string> _listKey;
+        /// <summary>上次讀成按鍵時群組清單的值（和現在的不同就重建）。</summary>
+        static string _listBuilt;
+        /// <summary>清單再按一次：下拉，選項是英文（Rules.ListAgainChoices）。</summary>
+        static ConfigEntry<string> _listAgain;
 
         /// <summary>
         /// 再按一次（預設全開就關）。下拉選單的值是英文（Rules.RepeatChoices），說明欄寫中文對照。
         /// 每次用到時才讀，按套用就生效。攔截在 Init 之前就掛上了，那時還沒有設定，用預設。
         /// </summary>
         internal static RepeatMode Repeat => Rules.ParseRepeat(_repeat != null ? _repeat.Value : Rules.RepeatDefault);
+        /// <summary>清單開著時再按一次清單的鍵：關掉或移到滑鼠旁邊（預設關掉）。每次用到時才讀。</summary>
+        internal static ListAgainMode ListAgain => Rules.ParseListAgain(_listAgain != null ? _listAgain.Value : Rules.ListAgainDefault);
         /// <summary>再按一次關掉時一鍵關窗鎖住的也關（預設開）。</summary>
         internal static bool CloseLockedToo => _closeLockedToo == null || _closeLockedToo.Value;
         /// <summary>群組也記儲物標籤頁（內容分頁；預設關）。</summary>
@@ -63,6 +71,12 @@ namespace ProbablyStolenWindowGroups
                 Rules.RepeatChoices, () => GameState.S.RepeatTip);
             _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => GameState.S.CloseLockedLabel, () => GameState.S.CloseLockedTip);
             _rememberTabs = cfg.Define("RememberTabs", false, Section, () => GameState.S.TabsLabel, () => GameState.S.TabsTip);
+            // 2.3.0 的群組清單：排在 2.1.0 的三個設定後面、40 個按鍵前面。寫法和群組的鍵一樣（Hotkey.Parse）
+            _listKey = cfg.Define(Rules.ListEntryName, Rules.DefaultListKey, Section, () => GameState.S.ListLabel,
+                choices: null, tooltip: () => GameState.S.ListTip);
+            // 清單再按一次排在群組清單的按鍵欄正下方
+            _listAgain = cfg.Define(Rules.ListAgainEntryName, Rules.ListAgainDefault, Section, () => GameState.S.ListAgainLabel,
+                Rules.ListAgainChoices, () => GameState.S.ListAgainTip);
             foreach (var (name, group, save) in Rules.AllEntries())
             {
                 int g = group;
@@ -85,7 +99,7 @@ namespace ProbablyStolenWindowGroups
         {
             get
             {
-                bool changed = !_built;
+                bool changed = !_built || (_listKey != null && _listBuilt != _listKey.Value);
                 foreach (var e in _entries)
                     if (e.Built != e.Config.Value) { changed = true; break; }
                 if (changed && _entries.Count > 0) Rebuild();
@@ -102,7 +116,9 @@ namespace ProbablyStolenWindowGroups
                 e.Built = e.Config.Value;
                 raw.Add((e.Name, e.Group, e.Save, e.Built ?? ""));
             }
-            var map = Keymap.Build(raw, Resolve, GameBindings());
+            _listBuilt = _listKey != null ? _listKey.Value : "";
+            // 群組清單排在前面（設定視窗的順序），和群組的鍵重複時清單的有效
+            var map = Keymap.Build(Rules.WithListEntry(_listBuilt, raw), Resolve, GameBindings());
             // 只在設定的值變了才重建，每次重建都把目前的問題全部警告一次（改錯、改好、再改錯也會再警告）
             foreach (var w in map.Warnings) WindowGroupsMod.Log.Warning(w);
             var keys = new List<Key>();
@@ -151,11 +167,22 @@ namespace ProbablyStolenWindowGroups
         internal static string Describe()
         {
             var parts = new List<string>();
-            foreach (var k in _keys) parts.Add($"{k.Binding.Group}{(k.Binding.Save ? "存" : "叫")}={k.Binding.Key.Display()}");
+            foreach (var k in _keys)
+                parts.Add(k.Binding.IsList ? $"清單={k.Binding.Key.Display()}" : $"{k.Binding.Group}{(k.Binding.Save ? "存" : "叫")}={k.Binding.Key.Display()}");
             return parts.Count == 0 ? "沒有設定任何按鍵" : string.Join(" ", parts);
         }
 
+        /// <summary>
+        /// 每組的叫出鍵給玩家看的寫法（群組清單的鍵那欄）：只有 Keymap 收下的（沒設、寫錯、和別的鍵重複的組沒有）。
+        /// </summary>
+        internal static Dictionary<int, string> RecallKeys()
+        {
+            var bindings = new List<Binding>();
+            foreach (var k in Keys) bindings.Add(k.Binding);
+            return Rules.RecallKeyDisplays(bindings);
+        }
+
         /// <summary>2.1.0 加的三個設定，給 log 看。</summary>
-        internal static string DescribeOptions() => $"再按一次={Repeat}、也關鎖住的={CloseLockedToo}、也記儲物標籤頁={RememberTabs}";
+        internal static string DescribeOptions() => $"再按一次={Repeat}、也關鎖住的={CloseLockedToo}、也記儲物標籤頁={RememberTabs}、清單再按一次={ListAgain}";
     }
 }

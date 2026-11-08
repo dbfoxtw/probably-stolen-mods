@@ -9,6 +9,7 @@ namespace ProbablyStolenWindowGroups
     /// 不擋的話 Ctrl+1 會同時拿起工具箱的第 1 個工具。操作提示另外是按鍵綁定 control_hints（預設 O，玩家可以改），
     /// StoreUIManager.Update 不看修飾鍵就 ToggleControlHintOverlay，群組設了同一個主要的鍵時也要讓開。
     /// 待辦清單 mod 在懸浮單打字時攔 UnityEngine.Input，這裡的查詢也會被擋，不會誤觸。
+    /// 2.3.0 起群組清單的鍵（預設 Ctrl+0）也在 Settings.Keys 裡（Binding.IsList），工具箱與操作提示一樣讓開。
     /// 攔截本身在 Patches.cs。
     /// </summary>
     static class Keys
