@@ -137,11 +137,18 @@ def dotnet() -> str:
     return shutil.which("dotnet") or r"C:\Program Files\dotnet\dotnet.exe"
 
 
+# 建置 mod 時都加的 MSBuild 屬性：讓同一份原始碼在不同 commit 建置出來的 DLL 一樣（Workshop 與 Nexus 各打包一次時，DLL 原本會不同）。
+# - IncludeSourceRevisionInInformationalVersion=false：.NET 8 SDK 預設把建置當下的 git commit 接在組件的版本資訊後面（2.0.0+<commit>）。
+# - DebugType=none：不產生 PDB。SourceLink 會把 commit 寫進 PDB，DLL 又記著 PDB 的雜湊與建置電腦上的路徑；
+#   mod 安裝與打包本來就不放 PDB，拿掉也不少什麼，散布的 DLL 也不會記著建置的資料夾。
+BUILD_PROPS = ["-p:IncludeSourceRevisionInInformationalVersion=false", "-p:DebugType=none"]
+
+
 def build_dll(csproj: Path, dll: Path, game: Path, check_dll: str = "Assembly-CSharp.dll") -> None:
     """編譯 MelonLoader 格式的 mod（Demo）。check_dll：先確認 MelonLoader 產生的組件有這個（編譯要參考它們）。"""
     if not (game / "MelonLoader" / "Il2CppAssemblies" / check_dll).is_file():
         raise SystemExit("找不到 MelonLoader\\Il2CppAssemblies：請先安裝 MelonLoader 並啟動一次遊戲。")
-    subprocess.run([dotnet(), "build", str(csproj), "-c", "Release", "-nologo", "-v", "q", f"-p:GameDir={game}"],
+    subprocess.run([dotnet(), "build", str(csproj), "-c", "Release", "-nologo", "-v", "q", f"-p:GameDir={game}", *BUILD_PROPS],
                    check=True)
     print(f"建置完成：{dll}")
 
@@ -326,7 +333,7 @@ def build_official_dll(csproj: Path, dll: Path, game: Path) -> None:
     """編譯官方格式的 mod：csproj 用 $(GameDir) 參考 Managed 裡的組件（Private=false，不附進 mod）。"""
     if not (managed_dir(game) / "Assembly-CSharp.dll").is_file():
         raise SystemExit(f"找不到 {managed_dir(game)}\\Assembly-CSharp.dll：--game 要指向正式版的遊戲資料夾（不是 Demo）。")
-    subprocess.run([dotnet(), "build", str(csproj), "-c", "Release", "-nologo", "-v", "q", f"-p:GameDir={game}"],
+    subprocess.run([dotnet(), "build", str(csproj), "-c", "Release", "-nologo", "-v", "q", f"-p:GameDir={game}", *BUILD_PROPS],
                    check=True)
     print(f"建置完成：{dll}")
 

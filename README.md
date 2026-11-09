@@ -1,17 +1,17 @@
 # Probably Stolen mods
 
-*Probably Stolen* 的 mod 集合，非官方製作。每個 mod 放在 `mods/` 底下自己的資料夾，各有說明（README）、版本紀錄（CHANGELOG）與授權。
+*Probably Stolen* 的 mod 集合。每個 mod 放在 `mods/` 底下自己的資料夾，各有說明（README）、版本紀錄（CHANGELOG）與授權。
 
-正式版（1.0，2026-10-28 發售）起，mod 陸續改成遊戲官方的 mod 格式（不需要 MelonLoader，也可以從 Steam 工作坊訂閱）；還沒改的只支援 Demo（MelonLoader 版，Demo 已下架）。每個 mod 對應的版本寫在下表。
+所有 mod 都是遊戲官方的 mod 格式，支援正式版（1.0，2026-10-28 發售；不需要 MelonLoader，也可以從 Steam 工作坊訂閱）。每個 mod 對應的版本寫在下表。
 
-> A collection of unofficial mods for *Probably Stolen*. Since the full release (1.0), the mods are being moved to the game's official mod format; the ones not moved yet still only support the demo. See [English](#english) below.
+> A collection of mods for *Probably Stolen*, all in the game's official mod format for the full release (1.0). See [English](#english) below.
 
 ## mod 一覽
 
 | mod | 說明 | 對應版本 | 下載 | 原始碼 |
 |---|---|---|---|---|
 | 繁體中文化 mod（Traditional Chinese Translation） | 把遊戲的簡體中文，在顯示時轉成繁體中文（台灣用語） | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) | [mods/zh-hant](mods/zh-hant) |
-| 待辦清單（To-Do List） | 在店鋪畫面顯示一張懸浮單，記待辦和筆記 | Demo 050REV5-L（MelonLoader） | [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) | [mods/todo](mods/todo) |
+| 簡易待辦（Simple To-Do） | 在店裡顯示一張懸浮單，記待辦和筆記，每個存檔各一份（2.0.0 以前叫待辦清單） | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) | [mods/todo](mods/todo) |
 | 交易所預覽（Exchange Preview） | 滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉 | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) | [mods/exchange-preview](mods/exchange-preview) |
 | 一鍵關窗（Close All Windows） | 按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住 | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) | [mods/close-all-windows](mods/close-all-windows) |
 | 一鍵收水（Collect All Water） | 水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來 | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) | [mods/collect-all-water](mods/collect-all-water) |
@@ -24,17 +24,18 @@
 
 ## 下載與安裝
 
-- **官方格式的 mod**（正式版）：在 Steam 工作坊訂閱，或到 Nexus、這裡的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 下載壓縮檔，把裡面的資料夾解壓縮到遊戲資料夾的 `Mods` 裡，再到主選單的模組畫面啟用。不需要 MelonLoader。
-- **MelonLoader 的 mod**（Demo）：到 Nexus 或 Releases 下載，照那個 mod 的 README 安裝（要先裝 MelonLoader 0.7.3）。
+在 Steam 工作坊訂閱，或到 Nexus、這裡的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 下載壓縮檔，把裡面的資料夾解壓縮到遊戲資料夾的 `Mods` 裡，再到主選單的模組畫面啟用。不需要 MelonLoader。
 
-Releases 的標題是 mod 的英文名稱加版本，例如 To-Do List v1.0.1、Traditional Chinese Translation v2.0.0（標記是資料夾名稱加版本：`todo-v1.0.1`、`zh-hant-v2.0.0`）。
+Demo 時期的 MelonLoader 版（Demo 已下架）還留在 Releases，照那一版的 README 安裝。
+
+Releases 的標題是 mod 的英文名稱加版本，例如 Simple To-Do v2.0.0、Traditional Chinese Translation v2.0.0（標記是資料夾名稱加版本：`todo-v2.0.0`、`zh-hant-v2.0.0`）。
 
 ## 從原始碼建置（開發者）
 
 需要 Windows、Python 3.10 以上、.NET SDK 8 以上（繁體中文化 mod 的 `install.bat` 會自己建 Python 虛擬環境、安裝 `requirements.txt`，見它的 README）。
 
 1. `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`
-2. 官方格式的 mod 直接參考正式版遊戲資料夾裡的組件（`Probably Stolen_Data\Managed`），不用另外準備。MelonLoader 的 mod 要先安裝 [MelonLoader](https://github.com/LavaGang/MelonLoader) 0.7.3 到 Demo，並啟動一次遊戲，讓它產生 `MelonLoader\Il2CppAssemblies`（編譯時要參考）。
+2. 建置時直接參考正式版遊戲資料夾裡的組件（`Probably Stolen_Data\Managed`），不用另外準備。
 3. 關閉遊戲，進到要建置的 mod 資料夾（例如 `mods\zh-hant`）執行 `install.bat`：建置後安裝到遊戲。移除用同一個資料夾的 `uninstall.bat`。其他用法（除錯模式、打包、離線測試）見各 mod 的 README。
 
 ## 共用的 tools/modkit.py
@@ -49,12 +50,12 @@ Releases 的標題是 mod 的英文名稱加版本，例如 To-Do List v1.0.1、
 
 ## English
 
-Unofficial mods for *Probably Stolen*. Each mod lives in its own folder under `mods/`, with its own README, changelog and license. Since the full release (1.0, October 28, 2026), the mods are being moved to the game's official mod format (no MelonLoader needed, also available on the Steam Workshop); the ones not moved yet still only support the demo (MelonLoader; the demo has been retired). The supported version of each mod is in the table.
+Mods for *Probably Stolen*. Each mod lives in its own folder under `mods/`, with its own README, changelog and license. All of them use the game's official mod format for the full release (1.0, October 28, 2026; no MelonLoader needed, also available on the Steam Workshop). The supported version of each mod is in the table.
 
 | Mod | What it does | Supported version | Download | Source |
 |---|---|---|---|---|
 | Traditional Chinese Translation | Shows the game's Simplified Chinese text in Traditional Chinese (Taiwan) | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) | [mods/zh-hant](mods/zh-hant) |
-| To-Do List | A floating panel on the shop screen for your to-dos and notes | Demo 050REV5-L (MelonLoader) | [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) | [mods/todo](mods/todo) |
+| Simple To-Do | A floating list in your store for to-dos and notes, with a separate list for each save (called To-Do List before 2.0.0) | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) | [mods/todo](mods/todo) |
 | Exchange Preview | Hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) | [mods/exchange-preview](mods/exchange-preview) |
 | Close All Windows | Press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) | [mods/close-all-windows](mods/close-all-windows) |
 | Collect All Water | Adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) | [mods/collect-all-water](mods/collect-all-water) |
@@ -65,9 +66,9 @@ Unofficial mods for *Probably Stolen*. Each mod lives in its own folder under `m
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author (the Taiwan-usage proofreading and missing translations of the Traditional Chinese mod were also made with AI). Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on each mod's Nexus page; please report problems to the mods, not to the game developers.
 
-**Download and install:** official-format mods (full release): subscribe on the Steam Workshop, or get the zip from Nexus or [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases), extract its folder into the game's `Mods` folder and activate the mod in the Mods menu; no MelonLoader needed. MelonLoader mods (demo): get the zip from Nexus or Releases and follow that mod's README (they need MelonLoader 0.7.3). Each release is titled with the mod's name and version, e.g. To-Do List v1.0.1, Traditional Chinese Translation v2.0.0 (tagged with the folder name and version: `todo-v1.0.1`, `zh-hant-v2.0.0`).
+**Download and install:** subscribe on the Steam Workshop, or get the zip from Nexus or [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases), extract its folder into the game's `Mods` folder and activate the mod in the Mods menu; no MelonLoader needed. The older MelonLoader versions from the demo days (the demo has been retired) are still in Releases; follow the README of that version. Each release is titled with the mod's name and version, e.g. Simple To-Do v2.0.0, Traditional Chinese Translation v2.0.0 (tagged with the folder name and version: `todo-v2.0.0`, `zh-hant-v2.0.0`).
 
-**Build from source** (developers only): requires Windows, Python 3.10+ and the .NET SDK 8+ (the Traditional Chinese mod's `install.bat` creates a Python virtual environment and installs `requirements.txt` by itself, see its README). Clone this repository. Official-format mods build against the assemblies in the full game's `Probably Stolen_Data\Managed`; MelonLoader mods need MelonLoader 0.7.3 installed on the demo and the game started once. Then close the game and run `install.bat` in the mod's folder (e.g. `mods\zh-hant`). `uninstall.bat` in the same folder removes it. See each mod's README for the other options.
+**Build from source** (developers only): requires Windows, Python 3.10+ and the .NET SDK 8+ (the Traditional Chinese mod's `install.bat` creates a Python virtual environment and installs `requirements.txt` by itself, see its README). Clone this repository. The mods build against the assemblies in the full game's `Probably Stolen_Data\Managed`. Then close the game and run `install.bat` in the mod's folder (e.g. `mods\zh-hant`). `uninstall.bat` in the same folder removes it. See each mod's README for the other options.
 
 **Shared `tools/modkit.py`:** the build, install and packaging code shared by every mod's `tools/install.py` (finding the game folder in your Steam libraries, compiling, installing into the game: official-format mods go to `Mods\<mod ID>\` with a generated `manifest.xml`, MelonLoader mods put their dll in `Mods\`; building the player zip), using only the Python standard library. Each mod's `tools/install.py` looks for it in the `tools/` folder above, so clone the whole repository; a single mod's folder on its own can't be built.
 
