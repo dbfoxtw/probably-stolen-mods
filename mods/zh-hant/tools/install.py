@@ -37,7 +37,7 @@ MOD = modkit.OfficialMod(
     root=ROOT,
     mod_id="dbfoxtw.zh-hant",  # 和 mod/src/ZhHantMod.cs 的 ModId 一致
     name="Traditional Chinese Translation",
-    description=("Unofficial. Shows the game's Simplified Chinese text as Traditional Chinese (Taiwan usage), "
+    description=("Shows the game's Simplified Chinese text as Traditional Chinese (Taiwan usage), "
                  "converting it at display time; game files, string tables and saves are not modified. "
                  "Select Simplified Chinese in the game's language options to use it."),
     assembly="ProbablyStolenZhHant",

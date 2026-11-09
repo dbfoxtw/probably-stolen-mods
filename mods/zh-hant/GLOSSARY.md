@@ -6,8 +6,8 @@
 
 - ★：繁中和簡中不只差在字形（台灣用語，或特意改過的譯名）。
 - 說明：只有特意選過的名稱才寫為什麼這樣譯；說明是 AI（Claude）整理、作者審過的。
-- 對應遊戲版本：正式版 1.0（VERSION 100-REV12）；mod 版本 2.10.0。
-- 共 970 條，★ 142 條。
+- 對應遊戲版本：正式版 1.0（VERSION 100-REV13）；mod 版本 2.11.0。
+- 共 970 條，★ 154 條。
 
 分類：[水的種類](#水的種類)（6）、[貨幣與數值](#貨幣與數值)（8）、[違禁品](#違禁品)（5）、[組織](#組織)（2）、[玩法用語](#玩法用語)（15）、[地區](#地區)（4）、[物品](#物品)（457）、[顧客與角色](#顧客與角色)（158）、[派系](#派系)（6）、[公司](#公司)（23）、[難度](#難度)（4）、[初始專精](#初始專精)（14）、[初始特性](#初始特性)（51）、[聲望特性](#聲望特性)（46）、[王爾德的人脈網路](#王爾德的人脈網路)（54）、[作物特性](#作物特性)（23）、[機器模組](#機器模組)（10）、[委託](#委託)（27）、[夜間事件](#夜間事件)（7）、[書與手冊](#書與手冊)（11）、[導師筆記](#導師筆記)（18）、[介面](#介面)（14）、[其他](#其他)（7）
 
@@ -153,10 +153,10 @@
 | N-羥甲基鹼溶液瓶 | Bottle of N-Methylol Base | N-羟甲基碱溶液瓶 |  |
 | 還原劑瓶 | Bottle of Reducing Agent | 还原剂瓶 |  |
 | 瓶裝泉水 | Bottle of Spring Water | 瓶装泉水 |  |
-| 水瓶（大） ★ | Bottle of Water (Large) | 水瓶（大号） | 官方簡中寫「大號」；台灣說「大號」容易想到上廁所，改用「大」。 |
-| 水瓶（迷你） ★ | Bottle of Water (Micro) | 水瓶（微型） | 官方簡中寫「微型」；和「小」「大」一起改成口語的「迷你」。 |
-| 水瓶（小） ★ | Bottle of Water (Small) | 水瓶（小号） | 官方簡中寫「小號」，台灣說小號、大號容易想到上廁所，改用「小」「大」。 |
-| 水瓶（標準） | Bottle of Water (Standard) | 水瓶（标准） | 遊戲 VERSION 100-REV12 起跟官方從「瓶裝水」改成「水瓶」：這是裝水的容器，台灣的「瓶裝水」多指買來喝的整瓶水。 |
+| 水瓶（大） ★ | Bottle of Water (Large) | 瓶装水（大） | 官方簡中寫「大號」；台灣說「大號」容易想到上廁所，改用「大」。 |
+| 水瓶（迷你） ★ | Bottle of Water (Micro) | 瓶装水（微型） | 官方簡中寫「微型」；和「小」「大」一起改成口語的「迷你」。 |
+| 水瓶（小） ★ | Bottle of Water (Small) | 瓶装水（小） | 官方簡中寫「小號」，台灣說小號、大號容易想到上廁所，改用「小」「大」。 |
+| 水瓶（標準） ★ | Bottle of Water (Standard) | 瓶装水（标准） | 遊戲 VERSION 100-REV12 起跟官方從「瓶裝水」改成「水瓶」：這是裝水的容器，台灣的「瓶裝水」多指買來喝的整瓶水。 |
 | 一瓶淨水錠 ★ | Bottle of Water Purification Tablets | 一瓶净水药片 |  |
 | 水瓶印表機 ★ | Bottle Printer | 水瓶打印机 |  |
 | 美工刀 | Box Cutter | 美工刀 |  |
@@ -167,7 +167,7 @@
 | 名片（GP採礦合作社） | Business Card (GP Mining Coop) | 名片（GP采矿合作社） |  |
 | 名片（綠） | Business Card (Green) | 名片（绿） |  |
 | 名片（喬·王爾德） | Business Card (Joe Wild) | 名片（乔·王尔德） |  |
-| 名片（藥劑師） | Business Card (Pharmacist) | 名片（药剂师） |  |
+| 名片（藥劑師） ★ | Business Card (Pharmacist) | 名片（药商） |  |
 | 名片（紅魔鬼釀酒廠） | Business Card (Red Imp Brewery) | 名片（红魔鬼酿酒厂） |  |
 | 營業許可證 | Business Permit | 营业许可证 |  |
 | 咖啡因藥片 | Caffeine Pill | 咖啡因药片 |  |
@@ -321,7 +321,7 @@
 | 「鐵鑄10」手槍 | Ironcraft 10 | “铁铸10”手枪 |  |
 | 「鐵鑄10」手槍框架 | Ironcraft 10 Frame | “铁铸10”手枪框架 |  |
 | 3D印表機晶片（「鐵鑄10」手槍框架） ★ | Ironcraft 10 Frame 3D Printer Chip | 3D打印机芯片（“铁铸10”手枪框架） |  |
-| 水桶 | Jug of Water | 水桶 | 遊戲 VERSION 100-REV12 起跟官方從「桶裝水」改成「水桶」：這是裝水的容器，台灣的「桶裝水」多指飲水機用的大桶水。 |
+| 水桶 ★ | Jug of Water | 桶装水 | 遊戲 VERSION 100-REV12 起跟官方從「桶裝水」改成「水桶」：這是裝水的容器，台灣的「桶裝水」多指飲水機用的大桶水。 |
 | 垃圾 | Junk | 垃圾 |  |
 | 兒童背包 | Kid's Backpack | 儿童背包 |  |
 | 兒童背包（大） | Kid's Backpack (Large) | 儿童背包（大） |  |
@@ -377,7 +377,7 @@
 | 小瓶酒精 | Mini Alcohol Bottle | 小瓶酒精 |  |
 | 迷你走私儲藏區 | Mini Smuggler's Bay | 迷你走私储藏区 |  |
 | 幻影投影機 ★ | Mirage Projector | 幻影投影仪 |  |
-| 改寫中的鑰匙卡 | Modified Access Card | 改写中的钥匙卡 | 遊戲 VERSION 100-REV12 起跟官方從「篡改識別卡」改成「改寫中的鑰匙卡」；官方同時把 Access Card 統一叫「鑰匙卡」（原本識別卡、通行卡、鑰匙卡混用）。 |
+| 改寫中的鑰匙卡 ★ | Modified Access Card | 篡改识别卡 | 遊戲 VERSION 100-REV12 起跟官方從「篡改識別卡」改成「改寫中的鑰匙卡」；官方同時把 Access Card 統一叫「鑰匙卡」（原本識別卡、通行卡、鑰匙卡混用）。 |
 | 模組艙擴建套件 | Module Bay Expansion Kit | 模组舱扩建套件 |  |
 | 模組提取器（高級） | Module Extractor (Advanced) | 模组提取器（高级） |  |
 | 模組提取器（基礎） | Module Extractor (Basic) | 模组提取器（基础） |  |
@@ -569,11 +569,11 @@
 | 企業代表 | Corporate Representative | 企业代表 |  |
 | 企業安檢員 | Corporate Security Inspector | 企业安检员 |  |
 | 企業廢棄物管理員 | Corporate Waste Manager | 企业废弃物管理员 |  |
-| 送貨員 | Courier | 送货员 | 遊戲 VERSION 100-REV12 起跟官方從「快遞員」改成「送貨員」，GP採礦、紅魔鬼的送貨員也一樣。 |
+| 送貨員 ★ | Courier | 快递员 | 遊戲 VERSION 100-REV12 起跟官方從「快遞員」改成「送貨員」，GP採礦、紅魔鬼的送貨員也一樣。 |
 | 戴爾 | Dale | 戴尔 |  |
-| 毒販 | Dealer | 毒贩 | 遊戲 VERSION 100-REV12 起跟官方從「商人」改成「毒販」：卡特爾線上賣毒品的人。 |
+| 商人 | Dealer | 商人 | 卡特爾線上賣毒品的人。簡中和一般的商人同名，跟著寫「商人」。 |
 | 絕望的癮君子 | Desperate Addict | 绝望的瘾君子 |  |
-| 焦急的戀人 | Desperate Lover | 焦急的恋人 | 遊戲 VERSION 100-REV12 起跟官方從「絕望的愛人」改成「焦急的戀人」：這裡的 desperate 是急著要東西，台灣的「愛人」也多指配偶。 |
+| 焦急的戀人 ★ | Desperate Lover | 绝望的爱人 | 遊戲 VERSION 100-REV12 起跟官方從「絕望的愛人」改成「焦急的戀人」：這裡的 desperate 是急著要東西，台灣的「愛人」也多指配偶。 |
 | 傑克遜博士 | Dr. Jackson | 杰克逊博士 |  |
 | 埃莉諾 | Eleanor | 埃莉诺 | 台灣常見的譯法是「艾莉諾」，維持簡中的譯名，兩邊的玩家討論時認得出。 |
 | 埃莉諾的叔叔 | Eleanor's Uncle | 埃莉诺的叔叔 |  |
@@ -585,7 +585,7 @@
 | 老饕遊客 ★ | Foodie Tourist | 觅食游客 | Foodie 是愛吃美食的人；簡中「覓食遊客」的「覓食」是動物找食物。 |
 | 工頭 | Foreman | 工头 |  |
 | 喬治奧 | Georgio | 乔治奥 |  |
-| GP採礦送貨員 | GP Mining Courier | GP采矿送货员 |  |
+| GP採礦送貨員 ★ | GP Mining Courier | GP采矿快递员 |  |
 | 程爺爺 ★ | Grandpa Cheng | 程大爷 | 簡中「程大爺」；「大爺」在台灣帶北方口吻，也可能讀成「大爺我」的傲慢語氣。 |
 | 殺手 | Hitman | 杀手 |  |
 | 忍飢挨餓的星際客 | Hungry Spacer | 忍饥挨饿的星际客 |  |
@@ -596,7 +596,7 @@
 | 詹姆斯·貝利 | James Bailey | 詹姆斯·贝利 |  |
 | 喬·王爾德 | Joe Wild | 乔·王尔德 |  |
 | 喬·王爾德的助手 | Joe Wild's Assistant | 乔·王尔德的助手 |  |
-| 張偉 | John Smith | 张伟 | 英文是常拿來當假名的 John Smith，官方簡中在地化成「張偉」；維持和簡中一樣，簡繁玩家認得出。 |
+| 約翰·史密斯 | John Smith | 约翰·史密斯 | 英文是常拿來當假名的 John Smith，官方簡中在地化成「張偉」；維持和簡中一樣，簡繁玩家認得出。 |
 | 胡安 | Juan | 胡安 |  |
 | 廢料客 | Junker | 废料客 |  |
 | 懶惰的治安部盤查員 | Lazy Security Inspector | 懒惰的治安部盘查员 |  |
@@ -632,11 +632,11 @@
 | 面色慘白的拾荒者 ★ | Pale Scav | 面色惨白的拾荒客 |  |
 | 驚恐的店主 | Panicked Shopkeeper | 惊恐的店主 |  |
 | 扒手 | Petty Thief | 扒手 | 和顧客「小偷」（Thief）是不同的人；說明裡提到的扒手顧客也都寫「扒手」。 |
-| 藥劑師 | Pharmacist | 药剂师 | 遊戲 VERSION 100-REV12 起跟官方從「藥商」改成「藥劑師」；「藥商」是賣藥的商人，和英文 Pharmacist 對不上。 |
+| 藥劑師 ★ | Pharmacist | 药商 | 遊戲 VERSION 100-REV12 起跟官方從「藥商」改成「藥劑師」；「藥商」是賣藥的商人，和英文 Pharmacist 對不上。 |
 | 貧窮的拾荒者 ★ | Poor Scav | 贫穷的拾荒客 |  |
 | 私人保全承包商 ★ | Private Security Contractor | 私人安保承包商 |  |
 | 稀有品商人 | Rare Merchant | 稀有品商人 |  |
-| 紅魔鬼送貨員 | Red Imp Courier | 红魔鬼送货员 |  |
+| 紅魔鬼送貨員 ★ | Red Imp Courier | 红魔鬼快递员 |  |
 | 紅魔鬼代表 | Red Imp Rep. | 红魔鬼代表 |  |
 | 共和國特工 | Republic Operative | 共和国特工 |  |
 | 退休水產養殖戶 | Retired Aquafarmer | 退休水产养殖户 |  |
@@ -662,7 +662,7 @@
 | 治安部盤查員 | Security Inspector | 治安部盘查员 |  |
 | 治安部警官 | Security Officer | 治安部警官 |  |
 | 治安部徵用官 | Security Requisition Officer | 治安部征用官 |  |
-| 治安部出清商人 ★ | Security Surplus Merchant | 治安部富余物资商人 | 簡中寫「富餘物資商人」（「富餘」是大陸用語）；照聲望特性「治安部庫存出清」寫成「出清商人」。 |
+| 治安部出清商人 ★ | Security Surplus Merchant | 治安部盈余物资商人 | 照聲望特性「治安部庫存出清」寫成「出清商人」。 |
 | 自衛愛好者 | Self-Defense Enthusiast | 自卫爱好者 |  |
 | 可疑的癮君子 | Shady Addict | 可疑的瘾君子 |  |
 | 可疑的買家 | Shady Buyer | 可疑的买家 |  |
@@ -767,7 +767,7 @@
 | 廢料客 | Junker | 废料客 |  |
 | 私酒販子 | Moonshiner | 私酒贩子 |  |
 | 器官販子 | Organ Dealer | 器官贩子 |  |
-| 藥劑師 | Pharmacist | 药剂师 |  |
+| 藥劑師 ★ | Pharmacist | 药商 |  |
 | 養鼠人 | Rat Wrangler | 养鼠人 |  |
 | 一貧如洗 | Rock Bottom | 一贫如洗 |  |
 | 街頭小吃攤販 | Street Food Vendor | 街头小吃摊贩 |  |
@@ -779,7 +779,7 @@
 |---|---|---|---|
 | 廣場恐懼症 | Agoraphobia | 广场恐惧症 |  |
 | 酒精成癮 | Alcohol Addiction | 酒精成瘾 |  |
-| 苦行者 ★ | Ascetic | 苦修者 | 官方簡中遊戲 VERSION 100-REV12 起寫「苦修者」；台灣比較常聽到「苦行者」（苦行僧），維持。 |
+| 苦行者 | Ascetic | 苦行者 | 官方簡中遊戲 VERSION 100-REV12 起寫「苦修者」；台灣比較常聽到「苦行者」（苦行僧），維持。 |
 | 改造體危機 | Aug Menace | 改造体危机 |  |
 | 不善議價 | Awful Negotiator | 不善议价 |  |
 | 高昂房租 | Bad Lease | 高昂房租 |  |
@@ -793,7 +793,7 @@
 | 舌燦蓮花 | Diplomatic | 舌灿莲花 |  |
 | 探險組織者 | Expedition Organizer | 探险组织者 |  |
 | 賭博成癮 | Gambling Addiction | 赌博成瘾 |  |
-| 心靈手巧 | Handy | 心灵手巧 | 遊戲 VERSION 100-REV12 起跟官方從「巧手」改成「心靈手巧」。 |
+| 心靈手巧 ★ | Handy | 巧手 | 遊戲 VERSION 100-REV12 起跟官方從「巧手」改成「心靈手巧」。 |
 | 囤積癖 | Hoarder | 囤积癖 |  |
 | 文盲 | Illiterate | 文盲 |  |
 | 凶神惡煞 | Intimidating | 凶神恶煞 |  |
@@ -867,7 +867,7 @@
 | 革命軍軍需官 | Revolution Quartermaster | 革命军军需官 |  |
 | 銷贓信譽 | Safe Hands | 销赃信誉 |  |
 | 治安部庇護 | Security Protection | 治安部庇护 |  |
-| 治安部庫存出清 ★ | Security Surplus | 治安部富余物资 | Surplus 是多出來、要出清的物資：簡中原本寫「盈餘」（多指錢的結餘），遊戲 VERSION 100-REV12 起寫「富餘」（大陸用語），這裡維持「庫存出清」。 |
+| 治安部庫存出清 ★ | Security Surplus | 治安部盈余 | Surplus 是多出來、要出清的物資：簡中原本寫「盈餘」（多指錢的結餘），遊戲 VERSION 100-REV12 起寫「富餘」（大陸用語），這裡維持「庫存出清」。 |
 | 人見人嫌 ★ | Shunned | 狗嫌人厌 |  |
 | 小牌掮客 | Small Time Broker | 小牌掮客 |  |
 | 守口如瓶 | Tight Lips | 守口如瓶 |  |
@@ -902,7 +902,7 @@
 | 小股東：GP採礦合作社 | Minor Shareholder: GP Mining Coop | 小股东：GP采矿合作社 |  |
 | 小股東：下層區化學家 | Minor Shareholder: Lower Levels Chemist | 小股东：下层区化学家 |  |
 | 小股東：紅魔鬼釀酒廠 | Minor Shareholder: Red Imp Brewery | 小股东：红魔鬼酿酒厂 |  |
-| 小股東：上層區藥劑師 | Minor Shareholder: Upper Level Pharmacist | 小股东：上层区药剂师 |  |
+| 小股東：上層區藥劑師 ★ | Minor Shareholder: Upper Level Pharmacist | 小股东：上层区药商 |  |
 | 週一特選 ★ | Monday's Special Stock | 周一特供 |  |
 | 植物基因 | Plant Genetics | 植物基因 |  |
 | 偷接私電 | Power Line Hijack | 偷接私电 |  |
@@ -925,7 +925,7 @@
 | 店鋪翻新 III | Store Renovation III | 店铺翻新 III |  |
 | 檔案箱升級 | Upgraded Dossier | 档案箱升级 |  |
 | 垃圾桶升級 | Upgraded Trash Can | 垃圾桶升级 |  |
-| 上層區藥劑師 | Upper Level Pharmacist | 上层区药剂师 |  |
+| 上層區藥劑師 ★ | Upper Level Pharmacist | 上层区药商 |  |
 | 自動售水機 | Vending Fountain | 自动售水机 |  |
 | 自動販賣機 ★ | Vending Machine | 自动售货机 |  |
 | 水資源交易 | Water Trading | 水资源交易 |  |

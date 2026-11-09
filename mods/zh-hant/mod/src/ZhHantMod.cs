@@ -67,7 +67,7 @@ namespace ProbablyStolenZhHant
             _reported = true;
         }
 
-        /// <summary>PatchAll 是遊戲做的，這裡只把結果寫進 log（TAnimCore、PaperUIManager.OpenUI、NewsUIElement.PopulateUI 找不到時只少那一個，其他照常）。</summary>
+        /// <summary>PatchAll 是遊戲做的，這裡只把結果寫進 log（TAnimCore、PaperUIManager.OpenUI、NewsUIElement.PopulateUI、LocHelper.Get 找不到時只少那一個，其他照常）。</summary>
         static void LogPatches()
         {
             try
@@ -92,6 +92,8 @@ namespace ProbablyStolenZhHant
             if (!TextAnimatorPatch.Found) Warning($"找不到 Text Animator 的 {TextAnimatorPatch.Target}，打字機效果可能失效");
             if (!MentorNotePatch.Found) Warning($"找不到 {MentorNotePatch.Target.Replace(':', '.')}，導師筆記的行距不調整");
             if (!NewsPatch.Found) Warning($"找不到 {NewsPatch.Target.Replace(':', '.')}，每日新聞的開頭不縮排");
+            if (!MissingTranslations.GetPatch.Found)
+                Warning($"找不到 {MissingTranslations.GetPatch.Target}，缺翻補譯只在畫面顯示時處理（帶參數的不補）、補佔位符停用");
         }
 
         internal static void Msg(string s) => _log?.Log(s);
@@ -120,9 +122,13 @@ namespace ProbablyStolenZhHant
                 conv.Produced = new Dictionary<string, string>(StringComparer.Ordinal);
                 Tr = tr;
                 Conv = conv;
-                // 簡中缺翻的條目：產生字串時補上譯文（沒有譯文就改用英文），不顯示「Translation Error」；
-                // 原文漏了佔位符的條目：趁參數還在時補上並代入
-                MissingTranslations.Init(tr, _log);
+                // 簡中缺翻的條目：畫面上（TMP 的攔截）把「Translation Error」換成補譯文（沒有譯文就改用英文）；遊戲取字串時不換，
+                // 存進存檔的是遊戲原本的缺翻訊息，只有帶參數的在 LocHelper.Get 補上並代入。原文漏了佔位符的條目：趁參數還在時補上並代入。
+                // 顯示層只換 mod 認得的字串表（tables.txt）的缺翻訊息
+                var tableNames = new List<string>();
+                foreach (var line in OpenCC.Lines(ReadData("tables.txt")))
+                    if (line.Trim().Length > 0) tableNames.Add(line.Trim());
+                MissingTranslations.Init(tr, tableNames, _log);
                 _data = DataState.Ready;
                 Msg($"載入翻譯資料：OpenCC {tr.OpenCCEntries} 詞、術語 {tr.TermCount}、逐條修正 {tr.OverrideCount}、" +
                     $"缺翻補譯文 {tr.Fills.Count} 條＋參照字串表 {tr.FillRefCount} 條、補佔位符 {tr.ArgCount} 條、導師筆記縮排 {tr.IndentCount} 篇（{sw.ElapsedMilliseconds} ms）{(_debug ? "；除錯模式" : "")}");
@@ -142,7 +148,11 @@ namespace ProbablyStolenZhHant
         internal static void ConvertFirst(ref string s)
         {
             if (Conv == null) return;
-            try { s = Conv.Convert(s); }
+            try
+            {
+                MissingTranslations.RepairDisplay(ref s); // 句子裡的缺翻訊息（只多一次 IndexOf）
+                s = Conv.Convert(s);
+            }
             catch (Exception e) { Error($"轉換失敗：{e.Message}"); }
         }
 
@@ -169,7 +179,10 @@ namespace ProbablyStolenZhHant
                     return;
                 }
                 var original = s;
-                s = Conv.Convert(original);
+                // 句子裡的缺翻訊息換成補譯文或英文（只多一次 IndexOf）；記的原文還是遊戲原本設的那句，讀回時換回它
+                var shown = original;
+                MissingTranslations.RepairDisplay(ref shown);
+                s = Conv.Convert(shown);
                 Shown.Record(t.GetInstanceID(), original, s);
             }
             catch (Exception e) { Error($"轉換失敗：{e.Message}"); }
@@ -230,14 +243,15 @@ namespace ProbablyStolenZhHant
             ApplyHandwrittenFont();
             _sceneReady = true;
             UpdateLocale();
-            // 場景與預製物件裡序列化好的文字不會經過 setter（例如主選單寫死的按鈕文字）
+            // 場景與預製物件裡序列化好的文字不會經過 setter（例如主選單寫死的按鈕文字）；翻譯資料讀進來之前設好的缺翻訊息也是，
+            // 轉換不會變、但顯示層會換的也要重設
             int changed = 0;
             foreach (var t in Resources.FindObjectsOfTypeAll<TMP_Text>())
             {
                 var s = RawText(t);
                 if (string.IsNullOrEmpty(s)) continue;
                 var r = Conv.Convert(s);
-                if (r == s) continue;
+                if (r == s && !MissingTranslations.WouldRepair(s)) continue;
                 t.text = s; // 設回原文，由攔截轉換並記下原文（讀取時才換得回來）
                 changed++;
             }
@@ -346,12 +360,20 @@ namespace ProbablyStolenZhHant
             if (Tr.IndentMismatched.Count > 0)
                 Warning($"導師筆記的段數和英文不同、照原樣不縮排 {Tr.IndentMismatched.Count} 篇：{string.Join("、", Tr.IndentMismatched)}");
 
-            // 暫用轉換器轉過、還在畫面上的字：設回原文，讓攔截用正式的轉換器重轉（逐條修正、短詞等可能不同）
+            // 暫用轉換器轉過、還在畫面上的字：設回原文，讓攔截用正式的轉換器重轉（逐條修正、短詞等可能不同）。
+            // 遊戲設的字含缺翻訊息的（讀回的原文，ShownText 有記的話）也是：參照型的補譯文隨字串表讀進來，顯示層現在可能換得不一樣
+            // （先前換成英文或換不了）。這種要設回遊戲原本的那句（Produced 記的是顯示層換過之後的字，設回它會把原文記錯）
+            MissingTranslations.AddTables(tables.Keys);
             int refreshed = 0;
             foreach (var t in Resources.FindObjectsOfTypeAll<TMP_Text>())
             {
                 var s = RawText(t);
-                if (string.IsNullOrEmpty(s) || !early.Produced.TryGetValue(s, out var orig) || conv.Convert(orig) == s) continue;
+                if (string.IsNullOrEmpty(s)) continue;
+                var recorded = t.text; // 換回原文（沒記就是畫面上的字）
+                string orig;
+                if (MissingTranslations.WouldRepair(recorded)) orig = recorded;
+                else if (!early.Produced.TryGetValue(s, out orig)) continue;
+                if (conv.Convert(MissingTranslations.Repaired(orig)) == s) continue;
                 t.text = orig;
                 refreshed++;
             }
@@ -479,7 +501,7 @@ namespace ProbablyStolenZhHant
                 if (_debug && zh && !_selfTested && _tables >= TableState.Done) // 參照型的缺翻補譯要等字串表載入
                 {
                     _selfTested = true;
-                    MissingTranslations.SelfTest(loc);
+                    MissingTranslations.SelfTest();
                 }
                 if (_debug && zh && !_handTested && _tables == TableState.Done && _handFont != null) // 手寫字型在場景初始化時才建立
                 {
@@ -530,7 +552,8 @@ namespace ProbablyStolenZhHant
 
         void Report()
         {
-            Msg(Conv.Stats() + $"；缺翻補譯文 {MissingTranslations.FillHits}、改用英文 {MissingTranslations.EnglishHits}、補佔位符 {MissingTranslations.ArgHits}；" +
+            Msg(Conv.Stats() + $"；缺翻補譯文 {MissingTranslations.FillHits}、改用英文 {MissingTranslations.EnglishHits}、補佔位符 {MissingTranslations.ArgHits}、" +
+                $"畫面上換掉缺翻訊息 {MissingTranslations.DisplayHits}；" +
                 $"讀取文字 {Shown.Reads} 次、換回原文 {Shown.Restored} 次（紀錄 {Shown.Count} 筆、清空 {Shown.Clears} 次）");
             if (!_debug || _tables != TableState.Done) return; // 暫用轉換器的後備轉換不代表正式版會漏掉
             try { ModHelper.WriteModDataFileText(ModId, MissesFile, Conv.MissesText()); }

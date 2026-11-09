@@ -12,10 +12,10 @@ Dialogue	dialog_lun_shot_1	e49311c1a156751d	5	6	嗎
 Dialogue	dialog_lun_shot_2	585c6a46e98d8e6f	8	9	身	11	11	傢伙
 Dialogue	dialog_lun_duty_black_injector_thanks	9c1a8b413b817346	2	4	啦
 Dialogue	dialog_lun_duty_right_item	7aa84642b1b0c939	3	4	起來
-Dialogue	dialog_lun_surplus_2	0c82276abde5b8d4	12	13	剩
+Dialogue	dialog_lun_surplus_2	d0c449f614b11339	12	13	剩
 Dialogue	dialog_lun_inspect_2	8642a59588cf35ae	0	0	全部	2	3	，
-Dialogue	dialog_lun_inspect_drugs_1	18897329e66dfe9e	2	3	到毒品	4	4	。	5	13	律
-Dialogue	dialog_eleanor_intro_7	3aa6d0d129030803	3	6		7	9		15	16	挑點
+Dialogue	dialog_lun_inspect_drugs_1	9170f7de86112e25	0	2	我	3	4	到毒品	5	13	。一律	15	17	
+Dialogue	dialog_eleanor_intro_7	9d6ae7e782634b29	0	3	那麼	7	8	嗎
 Dialogue	dialog_serpico3_1	f6ca0aec29104fad	6	7	喝
 Dialogue	dialog_nellis1_3	2ced622a39a00926	17	19	樣
 Dialogue	dialog_nellis4_6	5240f2497c2c1de1	0	2	幸好
@@ -26,11 +26,11 @@ Dialogue	dialog_wanted9_arrest_client	e43bf632507c7ef1
 Dialogue	dialog_scavenger_greeting_3	1fe31a1c983f466b	7	8	裡
 Dialogue	dialog_scavenger_request_2	8244ff9b3b8fea5a	6	7	用
 Dialogue	dialog_scavenger_request_3	2ea1a83f5f802ef8	2	3	來
-Dialogue	dialog_selfdefense_request_3	d8f5a36a8e63b7d8	0	11		14	14	的防身用品是哪個
-Dialogue	dialog_desperate_addict_request_1	32318058137e0929	3	4	菸
+Dialogue	dialog_selfdefense_request_3	3f251d900a53f4e4	0	12		15	15	的防身用品是哪個
+Dialogue	dialog_desperate_addict_request_1	0aa3cef7b60a7db1	3	4	菸	8	9	什麼	10	13	行
 Dialogue	dialog_worn_spacer_greeting_2	430126726c0a5433	10	11	總
 Dialogue	dialog_water_scavenger_1	9731cc2834fdd9c3	8	9	嗎
-Dialogue	dialog_chem_return_substance_5	f60591a4dbc0c1a5	5	6	起來	7	9	順
+Dialogue	dialog_chem_return_substance_5	e1c7fd2ca8ca15de	0	0	那	3	5	用起來	6	9		10	11	
 Dialogue	dialog_chem_return_substance_7	7be7a89daeb6fc1d	14	16	猛
 Dialogue	dialog_hireling_ready_2	59a1464869ba1766	3	5	工作
 Dialogue	dialog_barter_addict_blood_yes	30dc44656e53387e	1	2	囉
@@ -65,7 +65,7 @@ Dialogue	dialog_thief_2	551df16e2ca11feb	2	5	看看
 Dialogue	dialog_loan_shark2_paid_player	f2fc038fa3cb8185	5	7	付現
 Dialogue	dialog_miner_substance	bec72e253663d1e5	1	2	菸
 Dialogue	aug_dialog_unholster_2	513e2e6d6411c0f9	4	6	東西
-Dialogue	dialog_mentor_outro_5	38f409401e2a65e4	13	16	一次付清買下	18	23	
+Dialogue	dialog_mentor_outro_5	4c6dd9e9d4e776d9	2	5	，如果錢夠的話，也可以一次付清買下	7	22	
 Dialogue	dialog_bargain_accept_grateful_2	589fbbfc1317dca7	2	2	真	3	4	方
 Dialogue	dialog_bargain_talk_bad_2	4e6c85e55c4b0f4e	10	11	是怎麼做生意	12	17	
 Dialogue	dialog_upper_hedonist_request_1	6ac9c37fa45d197a	2	3	菸	8	9	
@@ -74,7 +74,7 @@ Dialogue	dialog_wild_network_reminder_4	f36fae41d43d7613	13	14	田
 Dialogue	dialog_sawyer_cheng_3	2e64e512e1b78526	10	10	他	11	13	人家
 Dialogue	dialog_sec_inspect_grace_2	5c1f6c9eb72c90af	6	8		9	10	靠山
 Dialogue	dialog_chem_return_followup_6	9c7f0c3a25dc4d6c	1	3		4	8	了	11	12		14	14	貨
-Dialogue	dialog_criminal_merc_1	9e4a8524383e8f37	2	4	幹一票大的，需要	7	14	
+Dialogue	dialog_criminal_merc_1	4c23bb419083e5f5	1	2		3	4	幹	7	10	的，需要些
 Dialogue	dialog_criminal_thief_1	33c154187b864f14	3	4	口風	5	6	緊
 Dialogue	dialog_deal_done_7	517ba3e1478ffce6	0	2	就這樣吧
 Dialogue	dialog_info_storeroom_mid_4	7f84352a3cd6fc86	3	6	發現了	7	8	間
@@ -84,10 +84,10 @@ Dialogue	dialog_expose_water_rustwater	67ca2bb60081eef9	0	1	耍	2	3	嗎	5	6		7	8
 Dialogue	dialog_inventor_greet_5	00020ba41063fd2a	1	3	在找	6	7	與	11	14	生意嗎
 Dialogue	sec_shoot_bad_grace_0	ed86966e9de20c2a	7	12	
 Dialogue	sec_shoot_bad_grace_1	fd837b613efdb17f	3	8	放你一馬
-Dialogue	dialog_bargain_talk_bad_3	787e5ef3c585ae4c	1	3	裡	8	8	很	12	19	不會有多少人上門
+Dialogue	dialog_bargain_talk_bad_3	cc17e921efc64163	3	5	名聲	10	13	以後不會有多少人上	14	17	了
 Dialogue	dialog_lynching_greeting_3	e75b00651ee87164	5	6	坑了	9	13	的人
 Dialogue	dialog_mentor_visual_5	95a320df57d780db	0	6		10	14		16	16	香菸盒
-Dialogue	dialog_mentor_visual_6	fd5e2784017adbd7	0	3	
+Dialogue	dialog_mentor_visual_6	53a2a18b39dd81de	0	2	對照	4	8	檢查
 Dialogue	dialog_power_ll_greeting_2	edf9e892eafc9e18	4	6	可	7	9	嚴重
 Dialogue	dialog_power_ll_greeting_3	81e80f9511346ac5	10	11	說
 Dialogue	dialog_tourist_weapon_deal_5	9e1110c781578509	10	13	猛
@@ -101,7 +101,7 @@ Dialogue	dialog_wild_bailout_2	0f55096fb2366d22	8	9	在	10	12	小店，才
 Dialogue	dialog_wild_upgrade_reminder_3	07e24feef0f8683f	0	2	溫馨	4	6		7	9	有任何	11	13		16	18	歡迎
 Dialogue	dialog_georgio4_7	f814daec18106966	0	3	怎麼樣？	4	4	，還是	6	14	？
 Dialogue	dialog_minor_nurse2_3	351c23659e07e746	0	0	大家都沒日沒夜地	2	10	
-Dialogue	dialog_eleanor_intro_2	265baad70ba9caf0	2	5	別緻	15	16	面	19	20		24	27	樣還行
+Dialogue	dialog_eleanor_intro_2	ab76f797d2acb2a3	0	2	真是別緻	3	5	要是	8	9	像樣的店	10	17		20	20	會覺得這樣	21	24	行
 Dialogue	dialog_nellis4_5	d889f669b34f3fc1	1	2	絕對不會相	3	5		7	8	都在	9	18	什麼鬼東西
 Dialogue	dialog_tourist_greet_1	265ee507d6827623	5	6		8	11	破舊	12	13	，
 Dialogue	dialog_upper_hedonist_greeting_1	da4ed3cef46e3a58	5	11	來一趟	13	15	遠	16	16	，手腳快點	17	22	
@@ -110,7 +110,7 @@ Dialogue	dialog_deal_accepted_6	09817dadf5e96ca5	0	1	好
 Dialogue	dialog_bargain_accept_very_reluctant_1	fadb25d254871a55	8	9	好
 Dialogue	dialog_bargain_accept_very_reluctant_2	be900dd6921b1c73	9	10	好
 Dialogue	dialog_deal_accepted_4	b67739a01d869cc1	0	2	可以
-Dialogue	dialog_story_food_buyer2_3	9cdb88e534cfda2f	0	0	可以的話，	2	3		6	15	不同	16	17	
+Dialogue	dialog_story_food_buyer2_3	8a20f5990c77eeef	0	1	可	2	2	的話	4	6	想買幾	7	13	不同的
 Dialogue	dialog_story_food_buyer2_4	e90b0b44d659a0f3	0	5	我不想買兩件	10	17	
 Dialogue	dialog_georgio2_2	5d6ee626f8892f5c	7	9	正品
 Dialogue	dialog_georgio2_arrest_client	9431c6e97aaae4ca	13	14	做
@@ -126,7 +126,7 @@ Dialogue	dialog_lun_surplus_arrest_sec_2	c5d1a262b6736c8a	5	6		7	7	竊
 Dialogue	dialog_eleanor_intro_1	fc443fa737ee0979	7	8	把	13	13	做
 Dialogue	dialog_eleanor_intro_6	1bd63661309328e8	15	16	有飯	17	19	
 Dialogue	dialog_eleanor4_3	4a52c42891afaadc	3	5	小偷
-Dialogue	dialog_eleanor4_6	c488f9febc3d1315	11	13	母親	16	17	老死在	18	21	裡
+Dialogue	dialog_eleanor4_6	18566d7ee3705561	1	5	這輩子都得	10	11		13	13	也	15	15	老死在	16	19	裡了
 Dialogue	dialog_serpico1_8	d7ac01dbd5c1b491	9	10	打
 Dialogue	dialog_serpico4_2	231a48cbed5048a2	8	10	貪汙	12	13		14	14	告
 Dialogue	dialog_serpico5_3	82671983955b350c	3	5	貪汙
@@ -201,7 +201,7 @@ Dialogue	sec_aug_hacked_comms	88b5f4b03d1c5e3b	2	4	駭入
 Dialogue	sec_aug_stay_safe	b9d9c96b3a71f116	0	1	好
 Dialogue	sec_shoot_got_call	613ec21d50d4447b	7	8	案
 Dialogue	sec_shoot_bad_calling	7f1157fb2ec5b2b1	5	6		7	7	告
-Dialogue	dialog_mentor_shotgun_10	d57fb5d943b3ec8b	19	20	弄	22	25	他們	26	27	訊	30	32	
+Dialogue	dialog_mentor_shotgun_10	832b9bff0b3b76d1	19	20	弄
 Dialogue	dialog_mentor_display_case_3	b5da479b5740fba9	39	41		44	44	拿去
 Dialogue	dialog_barter_accept	9b71fd03f39ae5c0	0	1	好
 Dialogue	dialog_bargain_false_threaten_3	51c8892231fff5c5	9	10	耍
@@ -209,13 +209,13 @@ Dialogue	dialog_upper_hedonist_greeting_2	a4c1f43697aefa11	11	11	準	12	13
 Dialogue	dialog_bargain_accept_reluctant_event_2	a7df34d2e1f8c9fe	12	13	選
 Dialogue	dialog_upper_lower_visitor_luxury_2	724388827e9c9761	6	6	裡
 Dialogue	dialog_mentor_bargain_2	aa8721ffbde83359	6	8	
-Dialogue	dialog_bargain_innocent_blackmail_2	cc77aaf90ac563d9	1	1	可	2	4	安	11	13	這	14	20	鬼話去唬
+Dialogue	dialog_bargain_innocent_blackmail_2	15d8448634ad3bfb	1	1	可	2	4	安	11	20	這套鬼話去唬
 Dialogue	dialog_georgio3_arrest_sec_1	30d877d9bc229d4e	15	17	澡堂
 Dialogue	dialog_power_maint_deal_2	0f16600f7fc3c507	14	15	顆
 Dialogue	dialog_power_maint_deal_3	2064fa3045a3c63e	4	5	顆
-Dialogue	dialog_sec_wanted_intro_12	1ba7d4f1d9d5c0c8	6	8	
+Dialogue	dialog_sec_wanted_intro_12	4c133f9c72e7701b	1	2		3	5	今天平	6	7	
 Dialogue	dialog_broken_machine_intro_2	b81960809efe5adb	4	5	切割
-Dialogue	dialog_sec_wanted_intro2_8	1ba7d4f1d9d5c0c8	6	8	
+Dialogue	dialog_sec_wanted_intro2_8	da8f4deeb5d12407	2	4	今天平	5	6	
 Dialogue	dialog_deal_accepted_10	af465720311d3c5e	0	4	講好
 Dialogue	dialog_minor_sick_lowers_1	9f7b07364300be6a	7	9	冷顫
 Dialogue	dialog_janitor_ue_8	fe5ad8106be5bc13	0	2		4	4	在這裡	7	9	有些	17	19	換
@@ -223,7 +223,7 @@ Dialogue	dialog_lun_visit_right_item	ac46a2d64d8efac4	0	4	這個可以
 Dialogue	dialog_cartel_weekly_short_2	6c7e88e6596caaf0	2	4		6	7	出	10	11	份
 Dialogue	sec_shoot_arrest	c106004cbdca79cb	2	7	會以	11	15	罪對你立案
 Dialogue	dialog_janitor_ue_5	d068ba508f8502ee	0	0	做法	1	5		13	15	物品	20	22	……
-Dialogue	dialog_lottery_intro_5	2627b0a60e2ba88a	0	2	一旦	9	10		20	21	
+Dialogue	dialog_lottery_intro_5	129ab606a1bcdc95	3	4	了	9	12	夠	13	17		21	21	過一輩子
 Dialogue	dialog_loan_shark_intro_2	20211bfef89848fc	8	9	
 Dialogue	dialog_loan_shark_intro_8	00a5f3cd41b90d7a	2	4		10	11		12	12	款	15	16	買下	19	22	
 Dialogue	dialog_morning_mob_4	5b952902c3306cad	0	2	幹掉
@@ -309,13 +309,13 @@ Dialogue	dialog_loan_shark_collect_repo_4	0be2e148df02cff2	2	4	記得	5	7	錢
 Dialogue	dialog_lun_inspect_1	8a638ad0966f9c28	0	0	這是
 Dialogue	dialog_lun_surplus_5	58fe36acebbcf67b	7	7	上面准	8	11	
 Dialogue	dialog_mentor_display_case_reminder_1	fade3a756d725cbf	13	14	起來還是有點	15	19	
-Dialogue	dialog_mentor_visual_10	a6035b0c7726e0aa	8	9	會失去	11	14	
+Dialogue	dialog_mentor_visual_10	eb3d82ee7362cb8d	2	5	冤枉了	8	9	
 Dialogue	dialog_pharmacist_greeting_2	1bc3fe83e4111028	10	11	局
 Dialogue	dialog_spacer_household_1	5d997877005c7934	1	2	忘了出來	6	8		10	13		16	16	嗎
 Dialogue	dialog_wanted8_6	d546cee96feff41b	9	10	次
 Dialogue	dialog_water_scavenger_4	b43132d312d53324	8	14	走不了
 Dialogue	dialog_water_scavenger_wrong_item	ceef3e4a8c8402d4	8	12		16	18	行
-Dialogue	aug_dialog_mat_t3_1_b	74be08d503712c3e	2	3	此	7	10	該物品
+Dialogue	aug_dialog_mat_t3_1_b	4cab762deac0043c	2	2	此	4	6		8	15	該物品
 Dialogue	aug_dialog_mat_t3o_2_b	f7da74cca073c717	2	4	即	5	8	
 Dialogue	dialog_appraisal_board_intro_2	ee5a1efbdd6a78cf	0	1	有	4	6	的定價很	8	13	
 Dialogue	dialog_appraisal_board_intro_3	ecf721c5f4ca923b	3	4		6	7	判	8	9		11	11	的
@@ -337,10 +337,10 @@ Dialogue	dialog_chem_return_general_5	4cc9e343566a9f25	0	2	不管	7	9	摻了
 Dialogue	dialog_chem_return_substance_12	5b5908fad48feaf4	4	4	讓我暫時逃離現實，	10	14	
 Dialogue	dialog_cheng_ref_3	62b1d5afc4315883	16	18	將就
 Dialogue	dialog_eleanor2_5	530cab5612a2c42f	3	3	*	5	5	*
-Dialogue	dialog_eleanor3_2	f7747656051fad46	1	3		7	10	見底
-Dialogue	dialog_eleanor4_2	846e5e00c51ffe95	1	3		4	5	
-Dialogue	dialog_eleanor4_7	a4494078a996dd43	1	3	
-Dialogue	dialog_eleanor_intro_5	3ca154edc622e55d	10	13	把	14	15		17	17	關了起來	18	19	
+Dialogue	dialog_eleanor3_2	3ab2ece978d4a1fd	2	4	錢
+Dialogue	dialog_eleanor4_2	d927189a156cb306	1	6	沒錢
+Dialogue	dialog_eleanor4_7	b7c7a96175a09a02	1	3		7	8	自己	9	14	開	15	18	個口
+Dialogue	dialog_eleanor_intro_5	035d53b5a156bc08	10	13	把	14	15		17	17	關了起來	18	19		20	20	經營的	22	25		36	38	
 Dialogue	dialog_food_bank_3	ae6d566cde894525	8	9	幫	10	12	說	13	15	話
 Dialogue	dialog_food_bank_4	12ab90d354764764	0	3		7	7	以	12	13		20	21	
 Dialogue	dialog_georgio_intro2_3	4bd61e84b8be636f	14	15		16	18	己
@@ -356,9 +356,9 @@ Dialogue	dialog_inventor_intro_2	078bad9982f2e349	0	4	幸會
 Dialogue	dialog_inventor_storage_4	c274299fac6290d9	6	9	拿出來	10	11	
 Dialogue	dialog_janitor_intro_7	5b0f18deac01bdcd	1	3	就得	6	7		9	10	
 Dialogue	dialog_janitor_ue_11	d3eb7dd04244cbbc	4	5	小
-Dialogue	dialog_janitor_ue_7	18b6c8ddf44b6426	11	13	
+Dialogue	dialog_janitor_ue_7	d1f028d66e92f85c	2	5	第二天早上	8	9		10	13		14	18	點東西作為
 Dialogue	dialog_janitor_ue_fence_1	2cb88fb53e112327	2	4	照	8	8	說好	9	11	
-Dialogue	dialog_janitor_ue_fence_6	47e3c60c411605d0	9	11	
+Dialogue	dialog_janitor_ue_fence_6	ed4a2ef97282d834	0	3	第二天早上	6	7		8	11		12	16	點東西作為
 Dialogue	dialog_loan_clerk_early_4	af751aafc39b6a17	10	12		14	14	它
 Dialogue	dialog_loan_shark2_last_line	6fbdaff4dc496e54	0	4	在我們談下去之	6	7	先	8	9	定	10	13	每一期都	14	19	得出來
 Dialogue	dialog_loan_shark_intro_10	d004e4d5625a7984	2	3	手上	11	12		14	16		19	20		21	22	找你
@@ -375,19 +375,19 @@ Dialogue	dialog_mentor_intro_6	796888c9ee28de3d	3	3	隨	4	8		13	18	清空
 Dialogue	dialog_mentor_outro_4	965a4654657be10b	7	8		19	20	幫	21	23	辦
 Dialogue	dialog_mentor_permit_2	39488d86482e6ee4	7	8	就	15	16	得
 Dialogue	dialog_mentor_permit_3	4ae813d105bfcb72	7	9		12	12	就會	14	16	賣
-Dialogue	dialog_mentor_permit_5	afe9abd75677216b	4	9		13	17	取締
+Dialogue	dialog_mentor_permit_5	55a0977723765dae	0	5	再過	7	8	就會	10	14	取締
 Dialogue	dialog_merchant_4	a2b5cea95837e8cc	4	8	出比	10	10	低	15	17		18	20	錢
 Dialogue	dialog_merchant_5	578b13061d87a8de	0	0	而	2	4	算
-Dialogue	dialog_minor_conspiracy_4	77c6e79e0e2b525f	2	3	在	10	13	研究完就	23	24	了
+Dialogue	dialog_minor_conspiracy_4	1f2b03b3790c56f2	3	3	拿我們做研究，研究完就要	12	24	了
 Dialogue	dialog_minor_farmer_2	751f26d2215bf8ee	1	2	種	7	8		9	10	又抗	11	14	又抗	15	21	
 Dialogue	dialog_minor_patrol_2	4aac5d4dac62aae6	0	0	或者	5	6	、	10	11	。
-Dialogue	dialog_minor_salvage_pilot_4	f3483513d062beaf
+Dialogue	dialog_minor_salvage_pilot_4	101f84a7f3adf8ae	7	18	廢棄區裡
 Dialogue	dialog_nellis2_9	809d2167aff8341c	0	4		7	10	那邊又沒半點
 Dialogue	dialog_nellis4_4	15ca7a666b19f211	7	8	完全不了解	14	15		16	17	際狀	18	23	
 Dialogue	dialog_reaction_strong_1	46a01443f0aec508	3	3	真夠	4	7		15	16	
-Dialogue	dialog_scav_greet_8	b7f840b485c28ba8	8	8	可是	16	17	對
+Dialogue	dialog_scav_greet_8	366cd1ed437ce6c0	0	2	別	3	3	眼裡	6	10	，可	11	15	我們眼裡	16	19		20	20	貝	21	24	對吧
 Dialogue	dialog_sec_inspect_contraband_counter_2	72d839a46726c4e3	5	10	徹底盤	11	11	一遍
-Dialogue	dialog_sec_wanted_intro2_3	4d4346677d97efc0	1	2	要交代	6	9	
+Dialogue	dialog_sec_wanted_intro2_3	7e56acc8c10b8f24	1	4	要交代
 Dialogue	dialog_shady_merchant_2	228497e94e9f6f89	6	8	手上
 Dialogue	dialog_shady_merchant_4	bf6989907ac31a58	3	6	用比	8	8	低	9	11		12	12	錢	13	14	
 Dialogue	dialog_supplier_2	64ee04f3c7fcfe33	1	9		10	10	錢會比較貴
@@ -398,7 +398,7 @@ Dialogue	dialog_wanted2_arrest_client	1d5ce1fecae0d026	17	18	取
 Dialogue	dialog_wanted4_3	b35a2e5cbb53c7c3	2	10	筆生意想跟	12	13	
 Dialogue	dialog_wanted6_thanks	19b39fcaf7aedb65	8	9		10	11		14	16	人，免得他們死於	22	26	
 Dialogue	dialog_water_seller_1	d57e5a868b7de601	1	3		5	7	要賣
-Dialogue	dialog_water_seller_2	4a5dff1e83980a0b	8	9	算	10	11	
+Dialogue	dialog_water_seller_2	784f3f53334fab9f	0	0	你要是	1	4	都要	6	11	算	12	14	便宜點
 Dialogue	dialog_wild_bailout_3	8e9e3d81f0eb6746	5	9	送	10	10	幾個恩惠
 Dialogue	dialog_wild_cheng_5	459be788881050f8	11	13		16	18	支
 Dialogue	dialog_wild_network_3	e31c79419ed05f6d	0	10	要是拿太多、又什麼都	11	18	回饋
@@ -424,22 +424,58 @@ Dialogue	dialog_lou_operative_ask_3	5b55aec8c46269f1	7	8	得趕	9	11		17	21	不�
 Dialogue	dialog_lou_operative_rep_7	0466f15ecf468060	17	18	這件	19	19	一個字都	20	21	准	22	24	別	26	27	
 Dialogue	dialog_lou_operative_shot_6	f701dfdbb8ae34bd	28	29	這件	30	30	一個字都	31	32	准	33	35	別	37	38	
 Dialogue	dialog_cartel_sec_no_report_response	d691dd493748ce2d	6	8	今天
-Dialogue	dialog_cheng2_9	e58ebdbf74cb25da	2	3		6	10	買不起新的
-Dialogue	dialog_deal_done_10	344f2da224dab33d	2	3	有美好的一	4	8	
-Dialogue	dialog_food_buyer_offer_3	11ad8b99d31a3f46	8	10	
-Dialogue	dialog_info_ice_miner_2	19f6105f9aaa75ab	0	2		17	19		24	26	明白	30	31	吧
-Dialogue	dialog_insurance_6	47ea4d04c66a267e	3	4	
-Dialogue	dialog_insurance_9	bc56e47d034482cc	14	19	有保障
-Dialogue	dialog_janitor_intro_5	296adbe028e37e8c	5	6	准	10	12		14	19	店面
-Dialogue	dialog_mentor_shotgun_6	efc11d45a1e0b886	3	4	幫	13	14		21	22	好
-Dialogue	dialog_mentor_visual_2	39acb7d6ffcbcefb	8	9	菸
-Dialogue	dialog_minor_lottery_5	b6e745b84ffe22e7	4	5	是
-Dialogue	dialog_minor_peat_3	a507a91703476fb4	8	9	肉	10	12		13	14	
-Dialogue	dialog_minor_salvage_pilot_5	9d270e89ff55e8f6	6	10	搶來搶去
-Dialogue	dialog_nellis1_7	db65e7abd42e248d	7	11	破破爛爛
+Dialogue	dialog_deal_done_10	286e9f6c23ff10cb	3	5	美好
+Dialogue	dialog_food_buyer_offer_3	36d2b4b87285155b	1	4	預算	7	15	能買什麼	16	17	買什麼
+Dialogue	dialog_info_ice_miner_2	91dd4723fd1144f5	0	2		6	6	後	14	14	採	15	15	的
+Dialogue	dialog_insurance_6	1334e966735e5022	0	3	所以	4	6	推出了	17	20	
+Dialogue	dialog_insurance_9	ced99fbab408084c	2	12	店裡	15	17	要是被偷了，都有	18	19	障
+Dialogue	dialog_janitor_intro_5	31dadd102b483832	5	7	准
+Dialogue	dialog_mentor_shotgun_6	521bfa594a1c18a7	3	4	幫	6	7	來	13	14		15	17		22	26	辦好
+Dialogue	dialog_mentor_visual_2	bcad3ca473b22247	0	0	那邊剛卸了	3	5		6	13	
+Dialogue	dialog_minor_lottery_5	997487783c306155	3	5	，	12	12	剛	14	16	的時候
+Dialogue	dialog_minor_peat_3	cf5a43700de76a3e	4	6	覺得	8	10	
+Dialogue	dialog_minor_salvage_pilot_5	58c14d1de2b97d12	0	7	為了幾件破爛搶
+Dialogue	dialog_nellis1_7	3407ad8625b41236	0	0	我負責維護	1	2	座	12	18	
 Dialogue	dialog_sec_inspect_seizure_3	059751916f6dde85	2	4	今天
 Dialogue	dialog_sec_revoke_3	059751916f6dde85	2	4	今天
 Dialogue	dialog_wanted5_4	ee24feceab876d21	3	4	鉛	6	7	廚
+Dialogue	aug_dialog_mat_t2_0_b	20eaa9c0b555c4a2	0	11	我接下來有	17	17	，需要用到這些
+Dialogue	aug_dialog_med_t2_2_b	856a8d29a3c63bcc	2	7	名即將需要使	8	11	這些東西	17	18	
+Dialogue	dialog_appraisal_board_decline_1	53ebaaf19e612776	5	8	看得出
+Dialogue	dialog_criminal_thief_2	83de635d302897fe	3	5	鑰匙
+Dialogue	dialog_expedition_supplier_1	147eecc869647d4d	5	5	為我們下一次探險	11	18	
+Dialogue	dialog_gun_order_stay_melee	e75346e95306aca8	11	12	
+Dialogue	dialog_insurance_7	6af394c6f3ca6444	9	10		11	15	店
+Dialogue	dialog_inventor_intro_7	4829b460ed0d7ca9	11	13	在	14	15	間運	16	17	
+Dialogue	dialog_janitor_ue_fence_3	48d1c11ff0327a88	0	2		4	4	在這裡	5	8	上面有	9	11	東西	17	19	換
+Dialogue	dialog_loan_shark_intro_5	bb25c1849e6fc1f4	6	6	的	8	9	
+Dialogue	dialog_lottery_intro_6	32d3de4dcb0eff82	4	7	一些	8	9		10	11	
+Dialogue	dialog_mentor_display_case_4	e9989eaabf66c2a8	24	25	吸引到	40	40	之
+Dialogue	dialog_mentor_display_case_reminder_7	73325151de12386a	5	7	放進去	8	10	
+Dialogue	dialog_mentor_intro_2	ef5acf779515bdfc	7	9	好
+Dialogue	dialog_mentor_intro_4	200f0e71428d1ff6	12	14	筆記
+Dialogue	dialog_mentor_sec_7	a4c3958884d89bbc	3	5		12	12	請
+Dialogue	dialog_mentor_sec_8	bfa1b86227406db9	3	4		5	7	別	9	13	管不住嘴
+Dialogue	dialog_mentor_shotgun_3	56e5b997bfeb7974	15	19	還
+Dialogue	dialog_mentor_shotgun_7	e0ecf8d62919dbaa	5	7		9	11	所有	22	22	必須
+Dialogue	dialog_mentor_shotgun_9	56bd5490841e8ad6	2	6		14	14	時	15	15	你	16	18	能
+Dialogue	dialog_mentor_visual_7	7bfd81c0ce5a2006	10	11		16	16	當面
+Dialogue	dialog_mentor_visual_8	121a39a8299b0c85	5	6	處
+Dialogue	dialog_mentor_visual_9	a4ef8ac6bac09b8c	9	9	就
+Dialogue	dialog_miner_offer_1	64db8ba9de531f9b	0	2		3	3	要是	4	5		6	7	了	9	13	就	15	15	便宜點
+Dialogue	dialog_minor_lottery_3	fd5b9c97f9c92931	1	2	當時	3	3	氣好，	5	7	
+Dialogue	dialog_nellis2_3	8ee68074d003ad44	4	5	給	13	15	做	17	19	項	20	21	
+Dialogue	dialog_nellis2_8	ca03d0772c2bdef1	0	2		5	6	的要	7	9	沒完沒了	10	12		16	20	又不斷施壓
+Dialogue	dialog_scav_food_2	406833c122361e44	1	1	手頭	9	12	
+Dialogue	dialog_scav_offer_10	a441a413385f1942	14	16	便宜點
+Dialogue	dialog_scav_offer_8	d6766076d4760dd9	11	13	算便宜點
+Dialogue	dialog_shady_merchant_3	43f44e5e83281023	2	4	鑰匙
+Dialogue	dialog_tourist_weapon_deal_3	8f99c4a5409e294e	0	0	您這裡	1	8	槍賣嗎？	9	9	想	11	12	家，呃，掛在牆上當	13	26	飾
+Dialogue	dialog_util_after_sell	935eec35ee6c4393	4	5	
+Dialogue	dialog_wanted4_6	735ce90688178a49	20	22	鑰匙
+Dialogue	dialog_wanted4normal_3	2f542167d8885702	8	10	武器	24	26	鑰匙
+Dialogue	dialog_water_company_1	d637a686d83868fd	4	6	做
+Dialogue	dialog_water_dishonest_2	d41692257348b124	2	5	著用錢	6	10		11	11	要是	12	12	部	17	17	給你
 Item	item_trigger_group_desc	634749a731ff88f7	19	20	扣
 Item	item_compensator_desc	7d3f342d856e866a	7	8	透
 Item	item_stock_desc	27994f0175cb17f0	1	2	用於
@@ -447,14 +483,14 @@ Item	item_short_stock_desc	520c7eafd5542c76	1	2	用於
 Item	item_common_electronic_flavor	27a0644da52bec3f	10	11	
 Item	item_printed_gun_desc	e309802c36b76be4	8	9	製
 Item	item_topical_bandage_desc	416d80232ba8d8ae	4	6	外用
-Item	item_pink_injector_desc	4be08d9962e197fc	22	23	並
+Item	item_pink_injector_desc	99060c901e6e2a0c	22	23	並	30	32	濫	33	34	
 Item	item_blank_keycard_desc	985919ccf4a3927d	28	30	存取
 Item	item_system_module_ruined_desc	a702bec522418767	28	30	
 Item	item_med_bottle_small_pink_desc	5edd98f39e51b1c9	18	19	透
 Item	item_soda_red_desc	d10b15b94404b457	21	22	乾
-Item	item_desequencer_instruction_flavor	97004684e50d3a49	38	38	晶片
+Item	item_desequencer_instruction_flavor	819744adae5770df	8	8	  	10	12	：	15	15	  	17	19	：	22	22	  	24	24	：	33	33	晶片	34	36	鑰匙	43	46		47	47	間運作
 Item	item_hydroponic_desc	9aea9bcdd6ee415e	19	20	轉
-Item	item_moisture_farm_instruction_short	00d2670e35c4b73c	3	4	透	42	43	製	56	57	透
+Item	item_moisture_farm_instruction_short	ed405b33775f4e7a	3	4	透	42	43	製水	45	49	在	50	50	間進行	55	56	透
 Item	item_wine_gloomberry_desc	a4025b888a112165	15	17	東西
 Item	item_black_lamp_desc	ad9f41b367584181	44	45	回
 Item	item_birth_control_pill_flavor	ba8688a3c5581abb	11	13	含有	17	19	黃體	20	24	兩種荷爾蒙
@@ -469,13 +505,13 @@ Item	item_skincare_cream_flavor	05eda23303588fd0	1	2	個
 Item	item_pack_condom_flavor	2100182a29c32fb9	0	3	多虧
 Item	item_shampoo_flavor	59f0f0186706e7ae	19	19	方	20	21	盥	22	24	用
 Item	item_c4_desc	444c6d0d8e358c90	0	2	小心
-Item	item_wire_cutter_flavor	f4fb302f736bac50	27	28	握
+Item	item_wire_cutter_flavor	d6cf1c159ed74c42	4	14	讓剪切更省力	26	27		32	33	握	35	42	便於	43	45	持，手感	47	48	
 Item	item_rare_electronic_flavor	af560a611d8df27d	7	8	級
 Item	item_caffeine_pill_flavor	cb923584f6086fdf	5	6	級
 Item	item_zyanide_pill_desc	ddcbe854c35f4fdc	2	4	作用
 Item	item_zerochew_name	6dd11e99b8e9499c	0	2		4	4	錠
 Item	item_zerochew_desc	54fdd43b93e0628e	1	2	錠	9	11	便宜
-Item	item_zerochew_flavor	2c5fbe90852a4588	0	3	有	9	11	靠它	19	20	點	24	25		30	34	它	38	38	減肥藥	44	51	來賣
+Item	item_zerochew_flavor	84839342515a1827	0	3	有	9	11	靠它	15	17	飯	20	21	點	25	26		31	35	它	39	39	減肥藥	45	52	來賣
 Item	item_logo_checker_name	7d8ffccc614cf3f4	5	7	比對
 Item	item_business_permit_desc	7b97b39ebfaec796	19	20	店
 Item	item_sec_slip_desc	8a7fa8c11f039db1	10	11	立
@@ -486,7 +522,7 @@ Item	item_surgery_tool_name	5ef62f301ffb7fb7	6	8	組
 Item	item_postit_name	42820b4e9544d0b0	1	2	利貼
 Item	item_shampoo_name	df646f862a0d3dbf	5	8	沐浴乳
 Item	item_toolbox_desc	2bfe8c7b6adc4cf8	22	23	對	24	26	格子
-Item	item_water_purifier_instruction_short	bff6a03f9b8c50b6	0	1	這台	4	4	以	6	9	放入	11	12	中	14	15	，	16	18	汙染	20	22		24	24	尤其有	25	30		31	31	運作時	33	35		40	41	，	51	52	安裝模組可以提升	54	63	性能
+Item	item_water_purifier_instruction_short	b98c541f2d5712ac	33	34	
 Item	item_gutterflow_pellet_desc	5f623d75add0f877	8	9	製	26	26	不	27	30	食用
 Item	item_sturgeon_desc	8e6393957c62a493	23	26	取
 Item	item_auto_butcher_desc	a6f25b64a3322a63	1	3	設定
@@ -494,7 +530,7 @@ Item	item_current_converter_desc	82903c123733d1ef	16	17	為
 Item	item_dna_disk_desc	f1cbfbf12fa83d8e	6	7	碟
 Item	item_dna_disk_name	3533e16dbff525d3	5	6	碟
 Item	item_dna_manipulator_desc	474a0bf1d652de26	15	16	碟	21	22	碟	26	27	套
-Item	item_dna_manipulator_instruction_flavor	e27f3665105f50d9	0	1	套	15	16	碟	36	37	碟	64	65	套	70	71	碟	95	96	碟	129	130	碟	168	169	碟	173	174	碟	183	184	碟	325	326	碟	352	353	碟	375	376	碟	379	379	本的	380	381	
+Item	item_dna_manipulator_instruction_flavor	c11c3c8e28c46abd	0	1	套	15	16	碟	36	37	碟	64	65	套	70	71	碟	95	96	碟	129	130	碟	168	169	碟	173	174	碟	183	184	碟	325	326	碟	352	353	碟	375	376	碟	379	379	本的	380	381		391	391	  	393	395	：	398	398	  	400	406		413	413	：操作速度	414	414	  	416	421		428	428	：成功率
 Item	item_dna_module_precision_desc	e2f043c2a6521c3a	12	13	碟	23	24	碟
 Item	item_industrial_fish_feed_desc	27452be5869cbe75	3	4	
 Item	item_intake_hopper_desc	896fc17b46edf5be	48	50	即可
@@ -509,7 +545,7 @@ Item	item_turbo_booster_hypertech_desc	e9671c7344d8f6eb	8	9	電
 Item	item_water_pitcher_desc	81d742fce8ae6ae1	7	8	過濾	12	16	
 Item	item_age_well_desc	7ece140f187b52fd	2	7	裡面	14	16		22	23	讓	32	34	多
 Item	item_backpack_small_desc	2be331163d81eb0a	0	4	小巧	5	7		8	9	得很舊	13	14	縫線	17	19		22	23		25	28	卻	29	29	得	30	32	
-Item	item_beis_icecream_desc	309961c04faa3862	0	4	放進	8	8	一晚
+Item	item_beis_icecream_desc	b14798bf32303bbc	1	2	進	6	6	一晚	10	10	賣出	15	17		18	27	
 Item	item_blank_module_desc	494fe2fc0cb344ee	15	20	就能改	21	22	成
 Item	item_box_tampon_flavor	0c6fdf8fa43a7c08	0	1	這	6	10	標榜防護	14	15	在	18	19	是少	21	24	買
 Item	item_cert1_desc	b837c1ffe5c6f44c	0	2		3	4	進
@@ -524,10 +560,10 @@ Item	item_furnace_module_blast_desc	cd96fa123ea79f09	12	15	可用
 Item	item_furnace_module_junk_desc	58e50c8f7ac57899	12	15	可把
 Item	item_hydroponic_instruction_short	461612a1287c7fcc	44	45	這台	48	49	以加	50	52		55	57	提升
 Item	item_hydroreed_seed_desc	ce5c48d0f53a1820	18	19		21	24	時	27	28	它	30	30	的	31	32	
-Item	item_kitchen_knife_flavor	9e3b53e4a13993dd	9	11	放在	13	15	和	19	20	的	21	23	拿
+Item	item_kitchen_knife_flavor	3f03fb4e50c452b3	9	11	放在	13	15	和	27	29	拿
 Item	item_module_bay_expansion_kit_desc	7d992c8abfce9cc7	0	3	可
-Item	item_module_extractor_advanced_desc	e3784de5340b6f94	1	2	以把	10	13	裡	15	15	來，不會弄壞模組	22	24		25	26	了也	28	30	
-Item	item_module_extractor_desc	9dbfc9c84fabd3e5	1	2	以把	10	13	裡	15	15	來，不會弄壞模組	25	27		32	34		36	37		38	38	復
+Item	item_module_extractor_advanced_desc	9a00dedfe0a01a41	0	4	可以把	12	13	裡	15	21	來，不會弄	22	22	模組	29	31		32	33	了也	35	37	
+Item	item_module_extractor_desc	701b24d4b787b41d	0	4	可以把	12	13	裡	15	21	來，不會弄	22	22	模組	32	34		39	41		43	44		45	45	復
 Item	item_moisture_farm_flavor	84a2fff5c9f19f4f	2	4		10	12	的
 Item	item_nudka_desc	8893b5b896943bd1	0	1	用	5	8		10	11		16	20	當強力	23	24	
 Item	item_plant_analyser_desc	6fd0570a5e14d832	2	4		19	23	用來找出
@@ -541,28 +577,61 @@ Item	item_shotgun_desc	29da9231fd22acec	23	24		29	33	讓它	38	40	都能
 Item	item_sign_expedition_desc	0b666b021150d413	0	2		3	4	進	18	20		24	25	
 Item	item_sign_generic_desc	093fc02094a99edf	0	2		3	4		8	9	裡
 Item	item_sign_water_desc	8967607f21bbf00e	7	9		10	12	進	15	16		17	18	就會	20	24	想賣
-Item	item_stun_baton_desc	62fe675d04fef3a3	0	1	標準制式電擊警棍，	23	30	。治安部	31	35	官	43	49		51	54	配
+Item	item_stun_baton_desc	608c686171e3370c	0	12		18	18	警	19	19	，有STUN（擊暈）和HARM（傷害）兩種模式	20	22	治安部警官	30	36		38	42	配備
 Item	item_toilet_paper_flavor	076db7a4e8efa136	21	23	的就	24	25	經	26	28		30	30	品了
-Item	item_trashcan_desc	b9e258dc8c6a0b70	0	4	有	5	6		11	11	的話	17	18	會	21	22		24	25	清
+Item	item_trashcan_desc	92091765716ac7c6	0	0	有付清潔服務費的話，	5	6	會	9	10		12	13	清	14	27	
 Item	item_turbo_booster_adv_desc	bcc6c21b5d9378b0	0	2	可	7	8		9	9	間	18	21		27	28	認	33	35	放入	37	38	需	40	42		45	45	會	48	51		57	58	個	61	64		65	66	了	68	69	
 Item	item_turbo_booster_desc	0e1476a593b02047	0	2	可	7	8		9	9	間	18	21		27	28	認	33	35	放入	37	38	需	40	42		45	46		47	50	一次就	52	52	掉
 Item	item_uv_filter_flavor	ad1b4fbffc4bc48d	2	2	會	3	4	出	7	8	、	9	10	死
 Item	item_water_filter_adv_flavor	e9367e0436d5f568	4	5	罐	14	17	會	18	21	慢
-Item	item_welder_desc	4270a63a8b9ba228	1	3	用來	5	6		7	7	掉
+Item	item_welder_desc	d315b82450978b1f	0	2	可	6	7		8	8	掉	11	12		31	32	可多	38	40		43	45	
 Item	item_wine_yeast_red_desc	7a8a31310b1c5edb	9	11		16	26	便宜地釀出
-Item	item_wire_cutter_desc	f0cecb35a9c33db6	1	3	用來	5	6		7	7	掉
+Item	item_wire_cutter_desc	b155fd89465ea07c	0	2	可	6	7		8	8	掉	11	12		30	31	可多	37	39		41	43	
 Item	item_1ml_dropper_flavor	c1e646d0a80787e8	0	2	能	3	6	準滴取
-Item	item_cat_bar_flavor	0c4e3443dfd92e4e	10	14	明明	15	17		19	19	裝	20	22	卻	23	27	半是	31	33	完
+Item	item_cat_bar_flavor	ed779451af85c457	10	16	明明	17	19		21	21	裝	22	24	卻	25	26	半	27	28		31	34		35	36	完
 Item	item_food_stamp_flavor	bc6c799a77e2de17	0	1	只	4	5		13	16	屬於	19	23		24	24	一項	28	32	，用來幫助弱勢族群
 Item	item_rubbing_alcohol_flavor	af4e58d53c417cf4	20	21	誤	22	23		28	36		39	40	仍有人把它	41	42	成
 Item	item_lou_etched_round_flavor	8d4535692cafc102	10	11	
 Item	item_lou_locker_flavor	c26540346477621b	15	17	打烊
-Item	item_debris_pile_rest_desc	c054249ff45d23e0	2	10	晚上	13	13	、直接在店裡睡覺
-Item	item_large_bottled_water_name	49e0361edd0f5111	4	5	
-Item	item_mini_bottle_name	81a338b597a249ee	3	5	迷你
-Item	item_printer_chip_small_bottle_name	3a57f84c0d07ee7c	14	15	
-Item	item_recharger_desc	29bf3ada4e812a84	0	3		7	7	的	9	10	
-Item	item_small_bottled_water_name	c1e82c3c384a80d1	4	5	
+Item	item_debris_pile_rest_desc	112ae00d38c5b20a	2	10	晚上	13	13	、直接在店裡睡覺	22	22	這堆
+Item	item_large_bottled_water_name	029736613316149a	0	0	水	1	3	
+Item	item_mini_bottle_name	9d705d2389fafb3c	0	0	水	1	3		4	6	迷你
+Item	item_small_bottled_water_name	94c0606927816bcc	0	0	水	1	3	
+Item	item_3d_printer_instruction_flavor	7f922f25cbb2427f	9	9	 	11	13	：	16	16	  	18	20	：	26	37	 	47	47	：適用物品的列印品質
+Item	item_age_well_instruction_flavor	d8ac3d621948bfd0	8	8	  	10	12	：	15	15	  	17	19	：	22	22	  	38	39		43	44	並放入	55	56	後，機器	57	58	在	59	60	間運
+Item	item_alarm_instruction_flavor	25e49631f322b597	8	8	  	10	12	：	15	15	  	17	19	：	25	25	  	27	27	：
+Item	item_aug_scanner_desc	5d35828ec33f9e9e	2	11		21	21	，準確率100%
+Item	item_bottle_printer_flavor	fd83e827c720751c	17	18	
+Item	item_bottled_water_name	e5be0f96d9678197	0	0	水	1	3	
+Item	item_card_pharma_name	378cd44d228e0307	4	5	劑師
+Item	item_cigarette_guide_desc	617aa816b9cdff2f	0	0	一本	2	3	你辨	4	6		11	11	真偽
+Item	item_cup_noodle_desc	8621092b90dfcb1e	1	2	建	10	11	裝置	18	20		21	22	煮
+Item	item_desequencer_desc	a44af973f9fddce1	12	14	鑰匙	21	22		23	24	間運
+Item	item_energy_credit_flavor	6de1188883745975	7	7	共和國已將	12	19	列	20	22	違禁品
+Item	item_eng_box_desc	75f15804508245cf	36	38	鑰匙
+Item	item_evaporator_instruction_flavor	f01064f5178a2b60	8	8	  	10	12	：	15	15	  	17	19	：	25	25	  	27	29	：
+Item	item_evidence_box_desc	6682cf54cd694311	36	38	鑰匙
+Item	item_fridge_desc	950e7ddaf7017fb3	1	2	冰鎮存放其中的飲品，	4	8	運作	15	19	售價	21	24	
+Item	item_furnace_instruction_flavor	680ede145c8f3bc9	8	8	  	10	12	：	15	15	  	17	17	：	21	21	  	23	25	：
+Item	item_hydroponic_instruction_flavor	e62f30d91cd38248	9	9	 	11	13	：	16	16	  	18	24		32	32	：生長速度	33	33	  	35	41		49	49	：產量上限
+Item	item_junk_flavor	2e1628411c4f4845	0	0	破	1	2		6	8	沒	9	10		14	14	回收價值有限，	16	23	
+Item	item_lottery_ticket_flavor	5eca263ffe0b16c6	0	2	只要	7	11	就能
+Item	item_lottery_ticket_old_flavor	1673f9933a85be3d	0	2	只要	6	9		10	14	就能
+Item	item_med_box_desc	9b70ba9a91eb6cdf	34	36	鑰匙
+Item	item_metal_scanner_desc	3e50526b34b00da8	3	5	讓	10	10	更容易	16	18		23	31	多	38	40		42	42	無法疊加
+Item	item_modified_access_card_name	9fd80f291ac23203	0	1		2	4	寫中的鑰匙
+Item	item_moisture_farm_instruction_flavor	1e04d9d64887d7ff	8	8	  	10	12	：	15	15	  	17	19	：	22	22	  	24	26	：
+Item	item_printer_plastic_desc	b11e525dbbbb4577	0	0	一卷	10	11	線	16	18	採	21	23		25	28	製
+Item	item_processed_juice_desc	3da4b661481da284	29	29	真果汁	30	31	量高達	35	39	
+Item	item_projector_instruction_flavor	85cd6df901059995	8	8	  	10	12	：	15	15	  	17	22		31	36	：	39	39	\n  品質	47	47	：吸引力
+Item	item_scav_journal_flavor	58f5b0b10177d91a	73	75	瀰漫	77	78	股
+Item	item_sci_keycard_desc	84d61e6162ae3c7d	19	20		21	21	發
+Item	item_sec_box_desc	69adf28866361fd9	37	39	鑰匙
+Item	item_service_box_desc	79db209ce664ceda	36	38	鑰匙
+Item	item_stamp_guide_desc	95a93b6bf981feab	0	12	一本教你	14	18		21	21	真偽的實用指南
+Item	item_water_jug_name	10ea85f5e7ecf202	0	0	水	1	3	
+Item	item_water_purifier_desc	084192bc0072d44f	19	32	
+Item	item_water_purifier_instruction_flavor	a3c1245828f1c38a	8	8	  	10	12	：	15	15	  	17	19	：	25	25	  	27	33		41	41	：純度上限
 MainMenu	credit_ack	6897086dc7b23030	2	3	感
 MainMenu	option_note	8f6c31c270ec6465	5	7	不	9	11	支援	13	16	螢幕	20	23		26	30		31	32	遊戲	34	37	會有
 MainMenu	option_apply	95514e5a7ff65783	0	1	套
@@ -611,6 +680,8 @@ MainMenu	option_move_bought_to_inventory	214b4d36c49816e1	7	9	物品欄
 MainMenu	load_damaged_lost	0bce4b98b00ffd36	19	19	而	24	24	一天	25	27	存檔	30	33	它的檔案	34	37	在	42	43	裡移到	46	48	沒有
 MainMenu	load_damaged_repaired	59e97e8115eb6801	22	23		24	25	到	32	33	會
 MainMenu	load_save_damaged	b656b0b91647a482	0	1	這個	3	5	檔案	25	28	在	33	34	裡移到
+MainMenu	main_available_perk	c56bc2f1427e6b68	1	2	選
+MainMenu	option_game_setting	73547fd48e796081	2	3	
 Mechanic	mech_chem_finisher_btn_configure	148d195e21b05db5	0	2	設定
 Mechanic	mech_vending_tooltip_popular	2710378a91949d6e	7	8	透
 Mechanic	type_evaporator_module	f94eaef7fbeabe49	1	2	發
@@ -659,7 +730,7 @@ Mechanic	event_normal_bad_harvest_desc	e82dbc30fa3023f2	13	14		47	48	生	49	49	�
 Mechanic	event_normal_ice_asteroid_news	09cd39e95fad6e96	7	8		9	9	來
 Mechanic	event_normal_mining_return_news	7fc775a7ae8650ef	5	6		7	7	來
 Mechanic	event_normal_construction_news	f72ec1d65fd66130	2	4	工程
-Mechanic	event_normal_construction_desc	1a7852eac3bcfdce	13	15	工程
+Mechanic	event_normal_construction_desc	b6d8eac85faa4c6c	0	11		14	20	各處不斷	22	22	新的建設工程	30	31		32	32	人
 Mechanic	event_normal_power_maintenance_display	8110a891fa0a61ac	2	3	廠
 Mechanic	ins_cig_confront_lower_price	c1d6c2330bdf7c1c	2	3	算
 Mechanic	ins_cig_confront_wrong	a116876c84a22f31	6	7	
@@ -734,7 +805,7 @@ Mechanic	mech_hopper_list_empty_block	ae8d44ac221ea8ef	3	4	是	5	5	的
 Mechanic	mech_lottery_luck_good	4fd0da3337fedab5	11	12	
 Mechanic	mech_marking_pen_color_orange	aa1e899dd35771b0	0	1	橘
 Mechanic	mech_nightlog_burglary_grace	29012a635584fbc7	11	12	小偷
-Mechanic	mech_nightlog_insurance_unpaid	864dd7c8a6f6e4ca	5	5	投	6	9	
+Mechanic	mech_nightlog_insurance_unpaid	944af839596dea2d	3	5	沒有	8	10	
 Mechanic	mech_notify_eleanor_drive_bounty	cca89f338c0dbdf6	9	10	碟
 Mechanic	mech_pinned_tooltip	08500e5df465e13a	8	9	下
 Mechanic	mech_ras_waste	9bbf60ed8e041066	1	1	棄
@@ -745,7 +816,7 @@ Mechanic	note_georgio_iou_title	26b197ec2b2ffb05	0	2	借據
 Mechanic	afterhour_items_lost_warning	912de78b86338ab6	7	16	會留在原地，再也拿不回來
 Mechanic	event_cosmetic_electrical_desc	2bf0adfb123b9199	0	3		5	5	定期	7	9	展	10	13	後	17	18		19	20	暫
 Mechanic	event_evidence_locker_desc	22ba90cb13249a85	13	17	大膽	18	18	闖	19	22	案	38	39		45	46		47	47	經	54	61	一件偵辦中	81	83	
-Mechanic	event_normal_ice_asteroid_desc	ebc5dba8b654446c	8	9	礦	11	15	從	28	36	順利歸來
+Mechanic	event_normal_ice_asteroid_desc	4f0a2c795c052cc1	11	15	從	28	36	順利歸來
 Mechanic	event_normal_power_maintenance_desc	30c68bbba6fa2d6c	19	19	已通知	21	27	，	31	34		36	38	會有	42	45	
 Mechanic	event_normal_water_breakdown_news	f45702369001b207	9	11	
 Mechanic	event_op_household_relief_desc	3ad8a3c9d6eff769	22	24	日用
@@ -807,19 +878,36 @@ Mechanic	note_lou_locker_body	cecea9d2f42ef91c	9	10	痛	23	26	女孩子	30	30	�
 Mechanic	note_lou_thank_you_body	8b0e09fccbf2504b	27	29	啾
 Mechanic	event_lou_warehouse_desc	e7314cbed9fb6210	8	8	通	9	11		21	22		37	38		53	54	穿	74	75	分
 Mechanic	health_sentinel_collapse_lethal	4e3f2fc39d01dbf6	4	8	已經禁	10	10	再	19	20	晚打	22	26	
-Mechanic	mech_afterhour_effect_restock_percent	4e0f7c58534b3de7	1	5		10	12	{0}%
+Mechanic	mech_afterhour_effect_restock_percent	4aa3d706d18ea0ca	0	5	+	9	9	的	13	16	
+Mechanic	event_cosmetic_spacewalk_desc	f28a4064c1222cf5	70	75		76	78	因驚嚇過度
+Mechanic	event_normal_mining_return_display	3a64878747e161a6	2	4	過剩
+Mechanic	event_normal_water_maintenance_desc	51e10e8d96f98dcf	24	24	預計對	26	28	運作	31	35	
+Mechanic	health_immunivax_feel_none	639106dc44c406b5	7	11	變化
+Mechanic	mech_container_tooltip	a90aede3acb33c90	3	4	
+Mechanic	mech_dna_eject_hint	ae9bdf81e7d9bdbb	0	0	選擇機器選單中的「	2	6	」，
+Mechanic	mech_inspection_luck_saved	b4783c084acaeba4	2	5	真好
+Mechanic	mech_nightlog_aug_incoming	8607b04553f95283	10	10	很
+Mechanic	mech_scratcher_luck_bad	68d8d542582a54c2	4	6		12	12	更
+Mechanic	mech_scratcher_luck_good	84b080f017f57325	6	8		14	14	更
+Mechanic	note_lou_locker_again_body	ca662b344accee37	16	17	不見	45	47	打烊	71	73	啾
+Mechanic	sec_data_crime_card	2d5f9c432d71fc6a	7	9	鑰匙
+Mechanic	type_access_card	3a867ec019bdb7b1	0	2	鑰匙
+Mechanic	mech_nightlog_vandalized_john_smith	41fc841fd1c90d9d	24	25	幾	30	32	約翰·史密斯
 NewGame	fence_gear5	0e486e24078ef708	15	17	使用
 NewGame	gunsmith_body	60bb2125ebd052b3	76	77	透	78	79	為
 NewGame	welcome_main	e6fbec78e1effe76	121	123	申請房	124	125	
 NewGame	street_food_vendor_body	e9e05448ff29587c	54	55		56	56	點
-NewGame	organ_trader_body	9d54dec717fcdf78	40	42	正當	59	59	體病
+NewGame	organ_trader_body	f5d3da5c44f01afd	40	42	正當
 NewGame	rancher_body	e9e1a195ecd12ef3	26	27	來
 NewGame	aquafarmer_body	46cd02efa45f9ba1	14	15	在	17	17	裡	19	20		21	23		30	32		47	49		50	51	
-NewGame	generalist_body	e9e7dfcac812db07	11	13		14	15	哪一	16	18		20	24	都沒有特別感	26	30		31	33	反而花了更多	35	39		43	44		45	48		49	50		51	52		58	62	錢
+NewGame	generalist_body	253d79ee28d6da13	11	13		14	15	哪一	16	18		20	24	都沒有特別感	26	30		31	33	反而花了更多	35	39		43	44		45	49	開店時省	50	55		58	62	錢
 NewGame	junker_body	eab95c970855da43	17	18		22	22	，	28	30		35	35	以後	45	47	連	53	55	都	57	61	一下，拿來做	63	64	這一	65	67	
 NewGame	moonshiner_body	e10c0946986277eb	29	29	，	38	40	私酒	45	47		51	52	很	57	60	既不受管制，	61	77	不合	78	80	
 NewGame	pharmacist_body	15d206b2f3ab4443	32	33	局
 NewGame	rock_bottom_body	6861ab01ace5952c	0	0	導師	12	14	什麼都	15	17	幫	18	24	
+NewGame	chemist_body	aca5f18c93cde29b	76	77	錯
+NewGame	hydroponic_farmer_body	d535f772871807b7	73	76	從中	77	77	上
+NewGame	pharmacist	9982f0bee00f6c4e	1	2	劑師
 PerkTable	perk_nicotine_addiction_desc	e663e1f7fa93e4c9	2	3	沒有
 PerkTable	perk_narcotic_addiction_desc	93f3c4b1ed37abdb	2	3	沒有
 PerkTable	perk_alcohol_addiction_desc	8e58250c5193864c	2	3	沒有
@@ -832,21 +920,24 @@ PerkTable	perk_colorful_character_desc	140e983e3368c884	2	2	可選	4	6
 PerkTable	perk_sentinel_desc	e332ae226068c2ce	14	15	體	17	18		39	41	就有
 PerkTable	perk_banned_commissary_desc	3a4a710459d38ee5	4	6	開放
 PerkTable	perk_handy_desc	50f8f4aba32fd1a1	2	4	就有
-PerkTable	perk_maimed_desc	22d6678bea079b79	6	8	開放	10	10	完全	12	16		18	20	
+PerkTable	perk_maimed_desc	c2120a6f898d0a22	6	9	開放。	10	10	完全	12	16		18	20	
 PerkTable	perk_blabbermouth_desc	25e15c72bd6e2283	0	2		6	7		22	23	從	29	30	
 PerkTable	perk_intimidating_desc	3b025193c282ab33	0	2		6	10	
 PerkTable	perk_revolution_sympathizer_desc	565b7c0af7542bb2	17	18	會	19	22	常	24	26	
 PerkTable	perk_tapehead_desc	81943ab18d90f669	0	8	開局時	13	15	裡就	16	18	全部
-PerkTable	perk_welfare_program_desc	8bdedb85355e3da0	11	14		17	19	依	24	25	發給	26	28	
+PerkTable	perk_welfare_program_desc	38eb25fe17b80808	8	9		12	15		18	20	依	25	26	發給	27	29	
 PerkTable	perk_blackmail_desc	540f200356aec498	11	12	有	16	17		28	30		32	35	得	36	36	他	46	48	他就會	50	50	你	51	51	讓	52	53		59	62	的聲望	65	72	跌
-PerkTable	perk_ascetic_name	a594b425e42272e4	1	2	行
+PerkTable	perk_aug_menace_desc	c9ce0b78299c47fe	41	42	；
+PerkTable	perk_gambling_addiction_desc	9b92148986522ade	0	2	一	5	6		7	10	就忍不住	11	13		16	16	開局解鎖	20	20	相關	22	28	
+PerkTable	perk_handy_name	bb1b3d1e8d1c7713	0	0	心靈手	1	2	
+PerkTable	perk_vending_desc	627af79998ffa5ad	0	4	開局時，店外設有	6	12		18	20		22	22	可以	32	33	商
 UI	inte_shutter_cant	497cf8c1f091bee2	2	8	還不能打烊	10	11	伍
-UI	ins_cig_seal_info	5ebac9352169e2a1	5	6		18	18	果	27	30	就是仿	31	33	
+UI	ins_cig_seal_info	882343c5c20d9754	5	10	售出時必定帶	14	20		32	38	就是仿	39	41	
 UI	ins_inj_serial_number_intro	cbd08281a06a549a	17	17	數
 UI	intel_mentor_note_barter_body	9765f1fc2b6dcb38	59	61	正在發生的	63	64	
-UI	intel_mentor_note_commissary_body	a1a003ebbc9b0c82	33	35	不過，	42	44		46	49	量還是	52	54	隨	56	58	波動
+UI	intel_mentor_note_commissary_body	f277f88df975c57e	0	1		10	13	，所有商品均按固定價格	15	27		37	39	不過	47	52		54	57	量還是	58	65	容易隨	67	70	波動	76	80		87	87	購買商品	93	95		98	100	可前往	103	104	
 UI	book_ribwich_section5_body	749d8d62a5730eea
-UI	book_water_s4_body5	cac250a98cf0f85e	2	2	合	6	8		10	12		14	15	
+UI	book_water_s4_body5	f8226a73a7fa431a	3	3	用於	5	7		17	19	\t	22	26		28	32	即可辨認
 UI	book_water_s5_a1_body	4bf3ec68b0f02ffd	21	22	透
 UI	book_farm_s2_title	e7cbc12b061879b8	3	4	夫
 UI	book_chem_p4_s3_body	5c7dead1b5bf51fd	25	26	透
@@ -860,7 +951,7 @@ UI	general_match_label	28e9d6ca6b30dae4	0	2	比對
 UI	intel_mentor_note_food_body	ef69f64b0e3190f7	22	22	店裡常	23	24		26	28		29	35	因為	37	40	時	42	42	和水	45	46		47	50	大	53	57	人都得	59	60	
 UI	intel_mentor_note_upgrades_body	0a1e30d119036726	25	27	付費
 UI	book_water_s3_note3	9624835f16bdc280	1	3	建議	22	23		24	25	幅
-UI	book_water_s5_a2_body	5490ccb7b9479bb9	28	29		32	35	貼錯	36	38	籤
+UI	book_water_s5_a2_body	f3b1c087f7e7b132	28	29	
 UI	book_farm_s1_note	ccb3ca92e00a8bdf	0	1	視	2	2	要
 UI	book_chem_p5_body	8843ddef6b31d7d3	13	14	查
 UI	ui_clientele_no_merch_detected	11a2d8fb51b4fa0d
@@ -883,7 +974,7 @@ UI	book_fuel_p6_m2_bonus	48d44a7e5700fa13	7	9	符合
 UI	ui_wild_favor	a757d7c4c797ac0a	14	15	透
 UI	lottery_system_intro	c038009b234b77f7	0	3		6	7	～	9	11	開	22	22	選	25	28	對中幾	30	31	出的	33	40		41	44	就決定你拿到什麼	45	49	
 UI	lease_body	ccb2563696fd5763	4	8	當事人	73	75		224	226	驅逐	285	287	驅逐	303	304		305	305	漲	311	312		313	313	漲
-UI	intel_rev_codeword_body	246a5ec5d2d2c919	16	24		30	30	 = 即將展開的行動	31	31	「茶點」 = 	38	43		44	47		51	51	 = 突襲	52	56		60	60	 = 安全屋	61	61	「喬遷之禮」 = 	67	74		75	78		82	82	 = 撤離	83	87		93	93	 = 已暴露	94	94	「臨時」 = 	100	105	
+UI	intel_rev_codeword_body	5017ec88cdc2ae7e	27	27	展	28	29		32	33		48	49		59	60		71	72		85	87	鑰匙	88	89		97	99		101	102		115	116		118	122	臨時
 UI	book_ribwich_section7_body	e77c800f4d0925d5	26	26	果沒有	28	30		31	31	貼紙
 UI	book_water_s3_body3	c72dc72168ee0b98	39	39	棄
 UI	book_water_s3_note	b50561e11645ca2d	31	33	
@@ -896,7 +987,7 @@ UI	ui_mods_cap_files	28b1dd71e7ad9a99	14	16	檔案
 UI	ui_mods_cap_native	d5eac6d844489e06	0	2	呼叫	6	6	程式
 UI	ui_mods_cap_network	a66b8cdcb895fbc8	0	4	存取	5	5	際網路
 UI	ui_mods_cap_process	0bb42a4b2ac2bdf2	5	6	式	9	11	連結
-UI	ui_mods_cap_reflection_external	b1cb2b34885e1587	0	1	透	2	3	反	4	6	存取	15	16	作
+UI	ui_mods_cap_reflection_external	3c9d5d7c9ed6fa3c	0	1	透	4	6	存取	15	16	作
 UI	ui_mods_dependencies	deb1db01e1f03492	0	3	前置模組
 UI	ui_mods_dll_warning	b780890a5345ad44	7	8	製	53	54	程式	58	59	程式	64	66	存取	85	87		175	176	遺	205	206	援
 UI	ui_mods_enable_missing_dll	a43ea0b750a73ba7	6	8	檔案	18	20	檔案
@@ -951,21 +1042,21 @@ UI	bargain_ui_add_markup_info	455eddf7a7a95b75	14	16		19	20	他的	24	24	而	33	
 UI	book_chem_p1_module	b10a46533df7772b	0	1	和	15	15	的	19	20		30	32	
 UI	book_farm_s3_water_body	4fca08288d5045ce	48	49	註
 UI	book_hand_intro	9b9542931106a39c	26	27	能	28	31	你判斷	39	41	合理	42	43		44	45	
-UI	book_hand_p3_s1_body	512e5885bb939b31	0	1	每	9	11	各自	14	15		16	16	以	18	20	
+UI	book_hand_p3_s1_body	37f83470b8588fcf	0	0	每項	7	10	各自	13	15		16	16	以	18	20	
 UI	book_ingot_s2_body	866e4ba7938c42dc	6	7		10	12		18	19		20	21		27	30	純度	32	35		36	38		45	49	純度	51	54		55	56	另	63	64	裡	65	66		71	72		77	79		80	81	進去	87	93		110	113	
 UI	book_water_s2_body	3fc29c6aa5ea7e57	0	2	不管是	4	6		10	12		17	19	賣	21	21	標籤	24	29		31	34		41	42		44	46	確認
 UI	book_water_s3_body	24efb68e485d30a6	11	14		24	25	只	28	31	幾種	41	42	試了好幾	43	48	純度還是沒	50	54		55	58	就表示	59	60		66	68		69	70	不掉	71	74	裡剩下
 UI	book_water_s4_body1	2c9b64ac4b016268	0	5	就連	12	14	
 UI	ins_stamp_intro	745f40c8bc7ec567	14	15		16	16	施	20	21	會	35	41	，	42	44	以	45	46		54	55	
-UI	intel_mentor_note_appraisal_body	f13a1c1f6397ed59	47	47	每次鑑定	48	51	會收到	55	57		61	67	再依	69	69	的	72	75	加發	88	89	取	93	95	
+UI	intel_mentor_note_appraisal_body	295b8213e3762d8d	0	1		18	20	，價值計算方式較為	22	27		30	38	會上門請	39	40		42	48		56	56	每次鑑定	57	60	會收到	64	67		71	77	再依	79	79	的	82	83	加發	96	98	取	102	104		115	115	新的	118	120	
 UI	intel_mentor_note_basic_trading_body	b31bca7888186aad	3	4	把	7	8	到	13	15	就會	45	46	對	47	47	的	84	86	加上
 UI	intel_mentor_note_inspection_body	e7afad0ba167214d	7	14	會	18	18	違禁品	19	19	被查到違禁品時，	27	28	會	30	39		42	43	輕	44	46		57	60	被盤	75	77		109	109	都	110	111	
-UI	intel_mentor_note_visual_inspection_body	bad52dfafd41454b	1	3	某些	6	7		11	12	以	20	21	對	27	28		33	35	，就會	47	49	有	65	66		71	75	拿它跟	89	91	假冒的	115	119	你說對了	122	123		131	133	說	134	135	了	137	139	會	140	140	去	145	146	也	148	149		150	151	頭
+UI	intel_mentor_note_visual_inspection_body	fc318711da0290ff	0	1		6	7		11	12	以	20	21	對	27	28		33	35	，就會	47	49	有	65	66		71	75	拿它跟	114	119	如果你說對了	122	123		131	135	說錯了	137	138	會	143	144		146	146	也	148	155	轉頭就走
 UI	ui_cant_afford	487db58e86d65d7f	8	8	全部
 UI	ui_clientele_normal_tooltip	23b48ad141048a5c	23	25	裡	31	33	會	39	40		54	54	以	60	61	下	62	64		66	67		72	73		74	74	上
 UI	ui_dialog_window_note	ace8b0c8a4bcd2e3	18	21	裡
 UI	ui_info_inspection_counterfeit_claim	0b58fdae47ef7826	2	6	要賣	11	12		34	37		38	39	這個	41	45	說出來	48	50		51	54	因此	59	60	也	61	62	給	63	65	
-UI	ui_info_inspection_genuine_claim	a75e573469b3dcb2	11	12	、	24	27	假貨	28	29		35	37	就	38	39	這個	41	43	跟他	53	54		57	59	要是你	61	63	錯了	64	66		71	73	受損
+UI	ui_info_inspection_genuine_claim	7aeadcbc9cb77ff1	11	12	、	24	24	假貨或損壞的	26	36		37	39	就	40	41	這個	43	45	跟他	55	56		59	64	要是你	65	65	斷錯了	66	68	
 UI	ui_info_labeler	6628b28a0338a8b0	4	4	可以	5	6		9	11	標籤內容	13	16	修改	20	21		23	24	老	25	30		31	32	示	33	35	也可以	37	38	標	39	42	、賣	44	46		47	49		52	55	每種	57	62	識破錯誤	64	67		68	74	本事不一樣	75	78	要是	79	91	抓到賣的東西不	92	95		97	99	上的價	108	111	損
 UI	ui_info_security_team	752ce64b17594cbe	14	18	讓他看到
 UI	ui_info_service_janitorial	857fc5e76fb37739	0	2		3	4	了這筆	7	7	會清空	10	15	、打掃	17	23		24	26		30	33	好幾天沒	38	39		42	43		47	49		53	55	被	57	57	的話	62	63	
@@ -975,11 +1066,11 @@ UI	ui_mods_autosort_confirm	071a9c5c167b636e	21	24	它	25	25	前置	33	37		40	42
 UI	ui_nego_budget_warning	aa01a4de58902a10	14	15	會	16	18	賺
 UI	ui_nego_info_body	a129097c8589d93a	0	1	派得上用場的	3	15	情報
 UI	ui_nego_tag_no_contraband_info	3b699ff447bf3fba	4	8	不接受	20	21	檯
-UI	ui_tooltip_typewriter_auto_info	789ce82593ee6a6b	6	7		8	9	會	14	15	要	19	23	才會到
-UI	ui_tooltip_typewriter_effect_info	b17a8315aca3bf1f	8	13	會一次全部	17	18	會	20	20	打	21	22	
+UI	ui_tooltip_typewriter_auto_info	dedf6eb825a0c823	6	7		8	9	會	13	15	，要	19	23	才會到
+UI	ui_tooltip_typewriter_effect_info	877acb7f40984be5	8	11	會一次	16	20	不會逐字	21	24	出
 UI	book_water_s3_note2	a58d471bce2b73f7	7	9		13	16	裝好
-UI	book_water_s4_body4	c2ccbc7dfcae3e96	4	9	和	12	13	好	19	22	沒	24	27	就喝	35	35	最	36	37		54	61	把	64	69	貼上假標籤冒	71	71	水來賣	73	75	很
-UI	book_water_s5_a3_body	0420346fe48cee99	27	27	有些	36	38		42	46	
+UI	book_water_s4_body4	066aecebf3365dbb	4	8	和品	9	9	更好的	14	17	沒	19	22	就喝	30	30	最	31	32		49	50	把	54	54	上假	60	62	來賣，	63	67	很
+UI	book_water_s5_a3_body	27820b5ba8f451e2	27	27	有些	36	38		42	46		67	67	太	68	69	主動	70	76	查	77	80	質
 UI	ui_nego_buy_items	ffdb4181bc5e36a9	5	5	件
 UI	ui_nego_buying_items	c52d90ba9d98325d	7	7	件
 UI	ui_nego_sell_items	527ce9020ed1f4a8	0	0	賣	1	2		5	5	件
@@ -998,11 +1089,42 @@ UI	ui_mods_refused_hint	54b6410383d7bd40	2	5	記錄並	6	7		18	18	回	19	21	裡
 UI	ui_mods_refused_copy_log	7b0cd5489a0c87cb	2	4	記錄
 UI	ui_tooltip_dialogue_bubble_scale_info	41ecbefa1127506e	5	6	裡的	12	13	字標籤	26	29	是原本的
 UI	ui_tooltip_restore_display_after_focus_info	c4270d63b060326d	0	4		12	13		14	15	遊戲	16	16	，如果	18	19		29	30		31	31	自動	32	33		36	37		54	56	畫面	58	58	全	59	60		75	76	這個
-UI	book_fuel_p1_body4	3408c6c8b728cebd	5	6	製
-UI	ui_run_summary_hl_best_find	0da1a1bdbcea441d	2	4	收穫
-UI	ui_run_summary_nights_went	f2fc4e96393667b0	2	4	去哪
-UI	ui_run_summary_where_money_went	048280f6c8d4afd9	1	4	花在哪
+UI	book_fuel_p1_body4	fc07d397c5b3f8d9	2	2	由哪家	5	7	生產	11	13		37	38	
+UI	ui_run_summary_nights_went	e491367e0cb92dd3	2	3		5	7	
+UI	ui_run_summary_where_money_went	002fd68bc15956bc	1	2		5	7	
 UI	book_chem_p3_caffeine_pill_recipe	c2f94b7530994f49	3	3	藥
+UI	bargain_ui_rep_mult_info	7558488b4574b800	21	23	幅度
+UI	book_fuel_p1_body	5afc9f8ac703f8de	54	55	
+UI	book_fuel_p5_m1_desc	e8efef4d518465f8	30	34	不限	52	54	
+UI	book_fuel_p6_m1_desc	db2630629ea8f608	65	67	
+UI	book_fuel_p6_m2_desc	85bfc246ec3a82f9	44	44	狀況	59	61	
+UI	book_water_s2_body2	97647e887d736184	6	9	價格低廉、使用方便，可以用來檢	10	11		12	13	的	15	24	
+UI	book_water_s4_body6	413f0654bd587832	6	8	，具	26	28	\t	31	35		37	41	即可辨認
+UI	ins_cig_intro	e886701dd13a9eea	17	19		20	23		25	31	和	33	33	均	38	43	
+UI	ins_inj_body_intro	c430babe6da7dcb4	0	3		6	11	只要有裂紋等可見	14	24	就	25	27	
+UI	ins_inj_label_intro	9982e8ad1372485d	32	32	字型	34	39	不符
+UI	intel_mentor_note_display_case_body	3375f0a2d7cf2878	0	1		28	29	
+UI	intel_mentor_note_events_body	122a336a74a8bb10	0	1		47	49	知情
+UI	intel_mentor_note_labels_body	c23d0654b1b36af5	0	3	部分	31	33	，以此抬	34	35	售	36	37		86	87	還	94	98	下降	120	120	隨身攜	121	125	鑑別	126	127	假	144	146	相比之下
+UI	intel_mentor_note_stamp_body	4c20e7fadc1e937d	0	1		34	36	社會
+UI	lottery_match2	209290f95291d98a	0	4	中	7	7	個號碼
+UI	lottery_match3	3e757550546b34dc	2	2	/6
+UI	lottery_match4	a045ed77dbdb66f4	2	2	/6
+UI	lottery_match5	ed67deb9c51a8310	2	2	/6
+UI	lottery_match6	053340f23258cbe5	1	1	6/
+UI	lottery_system_example2	25bca0b04047a549	7	9	中	11	13	號碼
+UI	ui_aug_guide_section1_title	db12cf70b4d77808	0	2	外觀
+UI	ui_aug_guide_section2_title	800b256bc0045c39	1	3	外觀
+UI	ui_clientele_tooltip	86dde2bc3b8e52b0	13	15	
+UI	ui_info_store_attractiveness	045b1fbfc681af5e	17	17	特定
+UI	ui_nego_choose_offer	47fe08cdc899cf94	8	9	/
+UI	ui_nego_total_wholesale	98203931aa174615	2	3	/
+UI	ui_run_summary_georgio_bought	6c115ae689acc857	0	2		3	3	入	4	4	品
+UI	ui_run_summary_georgio_lent	ece57d99c682c1be	0	0	出	1	4	
+UI	ui_run_summary_georgio_paid	2b64baef9fb9c808	1	2		3	4	
+UI	ui_run_summary_rent_weeks_value	3ef4caa8910d3505	3	4	/
+UI	ui_run_summary_rent_weeks_value_missed	c9e42e22f4fd86e3	3	4	/
+UI	ui_run_summary_x_of_y	deae7f16bae0fb47	3	4	/
 RepPerkTable	rep_perk_UL_TOURISTTRAP_desc	e56baee2601821a8	6	6	較不會	12	18	
 RepPerkTable	rep_perk_SEC_ALARM_IGNORED_flavor	f2208254c0dbda01	13	14	抑
 RepPerkTable	rep_perk_BM_UNINSURABLE_name	2d3df1340205f431	2	3	投
@@ -1010,8 +1132,8 @@ RepPerkTable	rep_perk_REV_BLACKLISTED_flavor	5f351c6485a90195	8	9	出
 RepPerkTable	rep_perk_BM_HONOR_flavor	78e50ca346f45c27	2	2	就	6	8		9	9	幣
 RepPerkTable	rep_perk_BM_UNINSURABLE_flavor	c6d01f507eb2ed6f	17	19	不肯	22	25	承
 RepPerkTable	rep_perk_SEC_CONTRABAND_TOLERANCE_desc	e94a799dd1dc05bc	20	26	求處最重刑罰
-RepPerkTable	rep_perk_SEC_SURPLUS_name	b0d3d9fe6008f0c6	3	7	庫存出清
-RepPerkTable	rep_perk_SEC_THOROUGH_INSPECTION_desc	e8d5e650f77d62f6	3	4		5	5	會	7	12	懶惰	13	17	可疑	31	34	會	35	36	
+RepPerkTable	rep_perk_SEC_SURPLUS_name	16b43694eb01486a	3	5	庫存出清
+RepPerkTable	rep_perk_SEC_THOROUGH_INSPECTION_desc	483f88d44a20660a	3	6	不會再	7	12	懶惰	13	17	可疑	18	19	盤	31	34	會	35	36	
 RepPerkTable	rep_perk_UL_TOURISTTRAP_name	250297fd98e273d9	0	4	坑觀光客的店
 RepPerkTable	rep_perk_LLPOORREVIEWS_name	4266c4640245271e	0	1	負
 RepPerkTable	rep_perk_LLAVOIDED_name	9ce9d443df9ae71f	0	1	人見人	2	4	
@@ -1027,15 +1149,30 @@ RepPerkTable	rep_perk_LLTIPS_desc	a69b83c307ae4873	0	8		12	14	人偶爾會向你
 RepPerkTable	rep_perk_SEC_ALARM_IGNORED_desc	9266023ef287ce81	10	10	警	11	12	
 RepPerkTable	rep_perk_SEC_PRIORITY_desc	d08615b3813c27dd	8	11		12	19	會以	23	23	的速度進行
 RepPerkTable	rep_perk_SEC_PROTECTION_desc	718cc3989c62d7c2	8	9	望
-RepPerkTable	rep_perk_SEC_RELIABLE_VENDOR_desc	0f7004fce19d337d	7	8	會	16	17		22	22	能花	23	25		28	31	也多
+RepPerkTable	rep_perk_SEC_RELIABLE_VENDOR_desc	a310f18c1a723dea	7	8	會	16	17		22	25	能花的信用點也多	29	36	
 RepPerkTable	rep_perk_SEC_WATCHLIST_desc	44c0e72225b87479	21	24		25	32	會以	36	36	的速度進行
 RepPerkTable	rep_perk_UL_CHARITY_desc	a15af51b87b38046	0	4		7	10	有位善心	11	16	士偶爾會捐贈物品給	20	24	
 RepPerkTable	rep_perk_UL_PETITION_desc	1eab94ea0a6ecbe6	22	25		27	27	中	30	33	也
-RepPerkTable	rep_perk_UL_TOP_REVIEW_desc	592cf8db925b3e37	7	8	能	9	10		14	16	都多
+RepPerkTable	rep_perk_UL_TOP_REVIEW_desc	ae295804b94b1bf8	2	4		7	8		10	10	能花的信用點	11	14	多	18	25	
 RepPerkTable	rep_perk_LLLYNCH_flavor	0f44febba9e16172	5	10	忍無可忍	11	14	要	15	20	手	24	24	了
-RepPerkTable	rep_perk_SEC_TRUSTED_flavor	a121f6c60598ea77	21	25	
+RepPerkTable	rep_perk_SEC_TRUSTED_flavor	da6900472730e6a4	0	7	贏得	10	12	的信任，就能	13	14	受他們的	17	17	現在很少來	19	28	了
 RepPerkTable	rep_perk_CARTEL_RELIABLE_CHEMIST_flavor	cb1d5cf5b4585668	5	6	會獎	7	10		12	12	可靠的服務
-RepPerkTable	rep_perk_SEC_VIP_desc	e25d6b0038e5bdd3	17	18	
+RepPerkTable	rep_perk_SEC_VIP_desc	d94649f21d9bcab3	16	17		19	20	盯上	24	30	，治安部	31	32		33	33	會	34	38	來
+RepPerkTable	rep_perk_BM_RELIABLE_desc	4f726f287e796a96	12	16	上門	23	23	顧客
+RepPerkTable	rep_perk_BM_SMALL_TIME_BROKER_desc	5b7d5ff15a5704b1	0	2	扒手	13	14	高	15	17	你	18	28		32	32	越高，他們帶來	33	38	貨物就越好
+RepPerkTable	rep_perk_BM_SMALL_TIME_BROKER_flavor	fc28dceb6965c267	6	10	上有些	11	12	氣了
+RepPerkTable	rep_perk_CARTEL_RETIRED_desc	a94d017548df1f28	11	13	取	14	14	的性命
+RepPerkTable	rep_perk_LLPOORREVIEWS_flavor	7320e076001a4ae8	1	2	要有	4	4	顧客	7	10		21	22		23	25	損
+RepPerkTable	rep_perk_LLRAREGOOD_desc	d772d379fa20677c	0	10	新類型	11	13		24	24	，出售稀有貨物或違禁品
+RepPerkTable	rep_perk_LLRAREGOOD_flavor	19c83d18a3a0c7fd	2	6	有門路	7	9	就算	15	16	淘	17	24	
+RepPerkTable	rep_perk_REV_RAID_LOOT_flavor	5796e650cfc3a31f	0	0	要解放	2	3	，先	5	7		9	12	
+RepPerkTable	rep_perk_SEC_CONTRABAND_TOLERANCE_flavor	d784d7d0f5aa8f6d	1	1	會	6	11		13	13	也行不通了	17	20	一點	23	23	，
+RepPerkTable	rep_perk_SEC_IMMEDIATE_ARREST_flavor	7ee6092056a9ee9d	21	21	自	22	24	把	26	27		31	34	偽造成	36	38	需要的樣子
+RepPerkTable	rep_perk_SEC_PROTECTION_flavor	1ea30a131ea6da64	9	10	也	11	12	一定	13	15	
+RepPerkTable	rep_perk_SEC_SURPLUS_desc	21cc2f016aa3520a
+RepPerkTable	rep_perk_SEC_TRUSTED_desc	86d61cc8afd344a7	8	9		15	17	展也	18	20	放緩	21	29		31	36		41	42	開始前，你都會收到預	43	44	
+RepPerkTable	rep_perk_SEC_WATCHLIST_flavor	a9eeb1f1bb8bae52	2	3	惡	4	6		7	9	經	16	17		18	18	意	20	21	著	29	29	等著	33	33	吧
+RepPerkTable	rep_perk_UL_HOUSEHOLD_NAME_flavor	dfd92cf88cad1f21	7	8		12	14		15	15	熱門
 NetworkUpgrade	network_EVIDENCE_REMOVAL_desc	b70d433bdc937594
 NetworkUpgrade	network_GUTTERFLOW_TAP_desc	6c194d59928fb4ba	9	10	
 NetworkUpgrade	network_RUSTWATER_TAP_desc	899ffc566e99fbd0	9	10	
@@ -1046,8 +1183,8 @@ NetworkUpgrade	network_RENOVATION3_desc	f6e3f7c9f9e1199e	5	6	用
 NetworkUpgrade	network_SHOWCASE_I_desc	f51c8a0cb0646101	6	8		10	10	，
 NetworkUpgrade	network_SHOWCASE_II_desc	2d20e8c71569337b	6	8	
 NetworkUpgrade	network_MARKETPLACE_REQUESTS_desc	dcbfa98fa3d18f5d	4	5	幫	7	8	上	15	17	讓	27	30	種委託	42	44	一般	45	46		47	48	
-NetworkUpgrade	network_JACKSON1_desc	02a2a1f40dfb4eb8	43	45	隨時	48	49	販
-NetworkUpgrade	network_JACKSON2_desc	e58e33a486b2a7d3	43	45	隨時	51	52	販
+NetworkUpgrade	network_JACKSON1_desc	01b72f99880d558b	31	41	和商品	50	52	隨時	55	56	販
+NetworkUpgrade	network_JACKSON2_desc	1f9d2f8a7af4d254	31	41	和商品	50	52	隨時	58	59	販
 NetworkUpgrade	network_LANDLORD_GRACE_desc	f3ffbd7b3aafd9b0	10	11	：	14	16	漏繳	19	19	房	20	23		26	29	
 NetworkUpgrade	network_COMMERCIAL_POWER_desc	1322ae123f6be682	7	9		11	11	，
 NetworkUpgrade	network_HYPERTECH_SMUGGLER_desc	c5e05b4d040b3ac9	13	14	販	35	36	準
@@ -1056,8 +1193,7 @@ NetworkUpgrade	network_PLANT_DNA_desc	e5ca4640d605de56	30	31	碟
 NetworkUpgrade	network_VENDING_MACHINE_desc	a3a30cb365ad62ca	21	21	販	22	23	
 NetworkUpgrade	network_WILD_FIXER2_desc	60bbe5b22a519852	4	6		7	8		16	16	給你
 NetworkUpgrade	network_WILD_FIXER3_desc	6b3ba0f40e5beede	21	23	失憶
-NetworkUpgrade	network_subtitle_Referral	c4a159bd09e1c9ed	0	2	介紹
-NetworkUpgrade	network_BREWER_SHAREHOLDER_desc	35eb402b3bea67da	24	26	折扣
+NetworkUpgrade	network_BREWER_SHAREHOLDER_desc	fb81417a494aaa05	16	18	送貨	24	26	折扣
 NetworkUpgrade	network_CHEMIST_desc	a198a70b8c44b638	21	23	廉價的違禁藥物，	28	35	用途都有	37	40	會收到	42	42	名片，	43	44	來	46	47	這個	50	53	
 NetworkUpgrade	network_GUN_PERMIT_III_desc	462b8b594df7f404	19	21	只發給	30	32		39	41	讓	42	42	能	56	59		71	72	
 NetworkUpgrade	network_GUN_PERMIT_II_desc	cea3c7e4019ced01	3	4	會	19	21	只發給	26	28		35	37	讓	38	38	能	52	55		67	68	
@@ -1065,13 +1201,19 @@ NetworkUpgrade	network_GUN_PERMIT_I_desc	e6c768b5dc011f0e	3	4	會	19	21	只發�
 NetworkUpgrade	network_MINER_desc	d746e4e5b706664e	21	23	讓	24	24	可以	32	35	會收到	37	37	名片，	38	39	來	41	42	這個	45	48	
 NetworkUpgrade	network_RUINED_MACHINE_UNLOCK_desc	dd3516be8f826df8	0	0	第二天會有	2	3	廢料客來訪，	5	8	怎麼把	17	28	
 NetworkUpgrade	network_WINEMAKER_desc	28903196ed8b4b6f	53	55	內容
-NetworkUpgrade	network_BREWER_desc	d686890699715edf	36	39	會收到一張名片，用來聯絡	40	41	個	44	47	
+NetworkUpgrade	network_BREWER_desc	fb52ba8eca91fede	23	34	從此擁有穩定	37	39	貨源	41	44	會收到	46	46	名片，	47	48	來	50	51	這個	54	57	
 NetworkUpgrade	network_BUY_REFERAL_desc	7b26195e24d0f6a6	2	4		6	7	付一筆	13	14	就	15	21	介紹他認識的	23	30	上門	37	38	裡
 NetworkUpgrade	network_CRIMINEL_NETWORK_desc	c887f474400ca0e5	2	4		6	7	付一筆	13	14	就	15	25	介紹他認識、出手闊綽	31	38	上門	41	42	這項	46	47	讓	48	50	獲得
-NetworkUpgrade	network_PHARMA_desc	0e856a9ee5a64f3e	30	32	能	34	46	取得	49	50		51	53	以採購	58	61	會收到	63	63	名片，	64	65	來	67	68	這個	71	74	
+NetworkUpgrade	network_PHARMA_desc	510533ad9d712f5a	17	18	劑師	27	27	從此	28	31		33	34		48	51	會收到	53	53	名片，	54	55	來	57	58	這個	61	64	
 NetworkUpgrade	network_SEC_GRACE_desc	b3b1a0adf0dc3d6e	0	0	萬一治安部盤查員查到會讓你坐牢的違禁品，	3	5	會動	6	8		14	39	讓	41	43	收	46	48	了事	53	54	只能用	56	58	
 NetworkUpgrade	network_SELL_REFERAL_desc	54bf8d3e9068e4de	2	4		6	7	付一筆	13	14	就	15	21	介紹他認識的	23	30	上門
 NetworkUpgrade	network_POWER_HIJACK2_desc	852606793c803fce	5	6	在	10	11	上	12	13	
+NetworkUpgrade	network_CHEMIST_SHAREHOLDER_desc	873d36e5bc225c5c	18	20	送貨
+NetworkUpgrade	network_INSPECTION_INFORMANT_desc	a44feac514c2d303	22	23		41	43	治安部的每一次	45	46		50	55	如果是	57	58	盤	59	61	，他就	62	63	不上忙了
+NetworkUpgrade	network_MINER_SHAREHOLDER_desc	4225213cbd1ff4b9	17	19	送貨
+NetworkUpgrade	network_PHARMA_SHAREHOLDER_desc	56344223d6c6dd74	6	7	劑師	17	19	送貨
+NetworkUpgrade	network_PHARMA_SHAREHOLDER_title	2ab2f9a045bf6f20	8	9	劑師
+NetworkUpgrade	network_PHARMA_title	a59e08d47a5f0578	4	5	劑師
 PhoneDialogue	caulson_ready	d834812018a8b86b	0	1	好	9	11		14	14	給你
 PhoneDialogue	wild2	e2615f4bef50ae19	0	3	有什麼	4	8	為	9	9	效勞的
 PhoneDialogue	red_imp_rep_intro4	899ff1f83fe7cbed	9	9	送貨	11	13	
@@ -1085,6 +1227,10 @@ PhoneDialogue	red_imp_rep_intro1	4cbe18321eff05c1	8	13	說	15	16	會打	17	18
 PhoneDialogue	odin_yes	a1673b4ee2af5302	0	1	對
 PhoneDialogue	dale_regular2	c129b9e1c09d60da	0	0	先	1	2	定	3	4	旁
 PhoneDialogue	red_imp_rep_intro2	b72477eed4183230	0	0	以後	1	2	就
+PhoneDialogue	ashish_intro2	c2d4074dc13efbd3	0	5	想	8	8	儘管說	10	12		13	14	上給	15	17	弄
+PhoneDialogue	ashish_intro3	b0b5d0e73142d3a4	0	5	別問東問西	7	10	好吧
+PhoneDialogue	dale_intro6	3ea2f10d9872acc0	7	10		12	12	員配送
+PhoneDialogue	odin_blacklisted2	5dbad5a5e6f5411d	0	2		4	5	打
 Hint	negociation_interface_hover	2ac6dc74f0fec0ef	13	14	透
 Hint	customer_counter_hover	42c441d66a7a271d	4	4	還在排	5	9		12	12	人	13	14	
 Hint	display_case_hover	719f4d705d9aea75	0	1	把	4	8	在這裡，	10	11	有
@@ -1099,6 +1245,11 @@ ClientName	name_mercenary	a598c5f59bbfabe9	0	1
 ClientName	name_shopping_mercenary	c28dcc8a196fe58c	5	6	
 ClientName	name_scalper	5e3625caabcf4e00	2	4	
 ClientName	name_upper_levels_pharmacist	a59e08d47a5f0578	4	5	劑師
+ClientName	name_courrier	db7a3a6da359ee79	0	2	送貨
+ClientName	name_desperate_lover	2f745df4342c9b9a	0	2	焦急	3	4	戀
+ClientName	name_gp_mining_courrier	3b42ba902f159e38	4	6	送貨
+ClientName	name_pharmacist	9982f0bee00f6c4e	1	2	劑師
+ClientName	name_red_imp_courrier	14c1ff3f655fa26d	3	5	送貨
 Interactable	door_crackdown	b7db093738a3ad07	2	4	
 Interactable	vending_fountain_tooltip	eb00c30e06393baf	0	0	自動
 Tutorial	tuto_shutter	6f46d6e64652fbbd
@@ -1106,8 +1257,9 @@ Tutorial	tuto_display_case	55e8094ab7f37e79
 Tutorial	tuto_drag_select	e1b0350ef730d1a9	7	8	曳
 Tutorial	tuto_sort_menu	de0522af695907de	0	4	在	7	8		10	12	格上按右鍵
 Tutorial	tuto_buy	549dd79e3633c3ae	7	8		13	14		20	22	把它	23	24	到
-Tutorial	tuto_drag	8a14db992c943624	0	1	把	4	5	進	7	9	來
+Tutorial	tuto_drag	3015436dbf998bfe	0	3	把筆記	4	5	進	7	10	來
 Tutorial	tuto_right_click	d141045a09889335	0	0	在物品上按	2	7	，
 Tutorial	tuto_sell	288aa8afd722f132	7	8		13	14		20	22	把它	23	24	到
 Tutorial	tuto_double_click	d891456b333b613d	3	3	在物品上	6	10	來
-Tutorial	tuto_transfer	2147d3efd79f6ba6	6	7	
+Tutorial	tuto_transfer	fa5293ce41e5ccf1	0	3	按住	4	10	trl	12	13	物品，即可	17	19	。
+Tutorial	tuto_bargain2	08c21118dcae9cea	0	2	在	6	6	裡	10	15	爭取對自己	16	25	有利	29	29	也可以給顧客讓利。	33	35	顧客	43	44	獲	48	50	

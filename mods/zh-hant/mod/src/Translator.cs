@@ -32,7 +32,7 @@ namespace ProbablyStolenZhHant
             new Dictionary<string, (string, (int, int, string)[])>(StringComparer.Ordinal);
         bool[] _changes;
 
-        /// <summary>簡中缺翻的條目（表/key → 譯文），由 MissingTranslations 在產生字串時補上。</summary>
+        /// <summary>簡中缺翻的條目（表/key → 譯文），由 MissingTranslations 在遊戲取字串時（LocHelper.Get）或顯示時補上。</summary>
         public readonly Dictionary<string, string> Fills = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // 單位改成英文時，Fills 的單位沒換之前的樣子（TextConverter 照三個開關都開時的內容建短詞表用）；單位都用中文時不用
@@ -43,13 +43,10 @@ namespace ProbablyStolenZhHant
 
         /// <summary>
         /// 原文漏了英文有的佔位符（例如以物易物的提示少了 {0}）的條目：表/key → 補上佔位符的譯文。
-        /// 只在畫面顯示時轉換的話，遊戲已經代入完參數，參數早就丟了；所以由 MissingTranslations 在字串表產生字串時代入。
-        /// 這條的逐條修正生效（原文雜湊相符）才放進來，遊戲更新改了原文就不套用。
+        /// 只在畫面顯示時轉換的話，遊戲已經代入完參數，參數早就丟了；所以由 MissingTranslations 在遊戲取字串（LocHelper.Get）、
+        /// 參數還在的時候代入。這條的逐條修正生效（原文雜湊相符）才放進來，遊戲更新改了原文就不套用。
         /// </summary>
         public readonly Dictionary<string, string> WithArgs = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        /// <summary>WithArgs 各條的簡中原文；GenerateLocalizedString 每次查字串都會經過，先比原文，對上了才查 key。</summary>
-        public readonly HashSet<string> WithArgsSources = new HashSet<string>(StringComparer.Ordinal);
 
         readonly Dictionary<string, string> _args = new Dictionary<string, string>(StringComparer.Ordinal);
         public int ArgCount => _args.Count;
@@ -352,7 +349,7 @@ namespace ProbablyStolenZhHant
                 {
                     OverridesApplied++;
                     r = Patch(r, ov.ops);
-                    if (_args.TryGetValue(name, out var a)) { WithArgs[name] = a; WithArgsSources.Add(src); }
+                    if (_args.TryGetValue(name, out var a)) WithArgs[name] = a;
                 }
                 else StaleOverrides.Add(name);
             }

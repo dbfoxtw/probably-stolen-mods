@@ -97,6 +97,9 @@ namespace ProbablyStolenZhHant
     /// 目標用字串找、找不到就略過（Prepare 傳回 false），不讓整個 mod 因為 Text Animator 改版而啟用失敗；
     /// 屬性寫 typeof(TAnimCore) 的話，目標不見時 PatchAll 會丟例外。Febucci 不在遊戲掃描的「外部組件」清單裡，
     /// 用字串的 AccessTools.Method 不算 reflection-external（check 的「官方掃描」確認）。
+    /// Rev13（2026-11-09）的掃描器起 patch Unity、系統的方法算 reflection-external（12-10 起拒絕），這個 patch 沒被擋
+    /// （Febucci 不在它當成外部的名稱前綴裡）；但官方指南的通則寫「遊戲以外的 patch 目標算 reflection-external」，
+    /// 免費的只列 Assembly-CSharp 與三個 UI 命名空間，和掃描器的實作不一致。2026-11-09 已去問官方，12-10 的版本出來再掃一次。
     /// </summary>
     [HarmonyPatch]
     static class TextAnimatorPatch
