@@ -1,4 +1,4 @@
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,8 +11,10 @@ namespace ProbablyStolenTodo
     /// </summary>
     sealed partial class TodoPanel
     {
-        /// <summary>設定頁內容的高度（未縮放的單位，最後一行「存檔點」的說明也算進去；第八輪最上面多了樣式的兩排按鈕）。</summary>
-        const float SettingsContentH = 540;
+        /// <summary>
+        /// 設定頁內容的高度（未縮放的單位，最後一行「存檔點」的說明也算進去；第八輪最上面多了樣式的兩排按鈕；/// 2.0.0 拿掉摺疊快捷鍵那一行，高 56；鍵改到遊戲的按鍵綁定）。
+        /// </summary>
+        const float SettingsContentH = 484;
 
         /// <summary>設定頁（外層擋住清單的點擊，不縮放）、裡面縮放的那一塊（裁掉超出的部分）、捲動的內容、捲軸、標題列的齒輪。</summary>
         RectTransform _settingsPage, _settingsInner, _settingsContent, _settingsBar, _gearBtn;
@@ -92,12 +94,10 @@ namespace ProbablyStolenTodo
             _showProgress = progressBtn.GetComponent<Button>();
             _showProgressValue = progressBtn.GetComponentInChildren<TextMeshProUGUI>();
 
-            // 摺疊快捷鍵：[Ctrl+B]，點了再按想要的鍵；下面一行是改鍵時的提示或撞鍵警告（第五輪，TodoPanel.Hotkey.cs）
-            y = 222;
-            BuildHotkeyRow(page, y);
+            // 摺疊快捷鍵 2.0.0 起不在這裡：在遊戲的「選項 → 按鍵綁定」（CollapseKey.cs）
 
             // 換行：Enter｜Shift+Enter
-            y = 278;
+            y = 222;
             Label(page, _s.Newline, y);
             _nlEnter = Segment(page, _s.NewlineEnter, 0, y + 26, () => SetNewline(Settings.NewlineEnter));
             _nlShift = Segment(page, _s.NewlineShift, 1, y + 26, () => SetNewline(Settings.NewlineShiftEnter));
@@ -106,7 +106,7 @@ namespace ProbablyStolenTodo
             _newlineHint.alignment = TextAlignmentOptions.TopLeft;
 
             // Enter 後自動新增：開／關（只有 Shift+Enter 換行時能按，否則變灰）
-            y = 356;
+            y = 300;
             _autoNextLabel = NewText("AutoNextLabel", page, _s.AutoNext, 16, _t.Text);
             TopStretch(_autoNextLabel.rectTransform, y, 28, 14, 12 + 56 + 6);
             _autoNextLabel.alignment = TextAlignmentOptions.MidlineLeft;
@@ -119,7 +119,7 @@ namespace ProbablyStolenTodo
             _autoNextValue = toggle.GetComponentInChildren<TextMeshProUGUI>();
 
             // 存檔點：馬上存｜跟著遊戲存檔
-            y = 396;
+            y = 340;
             Label(page, _s.SaveMode, y);
             _saveNow = Segment(page, _s.SaveImmediate, 0, y + 28, () => SetSaveMode(Settings.SaveImmediate));
             _saveFollow = Segment(page, _s.SaveFollow, 1, y + 28, () => SetSaveMode(Settings.SaveFollowGame));
@@ -186,18 +186,16 @@ namespace ProbablyStolenTodo
             }
             FlushEdits();
             HideConfirm();
-            EndCapture();
             _settingsOpen = open;
             _settingsPage.gameObject.SetActive(_settingsOpen);
             ApplyOverlay();
             _gearBtn.GetComponent<Image>().color = _settingsOpen ? _t.TitleActive : _t.TitleText;
-            if (_settingsOpen) RefreshSettings(); // 撞鍵警告：打開時再看一次（查過的鍵會越來越多）
+            if (_settingsOpen) RefreshSettings();
         }
 
         void CloseSettings()
         {
             if (!_settingsOpen) return;
-            EndCapture();
             _settingsOpen = false;
             _settingsPage.gameObject.SetActive(false);
             ApplyOverlay();
@@ -214,7 +212,7 @@ namespace ProbablyStolenTodo
             float y = _settingsScroll;
             if (PointerOver())
             {
-                float wheel = InputBlocker.RawScroll().y;
+                float wheel = Input.mouseScrollDelta.y;
                 if (Mathf.Abs(wheel) >= 20) wheel /= 120f; // 少數裝置一格回報 120，換算成格數
                 y -= wheel * ScrollStep;
             }
@@ -240,7 +238,6 @@ namespace ProbablyStolenTodo
             _opacityValue.text = $"{Mathf.RoundToInt(_settings.OpacityK * 100)}%";
             Select(_showProgress, _settings.ShowProgress);
             _showProgressValue.text = _settings.ShowProgress ? _s.On : _s.Off;
-            RefreshHotkey();
             Select(_nlEnter, !_settings.ShiftEnterNewline);
             Select(_nlShift, _settings.ShiftEnterNewline);
             _newlineHint.gameObject.SetActive(_settings.ShiftEnterNewline);

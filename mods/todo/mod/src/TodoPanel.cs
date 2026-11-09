@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -30,7 +30,7 @@ namespace ProbablyStolenTodo
         const float MinW = 320, MinH = 300, SettingsH = 300, GripSize = 18;
         /// <summary>
         /// 標題列右邊的按鈕：由右到左是摺疊、設定、編輯模式、鎖定位置（TitleBtns 顆）；寬 TitleBtn、間距 2。
-        /// 最窄（320）時名稱還有 124 寬，「待辦清單」「To-do」放得下。
+        /// 最窄（320）時名稱還有 124 寬，「待辦」「To-do」放得下。
         /// </summary>
         const float TitleBtn = 26, TitleProgressW = 64;
         const int TitleBtns = 4;
@@ -71,6 +71,8 @@ namespace ProbablyStolenTodo
         readonly Settings _settings;
         readonly Action<SlotData> _save;
         readonly Action _saveSettings;
+        /// <summary>今天是遊戲的第幾天（勾選每日待辦時記下來）；這次讀檔還沒對照到天數時是 null。</summary>
+        readonly Func<int?> _today;
         readonly List<Row> _rows = new List<Row>();
 
         GameObject _root;
@@ -122,13 +124,14 @@ namespace ProbablyStolenTodo
         CanvasGroup _group;
         float _previewUntil;
 
-        public TodoPanel(TMP_FontAsset font, Strings s, Settings settings, Action<SlotData> save, Action saveSettings)
+        public TodoPanel(TMP_FontAsset font, Strings s, Settings settings, Action<SlotData> save, Action saveSettings, Func<int?> today)
         {
             _font = font;
             _s = s;
             _settings = settings;
             _save = save;
             _saveSettings = saveSettings;
+            _today = today;
             _t = Theme.For(settings.StyleId);
             _w = _wantW = settings.PanelW ?? W;
             _h = _wantH = settings.PanelH ?? H;
@@ -471,11 +474,7 @@ namespace ProbablyStolenTodo
         void ApplyCollapsed()
         {
             bool c = _settings.Collapsed;
-            if (c)
-            {
-                HideConfirm();
-                EndCapture(); // 設定頁跟著藏起來了，不要繼續等玩家按鍵
-            }
+            if (c) HideConfirm();
             _body.gameObject.SetActive(!c); // 藏起來時正在編輯的輸入框會結束編輯並存檔
             if (_titleLine != null) _titleLine.gameObject.SetActive(!c); // 摺起來時下面緊接著外框，兩條疊成一條粗線
             if (!c) _needResize = true;
@@ -555,12 +554,12 @@ namespace ProbablyStolenTodo
         }
 
         /// <summary>
-        /// 不透明度（每幀）：平常照設定值；滑鼠在單上、打字、拖動、縮放、排列、改快捷鍵時恢復 100%（要操作時看得清楚），
+        /// 不透明度（每幀）：平常照設定值；滑鼠在單上、打字、拖動、縮放、排列時恢復 100%（要操作時看得清楚），
         /// 但剛按過不透明度的 −／＋ 時照設定值（按的時候滑鼠一定在單上，不然看不出效果）。
         /// </summary>
         void UpdateAlpha()
         {
-            bool busy = PointerOver() || AnyFocused() || _dragging || _resizing || Reordering || _capturing;
+            bool busy = PointerOver() || AnyFocused() || _dragging || _resizing || Reordering;
             float target = busy && Time.unscaledTime >= _previewUntil ? 1f : _settings.OpacityK;
             float a = Mathf.MoveTowards(_group.alpha, target, Time.unscaledDeltaTime * FadeSpeed);
             if (a != _group.alpha) _group.alpha = a;
@@ -636,7 +635,6 @@ namespace ProbablyStolenTodo
                 _dragging = false;
                 if (Reordering) EndReorder();
                 if (_resizing) EndResize();
-                EndCapture();
             }
             _root.SetActive(v); // 藏起來時輸入框會結束編輯，打到一半的字照樣存檔
         }
@@ -683,7 +681,7 @@ namespace ProbablyStolenTodo
             }
             if (!_dragging)
             {
-                if (!InputBlocker.RawMouseDown(0)) return;
+                if (!Input.GetMouseButtonDown(0)) return;
                 if (RectTransformUtility.RectangleContainsScreenPoint(_title, mouse, null))
                 {
                     if (OverTitleButton(mouse)) return; // 按的是標題列上的按鈕，不是拖動
@@ -739,7 +737,7 @@ namespace ProbablyStolenTodo
         }
 
         /// <summary>
-        /// 清單的捲動：滑鼠在懸浮單上時讀滾輪（遊戲那邊的滾輪已被 InputBlocker 擋掉）；
+        /// 清單的捲動：滑鼠在懸浮單上時直接讀 Input 的滾輪（遊戲物品操作的滾輪由 InputBlocker 在 UpdateMouseScroll 擋掉，不會跟著捲）；
         /// 正在編輯的那一列剛開始編輯或長高（例如打字換行）時，捲到看得見它；最後更新捲軸。
         /// 內容的位置：anchoredPosition.y＝0 是最上面，往下捲時變大。
         /// </summary>
@@ -760,7 +758,7 @@ namespace ProbablyStolenTodo
             }
             if (PointerOver() && !Overlay)
             {
-                float wheel = InputBlocker.RawScroll().y;
+                float wheel = Input.mouseScrollDelta.y;
                 if (Mathf.Abs(wheel) >= 20) wheel /= 120f; // 少數裝置一格回報 120，換算成格數
                 y -= wheel * ScrollStep; // 往上滾＝往清單上面看（一格約一列；清單那一塊整個縮放，單位不用換算）
             }
@@ -815,21 +813,21 @@ namespace ProbablyStolenTodo
             return new Vector2(Mathf.Clamp(p.x, f, Mathf.Max(f, size.x - _w - f)), Mathf.Clamp(p.y, -Mathf.Max(f, size.y - CurH - f), -f));
         }
 
-        /// <summary>打字中（給 InputBlocker 擋遊戲的鍵盤用）：輸入框正在輸入，或設定頁正在等玩家按快捷鍵（不然按 P 會打開遊戲的選項）。</summary>
-        public bool Typing => AnyFocused() || _capturing;
+        /// <summary>
+        /// 打字中（給 InputBlocker 用：遊戲的「正在打字」與按鍵綁定、Esc、小鍵盤看它）：懸浮單的輸入框正在輸入。
+        /// 1.0.x 設定頁改快捷鍵時也算（2.0.0 起鍵綁在遊戲的按鍵綁定，沒有這個模式了）。
+        /// </summary>
+        public bool Typing => AnyFocused();
 
-        public bool AnyFocused() => FocusedInput() != null;
-
-        /// <summary>正在輸入的輸入框；沒有就回 null（除錯模式的輸入法量測也用它）。</summary>
-        public TMP_InputField FocusedInput()
+        public bool AnyFocused()
         {
-            if (!_visible) return null;
+            if (!_visible) return false;
             foreach (var r in _rows)
-                if (r.Input != null && r.Input.isFocused) return r.Input;
-            return null;
+                if (r.Input != null && r.Input.isFocused) return true;
+            return false;
         }
 
-        /// <summary>滑鼠在單上（連外框）：InputBlocker 擋遊戲的點擊、不透明度恢復都看這個。</summary>
+        /// <summary>滑鼠在單上（連外框）：InputBlocker 擋遊戲的點擊、滾輪、雙擊、射擊與設 hoveringStoreUI，不透明度恢復都看這個。</summary>
         public bool PointerOver() =>
             _visible && RectTransformUtility.RectangleContainsScreenPoint(_hitArea != null ? _hitArea : _panel, Input.mousePosition, null);
 

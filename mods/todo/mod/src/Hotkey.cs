@@ -1,69 +1,56 @@
 using System;
-using System.Collections.Generic;
 
 namespace ProbablyStolenTodo
 {
     /// <summary>
-    /// 快捷鍵在設定檔裡的文字格式：修飾鍵（Ctrl、Shift、Alt，照這個順序）加主要的鍵，用「+」連起來，例如 Ctrl+B、Ctrl+Shift+F9。
-    /// 主要的鍵存 Unity KeyCode 的名稱（B、F9、Alpha1、BackQuote…），由 mod 那邊轉成 KeyCode；KeyCode 名稱裡沒有「+」，不會和分隔符號混在一起。
-    /// 不碰 Unity，離線測試 mod/verify 直接測。
+    /// 摺疊整張的鍵在設定檔（settings.json 的 hotkey）裡的文字：單一個 Unity KeyCode 的名稱（例如 BackQuote、F6），空字串＝沒有。
+    /// 2.0.0 起鍵綁在遊戲的「選項 → 按鍵綁定」，那裡只能綁單鍵；1.0.x 的設定頁可以搭配 Ctrl／Shift／Alt（例如 Ctrl+B），
+    /// 舊設定檔裡的組合鍵當成沒有（拿掉修飾鍵只留 B 的話，平常打 B 就會觸發），由呼叫端記一次 log。
+    /// 不碰 Unity：KeyCode 由呼叫端當成型別參數傳進來（離線測試 mod/verify 用一個照 KeyCode 數值抄的列舉）。
     /// </summary>
-    sealed class Hotkey
+    static class Hotkey
     {
-        public bool Ctrl, Shift, Alt;
-        /// <summary>主要的鍵：Unity KeyCode 的名稱。</summary>
-        public string Key = "";
-
-        /// <summary>讀設定檔的字串；空的、格式不對（不認得的修飾鍵、沒有主要的鍵）回傳 null＝沒有快捷鍵。大小寫不拘。</summary>
-        public static Hotkey Parse(string s)
+        public enum Result
         {
-            if (string.IsNullOrWhiteSpace(s)) return null;
-            var parts = s.Split('+');
-            var h = new Hotkey { Key = parts[parts.Length - 1].Trim() };
-            if (h.Key.Length == 0 || IsModifier(h.Key)) return null;
-            for (int i = 0; i < parts.Length - 1; i++)
-            {
-                switch (parts[i].Trim().ToLowerInvariant())
-                {
-                    case "ctrl": case "control": h.Ctrl = true; break;
-                    case "shift": h.Shift = true; break;
-                    case "alt": h.Alt = true; break;
-                    default: return null;
-                }
-            }
-            return h;
+            /// <summary>沒有鍵（空字串或 None）。</summary>
+            None,
+            /// <summary>讀到一個可以用的鍵。</summary>
+            Key,
+            /// <summary>1.0.x 的組合鍵（有「+」）：當成沒有。</summary>
+            Combo,
+            /// <summary>看不懂（不是 KeyCode 名稱、是數字、不是綁得了的鍵）：當成沒有。</summary>
+            Invalid,
         }
 
-        static bool IsModifier(string k)
+        /// <summary>
+        /// 讀設定檔的字串。只收名稱、不收數字（Enum.TryParse 會把「12345」這種沒定義的值也收下，照一鍵關窗的 TryParseKey），
+        /// 大小寫不拘；allowed 決定哪些鍵可以用（摺疊鍵用 Bindable）。不是 Key 時 key 是 default（None）。
+        /// </summary>
+        public static Result Parse<T>(string s, Func<T, bool> allowed, out T key) where T : struct, Enum
         {
-            var l = k.ToLowerInvariant();
-            return l == "ctrl" || l == "control" || l == "shift" || l == "alt";
+            key = default;
+            s = (s ?? "").Trim();
+            if (s.Length == 0) return Result.None;
+            if (s.IndexOf('+') >= 0) return Result.Combo;
+            if (char.IsDigit(s[0]) || s[0] == '-') return Result.Invalid;
+            if (!Enum.TryParse(s, true, out T k) || !Enum.IsDefined(typeof(T), k)) return Result.Invalid;
+            if (k.Equals(default(T))) return Result.None;
+            if (!allowed(k)) return Result.Invalid;
+            key = k;
+            return Result.Key;
         }
 
-        /// <summary>存進設定檔的字串（修飾鍵照固定順序）。</summary>
-        public override string ToString() => Prefix() + Key;
+        /// <summary>
+        /// 遊戲的按鍵綁定擷取得到的鍵（KeyBindHelper.CaptureKeys），參數是 KeyCode 的數值：鍵盤鍵（排在 Mouse0＝323 前面的），
+        /// 遊戲 VERSION 100-Rev9 起再加滑鼠的 Mouse1～Mouse6（324～329；左鍵 Mouse0 遊戲保留不給綁）。搖桿鍵（330 起）不收。
+        /// 寫成數值放在這裡，離線測試才測得到同一份判斷（CollapseKey 和 mod/verify 都呼叫它）。
+        /// 在 Rev9 設了滑鼠鍵再切回舊版的遊戲，照樣讀得進來、按了照樣有反應（舊版的選項顯示得出來，只是設不出新的滑鼠鍵）。
+        /// </summary>
+        public static bool Bindable(int keyCode) => keyCode < Mouse0 || (keyCode > Mouse0 && keyCode <= Mouse6);
 
-        /// <summary>給玩家看的名稱：Alpha1 → 1、BackQuote → `、Keypad5 → Num 5 之類；其他照 KeyCode 名稱。</summary>
-        public string Display() => Prefix() + KeyLabel(Key);
+        const int Mouse0 = 323, Mouse6 = 329;
 
-        string Prefix() => (Ctrl ? "Ctrl+" : "") + (Shift ? "Shift+" : "") + (Alt ? "Alt+" : "");
-
-        static readonly Dictionary<string, string> Labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["BackQuote"] = "`", ["Minus"] = "-", ["Equals"] = "=", ["LeftBracket"] = "[", ["RightBracket"] = "]",
-            ["Backslash"] = "\\", ["Semicolon"] = ";", ["Quote"] = "'", ["Comma"] = ",", ["Period"] = ".", ["Slash"] = "/",
-            ["Return"] = "Enter", ["Escape"] = "Esc", ["Delete"] = "Del", ["Insert"] = "Ins", ["PageUp"] = "PgUp", ["PageDown"] = "PgDn",
-            ["UpArrow"] = "Up", ["DownArrow"] = "Down", ["LeftArrow"] = "Left", ["RightArrow"] = "Right",
-            ["KeypadPeriod"] = "Num .", ["KeypadDivide"] = "Num /", ["KeypadMultiply"] = "Num *", ["KeypadMinus"] = "Num -",
-            ["KeypadPlus"] = "Num +", ["KeypadEnter"] = "Num Enter", ["KeypadEquals"] = "Num =",
-        };
-
-        static string KeyLabel(string k)
-        {
-            if (Labels.TryGetValue(k, out var l)) return l;
-            if (k.Length == 6 && k.StartsWith("Alpha", StringComparison.OrdinalIgnoreCase) && char.IsDigit(k[5])) return k.Substring(5);
-            if (k.Length == 7 && k.StartsWith("Keypad", StringComparison.OrdinalIgnoreCase) && char.IsDigit(k[6])) return "Num " + k[6];
-            return k;
-        }
+        /// <summary>存進設定檔的字串：KeyCode 的名稱，None（default）是空字串。</summary>
+        public static string Format<T>(T key) where T : struct, Enum => key.Equals(default(T)) ? "" : key.ToString();
     }
 }

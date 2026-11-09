@@ -6,3 +6,5 @@ build/
 .venv/
 __pycache__/
 logs/
+# 實機測試前的存檔備份（不進 repo）
+backup/

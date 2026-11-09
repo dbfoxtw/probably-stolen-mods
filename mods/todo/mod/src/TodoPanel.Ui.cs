@@ -1,5 +1,5 @@
 using System;
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,7 +9,7 @@ namespace ProbablyStolenTodo
     /// <summary>懸浮單：建立 UI 物件的小工具。</summary>
     sealed partial class TodoPanel
     {
-        /// <summary>UI 回呼由遊戲（IL2CPP）那邊呼叫，例外不能丟回去，寫進 log 就好。</summary>
+        /// <summary>UI 回呼由 Unity 的事件系統呼叫，例外不要丟回去（會中斷那次事件），寫進 log 就好。</summary>
         static void Safe(string what, Action a)
         {
             try { a(); }
@@ -41,7 +41,7 @@ namespace ProbablyStolenTodo
         /// <summary>
         /// 按鈕。有底色的文字按鈕在樣式有按鈕外框時（經典以外）加一圈外框：四條細邊畫在按鈕內側、裡面縮一圈的 Fill 才是按鈕的顏色
         /// （ColorTint 只改 Fill），兩者不重疊——外框要是整塊墊在底下，半透明的按鈕（資訊）或整張變淡時按鈕面會透出外框色（審查找到）。
-        /// 外層 Image 透明，只負責接點擊。不用 UGUI 的 Outline 效果：遊戲沒用到的話 IL2CPP 可能把它裁掉。
+        /// 外層 Image 透明，只負責接點擊。不用 UGUI 的 Outline 效果（Demo 的 IL2CPP 時遊戲沒用到的話可能被裁掉；沿用同一種畫法）。
         /// 字的顏色預設是樣式的按鈕字色；透明底的按鈕（分區的＋、×）由呼叫端指定。
         /// </summary>
         RectTransform NewButton(string name, Transform parent, string label, Color normal, Color hover, Action onClick, float labelSize = 18, Color? labelColor = null)
@@ -68,13 +68,13 @@ namespace ProbablyStolenTodo
             b.targetGraphic = target;
             SetColors(b, normal, hover, hover);
             NoNavigation(b);
-            b.onClick.AddListener((Action)(() => Safe(name, () =>
+            b.onClick.AddListener(() => Safe(name, () =>
             {
                 // 按完就取消選取：不然玩家之後按空白鍵或 Enter 給遊戲用時，UGUI 會再按一次這顆按鈕
                 var es = EventSystem.current;
                 if (es != null) es.SetSelectedGameObject(null);
                 onClick();
-            })));
+            }));
             if (label != null)
             {
                 var t = NewText("Label", rt, label, labelSize, labelColor ?? _t.ButtonText);
@@ -115,13 +115,13 @@ namespace ProbablyStolenTodo
         static void SetColors(Selectable s, Color normal, Color hover, Color pressed)
         {
             var cb = s.colors;
-            cb.m_NormalColor = normal;
-            cb.m_HighlightedColor = hover;
-            cb.m_PressedColor = pressed;
-            cb.m_SelectedColor = normal; // 選取中不另外變色（按鈕按完會取消選取，輸入框編輯中靠游標看得出來）
-            cb.m_DisabledColor = normal;
-            cb.m_ColorMultiplier = 1;
-            cb.m_FadeDuration = 0.05f;
+            cb.normalColor = normal;
+            cb.highlightedColor = hover;
+            cb.pressedColor = pressed;
+            cb.selectedColor = normal; // 選取中不另外變色（按鈕按完會取消選取，輸入框編輯中靠游標看得出來）
+            cb.disabledColor = normal;
+            cb.colorMultiplier = 1;
+            cb.fadeDuration = 0.05f;
             s.colors = cb;
         }
 

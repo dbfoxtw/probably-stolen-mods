@@ -32,20 +32,20 @@ namespace ProbablyStolenTodo
             _store.Save(d);
         }
 
-        /// <summary>遊戲剛存檔：有還沒寫的改動就寫進去。回傳有沒有寫。</summary>
+        /// <summary>遊戲剛存檔：有還沒寫的改動就寫進去。回傳有沒有寫。寫失敗時留著「有改動」，下次遊戲存檔（或切回馬上存）再寫。</summary>
         public bool GameSaved(SlotData d)
         {
             if (d == null || !Dirty || !_following()) return false;
-            _store.Save(d);
+            if (!_store.Save(d)) return false;
             Dirty = false;
             return true;
         }
 
-        /// <summary>設定改了：不再跟著遊戲存檔時，把還沒寫的改動寫進去。回傳有沒有寫。</summary>
+        /// <summary>設定改了：不再跟著遊戲存檔時，把還沒寫的改動寫進去。回傳有沒有寫。寫失敗時留著「有改動」。</summary>
         public bool SettingsChanged(SlotData d)
         {
             if (d == null || !Dirty || _following()) return false;
-            _store.Save(d);
+            if (!_store.Save(d)) return false;
             Dirty = false;
             return true;
         }

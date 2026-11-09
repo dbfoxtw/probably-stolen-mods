@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 using static ProbablyStolenTodo.IconShapes;
 
@@ -51,7 +50,7 @@ namespace ProbablyStolenTodo
             float ax = N * -0.24f, ay = N * 0.02f, mx = N * -0.07f, my = N * -0.16f, cx = N * 0.25f, cy = N * 0.19f;
             var color = on ? th.BoxFill : th.BoxBorder;
             Color ring = th.BoxFillBorder, mk = th.BoxMark;
-            var px = new Il2CppStructArray<Color32>(N * N);
+            var px = new Color32[N * N];
             for (int y = 0; y < N; y++)
                 for (int x = 0; x < N; x++)
                 {
@@ -84,7 +83,7 @@ namespace ProbablyStolenTodo
         static Sprite White(Func<float, float, float> shape)
         {
             var a = Render(shape);
-            var px = new Il2CppStructArray<Color32>(N * N);
+            var px = new Color32[N * N];
             for (int i = 0; i < a.Length; i++) px[i] = Pixel(1f, 1f, 1f, a[i]);
             return ToSprite(px);
         }
@@ -100,7 +99,7 @@ namespace ProbablyStolenTodo
             return c;
         }
 
-        static Sprite ToSprite(Il2CppStructArray<Color32> px)
+        static Sprite ToSprite(Color32[] px)
         {
             var tex = new Texture2D(N, N, TextureFormat.RGBA32, true);
             tex.filterMode = FilterMode.Trilinear;
@@ -113,6 +112,6 @@ namespace ProbablyStolenTodo
             return sprite;
         }
 
-        static byte ToByte(float v) => (byte)Math.Round(Math.Clamp(v, 0f, 1f) * 255f);
+        static byte ToByte(float v) => (byte)Math.Round(MathUtil.Clamp(v, 0f, 1f) * 255f);
     }
 }

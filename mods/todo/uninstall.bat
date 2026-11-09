@@ -1,5 +1,6 @@
 @echo off
-rem Remove the mod dll from the game (your to-do data in UserData\ProbablyStolenTodo is kept).
+rem Remove the mod from the game (deletes Mods\dbfoxtw.todo). Close the game first.
+rem Your to-do lists and settings (ModData\dbfoxtw_todo in the save folder) are kept.
 rem This file is ASCII-only on purpose: cmd.exe parses .bat files byte by byte.
 setlocal
 cd /d "%~dp0"

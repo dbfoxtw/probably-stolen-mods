@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -23,7 +23,7 @@ namespace ProbablyStolenTodo
             public RectTransform Del, CheckRt, RepeatRt, BarRt, AddRt, InputRt;
             public Image Bg;
             public LayoutElement Layout;
-            public TMP_InputField Input;
+            public TodoInputField Input;
             public TextMeshProUGUI Text, Placeholder;
             /// <summary>分區標題右邊的進度（例如「2/5」）。</summary>
             public TextMeshProUGUI Progress;
@@ -174,16 +174,16 @@ namespace ProbablyStolenTodo
         void ToggleDone(Row row)
         {
             if (_data == null || !_rows.Contains(row)) return;
-            row.Item.Done = !row.Item.Done;
+            TodoList.SetDone(row.Item, !row.Item.Done, _today()); // 每日待辦記下勾在第幾天
             ApplyDone(row);
             Changed();
         }
 
-        /// <summary>點 ↻：一次待辦和每日待辦互換（勾選狀態不變）。</summary>
+        /// <summary>點 ↻：一次待辦和每日待辦互換（勾選狀態不變；勾在第幾天照 <see cref="TodoList.SetDaily"/>）。</summary>
         void ToggleDaily(Row row)
         {
             if (_data == null || !_rows.Contains(row)) return;
-            row.Item.Kind = row.Item.IsDaily ? TodoItem.KindTodo : TodoItem.KindDaily;
+            TodoList.SetDaily(row.Item, !row.Item.IsDaily, _today());
             row.Placeholder.text = Placeholder(row.Item);
             ApplyRepeat(row);
             if (!string.IsNullOrWhiteSpace(row.Item.Text)) _save(_data);
@@ -450,7 +450,7 @@ namespace ProbablyStolenTodo
             row.Text.alignment = align;
             if (oneLine) row.Text.fontStyle = FontStyles.Bold;
 
-            var input = inRt.gameObject.AddComponent<TMP_InputField>();
+            var input = inRt.gameObject.AddComponent<TodoInputField>(); // 子類別：拿得到插入處（組字中的列高與游標用）
             input.textViewport = area;
             input.textComponent = row.Text;
             input.placeholder = row.Placeholder;
@@ -458,7 +458,8 @@ namespace ProbablyStolenTodo
             input.pointSize = FontSize;
             // 都用 MultiLineNewline，結束編輯的 Enter 自己在 ValueChanged 判斷（分區名稱：Enter 完成；待辦、筆記：看設定頁的「換行」）。
             // 不用 TMP 的 MultiLineSubmit：它不管有沒有按 Shift，按 Enter 就結束編輯，Shift+Enter 會「換了行、游標卻不見了」（2026-10-04 實機）。
-            // 不能用 onValidateInput 改輸入的字：Il2CppInterop 轉換委派時把 char 當成 1 個位元組，中文字只剩低位元組（「測試」變成「,f」）。
+            // 不用 onValidateInput 改輸入的字：Demo（IL2CPP）時 Il2CppInterop 轉換委派會把 char 當成 1 個位元組，中文字只剩低位元組
+            // （「測試」變成「,f」），所以結束編輯的 Enter 改在 ValueChanged 判斷；正式版是 Mono，沒這個問題，但做法沿用。
             input.lineType = TMP_InputField.LineType.MultiLineNewline;
             if (oneLine)
             {
@@ -479,8 +480,8 @@ namespace ProbablyStolenTodo
             item.Text = item.IsSection ? SectionName(item.Text) : NormalizeNewlines(item.Text); // 0.1.0 存過 Shift+Enter 的 '\v'
             input.SetTextWithoutNotify(item.Text);
             row.LastText = item.Text;
-            input.onValueChanged.AddListener((Action<string>)(text => Safe("輸入", () => ValueChanged(row, text))));
-            input.onEndEdit.AddListener((Action<string>)(text => Safe("結束編輯", () => EndEdit(row, text))));
+            input.onValueChanged.AddListener(text => Safe("輸入", () => ValueChanged(row, text)));
+            input.onEndEdit.AddListener(text => Safe("結束編輯", () => EndEdit(row, text)));
             row.Input = input;
 
             LayoutRow(row, false); // 還沒顯示時量不了文字高度，列高由呼叫端或 _needResize 算
@@ -562,8 +563,8 @@ namespace ProbablyStolenTodo
         }
 
         static bool EnterPressed() =>
-            InputBlocker.RawKey(KeyCode.Return) || InputBlocker.RawKey(KeyCode.KeypadEnter)
-            || InputBlocker.RawKeyDown(KeyCode.Return) || InputBlocker.RawKeyDown(KeyCode.KeypadEnter); // 按太快、同一幀就放開時 GetKey 可能已經是 false
+            Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter)
+            || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter); // 按太快、同一幀就放開時 GetKey 可能已經是 false
 
         static readonly char[] Newlines = { '\n', '\v', '\r' };
 
@@ -678,9 +679,10 @@ namespace ProbablyStolenTodo
             // TMP 把文字往上捲，第一行就看不到了（組字中的游標也可能在那一行）
             var comp = Input.compositionString;
             if (!string.IsNullOrEmpty(comp) && row.Input.isFocused)
-                s = s.Insert(Mathf.Clamp(row.Input.m_StringPosition, 0, s.Length), comp);
+                s = s.Insert(Mathf.Clamp(row.Input.StringPosition, 0, s.Length), comp);
             if (string.IsNullOrEmpty(s)) s = row.Placeholder.text;
-            if (s.EndsWith('\n') || s.EndsWith('\v')) s += " "; // 結尾換行時，新的那一行也要算進去
+            // 結尾換行時，新的那一行也要算進去。比最後一個字元：string 版的 EndsWith 在 Mono 依文化比較，結果不一定對
+            if (s.Length > 0 && (s[s.Length - 1] == '\n' || s[s.Length - 1] == '\v')) s += " ";
             float width = ContentWidth() - row.Left - row.Right - 2 * TextAreaPad;
             var h = row.Text.GetPreferredValues(s, width, 0).y;
             row.Layout.preferredHeight = Mathf.Max(_rowH, Mathf.Ceil(h) + 2 * _textTop);

@@ -1,4 +1,4 @@
-using Il2CppTMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;

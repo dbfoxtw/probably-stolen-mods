@@ -1,5 +1,33 @@
 # 版本紀錄（Changelog）
 
+## v2.0.0（2026-11-10）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+
+- 對應正式版 1.0：改成遊戲官方的 mod 格式，不需要 MelonLoader；Steam 工作坊也有。
+- 改名為簡易待辦（Simple To-Do）。
+- 摺疊的鍵移到遊戲的「選項 → 按鍵綁定」。
+- 平板、資訊、箱子、選單樣式照正式版的畫面重新配色。
+- 在「載入遊戲」畫面複製存檔時，待辦也複製一份。
+- 每日待辦記住勾在哪一天：讀前幾天的存檔看看再讀回來，今天的勾選還在。
+- 拿掉輸入法組字的游標與底線（需要額外權限）；組字時游標停在組字的最後，和遊戲自己的輸入框一樣。
+- 滑鼠在懸浮單上時，丟棄物品的鍵（預設 Delete）不會再丟掉被懸浮單蓋住的物品。
+- Demo 版（1.0.1）不能用在正式版。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13)
+
+- For the full game (1.0): now uses the game's official mod format, no MelonLoader needed; also on the Steam Workshop.
+- Renamed to Simple To-Do.
+- The collapse key moved to the game's Options → Key Binds.
+- The Tablet, Info, Crate and Menu styles were recolored to match the full game's screens.
+- Duplicating a save on the Load Game screen copies its list.
+- Daily to-dos remember the day they were checked: loading an earlier day's save and coming back keeps today's checks.
+- The input method cursor and underline were removed (they would need extra permissions); while composing, the cursor stays at the end, as in the game's own text fields.
+- With the mouse over the list, the key that throws items in the trash (Delete by default) no longer throws away the item hidden behind the list.
+- The Demo version (1.0.1) does not work on the full game.
+
 ## v1.0.1（2026-10-19）
 
 對應遊戲版本：DEMO Version 050REV5-L

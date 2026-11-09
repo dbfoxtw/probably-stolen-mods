@@ -4,8 +4,10 @@ using UnityEngine;
 namespace ProbablyStolenTodo
 {
     /// <summary>
-    /// 懸浮單的樣式（設定頁選）：六種，名字照「在遊戲裡像什麼」取，配色照遊戲畫面取色
-    /// （2026-10-06 給使用者看過示意圖）。欄位的預設值就是「經典」（第一版的樣子），其他樣式只寫不一樣的地方。
+    /// 懸浮單的樣式（設定頁選）：六種，名字照「在遊戲裡像什麼」取，配色照遊戲畫面取色。
+    /// 1.0.x 照 Demo 取色（2026-10-06 給使用者看過示意圖）；2.0.0 起箱子、資訊、平板、選單照正式版的畫面重新取色
+    /// （機器視窗、物品說明框、談判平板、選項視窗；2026-10-29 使用者看示意圖選定），經典與聲望不動。
+    /// 欄位的預設值就是「經典」（第一版的樣子），其他樣式只寫不一樣的地方。
     /// 換樣式時懸浮單整張重建（和換語言一樣），所以顏色只在建立時讀一次。
     /// 外框、標題列下緣的線、按鈕外框、分區底線的寬度是 0 時就不建那個物件（經典完全沒有，和以前一模一樣）。
     /// </summary>
@@ -26,7 +28,7 @@ namespace ProbablyStolenTodo
         public Color TitleText = Text0, TitleDim = Dim0, TitleActive = Purple;
         /// <summary>標題列下緣的線（顏色同外框）；0＝沒有。</summary>
         public float TitleLineW;
-        /// <summary>新增按鈕那一列的底（箱子：和標題列連成一整塊橘色）；透明＝沒有。</summary>
+        /// <summary>新增按鈕那一列的底（箱子：和標題列連成一整塊）；透明＝沒有。</summary>
         public Color ToolBar = Color.clear;
 
         // ── 清單 ──
@@ -49,7 +51,7 @@ namespace ProbablyStolenTodo
         public Color Selected = new Color(0.42f, 0.36f, 0.70f, 1f), Danger = new Color(0.55f, 0.22f, 0.22f, 1f);
 
         // ── 點綴 ──
-        /// <summary>每日待辦的 ↻；一次待辦滑過時淡淡出現的 ↻；筆記的色條；撞鍵警告的字。</summary>
+        /// <summary>每日待辦的 ↻；一次待辦滑過時淡淡出現的 ↻；筆記的色條；警告的字（1.0.x 的撞鍵警告用過，目前沒有用到）。</summary>
         public Color Daily = Purple, RepeatHint = new Color(0.75f, 0.75f, 0.78f, 0.45f), Note = Gold, Warn = Gold;
         /// <summary>排列的把手 ≡ 與右下角的縮放拉把；捲軸；× 滑過。</summary>
         public Color Handle = new Color(0.65f, 0.65f, 0.68f, 0.55f), ScrollBar = new Color(1f, 1f, 1f, 0.25f), DeleteHover = new Color(0.75f, 0.30f, 0.30f, 0.9f);
@@ -72,86 +74,90 @@ namespace ProbablyStolenTodo
         /// <summary>經典：第一版的樣子（深灰半透明、紫色勾選框、圓角），預設。</summary>
         static readonly Theme Classic = new Theme();
 
-        /// <summary>平板：交易平板的米黃底、橘色粗框；內文用比平板深的磚紅（待辦的字比較小，平板那種鮭魚色在米黃上看不清楚）。</summary>
+        /// <summary>
+        /// 平板：正式版的談判平板。米黃底、橘色粗框、深灰內文；按鈕是平板分頁按鈕的磚紅，標題字也用它；
+        /// 勾選後是店鋪吸引力條的綠，↻ 與標題列圖示按下時用 mod 加進平板的字的紫。
+        /// </summary>
         static readonly Theme Tablet = new Theme
         {
             Id = Settings.StyleTablet,
-            Panel = C(0xE3D3A0), Page = C(0xE3D3A0), FrameW = 3, Frame = C(0xD27E5C),
-            Title = C(0xE3D3A0), TitleText = C(0xA8553A), TitleDim = C(0xB8664A), TitleActive = C(0x8B3A3A), TitleLineW = 2,
-            Text = C(0x7A3E36), Dim = C(0x8A6A4C),
-            Row = C(0x7A3E36, 0.10f), InputHover = C(0x7A3E36, 0.06f), InputPress = C(0x7A3E36, 0.10f), Selection = C(0xD27E5C, 0.45f), // 列底 6%→10%（實機回饋）
-            Section = C(0xD9A97B), SectionText = C(0x6E3237), SectionDim = C(0x8A4A3A),
-            Button = C(0xB8643F), ButtonHover = C(0xC87452), ButtonText = C(0xF6EAD0), ButtonTextOff = C(0xF6EAD0, 0.45f),
-            ButtonBorderW = 1, ButtonBorder = C(0xF0DCB0),
-            Selected = C(0x8B3A3A), Danger = C(0x8A1F2E), DeleteHover = C(0xE89A88), // 全部刪除：深酒紅（磚紅和橘色按鈕太像，實機回饋）
-            Daily = C(0xD27E5C), RepeatHint = C(0xB8664A, 0.45f), Note = C(0x8B3A3A), Warn = C(0xA83A32),
-            Handle = C(0x7A3E36, 0.5f), ScrollBar = C(0x7A3E36, 0.35f),
-            Gap = C(0xD27E5C, 0.18f), Ghost = C(0xD9C48C), GhostSection = C(0xD9A97B), Shadow = new Color(0f, 0f, 0f, 0.25f),
-            BoxBorder = C(0xD27E5C), BoxFill = C(0xD27E5C), BoxFillBorder = C(0xD27E5C), BoxMark = C(0xE3D3A0), BoxRound = false,
+            Panel = C(0xE0D09C), Page = C(0xE0D09C), FrameW = 3, Frame = C(0xC87850),
+            Title = C(0xE0D09C), TitleText = C(0xA4381C), TitleDim = C(0x8A7A60), TitleActive = C(0x613B52), TitleLineW = 2,
+            Text = C(0x52534B), Dim = C(0x8C8A78),
+            Row = C(0x52534B, 0.09f), InputHover = C(0x52534B, 0.06f), InputPress = C(0x52534B, 0.10f), Selection = C(0xC87850, 0.40f),
+            Section = C(0xD59E77), SectionText = C(0xFBEBD0), SectionDim = C(0xFBEBD0, 0.85f),
+            Button = C(0xA4381C), ButtonHover = C(0xB84A2C), ButtonText = C(0xF1D3A1), ButtonTextOff = C(0xF1D3A1, 0.45f),
+            ButtonBorderW = 1, ButtonBorder = C(0x7E2A14),
+            Selected = C(0x613B52), Danger = C(0x6E1A26), DeleteHover = C(0xE89A88),
+            Daily = C(0x613B52), RepeatHint = C(0x613B52, 0.45f), Note = C(0xA4381C), Warn = C(0xA4381C),
+            Handle = C(0x52534B, 0.5f), ScrollBar = C(0x52534B, 0.35f),
+            Gap = C(0xC87850, 0.18f), Ghost = C(0xD6C48C), GhostSection = C(0xD59E77), Shadow = new Color(0f, 0f, 0f, 0.25f),
+            BoxBorder = C(0x52534B), BoxFill = C(0x7AAF53), BoxFillBorder = C(0x52534B), BoxMark = C(0xE0D09C), BoxRound = false,
         };
 
         /// <summary>
-        /// 資訊：物品說明框、「顧客群體」這類資訊視窗。底色是說明框的深藍紫，細橘框、標題列不另外加深；
-        /// ↻ 與分區進度用說明框數值的青綠，筆記色條用 [方括號標籤] 的藍。
-        /// 第一版照遊戲做成約 85% 不透明，2026-10-06 實機後使用者要和其他樣式一樣不透明（要淡用不透明度設定）；
-        /// 按鈕、分區色帶、浮起來的列原本也是半透明，改成疊在底色上的同一個顏色。
+        /// 資訊：正式版的物品說明框。深藍紫底、紅褐細框、標題列不另外加深；
+        /// ↻、勾選與標題列圖示按下時用「雙擊以打開」的藍，分區進度與筆記色條用分區標題的粉紫，警告用說明框的橘。
+        /// 和其他樣式一樣不透明（要淡用不透明度設定；1.0.x 第一版照遊戲做成半透明，2026-10-06 實機後改掉）。
         /// </summary>
         static readonly Theme Info = new Theme
         {
             Id = Settings.StyleInfo,
-            Panel = C(0x231E2B), Page = C(0x231E2B), FrameW = 2, Frame = C(0xC46F48),
-            Title = Color.clear, TitleText = C(0xEFE8DC), TitleDim = C(0xC9C0C4), TitleActive = C(0x8CCFC0),
-            Text = C(0xDDD5CD), Dim = C(0x8D8794),
-            Row = new Color(1f, 1f, 1f, 0.035f), Selection = C(0x5E9FE6, 0.45f),
-            Section = C(0x3F374A), SectionText = C(0xEFE8DC), SectionDim = C(0x8CCFC0),
-            Button = C(0x393243), ButtonHover = C(0x50455B), ButtonText = C(0xEFE8DC), ButtonTextOff = C(0xEFE8DC, 0.4f),
-            ButtonBorderW = 1, ButtonBorder = C(0xC46F48),
-            Selected = C(0xC46F48),
-            Daily = C(0x8CCFC0), RepeatHint = C(0x8CCFC0, 0.4f), Note = C(0x5E9FE6), Warn = C(0xDBB359),
+            Panel = C(0x292234), Page = C(0x292234), FrameW = 2, Frame = C(0x9D493F),
+            Title = Color.clear, TitleText = C(0xD0CDC6), TitleDim = C(0xA9A4A8), TitleActive = C(0x4FA7CD),
+            Text = C(0xD3D0C7), Dim = C(0x857F8C),
+            Row = new Color(1f, 1f, 1f, 0.035f), Selection = C(0x4FA7CD, 0.45f),
+            Section = C(0x3A3245), SectionText = C(0xD0CDC6), SectionDim = C(0xA880A0),
+            Button = C(0x393243), ButtonHover = C(0x4A4157), ButtonText = C(0xD3D0C7), ButtonTextOff = C(0xD3D0C7, 0.4f),
+            ButtonBorderW = 1, ButtonBorder = C(0x9D493F),
+            Selected = C(0x9D493F),
+            Daily = C(0x4FA7CD), RepeatHint = C(0x4FA7CD, 0.4f), Note = C(0xA880A0), Warn = C(0xBE9174),
             Handle = C(0xCCC2CC, 0.5f),
-            Gap = C(0x8CCFC0, 0.12f), Ghost = C(0x2E2838), GhostSection = C(0x4A4157),
-            BoxBorder = C(0xD4CCC4), BoxFill = C(0xC46F48), BoxFillBorder = C(0xC46F48), BoxMark = C(0x1F1A26), BoxRound = false,
+            Gap = C(0x4FA7CD, 0.12f), Ghost = C(0x332B3F), GhostSection = C(0x473D55),
+            BoxBorder = C(0xD3D0C7), BoxFill = C(0x4FA7CD), BoxFillBorder = C(0x4FA7CD), BoxMark = C(0x1F1A26), BoxRound = false,
         };
 
         /// <summary>
-        /// 箱子：箱子與機器的視窗。標題列和新增按鈕那一列整條橘色、深橘的分區標籤、深色清單。
-        /// 標題列圖示按下時（鎖頭、鉛筆、齒輪）用深青綠（店裡金額螢幕的青色，和橘色是對比色）：淡黃和沒按時的米白分不出來，
-        /// 深棕近黑太搶眼（2026-10-06 實機後使用者選）。
+        /// 箱子：正式版的機器視窗。深灰底、灰色粗框與標題列（新增按鈕那一列連成一塊）、灰色按鈕；
+        /// 點綴用機器視窗鎖住時鎖頭的金色（↻、勾選、標題列圖示按下時），筆記色條用店裡管子的青綠。
         /// </summary>
         static readonly Theme Crate = new Theme
         {
             Id = Settings.StyleCrate,
-            Panel = C(0x2C2630), Page = C(0x2C2630), FrameW = 3, Frame = C(0xC8774F),
-            Title = C(0xC8774F), TitleText = C(0xFBEEDD), TitleDim = C(0xFBEEDD, 0.8f), TitleActive = C(0x1F6F6A),
-            ToolBar = C(0xC8774F),
-            Text = C(0xE8DECD), Dim = C(0x8A7F8E),
-            Row = new Color(1f, 1f, 1f, 0.035f), Selection = C(0xC8774F, 0.45f),
-            Section = C(0x9A5236), SectionText = C(0xFBEEDD), SectionDim = C(0xFBEEDD, 0.75f),
-            Button = C(0x9A5236), ButtonHover = C(0xAD613F), ButtonText = C(0xFBEEDD), ButtonTextOff = C(0xFBEEDD, 0.45f),
-            ButtonBorderW = 1, ButtonBorder = C(0x7A4029),
-            Selected = C(0x5E2A18), Danger = C(0x8A1F2E), // 全部刪除：深酒紅，和平板一樣（磚紅和深橘按鈕太像，實機回饋）
-            Daily = C(0xC8774F), RepeatHint = C(0xC8774F, 0.45f), Note = C(0xD9A066), Warn = C(0xD9A066),
-            Handle = C(0xCC9E85, 0.55f), ScrollBar = C(0xC8774F, 0.5f),
-            Gap = C(0xC8774F, 0.15f), Ghost = C(0x3A3240), GhostSection = C(0x9A5236),
-            BoxBorder = C(0xC8774F), BoxFill = C(0xC8774F), BoxFillBorder = C(0xC8774F), BoxMark = C(0x2C2630), BoxRound = false,
+            Panel = C(0x242227), Page = C(0x242227), FrameW = 3, Frame = C(0x424242),
+            Title = C(0x424242), TitleText = C(0xCFD0C2), TitleDim = C(0x8D8980), TitleActive = C(0xD4A83C),
+            ToolBar = C(0x424242),
+            Text = C(0xDAD6CA), Dim = C(0x77736C),
+            Row = new Color(1f, 1f, 1f, 0.045f), Selection = C(0xD4A83C, 0.35f),
+            Section = C(0x38373C), SectionText = C(0xCFD0C2), SectionDim = C(0x8D8980),
+            Button = C(0x57575A), ButtonHover = C(0x67676A), ButtonText = C(0xE8E4D8), ButtonTextOff = C(0xE8E4D8, 0.4f),
+            ButtonBorderW = 1, ButtonBorder = C(0x2A2A2C),
+            Selected = C(0x8C6D20), Danger = C(0x8A1F2E),
+            Daily = C(0xD4A83C), RepeatHint = C(0xD4A83C, 0.45f), Note = C(0x6FA8A0), Warn = C(0xD4A83C),
+            Handle = C(0xB5B0A6, 0.5f), ScrollBar = C(0x8D8980, 0.5f),
+            Gap = C(0xD4A83C, 0.12f), Ghost = C(0x343238), GhostSection = C(0x4A494F),
+            BoxBorder = C(0x8D8980), BoxFill = C(0xD4A83C), BoxFillBorder = C(0xD4A83C), BoxMark = C(0x242227), BoxRound = false,
         };
 
-        /// <summary>選單：遊戲選單與選項視窗。深藍紫底、薄荷綠標題列（深色字）與外框、按鈕是薄荷綠外框、分區標題用底線不用色帶。</summary>
+        /// <summary>
+        /// 選單：正式版的選項視窗。深藍紫底、薄荷綠標題列（深色字）與外框、按鈕是薄荷綠外框、分區標題用底線不用色帶；
+        /// 標題列圖示按下時用紅褐。
+        /// </summary>
         static readonly Theme Menu = new Theme
         {
             Id = Settings.StyleMenu,
-            Panel = C(0x252233), Page = C(0x252233), FrameW = 2, Frame = C(0x8EC5BE),
-            Title = C(0x8EC5BE), TitleText = C(0x252233), TitleDim = C(0x252233, 0.75f), TitleActive = C(0x9C3D1F),
-            Text = C(0xDDE3E5), Dim = C(0x7D7A8C),
-            Row = C(0x8EC5BE, 0.10f), Selection = C(0x8EC5BE, 0.4f), // 列底帶一點薄荷綠（白 3% 和背景分不出來，實機回饋）
-            Section = Color.clear, SectionText = C(0xA9DCD5), SectionDim = C(0xA9DCD5, 0.8f), SectionLineW = 2,
-            Button = C(0x252233), ButtonHover = C(0x33304A), ButtonText = C(0xE8EEEE), ButtonTextOff = C(0xE8EEEE, 0.4f),
-            ButtonBorderW = 2, ButtonBorder = C(0x8EC5BE),
+            Panel = C(0x2A2333), Page = C(0x2A2333), FrameW = 2, Frame = C(0x97BABE),
+            Title = C(0x8BBFBB), TitleText = C(0x0D1E26), TitleDim = C(0x0D1E26, 0.7f), TitleActive = C(0x9D493F),
+            Text = C(0xD0CED3), Dim = C(0x77727F),
+            Row = C(0x8BBFBB, 0.08f), Selection = C(0x8BBFBB, 0.4f),
+            Section = Color.clear, SectionText = C(0x8BBFBB), SectionDim = C(0x8BBFBB, 0.8f), SectionLineW = 2,
+            Button = C(0x292234), ButtonHover = C(0x37304A), ButtonText = C(0xD0D6D8), ButtonTextOff = C(0xD0D6D8, 0.4f),
+            ButtonBorderW = 2, ButtonBorder = C(0x97BABE),
             Selected = C(0x3E6F6B), Danger = C(0x7A2C3A),
-            Daily = C(0x8EC5BE), RepeatHint = C(0x8EC5BE, 0.4f), Note = C(0x5F9E98), Warn = C(0xE0C070),
-            Handle = C(0xC2CCD0, 0.5f), ScrollBar = C(0x8EC5BE, 0.45f),
-            Gap = C(0x8EC5BE, 0.12f), Ghost = C(0x302D42), GhostSection = C(0x3A4A55),
-            BoxBorder = C(0xC3CCD0), BoxFill = C(0x252233), BoxFillBorder = C(0xC3CCD0), BoxMark = C(0x8EC5BE), BoxRound = false,
+            Daily = C(0x8BBFBB), RepeatHint = C(0x8BBFBB, 0.4f), Note = C(0x5F9E98), Warn = C(0xE0C070),
+            Handle = C(0xC2CCD0, 0.5f), ScrollBar = C(0x8BBFBB, 0.45f),
+            Gap = C(0x8BBFBB, 0.12f), Ghost = C(0x352E40), GhostSection = C(0x3A4A55),
+            BoxBorder = C(0x97BABE), BoxFill = C(0x292234), BoxFillBorder = C(0x97BABE), BoxMark = C(0x8BBFBB), BoxRound = false,
         };
 
         /// <summary>

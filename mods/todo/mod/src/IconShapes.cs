@@ -15,19 +15,19 @@ namespace ProbablyStolenTodo
         {
             const float R = N * 0.28f, T = N * 0.055f; // 圓環半徑、半粗細
             const float A0 = 10f, A1 = 80f;             // 缺口（角度從 +x 軸逆時針算）
-            float ang = MathF.Atan2(y, x) * 180f / MathF.PI;
+            float ang = MathUtil.Atan2(y, x) * 180f / MathUtil.PI;
             float ring;
             if (ang > A0 && ang < A1)
             {
-                float c = A0 * MathF.PI / 180f;
-                ring = Dist(x, y, R * MathF.Cos(c), R * MathF.Sin(c)) - T; // 缺口下端是圓頭
+                float c = A0 * MathUtil.PI / 180f;
+                ring = Dist(x, y, R * MathUtil.Cos(c), R * MathUtil.Sin(c)) - T; // 缺口下端是圓頭
             }
-            else ring = Math.Abs(MathF.Sqrt(x * x + y * y) - R) - T;
+            else ring = Math.Abs(MathUtil.Sqrt(x * x + y * y) - R) - T;
             // 箭頭：底邊在缺口上端、沿半徑方向，尖端順著順時針的切線方向
-            float a = A1 * MathF.PI / 180f;
-            float px = R * MathF.Cos(a), py = R * MathF.Sin(a);
-            float nx = MathF.Cos(a), ny = MathF.Sin(a);   // 半徑方向
-            float dx = MathF.Sin(a), dy = -MathF.Cos(a);  // 順時針的切線方向
+            float a = A1 * MathUtil.PI / 180f;
+            float px = R * MathUtil.Cos(a), py = R * MathUtil.Sin(a);
+            float nx = MathUtil.Cos(a), ny = MathUtil.Sin(a);   // 半徑方向
+            float dx = MathUtil.Sin(a), dy = -MathUtil.Cos(a);  // 順時針的切線方向
             const float HW = N * 0.17f, L = N * 0.20f;
             float arrow = Triangle(x, y, px + nx * HW, py + ny * HW, px - nx * HW, py - ny * HW, px + dx * L, py + dy * L);
             return Math.Min(ring, arrow);
@@ -62,14 +62,14 @@ namespace ProbablyStolenTodo
         /// <summary>設定的齒輪：圓盤加 8 個齒，中間挖一個洞。</summary>
         public static float Gear(float x, float y)
         {
-            float d = MathF.Sqrt(x * x + y * y) - N * 0.27f; // 圓盤
+            float d = MathUtil.Sqrt(x * x + y * y) - N * 0.27f; // 圓盤
             for (int k = 0; k < 8; k++)
             {
-                float a = k * MathF.PI / 4, c = MathF.Cos(a), s = MathF.Sin(a);
+                float a = k * MathUtil.PI / 4, c = MathUtil.Cos(a), s = MathUtil.Sin(a);
                 float rx = x * c + y * s, ry = -x * s + y * c; // 轉到第 k 個齒的方向
                 d = Math.Min(d, RoundedBox(rx - N * 0.31f, ry, N * 0.09f, N * 0.075f, N * 0.025f));
             }
-            float hole = N * 0.11f - MathF.Sqrt(x * x + y * y); // 洞裡為正（在洞外為負）
+            float hole = N * 0.11f - MathUtil.Sqrt(x * x + y * y); // 洞裡為正（在洞外為負）
             return Math.Max(d, hole);
         }
 
@@ -93,7 +93,7 @@ namespace ProbablyStolenTodo
             float top = BodyY + BodyHH;                   // 鎖身上緣
             // 鎖環圓弧的圓心。打開時抬高到右腳和鎖身之間留得出縫：縮到 20 左右顯示時，縫太窄會糊在一起
             float cy = top + (open ? N * 0.14f : N * 0.02f);
-            float arc = y >= cy ? Math.Abs(MathF.Sqrt(x * x + (y - cy) * (y - cy)) - R) - T
+            float arc = y >= cy ? Math.Abs(MathUtil.Sqrt(x * x + (y - cy) * (y - cy)) - R) - T
                                 : Math.Min(Dist(x, y, -R, cy), Dist(x, y, R, cy)) - T;
             float left = Segment(x, y, -R, cy, -R, top - N * 0.04f) - T;                 // 左腳插進鎖身
             float right = Segment(x, y, R, cy, R, open ? cy - N * 0.03f : top - N * 0.04f) - T; // 打開時右腳懸空
@@ -109,15 +109,15 @@ namespace ProbablyStolenTodo
             return d;
         }
 
-        public static float Dist(float x, float y, float ax, float ay) => MathF.Sqrt((x - ax) * (x - ax) + (y - ay) * (y - ay));
+        public static float Dist(float x, float y, float ax, float ay) => MathUtil.Sqrt((x - ax) * (x - ax) + (y - ay) * (y - ay));
 
         /// <summary>點到線段的距離（像素）。</summary>
         public static float Segment(float x, float y, float ax, float ay, float bx, float by)
         {
             float vx = bx - ax, vy = by - ay, wx = x - ax, wy = y - ay;
-            float h = Math.Clamp((wx * vx + wy * vy) / (vx * vx + vy * vy), 0f, 1f);
+            float h = MathUtil.Clamp((wx * vx + wy * vy) / (vx * vx + vy * vy), 0f, 1f);
             float dx = wx - vx * h, dy = wy - vy * h;
-            return MathF.Sqrt(dx * dx + dy * dy);
+            return MathUtil.Sqrt(dx * dx + dy * dy);
         }
 
         /// <summary>點到三角形的距離（裡面為負）。</summary>
@@ -136,11 +136,11 @@ namespace ProbablyStolenTodo
         {
             float qx = Math.Abs(x) - halfW + r, qy = Math.Abs(y) - halfH + r;
             float ox = Math.Max(qx, 0), oy = Math.Max(qy, 0);
-            return MathF.Sqrt(ox * ox + oy * oy) + Math.Min(Math.Max(qx, qy), 0) - r;
+            return MathUtil.Sqrt(ox * ox + oy * oy) + Math.Min(Math.Max(qx, qy), 0) - r;
         }
 
         /// <summary>距離（像素）轉成覆蓋率：邊緣 1 像素內漸變，做反鋸齒。</summary>
-        public static float Coverage(float d) => Math.Clamp(0.5f - d, 0f, 1f);
+        public static float Coverage(float d) => MathUtil.Clamp(0.5f - d, 0f, 1f);
 
         /// <summary>把形狀畫成 N×N 的覆蓋率（列由下往上），給 Unity 的貼圖或離線預覽用。</summary>
         public static float[] Render(Func<float, float, float> shape)

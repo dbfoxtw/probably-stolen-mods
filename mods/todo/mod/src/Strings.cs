@@ -15,11 +15,13 @@ namespace ProbablyStolenTodo
         public string MoreItems;
         /// <summary>設定頁。</summary>
         public string FontSize, Newline, NewlineEnter, NewlineShift, NewlineShiftHint, AutoNext, On, Off, SaveMode, SaveImmediate, SaveFollow, SaveImmediateHint, SaveFollowHint;
+        /// <summary>設定頁（第五輪）：不透明度（中文不叫「透明度」：100% 會被看成全透明）。</summary>
+        public string Opacity;
         /// <summary>
-        /// 設定頁（第五輪）：不透明度（中文不叫「透明度」：100% 會被看成全透明）、摺疊快捷鍵
-        /// （沒有快捷鍵、改鍵時的提示、撞鍵警告）。
+        /// 遊戲「選項 → 按鍵綁定」裡摺疊整張的那一列：名稱與滑過時的說明（2.0.0 以前是設定頁的「摺疊快捷鍵」）。
+        /// 打開選項時才取，照當時的語言與繁中 mod 有沒有在跑選。
         /// </summary>
-        public string Opacity, Hotkey, KeyNone, PressKey, CaptureHint, KeyInUse;
+        public string KeyBind, KeyBindTip;
         /// <summary>設定頁：標題列顯示整張的進度（開／關）。</summary>
         public string ShowProgress;
         /// <summary>設定頁（第八輪）：樣式與六種樣式的名字（順序同 Settings.Styles）。</summary>
@@ -58,21 +60,18 @@ namespace ProbablyStolenTodo
             SaveImmediate = "Right away",
             SaveFollow = "With the game",
             SaveImmediateHint = "Changes are saved right away and stay when you load a save.",
-            SaveFollowHint = "Changes only count once the game saves (new game, or ending the day). Loading in the middle of a day brings back how the list was at the last save.",
+            SaveFollowHint = "Changes only count once the game saves (new game, or sleeping to end the day). Loading in the middle of a day brings back how the list was at the last save.",
             Opacity = "Opacity",
             ShowProgress = "Show progress in title bar",
-            Hotkey = "Collapse hotkey",
-            KeyNone = "None",
-            PressKey = "Press a key…",
-            CaptureHint = "Esc cancels, Backspace clears.",
-            KeyInUse = "The game or another mod also uses this key.",
+            KeyBind = "Collapse / expand Simple To-Do",
+            KeyBindTip = "Collapses or expands Simple To-Do, same as clicking the arrow at the right end of its title bar.",
             Style = "Style",
             StyleNames = new[] { "Classic", "Tablet", "Info", "Crate", "Menu", "Reputation" },
         };
 
         static readonly Strings ZhHans = new Strings
         {
-            Title = "待办清单",
+            Title = "待办",
             AddTodo = "+ 待办",
             AddDaily = "+ 每日",
             AddNote = "+ 笔记",
@@ -102,21 +101,18 @@ namespace ProbablyStolenTodo
             SaveImmediate = "马上存",
             SaveFollow = "跟着游戏存档",
             SaveImmediateHint = "改了马上存，读档也不会倒回。",
-            SaveFollowHint = "改动要等游戏存档（开新游戏、结束这一天）才算数；白天中途读档，会回到上次存档时的样子。",
+            SaveFollowHint = "改动要等游戏存档（开新游戏、睡觉结束今日）才算数；白天中途读档，会回到上次存档时的样子。",
             Opacity = "不透明度",
             ShowProgress = "标题栏显示进度",
-            Hotkey = "折叠快捷键",
-            KeyNone = "无",
-            PressKey = "请按下按键…",
-            CaptureHint = "Esc 取消、Backspace 清除。",
-            KeyInUse = "游戏或其他 mod 也在用这个键。",
+            KeyBind = "折叠/展开简易待办",
+            KeyBindTip = "按下后折叠或展开简易待办，和点一下标题栏最右边的箭头一样。",
             Style = "样式",
             StyleNames = new[] { "经典", "平板", "资讯", "箱子", "菜单", "声望" },
         };
 
         static readonly Strings ZhHant = new Strings
         {
-            Title = "待辦清單",
+            Title = "待辦",
             AddTodo = "+ 待辦",
             AddDaily = "+ 每日",
             AddNote = "+ 筆記",
@@ -146,14 +142,11 @@ namespace ProbablyStolenTodo
             SaveImmediate = "馬上存",
             SaveFollow = "跟著遊戲存檔",
             SaveImmediateHint = "改了馬上存，讀檔也不會倒回。",
-            SaveFollowHint = "改動要等遊戲存檔（開新遊戲、結束這一天）才算數；白天中途讀檔，會回到上次存檔時的樣子。",
+            SaveFollowHint = "改動要等遊戲存檔（開新遊戲、睡覺結束今日）才算數；白天中途讀檔，會回到上次存檔時的樣子。",
             Opacity = "不透明度",
             ShowProgress = "標題列顯示進度",
-            Hotkey = "摺疊快捷鍵",
-            KeyNone = "無",
-            PressKey = "請按下按鍵…",
-            CaptureHint = "Esc 取消、Backspace 清除。",
-            KeyInUse = "遊戲或其他 mod 也在用這個鍵。",
+            KeyBind = "摺疊／展開簡易待辦",
+            KeyBindTip = "按下後摺疊或展開簡易待辦，和點一下標題列最右邊的箭頭一樣。",
             Style = "樣式",
             StyleNames = new[] { "經典", "平板", "資訊", "箱子", "選單", "聲望" },
         };

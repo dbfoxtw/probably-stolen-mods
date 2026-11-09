@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試資料檔的對應與封存、清單的規則（不用開遊戲、不需要 MelonLoader）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試資料檔的對應與封存、清單的規則（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,9 +13,17 @@
     <Compile Include="..\src\TodoStore.cs" Link="TodoStore.cs" />
     <Compile Include="..\src\TodoList.cs" Link="TodoList.cs" />
     <Compile Include="..\src\IconShapes.cs" Link="IconShapes.cs" />
+    <Compile Include="..\src\MathUtil.cs" Link="MathUtil.cs" />
     <Compile Include="..\src\SaveGate.cs" Link="SaveGate.cs" />
     <Compile Include="..\src\Hotkey.cs" Link="Hotkey.cs" />
     <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+    <Compile Include="..\src\InputRules.cs" Link="InputRules.cs" />
+    <Compile Include="..\src\SlotOps.cs" Link="SlotOps.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TodoStore 用的 JSON：mod 在遊戲裡用遊戲自帶的 Newtonsoft.Json（組件版本 13.0.0.0），這裡用同一個大版本的 NuGet 套件 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>
