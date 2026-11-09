@@ -13,7 +13,7 @@ namespace ProbablyStolenItemQuickInfo
     /// - 被擋（不顯示；Toggle 時按下也不切換，開著的暫時不畫、結束後自己再出現）：在選項設定按鍵（KeyBindHelper.SuppressHotkeys，
     ///   含擷取結束的那一幀）、在打字（GameState.Typing：遊戲的 StoreUIManager.IsAnyTyping，含 F8 的指令視窗；它用 Tab 補完指令）、過場。
     ///   沒綁鍵時一律不顯示。
-    /// 待辦清單 mod 打字時會攔 Input.GetKey／GetKeyDown，這裡用它們讀鍵，自然不觸發。
+    /// 簡易待辦 mod（舊名待辦清單）打字時讓遊戲的 IsTextFieldFocused 成立，上面的「在打字」（IsAnyTyping）跟著擋住，不會觸發。
     /// 除錯模式（debug 或 perf 標記）另外量效能（Perf）：整個 Tick、重算的四段、擺位置，顯示狀態的轉換點通知 Perf；
     /// perf 標記的對照組模式在這裡跳過週期重算、每幀擺位置。沒有標記時每個量測點只多一個 bool 判斷。
     /// </summary>
