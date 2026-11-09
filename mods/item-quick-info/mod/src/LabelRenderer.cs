@@ -61,6 +61,12 @@ namespace ProbablyStolenItemQuickInfo
             public string Key;
             /// <summary>這一輪這個物品有沒有用到這個框（沒用到的一直藏著）。</summary>
             public bool Used;
+            /// <summary>
+            /// 上次設給 localPosition 的值（HasPos＝設過）：效能的對照組「位置沒變不重設」拿來比，不每次讀 Rt.localPosition。
+            /// 框新建、被藏起來時當作沒設過（下次一定重設）。
+            /// </summary>
+            public Vector3 Pos;
+            public bool HasPos;
         }
 
         /// <summary>一個物品的標籤：資訊框，和名稱位置是 Top 時的名稱框。框用到時才建。</summary>
@@ -274,6 +280,7 @@ namespace ProbablyStolenItemQuickInfo
         {
             if (box == null) return;
             box.Used = used;
+            if (!used) box.HasPos = false;
             if (box.Go != null && box.Go.activeSelf != used) box.Go.SetActive(used);
         }
 
@@ -281,6 +288,7 @@ namespace ProbablyStolenItemQuickInfo
         static void Show(Box box, bool shown)
         {
             if (box == null || box.Go == null || !box.Used) return;
+            if (!shown) box.HasPos = false;
             if (box.Go.activeSelf != shown) box.Go.SetActive(shown);
         }
 
@@ -493,10 +501,25 @@ namespace ProbablyStolenItemQuickInfo
         static void Place(Layer layer, Label label)
         {
             if (!ItemRect(layer, label.Item, out float minX, out float minY, out float maxX, out float maxY)) return;
+            bool skipSame = Perf.SkipSamePosition; // 效能的對照組「位置沒變不重設」；平常是 false
             if (label.Info != null && label.Info.Used)
-                label.Info.Rt.localPosition = new Vector3(minX, minY, 0f);
+                SetPosition(label.Info, new Vector3(minX, minY, 0f), skipSame);
             if (label.Name != null && label.Name.Used)
-                label.Name.Rt.localPosition = new Vector3((minX + maxX) * 0.5f, maxY, 0f);
+                SetPosition(label.Name, new Vector3((minX + maxX) * 0.5f, maxY, 0f), skipSame);
+        }
+
+        /// <summary>
+        /// 設框的位置。skipSame（對照組「位置沒變不重設」，之後的候選修法）：和上次設的一樣就不設——嫌疑是設 localPosition
+        /// 即使值沒變，Unity 也把它當成移動過，整塊畫布每幀重建（這段時間在遊戲的繪製裡，mod 自己計時量不到，要用對照組比）。
+        /// 比較用 Unity 的 Vector3 ==（距離小於 1e-5 算一樣）：圖層座標是 UI 單位（一格 16），1e-5 遠小於一個像素，
+        /// 而且比的是上次真的設下去的值，誤差不會一幀一幀累積。上次的值不管哪種模式都記：換到這種模式時，記的值才是框現在的位置。
+        /// </summary>
+        static void SetPosition(Box box, Vector3 p, bool skipSame)
+        {
+            if (skipSame && box.HasPos && box.Pos == p) return;
+            box.Rt.localPosition = p;
+            box.Pos = p;
+            box.HasPos = true;
         }
 
         static Color32 ColorOf(LineColor c) => c switch

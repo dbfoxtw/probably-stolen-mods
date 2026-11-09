@@ -3,7 +3,7 @@ Probably Stolen 物品速覽 mod（Item Quick Info） v{version}
 
 按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、
 機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383 的留言
@@ -75,7 +75,7 @@ Probably Stolen Item Quick Info mod v{version}
 Hold a key (Tab by default) to show key info right on the items on screen: water volume and purity,
 battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left,
 stolen heat and the names you gave things. Release to hide.
-Supported game version: full release 1.0 (VERSION 100-REV12)
+Supported game version: full release 1.0 (VERSION 100-REV13)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome

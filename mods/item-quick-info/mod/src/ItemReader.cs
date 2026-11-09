@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 找畫面上看得到的物品、讀它要顯示的行。只讀物品的 tag 與遊戲的唯讀判斷，不改任何東西。
+    /// 找物品從每個場景的根物件往下、只看開著的部分（見 FindItems），不用 FindObjectsOfType 找全場景的物品節點。
     /// 條件照遊戲提示框的各個 Helper，不白給遊戲藏起來的資訊。
     /// GameItem、ItemFeature、各種 GameInventory 是一般的 C# 類別，可以用 ?. 與 ??=；TreeNodeRender、RectMask2D 這些 Unity 物件用 == null。
     /// </summary>
@@ -22,7 +24,7 @@ namespace ProbablyStolenItemQuickInfo
         const string MaxEnergyTag = "power_source_item_max_energy";
         const string RechargeableTag = "MACHINE_RECHARGABLE_TAG";
         const string BrokenTag = "BROKEN_MACHINE_TAG";
-        // 決定 30～34 的 tag（StolenHelper、UseCountHelper、DurabilityHelper、IngotPurityHelper 的常數）
+        // 熱度、使用次數、耐久度、金屬錠純度的 tag：StolenHelper、UseCountHelper、DurabilityHelper、IngotPurityHelper 的常數
         const string StolenTag = "STOLEN_TAG";
         const string StolenValueTag = "STOLEN_VALUE_INT";
         const string UseCountTag = "USE_COUNT_ITEM_TAG";
@@ -36,20 +38,182 @@ namespace ProbablyStolenItemQuickInfo
         const string IngotPurityTag = "INGOT_PURITY_TAG";
         const string IngotPurityFakeTag = "INGOT_PURITY_FAKE_TAG";
 
+        /// <summary>找節點的緩衝（每個場景的根物件輪流用，不每次配置）。</summary>
+        static readonly List<TreeNodeRender> _nodes = new List<TreeNodeRender>();
+        /// <summary>場景的根物件的緩衝。</summary>
+        static readonly List<GameObject> _roots = new List<GameObject>();
+
+        // 找節點核對（除錯模式，CheckFind）用的，第一次核對時才建：玩家的版本不配置
+        static List<GameItemElement> _checkNew, _checkOld, _onlyNew, _onlyOld;
+        static HashSet<GameItemElement> _setNew, _setOld;
+        static bool _ddolLogged;
+
         /// <summary>
-        /// 畫面上看得到的物品：場景裡所有啟用中的 TreeNodeRender（FindObjectsOfType 只回啟用的）裡，是物品本身那個節點
-        /// （GameItemElement.handler；物品的 middle、background 等子節點的 element 是空的），再用 IsShown 篩。
-        /// 關著的視窗整個停用（PixelWindow 關閉時 SetActive(false)），裡面的物品自然不在。任何場景都算（店裡、開著的視窗、櫃檯）。
-        /// 只在顯示中（按著鍵，或 Toggle 開著）每 0.25 秒叫一次（Runner）。
+        /// 畫面上看得到的物品：啟用中的 TreeNodeRender 裡，是物品本身那個節點（GameItemElement.handler；物品的 middle、
+        /// background 等子節點的 element 是空的），再用 IsShown 篩。關著的視窗整個停用（PixelWindow 關閉時 SetActive(false)），
+        /// 裡面的物品自然不在。任何場景都算（店裡、開著的視窗、櫃檯）。只在顯示中（按著鍵，或 Toggle 開著）每 0.25 秒叫一次（Runner）。
+        /// 順序是階層的順序（一個場景的根物件接一個），1.0.0 是 FindObjectsOfType 的順序。Runner、LabelRenderer 不靠順序；
+        /// 只影響物件池裡哪個框給哪個物品，所以兩個物品的標籤疊到時哪個在上面可能和 1.0.0 不同（現在和物品自己的上下一致：後面的在上面）。
+        /// nodes：找到幾個節點（效能 log 的「節點」；每個物品約 10 個，比物品數更能看出這一步多重）。
         /// </summary>
-        internal static List<GameItemElement> VisibleItems()
+        internal static List<GameItemElement> VisibleItems(out int nodes)
         {
             var list = new List<GameItemElement>();
-            foreach (var node in Object.FindObjectsOfType<TreeNodeRender>())
+            nodes = FindItems(list);
+            return list;
+        }
+
+        /// <summary>
+        /// 從畫面上開著的部分往下找，找到的加進 into，回傳節點數。
+        /// 不用 FindObjectsOfType&lt;TreeNodeRender&gt;：對腳本型別它要看過場景裡所有的 MonoBehaviour，連停用的（關著的箱子裡的物品節點）
+        /// 也看過才篩掉，成本跟著店裡全部的物品走（改前量測：店主擁有約 800 個物品的存檔每次 7 ms，佔重算的 85～98%）。
+        /// 改成：每個已載入的場景、加上 DontDestroyOnLoad 的場景，各自的根物件（Scene.GetRootGameObjects）往下
+        /// GetComponentsInChildren(false)：不走進停用的 GameObject 底下，關著的箱子、視窗整串跳過，成本跟著畫面上開著的物件走。
+        /// 範圍和 FindObjectsOfType 一樣（所有場景裡啟用中的；它另外排除 HideFlags.DontSave 的物件，遊戲的物品節點沒有用），
+        /// 所以找到的節點也一樣；根物件互不重疊，不會重複。
+        /// DontDestroyOnLoad 的場景一定要找到：畫面不是剛好 16:9（有黑邊）時，遊戲把打開的視窗停靠到那裡（LetterboxManager 的停靠層），
+        /// 漏掉就是整批沒有標籤。拿不到它的根物件（萬一這個 Unity 版本不准）就退回舊找法，不要靜靜地漏掉。
+        /// 不從根 Canvas 找（討論時原本的做法）：遊戲會切換 Canvas 元件的 enabled（LetterboxManager 的停靠層），停用的 Canvas
+        /// 找不找得到、它底下的 Canvas 算不算根都不確定，可能漏找或重複；場景的根物件沒有這個問題。
+        /// 每次都重新拿根物件、不快取：視窗停靠、浮動視窗的物件可能後來才建。除錯模式放開鍵時用舊找法核對一次（CheckFind）。
+        /// </summary>
+        static int FindItems(List<GameItemElement> into)
+        {
+            if (_fallback) return FindItemsOld(into);
+            try
             {
-                if (node == null || !(node.element is GameItemElement el)) continue;
-                if (!ReferenceEquals(el.handler, node)) continue;
-                if (IsShown(el)) list.Add(el);
+                int nodes = 0;
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var scene = SceneManager.GetSceneAt(i);
+                    if (!scene.IsValid() || !scene.isLoaded) continue; // 還在載入的場景拿不到根物件
+                    _roots.Clear();
+                    scene.GetRootGameObjects(_roots);
+                    nodes += FindInRoots(into);
+                }
+                // DontDestroyOnLoad 的場景不在 SceneManager 的清單裡，從我們自己放在那裡的物件拿。
+                // 只看 IsValid、不看 isLoaded：文件沒寫它的 isLoaded 是什麼，看了萬一是 false 就整批跳過
+                var runner = ItemQuickInfoMod.RunnerObject;
+                if (runner != null && runner.scene.IsValid())
+                {
+                    _roots.Clear();
+                    try { runner.scene.GetRootGameObjects(_roots); }
+                    catch (System.Exception e)
+                    {
+                        _fallback = true;
+                        ItemQuickInfoMod.LogOnce("拿 DontDestroyOnLoad 場景的根物件（之後改用舊的找法）", e);
+                        into.Clear();
+                        return FindItemsOld(into);
+                    }
+                    nodes += FindInRoots(into);
+                }
+                return nodes;
+            }
+            finally
+            {
+                // 不留著遊戲物件的參照（換場景後就是銷毀的物件）；中途出錯也一樣
+                _nodes.Clear();
+                _roots.Clear();
+            }
+        }
+
+        /// <summary>拿 DontDestroyOnLoad 場景的根物件失敗過：之後一律用舊找法（見 FindItems）。</summary>
+        static bool _fallback;
+
+        /// <summary>_roots 裡啟用中的根物件，各自往下找節點、篩選後加進 into；回傳節點數。</summary>
+        static int FindInRoots(List<GameItemElement> into)
+        {
+            int nodes = 0;
+            foreach (var root in _roots)
+            {
+                if (root == null || !root.activeSelf) continue; // 根物件的 activeSelf 就是 activeInHierarchy
+                // 自己先清：不依賴 GetComponentsInChildren 會不會先清掉 list
+                _nodes.Clear();
+                root.GetComponentsInChildren(false, _nodes);
+                nodes += _nodes.Count;
+                foreach (var node in _nodes) AddIfItem(node, into);
+            }
+            return nodes;
+        }
+
+        /// <summary>
+        /// 舊找法（1.0.0）：場景裡所有啟用中的 TreeNodeRender。回傳節點數。給 CheckFind 核對用，和拿不到 DontDestroyOnLoad 場景時的退路
+        /// （退回以後 CheckFind 比的是舊找法對舊找法，一定一致；那時 log 另有一行 LogOnce 的錯誤）。
+        /// </summary>
+        static int FindItemsOld(List<GameItemElement> into)
+        {
+            var all = Object.FindObjectsOfType<TreeNodeRender>();
+            foreach (var node in all) AddIfItem(node, into);
+            return all.Length;
+        }
+
+        /// <summary>是物品本身那個節點（element 是物品、而且它的 handler 就是這個節點），而且 IsShown，就加進 into。</summary>
+        static void AddIfItem(TreeNodeRender node, List<GameItemElement> into)
+        {
+            if (node == null || !(node.element is GameItemElement el)) return;
+            if (!ReferenceEquals(el.handler, node)) return;
+            if (IsShown(el)) into.Add(el);
+        }
+
+        /// <summary>
+        /// 找節點核對（只在除錯模式，Perf.StopShowing 在放開鍵的那一幀叫）：新找法與舊找法各找一次要畫的物品（都過 IsShown），
+        /// 比兩邊（FindCheck），回傳一行 log。放在放開的那一幀：那一幀和下一幀都不算進效能的統計（每段前 2 幀不算）。
+        /// 清單與集合重複用，用完清掉（不留著遊戲物件的參照）；只有不一致時才另外配置描述的字串。
+        /// </summary>
+        internal static string CheckFind()
+        {
+            _checkNew ??= new List<GameItemElement>();
+            _checkOld ??= new List<GameItemElement>();
+            _onlyNew ??= new List<GameItemElement>();
+            _onlyOld ??= new List<GameItemElement>();
+            _setNew ??= new HashSet<GameItemElement>();
+            _setOld ??= new HashSet<GameItemElement>();
+            if (!_ddolLogged)
+            {
+                // 第一次核對時記一次 DontDestroyOnLoad 場景的狀態：有黑邊時停靠的視窗都在那裡，isLoaded 是什麼 Unity 文件沒寫
+                _ddolLogged = true;
+                var runner = ItemQuickInfoMod.RunnerObject;
+                if (runner != null)
+                {
+                    var s = runner.scene;
+                    ItemQuickInfoMod.Log.Msg($"效能｜找節點：DontDestroyOnLoad 場景「{s.name}」IsValid={s.IsValid()}、isLoaded={s.isLoaded}、" +
+                        $"根物件 {(s.IsValid() ? s.rootCount : 0)} 個{(_fallback ? "；拿不到根物件，已改用舊的找法" : "")}");
+                }
+            }
+            try
+            {
+                int newNodes = FindItems(_checkNew);
+                int oldNodes = FindItemsOld(_checkOld);
+                _setNew.UnionWith(_checkNew);
+                _setOld.UnionWith(_checkOld);
+                FindCheck.Missing(_checkOld, _setNew, _onlyOld);
+                FindCheck.Missing(_checkNew, _setOld, _onlyNew);
+                int duplicates = _checkNew.Count - _setNew.Count;
+                bool same = FindCheck.SameItems(_checkNew.Count, _checkOld.Count, _onlyNew.Count, _onlyOld.Count) && duplicates == 0;
+                return FindCheck.Line(newNodes, oldNodes, _checkNew.Count, _checkOld.Count,
+                    same ? null : Describe(_onlyOld), _onlyOld.Count, same ? null : Describe(_onlyNew), _onlyNew.Count, duplicates);
+            }
+            finally
+            {
+                _checkNew.Clear();
+                _checkOld.Clear();
+                _onlyNew.Clear();
+                _onlyOld.Clear();
+                _setNew.Clear();
+                _setOld.Clear();
+            }
+        }
+
+        /// <summary>前 FindCheck.ListMax 個物品的描述：identifier 與往上第一個 Canvas 的名稱。</summary>
+        static List<string> Describe(List<GameItemElement> items)
+        {
+            var list = new List<string>();
+            for (int i = 0; i < items.Count && i < FindCheck.ListMax; i++)
+            {
+                var el = items[i];
+                var h = el.handler;
+                var canvas = h != null ? h.GetComponentInParent<Canvas>(true) : null;
+                list.Add(FindCheck.Describe(el.identifier, canvas != null ? canvas.name : null));
             }
             return list;
         }

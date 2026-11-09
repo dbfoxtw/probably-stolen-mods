@@ -15,7 +15,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 贓物熱度／使用次數／耐久度／金屬錠純度的行、前綴的長短、一格寬放不下時的排法（長→短→拆兩行）、名稱位置與名稱字級、
     /// 機器裡的水（水耕機、循環水養殖系統）、輸出區的成品數、今晚的充電（紅字用早充後的電量、電池的 +NkJ）、
     /// 機器今晚的電力收支（先充再扣、警報系統先扣再充、每晚耗電、+4kJ／-8kJ 的行）、缺電（別的原因優先、判紅看今晚會扣的電）、
-    /// 按鍵的 Hold／Toggle（KeySwitch）、
+    /// 按鍵的 Hold／Toggle（KeySwitch）、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
     /// 三語字串（每個都有、英文只用 ASCII）、設定的順序與預設（Settings.cs 的原始碼）、設定的標籤與說明（Localization 的 csv）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify -c Release
     /// </summary>
@@ -50,6 +50,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             FeatureRules();
             Prefixes();
             KeySwitches();
+            PerfMeasure();
             Purifier();
             Furnace();
             Machines();
@@ -232,7 +233,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
         };
 
         /// <summary>
-        /// 決定 43：電池、機器電量、耐久度、使用次數不寫上限（不會出現「數字/數字」），顏色照舊拿上限算：
+        /// 電池、機器電量、耐久度、使用次數不寫上限，不會出現「數字/數字」；顏色照舊拿上限算：
         /// 電不夠今晚用紅、耐久剩 1/4 以下橘（含邊界）、使用次數剩 0 紅。三語 × 長短都測。
         /// </summary>
         static void NoMax()
@@ -527,6 +528,238 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(asked, 2, "Hold 按著、Toggle 按下時才問被擋");
         }
 
+        /// <summary>
+        /// 效能量測（PerfStats.cs）：對照組模式的輪替（第一次正常、五種的順序、第六次回到正常、重設、沒有 perf 標記永遠正常）、
+        /// 每種模式做哪些事、每幀耗時的統計（平均、95% nearest-rank、最慢、FPS、超過容量時 95% 註明只算前幾幀、每段前 2 幀不算）、配置量照來源選、Mono 取樣只加正的差、
+        /// log 三種行的格式（非英文語系下小數點照樣是句點）。
+        /// </summary>
+        static void PerfMeasure()
+        {
+            // 輪替
+            var c = new PerfCycle();
+            Eq(c.Current, PerfMode.Normal, "效能：一開始是正常");
+            var order = new[] { PerfMode.Normal, PerfMode.NoPlace, PerfMode.NoRecompute, PerfMode.Neither, PerfMode.SkipSamePosition };
+            for (int i = 0; i < order.Length; i++)
+                Eq(c.Start(true), order[i], $"效能：第 {i + 1} 次開始顯示的模式");
+            Eq(c.Start(true), PerfMode.Normal, "效能：第 6 次回到正常");
+            Eq(c.Start(true), PerfMode.NoPlace, "效能：第 7 次是不擺位置");
+            c.Reset();
+            Eq(c.Current, PerfMode.Normal, "效能：換場景後是正常");
+            Eq(c.Start(true), PerfMode.Normal, "效能：換場景後第一次開始顯示是正常");
+            Eq(c.Start(true), PerfMode.NoPlace, "效能：換場景後從頭輪");
+            var d = new PerfCycle();
+            for (int i = 0; i < 7; i++)
+                Eq(d.Start(false), PerfMode.Normal, $"效能：沒有 perf 標記，第 {i + 1} 次也是正常");
+            d.Start(true);
+            Eq(d.Start(false), PerfMode.Normal, "效能：perf 標記拿掉（沒在輪）就回到正常");
+
+            // 每種模式做哪些事：每幀擺位置、週期重算、比對位置
+            foreach (var (m, place, recompute, skip, name) in new[]
+            {
+                (PerfMode.Normal, true, true, false, "正常"),
+                (PerfMode.NoPlace, false, true, false, "不擺位置"),
+                (PerfMode.NoRecompute, true, false, false, "不重算"),
+                (PerfMode.Neither, false, false, false, "都不做"),
+                (PerfMode.SkipSamePosition, true, true, true, "位置沒變不重設"),
+            })
+            {
+                Eq(PerfModes.PlacesEachFrame(m), place, $"效能：{name} 每幀擺位置");
+                Eq(PerfModes.RecomputesPeriodically(m), recompute, $"效能：{name} 週期重算");
+                Eq(PerfModes.SkipsSamePosition(m), skip, $"效能：{name} 比對位置");
+                Eq(PerfModes.Name(m), name, $"效能：{m} 的名稱");
+            }
+            Eq(PerfModes.Next(PerfMode.SkipSamePosition), PerfMode.Normal, "效能：最後一種的下一種是正常");
+
+            // 95%（nearest-rank：排序後第 ceil(0.95n) 個）
+            Eq(FrameTimes.NearestRank95(1), 0, "效能：n=1 的 95% 是唯一那個");
+            Eq(FrameTimes.NearestRank95(20), 18, "效能：n=20 的 95% 是第 19 個");
+            Eq(FrameTimes.NearestRank95(100), 94, "效能：n=100 的 95% 是第 95 個");
+            Eq(FrameTimes.NearestRank95(21), 19, "效能：n=21 的 95% 是第 20 個（ceil(19.95)）");
+
+            var one = new FrameTimes(16);
+            one.Add(7.5f);
+            Eq(one.Percentile95(), 7.5f, "效能：一幀的 95%");
+            Eq(one.Max, 7.5f, "效能：一幀的最慢");
+
+            var twenty = new FrameTimes(64);
+            for (int i = 20; i >= 1; i--) twenty.Add(i); // 倒著放，確認有排序
+            Eq(twenty.Count, 20, "效能：20 幀");
+            Eq(twenty.Average, 10.5, "效能：1～20 的平均");
+            Eq(twenty.Percentile95(), 19f, "效能：1～20 的 95%");
+            Eq(twenty.Max, 20f, "效能：1～20 的最慢");
+            Check(Math.Abs(twenty.Fps - 1000.0 / 10.5) < 1e-9, $"效能：1～20 的 FPS：實際「{twenty.Fps}」");
+
+            var hundred = new FrameTimes(128);
+            for (int i = 0; i < 100; i++) hundred.Add((i * 37) % 100 + 1); // 1～100 打亂
+            Eq(hundred.Percentile95(), 95f, "效能：1～100 的 95%");
+            Eq(hundred.Average, 50.5, "效能：1～100 的平均");
+            Eq(hundred.Max, 100f, "效能：1～100 的最慢");
+
+            var full = new FrameTimes(4);
+            foreach (var v in new[] { 1f, 2f, 3f, 4f, 100f }) full.Add(v);
+            Eq(full.Count, 5, "效能：超過容量照樣算幀數");
+            Eq(full.Average, 22.0, "效能：超過容量時平均照算");
+            Eq(full.Max, 100f, "效能：超過容量時最慢照算");
+            Eq(full.Percentile95(), 4f, "效能：超過容量時 95% 只用前面存的");
+            full.Clear();
+            Eq(full.Count, 0, "效能：清掉後沒有幀");
+            Eq(full.Percentile95(), 0f, "效能：沒有幀時 95% 是 0");
+            Eq(full.Fps, 0.0, "效能：沒有幀時 FPS 是 0");
+
+            // 一段期間：前 2 幀不算；重算不管第幾幀都算；計數讀不到或都是 0 的不寫；配置照來源選
+            var p = new Period(64);
+            p.AddFrame(500f, 80.0, 1.0, 1000, 2000, new long[] { 9, 9, 9, 9 }); // 上一段的最後一幀
+            p.AddFrame(120f, 2.0, 1.0, 1000, 2000, new long[] { 9, 9, 9, 9 }); // 開始顯示那一幀的尖峰
+            p.AddFrame(10f, 0.5, 0.2, 2048, 1024, new long[] { -1, 100, 0, 40 });
+            p.AddFrame(20f, 1.5, double.NaN, 2048, 1024, new long[] { -1, 300, 0, 60 });
+            p.AddRecompute(3.0, 1.0, 1.0, 0.5, 0.5);
+            Eq(p.TotalFrames, 4, "效能：期間經過 4 幀");
+            Eq(p.Frames.Count, 2, "效能：前 2 幀不算");
+            Eq(p.Frames.Average, 15.0, "效能：算的幀的平均");
+            Eq(p.Frames.Max, 20f, "效能：前 2 幀的尖峰不算進最慢");
+            Eq(p.ModTick.Max, 1.5, "效能：mod 每幀也不算前 2 幀");
+            Eq(p.Positions.Count, 1, "效能：沒擺位置（NaN）的幀不算進擺位置");
+            var s = new PeriodSummary();
+            // 兩種來源的總和故意不同（ProfilerRecorder 4 KB、Mono 2 KB），寫反了測得出來
+            p.Summarize(s, 0.5, 1, true);
+            Eq(s.AllocKb, 4.0, "效能：ProfilerRecorder 的配置（前 2 幀不算）");
+            Eq(s.AllocByRecorder, true, "效能：配置的來源是 ProfilerRecorder");
+            p.Summarize(s, 0.5, 1, false);
+            Eq(s.AllocKb, 2.0, "效能：Mono 取樣的配置（前 2 幀不算）");
+            Eq(s.AllocByRecorder, false, "效能：配置的來源是 Mono 取樣");
+            Eq(s.P95Only, 0, "效能：沒超過容量時 95% 全部都算");
+            Check(double.IsNaN(s.Counters[(int)PerfCounter.MainThread]), "效能：讀不到的計數不寫");
+            Eq(s.Counters[(int)PerfCounter.DrawCalls], 200.0, "效能：draw call 的平均");
+            Check(double.IsNaN(s.Counters[(int)PerfCounter.Batches]), "效能：一直是 0 的計數不寫");
+            Eq(s.Counters[(int)PerfCounter.SetPassCalls], 50.0, "效能：SetPass 的平均");
+            Eq(s.Recomputes, 1, "效能：重算次數");
+            Eq(s.RecAvg, 3.0, "效能：重算平均");
+            p.Clear();
+            Eq(p.TotalFrames, 0, "效能：新的期間從 0 幀開始");
+            p.AddFrame(999f, 0, double.NaN, 0, 0, null);
+            Eq(p.Frames.Count, 0, "效能：新的期間也不算前 2 幀");
+
+            // 計數的種類數是 const（玩家的版本不跑靜態初始化），要和列舉一致
+            Eq(Period.CounterCount, Enum.GetValues(typeof(PerfCounter)).Length, "效能：CounterCount 和 PerfCounter 的種類數一致");
+
+            // 超過容量：95% 只算前面存的，Summarize 記下只算了幾幀
+            var over = new Period(4);
+            foreach (var v in new[] { 50f, 50f, 1f, 2f, 3f, 4f, 100f, 200f }) over.AddFrame(v, 0, double.NaN, 0, 0, null);
+            var so = new PeriodSummary();
+            over.Summarize(so, 1.0, 0, true);
+            Eq(so.Frames, 6, "效能：超過容量時幀數照算");
+            Eq(so.P95Only, 4, "效能：超過容量時 95% 只算前 4 幀");
+            Eq(so.P95Ms, 4.0, "效能：超過容量時的 95%");
+
+            // Mono 記憶體取樣：只加正的差（GC 那一幀變少，跳過）
+            var a = new AllocSampler();
+            long total = 0;
+            foreach (var used in new long[] { 100, 150, 120, 200, 200 }) total += a.Sample(used);
+            Eq(total, 130L, "效能：Mono 取樣只加正的差");
+            a.Rebase(1000);
+            Eq(a.Sample(1010), 10L, "效能：重新取基準後從基準算");
+
+            // log 的格式：用固定的數字，在小數點是逗號的語系下也要是句點
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                Check((1.5).ToString() == "1,5", "效能：測試用的語系小數點是逗號");
+                var idle = new PeriodSummary
+                {
+                    Seconds = 5.04, Frames = 300, AvgMs = 8.333, Fps = 120.0, P95Ms = 9.0, MaxMs = 12.1,
+                    ModAvg = 0.0021, ModMax = 0.0104, Gc = 0, AllocKb = 0, AllocByRecorder = true,
+                };
+                idle.Counters[(int)PerfCounter.MainThread] = 12300000;
+                idle.Counters[(int)PerfCounter.DrawCalls] = 210.5;
+                idle.Counters[(int)PerfCounter.SetPassCalls] = 40;
+                Eq(PerfLog.Idle(idle),
+                    "效能｜沒按 5.0 秒：300 幀，平均 8.33 ms（120.0 FPS），95% 在 9.00 ms 內，最慢 12.10 ms｜mod 每幀 0.002 ms，最慢 0.010 ms" +
+                    "｜GC 0 次、配置 0 KB（ProfilerRecorder）｜主執行緒 每幀 12.30 ms、draw call 每幀 210.5、SetPass 每幀 40.0",
+                    "效能：「沒按」那一行");
+
+                var press = new PressSummary();
+                press.Clear(PerfMode.Normal);
+                press.HasRecompute = true;
+                press.RecMs = 84.2; press.FindMs = 1.2; press.ReadMs = 30; press.PutMs = 50; press.FinishMs = 3;
+                press.PosMs = 1.0; press.FrameMs = 120.5; press.Nodes = 8120; press.Items = 640; press.Labels = 312;
+                Eq(PerfLog.Press(press),
+                    "效能｜按下（正常）：重算 84.20 ms（找節點 1.20、讀物品 30.00、畫標籤 50.00、收尾 3.00），擺位置 1.00 ms，那一幀共 120.50 ms" +
+                    "｜節點 8120、物品 640、標籤 312",
+                    "效能：「按下」那一行");
+                press.Clear(PerfMode.NoPlace);
+                press.FrameMs = 16.7;
+                Eq(PerfLog.Press(press), "效能｜按下（不擺位置）：重算 沒做，擺位置 不做，那一幀共 16.70 ms｜節點 0、物品 0、標籤 0",
+                    "效能：「按下」那一行（沒重算、不擺位置）");
+
+                var held = new PeriodSummary
+                {
+                    Seconds = 10.1, Frames = 602, AvgMs = 16.8, Fps = 59.5, P95Ms = 18.2, MaxMs = 31,
+                    Recomputes = 40, RecAvg = 3.1, FindAvg = 1.2, ReadAvg = 0.9, PutAvg = 0.8, FinishAvg = 0.2, RecMax = 5.5,
+                    PosFrames = 600, PosAvg = 0.9, PosMax = 1.6, ModAvg = 4, ModMax = 8, Gc = 2, AllocKb = 1840.4, AllocByRecorder = false,
+                    Nodes = 8120, Items = 640, Labels = 312,
+                };
+                Eq(PerfLog.Held(held, PerfMode.Normal),
+                    "效能｜按住 10.1 秒（正常）：602 幀，平均 16.80 ms（59.5 FPS），95% 在 18.20 ms 內，最慢 31.00 ms" +
+                    "｜重算 40 次，平均 3.10 ms（找節點 1.20、讀物品 0.90、畫標籤 0.80、收尾 0.20），最慢 5.50 ms" +
+                    "｜擺位置 每幀 0.900 ms，最慢 1.600 ms｜mod 每幀 4.000 ms，最慢 8.000 ms｜GC 2 次、配置 1840 KB（Mono 堆積取樣，可能少算）" +
+                    "｜節點 8120、物品 640、標籤 312",
+                    "效能：「按住」那一行");
+                held.Recomputes = 0;
+                held.PosFrames = 0;
+                held.Frames = 0;
+                Eq(PerfLog.Held(held, PerfMode.Neither),
+                    "效能｜按住 10.1 秒（都不做）：0 幀｜重算 0 次｜擺位置 不做｜mod 每幀 4.000 ms，最慢 8.000 ms" +
+                    "｜GC 2 次、配置 1840 KB（Mono 堆積取樣，可能少算）｜節點 8120、物品 640、標籤 312",
+                    "效能：「按住」那一行（都不做、沒有幀）");
+
+                var full2 = new PeriodSummary
+                {
+                    Seconds = 12.0, Frames = 40000, AvgMs = 0.3, Fps = 3333.3, P95Ms = 9.0, MaxMs = 12.1, P95Only = 32768,
+                    ModAvg = 0.0021, ModMax = 0.0104, Gc = 0, AllocKb = 0, AllocByRecorder = true,
+                };
+                Eq(PerfLog.Idle(full2),
+                    "效能｜沒按 12.0 秒：40000 幀，平均 0.30 ms（3333.3 FPS），95% 在 9.00 ms 內（只算前 32768 幀），最慢 12.10 ms" +
+                    "｜mod 每幀 0.002 ms，最慢 0.010 ms｜GC 0 次、配置 0 KB（ProfilerRecorder）",
+                    "效能：超過容量時「95%」註明只算前幾幀");
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = culture; }
+
+            FindChecks();
+        }
+
+        /// <summary>找節點核對：兩邊的差集、算不算一致、log 的三種行。</summary>
+        static void FindChecks()
+        {
+            var only = new List<int> { 99 };
+            FindCheck.Missing(new List<int> { 1, 2, 3, 4 }, new HashSet<int> { 2, 4, 5 }, only);
+            Eq(string.Join(",", only), "1,3", "找節點核對：舊的有、新的沒有（照順序，先清掉原本的）");
+            FindCheck.Missing(new List<int> { 2, 4 }, new HashSet<int> { 2, 4, 5 }, only);
+            Eq(only.Count, 0, "找節點核對：全部都有時是空的");
+
+            Check(FindCheck.SameItems(64, 64, 0, 0), "找節點核對：數量一樣、沒有差的算一樣");
+            Check(!FindCheck.SameItems(65, 64, 0, 0), "找節點核對：新找法重複找到（數量多）不算一樣");
+            Check(!FindCheck.SameItems(64, 64, 1, 1), "找節點核對：兩邊各多一個不算一樣");
+
+            Eq(FindCheck.Line(510, 510, 64, 64, null, 0, null, 0, 0), "效能｜找節點核對：一致（節點 510、物品 64）", "找節點核對：一致");
+            Eq(FindCheck.Line(510, 512, 64, 64, null, 0, null, 0, 0), "效能｜找節點核對：物品一致（64 個），節點數不同：新 510、舊 512",
+                "找節點核對：物品一致、節點數不同");
+
+            var oldOnly = new List<string>();
+            for (int i = 1; i <= 5; i++) oldOnly.Add(FindCheck.Describe($"item_{i}", i == 5 ? null : "WindowCanvas"));
+            Eq(oldOnly[4], "item_5（沒有 Canvas）", "找節點核對：沒有 Canvas 的描述");
+            Eq(FindCheck.Line(400, 510, 58, 64, oldOnly, 7, new List<string> { FindCheck.Describe("box", "Dock") }, 1, 0),
+                "效能｜找節點核對：不一致：新 400、舊 510 個節點；物品 新 58、舊 64" +
+                "；舊的有、新的沒有的 7 個：item_1（WindowCanvas）、item_2（WindowCanvas）、item_3（WindowCanvas）、item_4（WindowCanvas）、item_5（沒有 Canvas）…" +
+                "；新的有、舊的沒有的 1 個：box（Dock）",
+                "找節點核對：不一致（只列前 5 個，多的寫…）");
+            Eq(FindCheck.Line(510, 510, 66, 64, new List<string>(), 0, new List<string>(), 0, 2),
+                "效能｜找節點核對：不一致：新 510、舊 510 個節點；物品 新 66、舊 64；舊的有、新的沒有的 0 個；新的有、舊的沒有的 0 個；新找法重複找到 2 個",
+                "找節點核對：新找法重複找到");
+            Eq(FindCheck.Line(510, 510, 64, 64, new List<string>(), 0, new List<string>(), 0, 1).Contains("不一致"), true,
+                "找節點核對：重複找到時就算數量一樣也不算一致");
+        }
+
         /// <summary>淨水器「已淨化完」（照 MachinePurifier.RemoveLargestFirst 會去掉 0 的情況）。cap 9901＝沒有品質加成的上限。</summary>
         static void Purifier()
         {
@@ -573,7 +806,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
         /// <summary>
         /// 每台機器的判斷順序（MachineLogic.Decide，照遊戲各機器的 onCycleEndSlotItemFunc）：每種原因、會動的情況、
-        /// 決定 21（容器成分判斷的原因只在水質看得到時）、決定 24（今晚不會跑的機器沒有原因與進度）。
+        /// 容器成分判斷的原因只在水質看得到時、今晚不會跑的機器沒有原因與進度。
         /// </summary>
         static void Machines()
         {
@@ -586,7 +819,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(MachineLogic.KindOf("alarm"), MachineKind.Other, "不認得的是其他");
             Check(MachineLogic.HoldsWater(MachineKind.Purifier) && MachineLogic.HoldsWater(MachineKind.MoistureFarm) && MachineLogic.HoldsWater(MachineKind.Evaporator),
                 "淨水器、水分收集器、蒸餾器顯示裡面的水");
-            // 決定 52：水耕機（水格 2）、循環水養殖系統（水箱格 1）也顯示；自動售水機不加
+            // 水耕機（水格 2）、循環水養殖系統（水箱格 1）也顯示裡面的水，自動售水機不加
             Check(MachineLogic.HoldsWater(MachineKind.Hydroponic) && MachineLogic.HoldsWater(MachineKind.Ras), "水耕機、循環水養殖系統也顯示裡面的水");
             Eq(MachineLogic.WaterSlot(MachineKind.Purifier), 2, "淨水器的水在容器格 2");
             Eq(MachineLogic.WaterSlot(MachineKind.MoistureFarm), 2, "水分收集器的水在容器格 2");
@@ -687,7 +920,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
             Decide(MachineKind.Other, new MachineFacts(), Reason.None, false, "其他機器：只有電");
 
-            // 決定 24：今晚不會跑的機器（不是自己的、不在店裡）沒有原因與進度
+            // 今晚不會跑的機器（不是自己的、不在店裡）沒有原因與進度
             foreach (MachineKind k in Enum.GetValues(typeof(MachineKind)))
                 Decide(k, new MachineFacts { RunsTonight = false, State = Working }, Reason.None, false, $"{k} 不是自己的：沒有原因與進度");
         }
@@ -1323,7 +1556,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(settings.Contains("_nameTextSize != null ? _nameTextSize.Value : TextSize.Large"), "NameTextSize 屬性的預設是 Large");
             var d = new Display();
             Check(d.BatteryTonightCharge && d.MachineTonightNet && d.MachineOutput, "Display 的新開關預設開");
-            // 決定 62：機器的「今晚會充多少」改成收支，key 跟著改名（還沒發布，不用相容），舊的 key 不留
+            // 機器的「今晚會充多少」改成收支，key 跟著改名；那時還沒發布、不用相容，舊的 key 不留
             Check(defs.All(x => x.key != "ShowMachineTonightCharge"), "舊的 key ShowMachineTonightCharge 不見了");
         }
 
@@ -1737,26 +1970,26 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 電池沒有前綴、不分長短，說明裡舉一個例子，和標籤畫的一樣（只寫剩多少）
             foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
                 Check(csv.TryGetValue("cfg_battery_charge_tip", out var bt) && bt.Contains(" " + Rules.Kj(8)), $"{name} cfg_battery_charge_tip 的例子是 8kJ");
-            // 決定 43：說明不再舉上限的例子、不再寫「目前/上限」
+            // 說明不再舉上限的例子、不再寫「目前/上限」
             foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
                 foreach (var (k, v) in csv)
                     foreach (var old in new[] { "8/100kJ", "87/100kJ", "320/400", "3/5", "目前/上限", "剩余/上限", "current/max", "capacity", "容量" })
                         Check(!v.Contains(old), $"{name} {k} 沒有上限的舊例子「{old}」");
-            // 決定 45：按鍵方式的設定兩份都有；按鍵的名稱不分模式（不寫按住）、說明提到 Toggle
+            // 按鍵方式（Hold／Toggle）的設定兩份都有；按鍵的名稱不分模式（不寫按住）、說明提到 Toggle
             foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
             {
                 Check(csv.TryGetValue("cfg_key_mode", out var km) && km.Trim().Length > 0, $"{name} 有 cfg_key_mode");
-                // 決定 57：第一行說明、下面 Hold、Toggle 各一行（選項＝意思）
+                // 按鍵方式的說明：第一行說明、下面 Hold、Toggle 各一行（選項＝意思）
                 Check(csv.TryGetValue("cfg_key_mode_tip", out var kt) && kt.Split('\n').Length == 3 && kt.Split('\n')[1].StartsWith("Hold") && kt.Split('\n')[2].StartsWith("Toggle"),
                     $"{name} cfg_key_mode_tip 三行、Hold 與 Toggle 各一行");
                 Check(csv.TryGetValue("key_show_info_tip", out var st) && st.Contains("Toggle"), $"{name} key_show_info_tip 提到 Toggle");
             }
             Check(en.TryGetValue("key_show_info", out var keyNameEn) && !keyNameEn.ToLowerInvariant().Contains("hold"), "en.csv key_show_info 不分模式（不寫 hold）");
             Check(zh.TryGetValue("key_show_info", out var keyNameZh) && !keyNameZh.Contains("按住"), "zh.csv key_show_info 不分模式（不寫按住）");
-            // 決定 44：剩幾天的字樣出現在前綴與進度的說明
+            // 剩幾天的字樣出現在前綴與進度的說明
             Check(en.TryGetValue("cfg_prefix_tip", out var pEn) && pEn.Contains("3d,") && pEn.Contains("3day,") && !pEn.Contains("Prog"), "en.csv cfg_prefix_tip 是剩幾天的字樣");
             Check(zh.TryGetValue("cfg_prefix_tip", out var pZh) && pZh.Contains("、3天、") && pZh.Contains("、剩3天、") && !pZh.Contains("进度"), "zh.csv cfg_prefix_tip 是剩幾天的字樣");
-            // 決定 53、57：成品數的前綴（Out／Output、成／成品）也在對照裡
+            // 成品數的前綴（Out／Output、成／成品）也在前綴的對照裡
             Check(pEn != null && pEn.Contains(", Out,") && pEn.Contains(", Output,"), "en.csv cfg_prefix_tip 有 Out／Output");
             Check(pZh != null && pZh.Contains("、成、") && pZh.Contains("、成品、"), "zh.csv cfg_prefix_tip 有 成／成品");
             Check(en.TryGetValue("cfg_machine_progress_tip", out var mpEn) && mpEn.EndsWith("\nShort: 3d\nLong: 3day"), "en.csv cfg_machine_progress_tip 的例子");

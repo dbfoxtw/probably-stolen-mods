@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v1.0.1（2026-11-09）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+
+- 效能：顯示標籤時，物品多的店不再每 0.25 秒卡一下。找畫面上的物品改成只看開著的地方，不再連關著的箱子裡的物品也看過一遍。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13)
+
+- Performance: while the labels are shown, shops with many items no longer hitch every quarter second. Finding the items on screen now only looks at what's open, instead of also going through everything in closed containers.
+
 ## v1.0.0（2026-11-08）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）

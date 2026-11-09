@@ -42,7 +42,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 一律顯示真實水質（起預設開，關掉＝照遊戲的規則）。「顯示水質」關掉時沒有作用（說明這樣寫）：水質那行不顯示，
-        /// 決定 21 的「水質看得到」也不算它。還沒讀設定時照預設（開），和其他開關一樣。
+        /// 淨水器這類機器「水質看得到才判斷原因」的條件也不把它算成看得到。還沒讀設定時照預設（開），和其他開關一樣。
         /// </summary>
         internal static bool RealPurity => On(_realPurity) && On(_waterPurity);
 
@@ -131,8 +131,8 @@ namespace ProbablyStolenItemQuickInfo
             // 輸出區的成品數接在進度後面
             _machineOutput = cfg.Define("ShowMachineOutput", true, SectionMachines, () => L("cfg_machine_output"), () => L("cfg_machine_output_tip"));
             _machineWater = cfg.Define("ShowMachineWater", true, SectionMachines, () => L("cfg_machine_water"), () => L("cfg_machine_water_tip"));
-            // Items 段：任何物品都可能有的資訊，排在 Machines 後面。四個開關照決定 37 列的順序（熱度、使用次數、耐久度、純度；
-            // 標籤上的行序是耐久度、純度、使用次數、熱度）
+            // Items 段：任何物品都可能有的資訊，排在 Machines 後面。四個開關的順序是熱度、使用次數、耐久度、純度
+            // （和標籤上的行序不同，標籤是耐久度、純度、使用次數、熱度）
             _stolenHeat = cfg.Define("ShowStolenHeat", true, SectionItems, () => L("cfg_stolen_heat"), () => L("cfg_stolen_heat_tip"));
             _useCount = cfg.Define("ShowUseCount", true, SectionItems, () => L("cfg_use_count"), () => L("cfg_use_count_tip"));
             _durability = cfg.Define("ShowDurability", true, SectionItems, () => L("cfg_durability"), () => L("cfg_durability_tip"));

@@ -18,10 +18,15 @@ namespace ProbablyStolenItemQuickInfo
         internal const string DataFolder = "ModData\\dbfoxtw_item-quick-info";
 
         internal static readonly ModLogger Log = new ModLogger();
-        /// <summary>mod 資料夾裡的 debug 存在時（install.bat 裝的開發版）：每次開始顯示時記標籤數與前 20 個物品的內容。</summary>
+        /// <summary>
+        /// mod 資料夾裡的 debug 存在時（install.bat 裝的開發版）：每次開始顯示時記標籤數與前 20 個物品的內容，也記效能 log（Perf）。
+        /// 另一個標記 perf（install-perf.bat）：每次開始顯示換一種對照組模式（Perf.Cycling），也記效能 log，不記物品內容。
+        /// </summary>
         internal static bool Debug;
         /// <summary>Init 跑完了。</summary>
         internal static bool Ready;
+        /// <summary>每幀工作的物件（DontDestroyOnLoad）：ItemReader 從它的 scene 拿到 DontDestroyOnLoad 的場景，找那裡的物品節點。</summary>
+        internal static GameObject RunnerObject;
 
         /// <summary>除錯標記讀過了沒（Init 時讀不到 mod 資料夾，見 EnsureDebugFlag）。</summary>
         static bool _debugChecked;
@@ -35,6 +40,7 @@ namespace ProbablyStolenItemQuickInfo
             var go = new GameObject("ItemQuickInfo");
             UnityEngine.Object.DontDestroyOnLoad(go);
             go.AddComponent<ItemQuickInfoRunner>();
+            RunnerObject = go;
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             Log.Msg($"設定（ModConfigs\\{ModId}.json 與 {DataFolder}\\{Settings.KeyFile}）：{Settings.Describe()}");
@@ -56,11 +62,13 @@ namespace ProbablyStolenItemQuickInfo
             SceneManager.sceneUnloaded -= OnSceneUnloaded;
             try { ModHelper.RemoveGameOptions(ModId); }
             catch (Exception e) { Log.Warning($"拿掉按鍵綁定失敗：{e.Message}"); }
+            try { Perf.Dispose(); }
+            catch (Exception e) { Log.Warning($"停止效能量測失敗：{e.Message}"); }
         }
 
         /// <summary>
-        /// 除錯標記（mod 資料夾的 debug）。Init 時遊戲還沒把這個 mod 登記進 ModLoader.Mods（Init 回來之後才登記），
-        /// ModHelper 找不到 mod 資料夾，所以延到第一個場景載入或第一幀才讀。
+        /// 除錯標記（mod 資料夾的 debug、perf）。Init 時遊戲還沒把這個 mod 登記進 ModLoader.Mods（Init 回來之後才登記），
+        /// ModHelper 找不到 mod 資料夾，所以延到第一個場景載入或第一幀才讀。兩個都沒有時（玩家的版本）不量效能。
         /// </summary>
         internal static void EnsureDebugFlag()
         {
@@ -68,7 +76,13 @@ namespace ProbablyStolenItemQuickInfo
             _debugChecked = true;
             try { Debug = ModHelper.ModFileExists(ModId, "debug"); }
             catch (Exception e) { Log.Warning($"讀取除錯標記失敗：{e.Message}"); }
-            if (Debug) Log.Msg("除錯模式：每次開始顯示時畫了幾個標籤、前 20 個物品的內容會寫進 log");
+            try { Perf.Cycling = ModHelper.ModFileExists(ModId, "perf"); }
+            catch (Exception e) { Log.Warning($"讀取效能標記失敗：{e.Message}"); }
+            Perf.On = Debug || Perf.Cycling;
+            if (Perf.Cycling)
+                Log.Msg("效能量測（perf 標記）：每次開始顯示換一種對照組模式，「效能｜」開頭的量測寫進 log；物品內容不記（會算進量測）");
+            else if (Debug)
+                Log.Msg("除錯模式：每次開始顯示時畫了幾個標籤、前 20 個物品的內容會寫進 log，「效能｜」開頭的是效能量測");
         }
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
