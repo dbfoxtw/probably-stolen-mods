@@ -14,7 +14,7 @@ Dialogue	dialog_lun_duty_black_injector_thanks	9c1a8b413b817346	2	4	啦
 Dialogue	dialog_lun_duty_right_item	7aa84642b1b0c939	3	4	起來
 Dialogue	dialog_lun_surplus_2	d0c449f614b11339	12	13	剩
 Dialogue	dialog_lun_inspect_2	8642a59588cf35ae	0	0	全部	2	3	，
-Dialogue	dialog_lun_inspect_drugs_1	9170f7de86112e25	0	2	我	3	4	到毒品	5	13	。一律	15	17	
+Dialogue	dialog_lun_inspect_drugs_1	9170f7de86112e25	0	2	我	3	5	到	8	13	了。一律	15	17	
 Dialogue	dialog_eleanor_intro_7	9d6ae7e782634b29	0	3	那麼	7	8	嗎
 Dialogue	dialog_serpico3_1	f6ca0aec29104fad	6	7	喝
 Dialogue	dialog_nellis1_3	2ced622a39a00926	17	19	樣

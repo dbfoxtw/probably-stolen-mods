@@ -94,28 +94,33 @@ namespace ProbablyStolenZhHant
     /// <summary>
     /// Text Animator 會記住自己設給 TMP 的文字，每幀比對；只在 TMP 層轉換會被當成「外部改了文字」，打字機效果就直接整段顯示。
     /// 所以在它解析文字的入口（private void TAnimCore.ConvertText(string, ShowTextMode)）先轉好，讓它記住的就是繁體。
-    /// 目標用字串找、找不到就略過（Prepare 傳回 false），不讓整個 mod 因為 Text Animator 改版而啟用失敗；
-    /// 屬性寫 typeof(TAnimCore) 的話，目標不見時 PatchAll 會丟例外。Febucci 不在遊戲掃描的「外部組件」清單裡，
-    /// 用字串的 AccessTools.Method 不算 reflection-external（check 的「官方掃描」確認）。
-    /// Rev13（2026-11-09）的掃描器起 patch Unity、系統的方法算 reflection-external（12-10 起拒絕），這個 patch 沒被擋
-    /// （Febucci 不在它當成外部的名稱前綴裡）；但官方指南的通則寫「遊戲以外的 patch 目標算 reflection-external」，
-    /// 免費的只列 Assembly-CSharp 與三個 UI 命名空間，和掃描器的實作不一致。2026-11-09 已去問官方，12-10 的版本出來再掃一次。
+    /// 目標用 typeof(TAnimCore)＋字面的方法名找（官方建議的寫法：Febucci 的型別 ModReflect 碰不到，官方指南也把
+    /// 不是遊戲型別的 "Type:Member" 字串算成 reflection-external）。用 Prepare＋TargetMethod、找不到就略過（Prepare 傳回 false），
+    /// TAnimCore 或 ConvertText 不見時不讓整個 mod 啟用失敗；寫在屬性上的話，目標不見時 PatchAll 會丟例外。
+    /// 但 typeof 讓 DLL 參考 Febucci.TextAnimator.Runtime 組件：遊戲把這個 DLL 拿掉或改名時，掃描會因為參考不到組件
+    /// 而拒絕整個 mod（和 TMP、Localization 的參考一樣的風險），遊戲更新時要先看它還在。
+    /// Febucci 是遊戲自帶的函式庫，不算「遊戲以外」：12-10 的安全更新起，patch 系統、引擎、Harmony、Steam 的方法才算
+    /// reflection-external（官方 2026-11-10 的答覆；遊戲的掃描器也不把 Febucci 當外部，check 的「官方掃描」確認）。
     /// </summary>
     [HarmonyPatch]
     static class TextAnimatorPatch
     {
-        internal const string Target = "Febucci.UI.Core.TAnimCore:ConvertText";
+        /// <summary>給 log 看的名稱。</summary>
+        internal const string Target = "TAnimCore.ConvertText";
         internal static bool Found;
 
         static MethodBase Find()
         {
-            try { return AccessTools.Method(Target); }
+            try { return AccessTools.Method(typeof(Febucci.UI.Core.TAnimCore), "ConvertText"); }
             catch (Exception) { return null; }
         }
 
+        // Text Animator 改版、TAnimCore 不見時，載入型別的例外可能在 JIT Find 的時候丟出來（Find 裡面的 try 接不到），
+        // 所以這裡再包一層（同 MissingTranslations.GetPatch）
         static bool Prepare()
         {
-            Found = Find() != null;
+            try { Found = Find() != null; }
+            catch (Exception) { Found = false; }
             return Found;
         }
 

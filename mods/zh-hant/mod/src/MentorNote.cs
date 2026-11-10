@@ -22,7 +22,7 @@ namespace ProbablyStolenZhHant
     /// 調的，剛好一行對齊紙上的一格橫線。中文時 TMPLocalizer 把字型換成 NotoSansSC，它的 lineHeight 比較高，每行多 6.6%，越往下越偏離橫線。
     /// 打開筆記時補上兩種字型 lineHeight 的差（換算成 lineSpacing 的單位），中文也一行一格；這個差和字級無關，自動縮字時也對。
     ///
-    /// 目標用字串找、找不到就略過（同 TextAnimatorPatch）：PaperUIManager 是遊戲自己的類別，改版時可能改名或改簽名，
+    /// 目標用字串找、找不到就略過（Prepare＋TargetMethod 同 TextAnimatorPatch，但目標用字串）：PaperUIManager 是遊戲自己的類別，改版時可能改名或改簽名，
     /// 屬性寫 typeof(PaperUIManager) 的話目標不見時 PatchAll 會丟例外、整個 mod 不能啟用，為了一個排版的小修正不值得。
     /// Assembly-CSharp 不在遊戲掃描的「外部組件」清單裡，用字串的 AccessTools.Method 不算 reflection-external（check 的「官方掃描」確認）。
     /// </summary>

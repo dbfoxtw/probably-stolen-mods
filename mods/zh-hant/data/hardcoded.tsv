@@ -111,6 +111,25 @@ Cannot	(?<=<color=#be514c>)Cannot(?: |</color>\n<color=#be514c>)activate(?: |</c
 # 名稱換好以後，提示框那行的「, 」換成頓號（斷在逗號後面時保留斷行）
 無效	(?<=<color=#88948a>對以下對象無效[：](?:[^<\n]|</color>\n<color=#88948a>)*),(?: |(?=</color>\n<color=#88948a>))	、
 
+# 模組畫面字串表沒有的英文（2026-11-10 查 100-Rev14 beta）：程式用 LocHelper.GetLocalizedUIOrDefault，key 不在任何語言的字串表，
+# 遊戲顯示寫死的英文預設值。Rev14 程式裡這種 key 有 5 個：window 的說明與最後一條停用原因是 Rev14 新加的，其他三條 Rev13 就沒進字串表（當時漏看）。
+# 官方補進字串表以後這幾條就用不到（不刪也不會換錯）。
+# 權限的說明（ModCapability.DisplayName）：啟用確認視窗一行一個「- 說明」（ModEnablePromptUI.FormatCapabilities，包顏色標籤）、
+# 拒絕啟用的對話框一行一個「- 說明」（ModCapability.FormatList）、模組詳細資料的「權限：說明, 說明」、下面那條警告的括號裡，
+# 前後的格式都不同，所以不錨定、只比對整句。譯法照字串表裡其他權限的說明（ui_mods_cap_*）
+Move and resize the game window	Move and resize the game window on your monitors	在你的螢幕上移動遊戲視窗並調整大小
+Keep running code in the background	Keep running code in the background, even after the game switches the mod off	在背景持續執行程式碼，即使遊戲已停用此模組
+# 模組清單那一列的警告（ModUIManager 的 ui_mods_issue_deprecated_capability，Rev13 起；Rev13 第一次啟動看到的紅三角）。
+# 括號裡是用「, 」接起來的權限說明（字串表有的已經是中文，沒有的由上面兩條換）；譯法照其他警告（ui_mods_issue_*）
+Uses capabilities the next game update refuses	Uses capabilities the next game update refuses \((.*?)\)\. The mod author needs to update it\.	使用了下次遊戲更新會拒絕的權限（$1）。模組作者需要更新它。
+# 拒絕啟用的對話框（ModLoader 的 ui_mods_enable_refused_capability，Rev13 起）：「{0} declares capabilities mods can no longer use:\n{1}\n\n…」，
+# {0} 是模組名稱、{1} 是權限清單。分成前後兩段換，中間的清單照上面；譯法照同一個對話框的 ui_mods_enable_refused_undeclared
+ declares capabilities mods can no longer use:	 declares capabilities mods can no longer use:	宣告了模組已經不能使用的權限：
+Details are in the console (mod-scan).	The mod author needs to update it\. Details are in the console \(mod-scan\)\.	模組作者需要更新它。詳情請查看主控台中的mod-scan記錄。
+# 模組被遊戲停掉的原因（ModLoader.OnSteamGuardTripped 的 ui_mods_note_stopped_console，Rev14 新加）：代入字串表的
+# ui_mods_trust_stopped 與 ui_mods_enable_stopped 的 {0}／{1}；譯法照 ui_mods_note_stopped_process
+developer console commands	it tried to run developer console commands from its own code, which mods are never allowed to do	它試圖從自己的程式碼執行開發者主控台指令，而模組絕不允許這樣做
+
 # 彩券說明頁（PaperUIManager.OpenLotteryInfo 打開的 _LotteryInfographic，level1 場景裡序列化好的文字，2026-10-31 實機看到）：
 # 獎品表右欄的獎金寫死成「1000000 Credits」等五個（字型設成全大寫，畫面上是 CREDITS），左欄「中6個」等走字串表。
 # 照字串表「{0}信用點」緊接數字；只列這五個金額、整段剛好是「數字 Credits」才換，免得換到玩家自己打的字
