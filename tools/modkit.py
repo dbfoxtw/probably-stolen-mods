@@ -33,10 +33,12 @@ DEMO_GAME_DIR_EXAMPLE = r"D:\SteamLibrary\steamapps\common\Probably Stolen Demo"
 # 打包檔名標出對應的遊戲：給 Demo 用的 zip 加「Demo」（ProbablyStolen-ToDoList-Demo-1.0.1.zip），玩家在 Nexus 與
 # Releases 一眼看得出來。只給還沒移植的 MelonLoader mod（Mod.package）用；官方格式的 zip 不加
 ZIP_EDITION = "Demo"
-# 官方格式的 manifest 的 <GameVersions>：測過的遊戲版本，所有 mod 一起跟著改。遊戲拿它比對 Application.version
-# （正式版 1.0 回報「0.46D」，比對時去掉數字與 . 以外的字，所以寫 0.46），不符時 mod 清單顯示紅字警告。官方指南建議
-# 填、每次更新 mod 時跟著改：遊戲改版號後，測過再改這裡、重新打包上傳
-GAME_VERSIONS = ["0.46"]
+# 官方格式的 manifest 的 <GameVersions>：測過的遊戲版本，所有 mod 一起跟著改；清單裡有一個符合，mod 清單就不顯示
+# 紅字警告。官方指南建議填、每次更新 mod 時跟著改：遊戲改版號後，測過再改這裡、重新打包上傳。兩個寫法並存：
+# - 0.46：100-Rev13 以前拿 Application.version 比（正式版 1.0 回報「0.46D」，去掉數字與 . 以外的字）。
+# - 1.0：100-Rev14 起改比 1.0.0.14 這種版本號，前綴相同就算（涵蓋 1.0.x）；0 開頭的舊編號忽略、不警告。
+#   Rev13 不認得 1.0，只在 mod 詳細資料把它顯示成紅字，有 0.46 符合就不警告。
+GAME_VERSIONS = ["0.46", "1.0"]
 # 遊戲的 Application.persistentDataPath（存檔、官方 mod 的設定 ModConfigs\ 與資料 ModData\ 都在這裡）；只拿來印訊息
 DATA_ROOT = Path(os.environ.get("USERPROFILE", "~")) / "AppData" / "LocalLow" / "Questing Goose Studio" / "Probably Stolen"
 
