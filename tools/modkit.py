@@ -370,6 +370,9 @@ class OfficialMod:
     # manifest 的 <Prerequisites>：要先啟用的 mod 的 ID（例如給某個框架用的資料包）。遊戲只在 mod 清單上列出、
     # 沒啟用時在 log 警告，不會擋載入，也不會幫玩家訂閱；Workshop 的「必要項目」要另外在項目頁設
     prerequisites: tuple[str, ...] = ()
+    # manifest 的 <Capabilities>：要宣告的權限（遊戲 ModCapability 的 id，例如 "files"）。掃描找到的權限都要宣告，
+    # 宣告了的玩家啟用時會看到確認框；留空就是不宣告任何權限
+    capabilities: tuple[str, ...] = ()
 
     @property
     def csproj(self) -> Path:
@@ -392,13 +395,18 @@ class OfficialMod:
 
     def manifest_xml(self, version: str) -> str:
         """照官方範例（dragonpan2/probably-stolen-modding 的 LearnerMod）的欄位與順序，最外層是 <Manifest>（遊戲不看最外層的名稱，
-        照官方的比較保險）。<GameVersions> 見 GAME_VERSIONS。<Capabilities/> 空的：mod 不宣告任何權限（玩家啟用時不跳確認），
-        沒有也要寫。沒有 prerequisites 時照舊寫空的 <Prerequisites />：已發布的 mod 的 manifest 一個字都不變，
-        遊戲算的指紋（manifest＋DLL）才不會跟著變。"""
+        照官方的比較保險）。<GameVersions> 見 GAME_VERSIONS。沒有 capabilities 時寫空的 <Capabilities />（不宣告任何權限，
+        玩家啟用時不跳確認；遊戲要求一定要有這個元素）；有的話每個權限一個 <Capability>（遊戲 ModLoader 讀的元素名）。
+        沒有 prerequisites 時照舊寫空的 <Prerequisites />。兩個都空的時候輸出和加這兩個參數以前一樣：已發布的 mod 的
+        manifest 一個字都不變，遊戲算的指紋（manifest＋DLL）才不會跟著變。"""
         if self.prerequisites:
             prereq = ["  <Prerequisites>", *(f"    <Mod>{escape(p)}</Mod>" for p in self.prerequisites), "  </Prerequisites>"]
         else:
             prereq = ["  <Prerequisites />"]
+        if self.capabilities:
+            caps = ["  <Capabilities>", *(f"    <Capability>{escape(c)}</Capability>" for c in self.capabilities), "  </Capabilities>"]
+        else:
+            caps = ["  <Capabilities />"]
         return "\n".join([
             '<?xml version="1.0" encoding="utf-8"?>',
             "<Manifest>",
@@ -414,7 +422,7 @@ class OfficialMod:
             "  <Assemblies>",
             f"    <Assembly>{escape(self.dll.name)}</Assembly>",
             "  </Assemblies>",
-            "  <Capabilities />",
+            *caps,
             "</Manifest>",
             "",
         ])
