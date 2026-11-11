@@ -29,17 +29,12 @@ MOD = modkit.OfficialMod(
     root=HERE.parent,
     mod_id="dbfoxtw.collect-all-water",  # 和 mod/src/CollectAllWaterMod.cs 的 ModId 一致
     name="Collect All Water",
-    description=("Adds buttons such as \"Collect Ghostwater (12400ml)\" to the right-click menu of water containers. "
-                 "Each one pours that water into the container until it is full, going by the actual water quality "
-                 "in each container: from your Moisture Farms (on by default) and, if switched on in the mod settings, "
-                 "from Water Purifiers, Hydroponic Systems (all, only ones growing Hydroreed, or ones whose water container you pinned; once the water reaches the chosen quality), "
-                 "Evaporators (the Distillate slot), "
-                 "the Vending Fountain, Fridges, and containers in the inventory, the Display Case "
-                 "and the Trash Can. Containers on the counter are never taken. "
-                 "With the Water Tower or WaterTowerPlus mod installed, it also collects from the towers' tanks (on by default). "
-                 "It pours the same way as by hand. Ghostwater is on by default; "
-                 "Basewater, High-Quality Water and Pure Water can be turned on in the settings. "
-                 "Moisture Farms placed in the Vending Fountain are left alone unless the Vending Fountain is switched on."),
+    # 模組畫面的說明，只有英文（遊戲直接顯示、不翻譯）。2.5.0 使用者嫌原本把每種水源都列出來太長，改成和其他 mod 差不多長：
+    # 細節（水培的模式、蒸發器、售水機、檯面不收…）留給設定的說明和說明頁。
+    description=("Adds buttons such as \"Collect Ghostwater (12400ml)\" to the right-click menu of water containers: "
+                 "one click fills the container with that water from your Moisture Farms and from some other mods' "
+                 "water sources. More sources (Water Purifiers, Hydroponic Systems, Fridges and more) and other water "
+                 "qualities can be turned on in the mod settings."),
     assembly="ProbablyStolenCollectAllWater",
     zip_name="ProbablyStolen-CollectAllWater",
     debug_note="這個檔存在時，mod 會把每次右鍵選單算出的各水源的水量、收水的經過寫進 Player.log。\n",

@@ -1,5 +1,25 @@
 # 版本紀錄（Changelog）
 
+## v2.5.0（2026-11-12）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- **收「水塔：淨水自動化」的淨水壺**：設定段落「Mod water sources」新增開關「收「水塔：淨水自動化」」（預設開）：裝了 Steam 工作坊上的這個 mod 時，也從塔裡的淨水壺收。待淨化壺、取水槽、工作區裡的容器不收。基礎水、優質水、純水的按鈕照舊預設關，也要在「Right-click menu」打開對應的水質。
+- 「收淨水器」不再收「水塔：淨水自動化」工作區裡的淨水器（那些水還在淨化）。
+- 收的順序：水分收集器 → 淨水器 → mod 水源 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃。mod 水源（Water Tower、WaterTowerPlus 的蓄水箱和「水塔：淨水自動化」的淨水壺）不分是哪個 mod，一起從最滿的先倒。
+- 「收水塔」改名成「收 Water Tower」，說明補上含同系列的 WaterTowerPlus（同一個設定，原本的選擇照舊）。沒偵測到 mod 時的註記改成「（未偵測到這個 mod）」。
+- 對應遊戲版本改成 VERSION 100-REV13，也支援 beta 分支的 100-REV14。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- **Clean jug of Water Tower: Purification Automation**: new switch "Collect from Water Tower: Purification Automation" under "Mod water sources" (on by default): with that Steam Workshop mod installed, it also collects from the tower's clean jug. The raw jug, the fill slot and containers in the work area are left alone. The Basewater, High-Quality Water and Pure Water buttons are still off by default; turn on the matching water under "Right-click menu" too.
+- "Collect from Water Purifiers" no longer takes the Water Purifiers in that tower's work area (their water is still being purified).
+- Order: Moisture Farms → Water Purifiers → mod water sources → Hydroponic Systems → Evaporators → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case. Mod water sources (the tanks of Water Tower and WaterTowerPlus and the clean jugs of Water Tower: Purification Automation) are poured together, fullest first, whichever mod they come from.
+- "Collect from Water Towers" is renamed "Collect from Water Tower", and its tooltip now mentions WaterTowerPlus from the same series (same setting; your choice is kept). The note when a mod isn't detected now reads "(mod not detected)".
+- Supported game version is now VERSION 100-REV13; also the 100-REV14 beta.
+
 ## v2.4.0（2026-11-07）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）

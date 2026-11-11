@@ -7,7 +7,7 @@ using System.Text;
 namespace ProbablyStolenCollectAllWater.Verify
 {
     /// <summary>
-    /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod 的、蒸發器的）、水培系統的兩個下拉（種類與最低水質）、水容器歸哪一層與水源總數、按鈕文字、能不能收、
+    /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod、淨水塔 mod 的、蒸發器的）、水培系統的兩個下拉（種類與最低水質）、水容器歸哪一層與水源總數、按鈕文字、能不能收、
     /// 收的順序，
     /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
@@ -82,7 +82,7 @@ namespace ProbablyStolenCollectAllWater.Verify
 
         /// <summary>
         /// 水源開關：Water sources 的八個（2.1.0 的七個鍵不動，玩家的設定檔要相容；2.3.0 的蒸發器插在淨水器後面）
-        /// 只有水分收集器預設開；Mod water sources 的水塔預設開；兩份合起來每個水源剛好一個開關、鍵不重複（也不和四種水的鍵重複）。
+        /// 只有水分收集器預設開；Mod water sources 的水塔、淨水塔都預設開；兩份合起來每個水源剛好一個開關、鍵不重複（也不和四種水的鍵重複）。
         /// </summary>
         static void Switches()
         {
@@ -103,15 +103,26 @@ namespace ProbablyStolenCollectAllWater.Verify
             Eq(Array.IndexOf(Rules.Switches, evaporator), Array.FindIndex(Rules.Switches, s => s.Source == Rules.HydroponicSettingAfter) + 1,
                 "收蒸發器緊接在水培系統的下拉跟著的那個開關（收淨水器）後面，設定視窗裡排在兩個下拉下面");
 
-            // Mod water sources
-            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.ConfigKey)), "SourceWaterTowers", "mod 水源開關的鍵");
-            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.Source)), "WaterTower", "mod 水源開關對應的水源");
-            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.LabelKey)), "cfg_src_watertower", "mod 水源開關的文字 key");
-            Check(Rules.ModSwitches.All(s => s.DefaultOn), "水塔預設開");
+            // Mod water sources：水塔在前、淨水塔接在後面；水塔的鍵 2.5.0 改名時不動（玩家的設定檔）
+            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.ConfigKey)), "SourceWaterTowers|SourcePurifyTowers", "mod 水源開關的鍵與順序");
+            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.Source)), "WaterTower|PurifyTower", "mod 水源開關對應的水源");
+            Eq(string.Join("|", Rules.ModSwitches.Select(s => s.LabelKey)), "cfg_src_watertower|cfg_src_purifytower", "mod 水源開關的文字 key");
+            Check(Rules.ModSwitches.All(s => s.DefaultOn), "水塔、淨水塔都預設開");
             Check(Rules.ModSwitches.All(s => s.ModIds != null && s.ModIds.Length > 0), "mod 水源開關都有要偵測的 mod");
             Eq(string.Join("|", Rules.WaterTowerModIds), "watertower|watertowerplus", "偵測的水塔 mod ID（WaterTower、WaterTowerPlus 的 manifest ID）");
             Check(ReferenceEquals(Rules.ModSwitches[0].ModIds, Rules.WaterTowerModIds), "水塔的開關偵測兩個水塔 mod");
+            Eq(string.Join("|", Rules.PurifyTowerModIds), "purify_tower", "偵測的淨水塔 mod ID（manifest ID）");
+            var purifyTower = Rules.ModSwitches.Single(s => s.Source == Rules.Source.PurifyTower);
+            Eq(purifyTower.ConfigKey, "SourcePurifyTowers", "收淨水塔的鍵");
+            Eq(purifyTower.LabelKey, "cfg_src_purifytower", "收淨水塔的文字 key");
+            Check(purifyTower.DefaultOn, "收淨水塔預設開");
+            Check(ReferenceEquals(purifyTower.ModIds, Rules.PurifyTowerModIds), "淨水塔的開關偵測淨水塔 mod");
+            Eq(Array.IndexOf(Rules.ModSwitches, purifyTower), Array.FindIndex(Rules.ModSwitches, s => s.Source == Rules.Source.WaterTower) + 1,
+                "收淨水塔接在水塔後面");
             Check(Rules.ModSwitches.All(s => s.MissingKey == s.LabelKey + "_missing"), "沒偵測到時的 key 是名稱加 _missing");
+            // mod 水源（收水順序整組）就是 ModSwitches 裡的那幾個；只比集合，開關在設定視窗的先後和收水順序無關
+            Eq(string.Join("|", Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Where(Rules.IsModSource).OrderBy(s => (int)s)),
+                string.Join("|", Rules.ModSwitches.Select(s => s.Source).OrderBy(s => (int)s)), "IsModSource 和 ModSwitches 的水源一致");
 
             // 兩份合起來
             var all = Rules.AllSwitches.ToList();
@@ -123,28 +134,34 @@ namespace ProbablyStolenCollectAllWater.Verify
             Check(all.All(s => s.Source != Rules.Source.Hydroponic), "水培系統沒有開關（設定是兩個下拉）");
             Check(Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().All(x => x == Rules.Source.Hydroponic || all.Any(s => s.Source == x)),
                 "水培系統以外的水源都有開關（水分收集器、水塔也有）");
-            Eq(string.Join("|", all.Where(s => s.DefaultOn).Select(s => s.Source)), "MoistureFarm|WaterTower", "預設開的只有水分收集器與水塔");
+            Eq(string.Join("|", all.Where(s => s.DefaultOn).Select(s => s.Source)), "MoistureFarm|WaterTower|PurifyTower", "預設開的只有水分收集器、水塔與淨水塔");
             var keys = Rules.Grades.Select(g => g.ConfigKey).Concat(all.Select(s => s.ConfigKey))
                 .Append(Rules.HydroponicKindConfigKey).Append(Rules.HydroponicQualityConfigKey).ToList();
-            Eq(keys.Distinct().Count(), keys.Count, "設定的鍵不重複（四種水＋九個水源開關＋水培系統的兩個下拉）");
+            Eq(keys.Distinct().Count(), keys.Count, "設定的鍵不重複（四種水＋十個水源開關＋水培系統的兩個下拉）");
             Check(keys.Contains("SourceWaterTowers"), "設定的鍵含水塔");
+            Check(keys.Contains("SourcePurifyTowers"), "設定的鍵含淨水塔");
             Check(keys.Contains("SourceEvaporators"), "設定的鍵含蒸發器");
             Check(keys.All(k => k.All(char.IsLetter)), "設定的鍵只有英文字母");
             Eq(all.Select(s => s.LabelKey).Append(Rules.HydroponicKindLabelKey).Append(Rules.HydroponicQualityLabelKey).Distinct().Count(), all.Count + 2,
                 "水源開關（與水培系統的兩個下拉）的文字 key 不重複");
             Check(all.All(s => s.TipKey == s.LabelKey + "_tip"), "說明的 key 是名稱加 _tip");
 
-            // 沒偵測到水塔 mod 時的名稱
-            Eq(Rules.MissingLabel("{0}（未检测到水塔 mod）", "cfg_src_watertower_missing", "收水塔"), "收水塔（未检测到水塔 mod）", "中文：加註");
-            Eq(Rules.MissingLabel("{0} (no water tower mod detected)", "cfg_src_watertower_missing", "Collect from Water Towers"),
-                "Collect from Water Towers (no water tower mod detected)", "英文：加註");
-            Eq(Rules.MissingLabel("cfg_src_watertower_missing", "cfg_src_watertower_missing", "收水塔"), "收水塔 (no water tower mod detected)",
+            // 沒偵測到 mod 時的名稱：兩個開關共用「（未检测到这个 mod）」
+            Eq(Rules.DefaultModMissingLabel, "{0} (mod not detected)", "退回用的英文樣板");
+            Eq(Rules.MissingLabel("{0}（未检测到这个 mod）", "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower（未检测到这个 mod）", "中文：加註");
+            Eq(Rules.MissingLabel("{0} (mod not detected)", "cfg_src_watertower_missing", "Collect from Water Tower"),
+                "Collect from Water Tower (mod not detected)", "英文：加註");
+            Eq(Rules.MissingLabel("{0}（未检测到这个 mod）", "cfg_src_purifytower_missing", "收“水塔：净水自动化”"), "收“水塔：净水自动化”（未检测到这个 mod）",
+                "中文：淨水塔加註");
+            Eq(Rules.MissingLabel("cfg_src_watertower_missing", "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower (mod not detected)",
                 "查不到 key（GetLocalized 回傳 key 本身）：退回英文樣板");
-            Eq(Rules.MissingLabel(null, "cfg_src_watertower_missing", "收水塔"), "收水塔 (no water tower mod detected)", "樣板是 null：退回英文");
-            Eq(Rules.MissingLabel("  ", "cfg_src_watertower_missing", "收水塔"), "收水塔 (no water tower mod detected)", "樣板只有空白：退回英文");
-            Eq(Rules.MissingLabel("{0（未检测到水塔 mod）", "cfg_src_watertower_missing", "收水塔"), "收水塔 (no water tower mod detected)", "樣板的大括號沒關：退回英文");
-            Eq(Rules.MissingLabel("{1}（未检测到）", "cfg_src_watertower_missing", "收水塔"), "收水塔 (no water tower mod detected)", "樣板的佔位符寫錯：退回英文");
-            Eq(Rules.MissingLabel("{0}（未检测到水塔 mod）", "cfg_src_watertower_missing", null), "?（未检测到水塔 mod）", "名稱查不到也不會出錯");
+            Eq(Rules.MissingLabel("cfg_src_purifytower_missing", "cfg_src_purifytower_missing", "Collect from Water Tower: Purification Automation"),
+                "Collect from Water Tower: Purification Automation (mod not detected)", "淨水塔查不到 key：退回英文樣板");
+            Eq(Rules.MissingLabel(null, "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower (mod not detected)", "樣板是 null：退回英文");
+            Eq(Rules.MissingLabel("  ", "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower (mod not detected)", "樣板只有空白：退回英文");
+            Eq(Rules.MissingLabel("{0（未检测到这个 mod）", "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower (mod not detected)", "樣板的大括號沒關：退回英文");
+            Eq(Rules.MissingLabel("{1}（未检测到）", "cfg_src_watertower_missing", "收 Water Tower"), "收 Water Tower (mod not detected)", "樣板的佔位符寫錯：退回英文");
+            Eq(Rules.MissingLabel("{0}（未检测到这个 mod）", "cfg_src_watertower_missing", null), "?（未检测到这个 mod）", "名稱查不到也不會出錯");
         }
 
         /// <summary>
@@ -302,7 +319,7 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 水容器歸哪一層（Rules.LayerOf）：自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱 ＞
+        /// 水容器歸哪一層（Rules.LayerOf）：自動售水機 ＞ 水塔的蓄水箱 ＞ 淨水塔的淨水壺 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱 ＞
         /// 水培系統的水格 ＞ 蒸發器的餾出液格 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。Where 的布林照 WaterSources.Scan 實際會同時成立的組合給
         /// （例如容器格裡的容器也在那台機器的子孫裡，售水機裡的也在售水機本身的子孫裡）。
         /// </summary>
@@ -398,6 +415,27 @@ namespace ProbablyStolenCollectAllWater.Verify
             // 自動售水機仍是最外層（塔放不進售水機，這裡只確認順序照寫的）
             Eq(Of(tank with { InFountain = true }, false), Skip(Rules.SkipFountainOff), "自動售水機排在水塔前面");
 
+            // 淨水塔：塔裡的淨水壺也在塔（機器）的子孫裡；塔放在其他機器裡、櫃台上、展示櫃、垃圾桶裡時淨水壺還是淨水塔
+            var jug = new Rules.Where { InPurifyTowerJug = true, InMachine = true, InMachineButFountain = true };
+            Eq(Of(jug, false), "PurifyTower", "淨水塔裡的淨水壺：淨水塔那層");
+            Eq(Of(jug, true), "PurifyTower", "淨水塔裡的淨水壺（售水機的開關不影響）：淨水塔那層");
+            Eq(Of(jug with { OnCounter = true }, true), "PurifyTower", "櫃台上的淨水塔裡的淨水壺：淨水塔那層（機器優先）");
+            Eq(Of(jug with { InShowcase = true }, true), "PurifyTower", "展示櫃裡的淨水塔裡的淨水壺：淨水塔那層");
+            Eq(Of(jug with { InTrash = true }, true), "PurifyTower", "垃圾桶裡的淨水塔裡的淨水壺：淨水塔那層");
+            Eq(Of(jug with { InShowcase = true, OnCounter = true, InTrash = true }, true), "PurifyTower", "淨水壺排在櫃台、垃圾桶、展示櫃前面");
+            Eq(Of(jug with { InFarmSlot = true, InPurifierSlot = true, InFridge = true, InHydroponicSlot = true, InEvaporatorSlot = true }, true), "PurifyTower",
+                "淨水塔排在水分收集器、淨水器、冰箱、水培系統、蒸發器前面（只確認順序照寫的）");
+            Eq(Of(jug with { InTowerTank = true }, true), "WaterTower", "水塔的蓄水箱排在淨水壺前面（只確認順序照寫的）");
+            // 自動售水機那層照舊優先（塔放不進售水機，這裡只確認順序照寫的）
+            Eq(Of(jug with { InFountain = true }, false), Skip(Rules.SkipFountainOff), "自動售水機排在淨水塔前面（售水機關著）");
+            Eq(Of(jug with { InFountain = true }, true), Skip(Rules.SkipFountainMachine), "自動售水機排在淨水塔前面（售水機開著，裡面其他機器裡的不收）");
+            // 待淨化壺、取水槽、工作區裡直接放的容器、工作區淨水器的容器格（淨水器不記進 InPurifierSlot）：在其他機器裡，不收
+            var purifyTowerOther = new Rules.Where { InMachine = true, InMachineButFountain = true };
+            Eq(Of(purifyTowerOther, true), Skip(Rules.SkipOtherMachine), "淨水塔的待淨化壺、取水槽、工作區的容器與淨水器的容器格：在其他機器裡，不收");
+            Eq(Of(purifyTowerOther with { OnCounter = true }, true), Skip(Rules.SkipOtherMachine), "櫃台上的淨水塔裡其他的容器：照其他機器不收");
+            Eq(Of(purifyTowerOther with { InShowcase = true }, true), Skip(Rules.SkipOtherMachine), "展示櫃裡的淨水塔裡其他的容器：照其他機器不收");
+            // 工作區的淨水器不收是 Scan 不把它的容器記進 InPurifierSlot，在碰遊戲的那一半，離線測不到，由實機測試確認
+
             // 水培系統：符合種類的水培系統，水格裡的容器（也在水培的子孫裡）歸水培系統那層；
             // 不符合種類的（種類是 Off 時全部）、水格以外的格子 Scan 不設 InHydroponicSlot，照舊是「其他機器裡」
             var hydro = new Rules.Where { InHydroponicSlot = true, InMachine = true, InMachineButFountain = true };
@@ -439,55 +477,63 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 水源總數（Rules.SourceCount）：只算開著的；機器算台數（水塔算座數、水培系統算符合種類的台數、蒸發器算台數）、自動售水機有就算 1、
+        /// 水源總數（Rules.SourceCount）：只算開著的；機器算台數（水塔、淨水塔算座數、水培系統算符合種類的台數、蒸發器算台數）、自動售水機有就算 1、
         /// 物品欄／展示櫃／垃圾桶算水容器個數。
         /// </summary>
         static void SourceCounting()
         {
-            // 參數：水分收集器 3 台、淨水器 2 台、水塔 8 座、水培系統 7 台、蒸發器 9 台、冰箱 1 台、有售水機、物品欄 4 個、展示櫃 5 個、垃圾桶 6 個
-            int Count(Func<Rules.Source, bool> isOn, bool hasFountain = true) => Rules.SourceCount(3, 2, 8, 7, 9, 1, hasFountain, 4, 5, 6, isOn);
+            // 參數：水分收集器 3 台、淨水器 2 台、水塔 8 座、淨水塔 11 座、水培系統 7 台、蒸發器 9 台、冰箱 1 台、有售水機、物品欄 4 個、展示櫃 5 個、垃圾桶 6 個
+            int Count(Func<Rules.Source, bool> isOn, bool hasFountain = true) => Rules.SourceCount(3, 2, 8, 11, 7, 9, 1, hasFountain, 4, 5, 6, isOn);
             Func<Rules.Source, bool> Only(params Rules.Source[] on) => s => on.Contains(s);
 
             Eq(Count(_ => false), 0, "全關是 0");
-            Eq(Count(_ => true), 3 + 2 + 8 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "全開：每種都算");
+            Eq(Count(_ => true), 3 + 2 + 8 + 11 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "全開：每種都算");
             Eq(Count(Only(Rules.Source.MoistureFarm)), 3, "只開水分收集器：算台數");
-            Eq(Count(s => s != Rules.Source.MoistureFarm), 2 + 8 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水分收集器的開關關著：不算它的台數");
+            Eq(Count(s => s != Rules.Source.MoistureFarm), 2 + 8 + 11 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水分收集器的開關關著：不算它的台數");
             Eq(Count(Only(Rules.Source.Purifier)), 2, "只開淨水器：算台數");
             Eq(Count(Only(Rules.Source.WaterTower)), 8, "只開水塔：算座數");
-            Eq(Count(s => s != Rules.Source.WaterTower), 3 + 2 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水塔的開關關著：不算它的座數");
-            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.WaterTower)), 1, "只有一座塔（開著）：1，按鈕寫水量");
-            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一座塔但開關關著：0，按鈕寫沒有水源");
+            Eq(Count(s => s != Rules.Source.WaterTower), 3 + 2 + 11 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "水塔的開關關著：不算它的座數");
+            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.WaterTower)), 1, "只有一座塔（開著）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一座塔但開關關著：0，按鈕寫沒有水源");
+            // 淨水塔：開關開著時一座算 1，不管淨水壺有沒有水；關著不算；和水塔的開關各算各的
+            Eq(Count(Only(Rules.Source.PurifyTower)), 11, "只開淨水塔：算座數");
+            Eq(Count(s => s != Rules.Source.PurifyTower), 3 + 2 + 8 + 7 + 9 + 1 + 1 + 4 + 5 + 6, "淨水塔的開關關著：不算它的座數");
+            Eq(Count(Only(Rules.Source.WaterTower, Rules.Source.PurifyTower)), 8 + 11, "兩個 mod 水源都開：座數相加");
+            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.PurifyTower)), 1, "只有一座淨水塔（開著）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一座淨水塔但開關關著：0，按鈕寫沒有水源");
+            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.WaterTower)), 0, "只有一座淨水塔、只開水塔的開關：0（不互相影響）");
+            Eq(Rules.SourceCount(0, 0, 1, 0, 0, 0, 0, false, 0, 0, 0, Only(Rules.Source.PurifyTower)), 0, "只有一座水塔、只開淨水塔的開關：0（不互相影響）");
             Eq(Count(Only(Rules.Source.Hydroponic)), 7, "只開水培系統：算符合種類的台數");
-            Eq(Count(s => s != Rules.Source.Hydroponic), 3 + 2 + 8 + 9 + 1 + 1 + 4 + 5 + 6, "水培系統的種類是 Off：不算它的台數");
-            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, false, 0, 0, 0, Only(Rules.Source.Hydroponic)), 1, "只有一台符合的水培系統（種類不是 Off）：1，按鈕寫水量");
-            Eq(Rules.SourceCount(0, 0, 0, 1, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一台水培系統但種類是 Off：0，按鈕寫沒有水源");
+            Eq(Count(s => s != Rules.Source.Hydroponic), 3 + 2 + 8 + 11 + 9 + 1 + 1 + 4 + 5 + 6, "水培系統的種類是 Off：不算它的台數");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, 0, false, 0, 0, 0, Only(Rules.Source.Hydroponic)), 1, "只有一台符合的水培系統（種類不是 Off）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, 0, false, 0, 0, 0, _ => false), 0, "只有一台水培系統但種類是 Off：0，按鈕寫沒有水源");
             // 種類 → 開沒開 → 算不算台數（Settings.IsOn(Hydroponic) 是 Rules.HydroponicOn(種類)）
             foreach (var kind in Rules.HydroponicKinds)
             {
                 Func<Rules.Source, bool> isOn = s => s == Rules.Source.Hydroponic && Rules.HydroponicOn(kind);
-                Eq(Rules.SourceCount(0, 0, 0, 2, 0, 0, false, 0, 0, 0, isOn), kind == "Off" ? 0 : 2, $"種類「{kind}」：水培系統 2 台算 {(kind == "Off" ? 0 : 2)}");
+                Eq(Rules.SourceCount(0, 0, 0, 0, 2, 0, 0, false, 0, 0, 0, isOn), kind == "Off" ? 0 : 2, $"種類「{kind}」：水培系統 2 台算 {(kind == "Off" ? 0 : 2)}");
             }
             Eq(Count(Only(Rules.Source.Evaporator)), 9, "只開蒸發器：算台數");
-            Eq(Count(s => s != Rules.Source.Evaporator), 3 + 2 + 8 + 7 + 1 + 1 + 4 + 5 + 6, "蒸發器的開關關著：不算它的台數");
-            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, false, 0, 0, 0, Only(Rules.Source.Evaporator)), 1, "只有一台蒸發器（開著）：1，按鈕寫水量");
-            Eq(Rules.SourceCount(0, 0, 0, 0, 1, 0, false, 0, 0, 0, _ => false), 0, "只有一台蒸發器但開關關著：0，按鈕寫沒有水源");
+            Eq(Count(s => s != Rules.Source.Evaporator), 3 + 2 + 8 + 11 + 7 + 1 + 1 + 4 + 5 + 6, "蒸發器的開關關著：不算它的台數");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 0, 1, 0, false, 0, 0, 0, Only(Rules.Source.Evaporator)), 1, "只有一台蒸發器（開著）：1，按鈕寫水量");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 0, 1, 0, false, 0, 0, 0, _ => false), 0, "只有一台蒸發器但開關關著：0，按鈕寫沒有水源");
             Eq(Count(Only(Rules.Source.Fridge)), 1, "只開冰箱：算台數");
             Eq(Count(Only(Rules.Source.VendingFountain)), 1, "售水機開著而且有機器：算 1");
             Eq(Count(Only(Rules.Source.VendingFountain), hasFountain: false), 0, "售水機開著但還沒有機器：0");
-            Eq(Count(_ => true, hasFountain: false), 3 + 2 + 8 + 7 + 9 + 1 + 4 + 5 + 6, "全開但沒有售水機：不算售水機");
+            Eq(Count(_ => true, hasFountain: false), 3 + 2 + 8 + 11 + 7 + 9 + 1 + 4 + 5 + 6, "全開但沒有售水機：不算售水機");
             Eq(Count(Only(Rules.Source.Inventory)), 4, "只開物品欄：算水容器個數");
             Eq(Count(Only(Rules.Source.DisplayCase)), 5, "只開展示櫃：算水容器個數");
             Eq(Count(Only(Rules.Source.TrashCan)), 6, "只開垃圾桶：算水容器個數");
             Eq(Count(Only(Rules.Source.MoistureFarm, Rules.Source.Inventory)), 3 + 4, "水分收集器加物品欄");
-            Eq(Rules.SourceCount(0, 0, 0, 0, 0, 0, false, 0, 0, 0, _ => true), 0, "全開但什麼都沒有是 0（按鈕寫沒有水源）");
+            Eq(Rules.SourceCount(0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, _ => true), 0, "全開但什麼都沒有是 0（按鈕寫沒有水源）");
             Eq(Rules.KindOf(Count(_ => false)), Rules.LabelKind.NoSource, "全關：按鈕寫沒有水源");
-            Eq(Rules.KindOf(Rules.SourceCount(0, 0, 0, 0, 0, 0, true, 0, 0, 0, Only(Rules.Source.VendingFountain))), Rules.LabelKind.Amount,
+            Eq(Rules.KindOf(Rules.SourceCount(0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, Only(Rules.Source.VendingFountain))), Rules.LabelKind.Amount,
                 "只開售水機、有機器：寫水量");
             // 預設：開關照 DefaultOn，水培系統照種類下拉的預設（Off）
             bool DefaultOn(Rules.Source s) => s == Rules.Source.Hydroponic
                 ? Rules.HydroponicOn(Rules.HydroponicKindDefault)
                 : Rules.AllSwitches.First(x => x.Source == s).DefaultOn;
-            Eq(Count(DefaultOn), 3 + 8, "預設（水分收集器與水塔開、水培系統 Off、蒸發器關）：算水分收集器的台數與水塔的座數");
+            Eq(Count(DefaultOn), 3 + 8 + 11, "預設（水分收集器、水塔、淨水塔開，水培系統 Off、蒸發器關）：算水分收集器的台數與兩種塔的座數");
         }
 
         /// <summary>按鈕文字：樣板來自 Localization 的 button，查不到或寫壞時退回英文。</summary>
@@ -556,14 +602,28 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// 收的順序（改了開關的順序與名稱，收的順序不變）：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 →
-        /// 物品欄 → 冰箱 → 自動售水機 → 展示櫃；前五層水多的先、後五層水少的先；同層同量照原順序；沒水的不收。
+        /// 收的順序（改了開關的順序與名稱，收的順序不變）：水分收集器 → 淨水器 → mod 水源（水塔、淨水塔整組）→
+        /// 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃；蒸發器以前水多的先、後五層水少的先；
+        /// mod 水源組內不分 mod、水多的先；同層同量照原順序；沒水的不收。
         /// </summary>
         static void Order()
         {
             Eq(string.Join(",", Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>()),
-                "MoistureFarm,Purifier,WaterTower,Hydroponic,Evaporator,TrashCan,Inventory,Fridge,VendingFountain,DisplayCase",
-                "層級的順序（水塔在淨水器之後，水培系統在水塔之後，蒸發器在水培系統之後、垃圾桶之前）");
+                "MoistureFarm,Purifier,WaterTower,PurifyTower,Hydroponic,Evaporator,TrashCan,Inventory,Fridge,VendingFountain,DisplayCase",
+                "層級的順序（mod 水源在淨水器之後，水培系統在 mod 水源之後，蒸發器在水培系統之後、垃圾桶之前）");
+            // mod 水源整組：同一個名次，在淨水器之後、水培系統之前；列舉裡連在一起
+            Eq(Rules.OrderRank(Rules.Source.PurifyTower), Rules.OrderRank(Rules.Source.WaterTower), "淨水塔和水塔同一個名次");
+            var modSources = Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Where(Rules.IsModSource).ToList();
+            Eq(string.Join("|", modSources), "WaterTower|PurifyTower", "mod 水源是水塔與淨水塔");
+            Check(modSources.All(s => Rules.OrderRank(s) > Rules.OrderRank(Rules.Source.Purifier) && Rules.OrderRank(s) < Rules.OrderRank(Rules.Source.Hydroponic)),
+                "mod 水源在淨水器之後、水培系統之前（原本水塔的位置）");
+            Check(modSources.Zip(modSources.Skip(1), (a, b) => (int)b - (int)a == 1).All(x => x), "mod 水源在列舉裡連在一起");
+            Check(Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Where(s => !Rules.IsModSource(s)).All(s => Rules.OrderRank(s) == (int)s),
+                "mod 水源以外的名次就是列舉的順序");
+            Check(Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Where(s => !Rules.IsModSource(s))
+                .All(s => modSources.All(m => Rules.OrderRank(s) != Rules.OrderRank(m))), "其他水源不和 mod 水源同名次");
+            Check(Rules.FullestFirst(Rules.Source.PurifyTower), "淨水塔水多的先");
+            Eq(Rules.SourceName(Rules.Source.PurifyTower), "淨水塔", "淨水塔的 log 名稱");
             Check(Rules.Source.WaterTower < Rules.Source.Hydroponic && Rules.Source.Hydroponic < Rules.Source.TrashCan, "水培系統在水塔之後、垃圾桶之前");
             Check(Rules.Source.Hydroponic < Rules.Source.Evaporator && Rules.Source.Evaporator < Rules.Source.TrashCan, "蒸發器在水培系統之後、垃圾桶之前");
             Check(Rules.Source.Hydroponic < Rules.Source.Inventory && Rules.Source.Hydroponic < Rules.Source.DisplayCase, "水培系統在物品欄、展示櫃之前");
@@ -616,6 +676,39 @@ namespace ProbablyStolenCollectAllWater.Verify
             });
             Eq(string.Join(",", mixed), "farm,purBig,purSmall,towerBig,towerSmall,hydroBig,hydroSmall,stillBig,stillSmall,trash,inv,fridgeSmall,fridgeBig,fountain,show",
                 "跨層照層級（水塔在淨水器之後，水培系統在水塔之後，蒸發器在水培系統之後、垃圾桶之前），層內照各自的方向（水塔、水培系統、蒸發器水多的先）");
+
+            // mod 水源整組：水塔 5000、淨水塔 8000、水塔 3000 → 8000、5000、3000，不分 mod；整組在淨水器之後、水培系統之前
+            var modGroup = Rules.CollectOrder(new[]
+            {
+                ("hydro", Rules.Source.Hydroponic, 90000L),
+                ("tower5000", Rules.Source.WaterTower, 5000L),
+                ("purify8000", Rules.Source.PurifyTower, 8000L),
+                ("tower3000", Rules.Source.WaterTower, 3000L),
+                ("purifyEmpty", Rules.Source.PurifyTower, 0L),
+                ("pur", Rules.Source.Purifier, 1L),
+                ("farm", Rules.Source.MoistureFarm, 2L),
+                ("inv", Rules.Source.Inventory, 100L),
+            });
+            Eq(string.Join(",", modGroup), "farm,pur,purify8000,tower5000,tower3000,hydro,inv",
+                "mod 水源整組水多的先、不分 mod（淨水塔 8000 → 水塔 5000 → 水塔 3000），整組在淨水器之後、水培系統之前；沒水的不收");
+            // 同量照原順序（穩定排序），不分 mod
+            var modTie = Rules.CollectOrder(new[]
+            {
+                ("purifyA", Rules.Source.PurifyTower, 4000L),
+                ("towerA", Rules.Source.WaterTower, 4000L),
+                ("purifyB", Rules.Source.PurifyTower, 4000L),
+                ("towerB", Rules.Source.WaterTower, 4000L),
+            });
+            Eq(string.Join(",", modTie), "purifyA,towerA,purifyB,towerB", "mod 水源同量照原順序（不先排水塔、再排淨水塔）");
+            // 只有淨水塔時，位置和以前的水塔一樣
+            var purifyOnly = Rules.CollectOrder(new[]
+            {
+                ("still", Rules.Source.Evaporator, 100L),
+                ("purify", Rules.Source.PurifyTower, 100L),
+                ("pur", Rules.Source.Purifier, 100L),
+                ("hydro", Rules.Source.Hydroponic, 100L),
+            });
+            Eq(string.Join(",", purifyOnly), "pur,purify,hydro,still", "淨水塔在淨水器之後、水培系統之前");
             Eq(Rules.CollectOrder(Array.Empty<(string, Rules.Source, long)>()).Count, 0, "沒有水源");
             Eq(Rules.CollectOrder(new[] { ("x", Rules.Source.Inventory, -5L), ("y", Rules.Source.MoistureFarm, -1L) }).Count, 0, "負數當沒水");
         }
@@ -640,6 +733,7 @@ namespace ProbablyStolenCollectAllWater.Verify
                 .Concat(new[] { Rules.HydroponicKindLabelKey, Rules.HydroponicKindTipKey, Rules.HydroponicQualityLabelKey, Rules.HydroponicQualityTipKey }).ToArray();
             var missing = Rules.AllSwitches.Where(s => s.ModIds != null).Select(s => s.MissingKey).ToArray();
             Check(missing.Contains("cfg_src_watertower_missing"), "水塔有沒偵測到時的 key");
+            Check(missing.Contains("cfg_src_purifytower_missing"), "淨水塔有沒偵測到時的 key");
             foreach (var (name, table) in new[] { ("en.csv", en), ("zh.csv", zh) })
             {
                 foreach (var key in withName)
@@ -675,10 +769,40 @@ namespace ProbablyStolenCollectAllWater.Verify
             foreach (var kind in Enum.GetValues(typeof(Rules.LabelKind)).Cast<Rules.LabelKind>())
                 if (en.TryGetValue(Rules.KeyOf(kind), out var enLabel))
                     Eq(enLabel, Rules.DefaultOf(kind), $"en.csv 的 {Rules.KeyOf(kind)} 和程式退回用的英文一樣");
-            if (en.TryGetValue("cfg_src_watertower_missing", out var enMissing))
-                Eq(enMissing, Rules.DefaultWaterTowerMissingLabel, "en.csv 的 cfg_src_watertower_missing 和程式退回用的英文一樣");
+            foreach (var key in missing)
+                if (en.TryGetValue(key, out var enMissing))
+                    Eq(enMissing, Rules.DefaultModMissingLabel, $"en.csv 的 {key} 和程式退回用的英文一樣");
+            // mod 水源開關的文字：照拍板的字，一字不改
+            var modTexts = new (string key, string en, string zh)[]
+            {
+                ("cfg_src_watertower", "Collect from Water Tower", "收 Water Tower"),
+                ("cfg_src_watertower_tip",
+                    "The tanks of the Water Tower mod, including WaterTowerPlus from the same series. Water still being purified is collected too.",
+                    "Water Tower mod（含同系列的 WaterTowerPlus）的蓄水箱。净化中的水也会被收走。"),
+                ("cfg_src_watertower_missing", "{0} (mod not detected)", "{0}（未检测到这个 mod）"),
+                ("cfg_src_purifytower", "Collect from Water Tower: Purification Automation", "收“水塔：净水自动化”"),
+                ("cfg_src_purifytower_tip",
+                    "The Tower Clean Jug in the tower; the Tower Raw Jug and the purifiers in the work area are not taken.\nAlso turn on the matching water under Right-click menu.",
+                    "塔里的“水塔·净水壶”；待净化壶和工作区里的净水器不收。\n也要打开右键菜单里对应水质的按钮。"),
+                ("cfg_src_purifytower_missing", "{0} (mod not detected)", "{0}（未检测到这个 mod）"),
+            };
+            foreach (var (key, enText, zhText) in modTexts)
+            {
+                Eq(en.TryGetValue(key, out var e) ? e : null, enText, $"en.csv 的 {key}");
+                Eq(zh.TryGetValue(key, out var z) ? z : null, zhText, $"zh.csv 的 {key}");
+            }
+            // 淨水塔的說明分兩行（CSV 的 \n 解析成換行）
+            foreach (var (table, name) in new[] { (en, "en.csv"), (zh, "zh.csv") })
+                if (table.TryGetValue("cfg_src_purifytower_tip", out var pt))
+                    Check(pt.Split('\n').Length == 2 && !pt.Contains("\\n"), $"{name} 的 cfg_src_purifytower_tip 解析後是兩行");
             if (zh.TryGetValue("cfg_src_watertower", out var zhTower) && zh.TryGetValue("cfg_src_watertower_missing", out var zhMissing))
-                Eq(Rules.MissingLabel(zhMissing, "cfg_src_watertower_missing", zhTower), "收水塔（未检测到水塔 mod）", "zh.csv：沒偵測到水塔 mod 時的名稱");
+                Eq(Rules.MissingLabel(zhMissing, "cfg_src_watertower_missing", zhTower), "收 Water Tower（未检测到这个 mod）", "zh.csv：沒偵測到水塔 mod 時的名稱");
+            if (zh.TryGetValue("cfg_src_purifytower", out var zhPurify) && zh.TryGetValue("cfg_src_purifytower_missing", out var zhPurifyMissing))
+                Eq(Rules.MissingLabel(zhPurifyMissing, "cfg_src_purifytower_missing", zhPurify), "收“水塔：净水自动化”（未检测到这个 mod）",
+                    "zh.csv：沒偵測到淨水塔 mod 時的名稱");
+            if (en.TryGetValue("cfg_src_purifytower", out var enPurify) && en.TryGetValue("cfg_src_purifytower_missing", out var enPurifyMissing))
+                Eq(Rules.MissingLabel(enPurifyMissing, "cfg_src_purifytower_missing", enPurify), "Collect from Water Tower: Purification Automation (mod not detected)",
+                    "en.csv：沒偵測到淨水塔 mod 時的名稱");
             // 水培系統的兩個下拉：名稱照拍板的文字；中文的說明寫英文選項的對照（下拉照字面顯示英文）
             if (en.TryGetValue(Rules.HydroponicKindLabelKey, out var enHydro)) Eq(enHydro, "Collect from Hydroponic Systems", "en.csv：水培系統種類的名稱");
             if (zh.TryGetValue(Rules.HydroponicKindLabelKey, out var zhHydro)) Eq(zhHydro, "收水培系统的水", "zh.csv：水培系統種類的名稱");

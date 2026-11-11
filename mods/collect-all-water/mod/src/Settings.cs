@@ -9,7 +9,7 @@ namespace ProbablyStolenCollectAllWater
     /// 有這個 mod 的設定視窗）。段落 Right-click menu：每種水一個開關，預設只開幽靈水；段落 Water sources：八個水源開關，
     /// 只有水分收集器預設開，「收淨水器」後面另有水培系統的兩個下拉：收哪些水培系統（預設 Off）與水培的最低水質（預設基礎水以上），
     /// 下拉後面是「收蒸發器」（預設關）；
-    /// 段落 Mod water sources：別人的 mod 帶來的水源，目前只有水塔（預設開）。
+    /// 段落 Mod water sources：別人的 mod 帶來的水源，水塔（Water Tower、WaterTowerPlus）與淨水塔（「水塔：净水自动化」）各一個開關，都預設開。
     /// 值隨設定視窗即時改變，每次按右鍵都重新讀，所以不用重開遊戲。
     /// 設定視窗照定義的順序排（段落照第一次出現的順序、段落裡照定義的順序：ModConfig.Sections 是 Distinct、ModConfigWindow 照 Entries 列），
     /// 所以先定四種水、再定水源、最後定 mod 的水源。
@@ -77,7 +77,7 @@ namespace ProbablyStolenCollectAllWater
                         () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicQualityTipKey));
                 }
             }
-            // 不管有沒有裝那個 mod 都列出：「偵測到才顯示」要等全部 mod 載完（水塔可能比本 mod 晚載入），
+            // 不管有沒有裝那個 mod 都列出：「偵測到才顯示」要等全部 mod 載完（水塔、淨水塔可能比本 mod 晚載入），
             // 得多攔截遊戲的設定視窗；沒偵測到時名稱加註就好
             foreach (var s in Rules.ModSwitches)
             {
@@ -89,7 +89,7 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// mod 水源開關的名稱：偵測到那個 mod 時照常，沒偵測到時加註「（未偵測到水塔 mod）」。
+        /// mod 水源開關的名稱：偵測到那個 mod 時照常，沒偵測到時加註「（未偵測到這個 mod）」（兩個開關共用同一句，名稱裡已經有 mod 名）。
         /// 在標籤函式裡偵測：打開設定視窗時才算，那時所有 mod 都載完了（Init 時排在後面的 mod 還不在 ModLoader.Mods 裡）。
         /// </summary>
         static string ModSwitchLabel(Rules.SourceSwitch sw)
@@ -104,7 +104,7 @@ namespace ProbablyStolenCollectAllWater
         /// <summary>
         /// 這些 mod 有沒有任一個在跑：ModLoader.Mods 裡 manifest 的 ID 相符而且 IsEnabled（Init、OnEnable 成功才是 true）。
         /// 不用 ModLoader.IsModEnabled：它只看玩家勾選的清單，剛勾還沒重開、掃描被拒、Init 失敗時都還是 true。
-        /// 讀不到（清單是 null、遊戲改了）時當作有偵測到：寧可少一句註記，也不要對裝了水塔的玩家說沒偵測到；警告寫一次。
+        /// 讀不到（清單是 null、遊戲改了）時當作有偵測到：寧可少一句註記，也不要對裝了那個 mod 的玩家說沒偵測到；警告寫一次。
         /// </summary>
         static bool AnyModRunning(string[] ids)
         {
@@ -137,8 +137,8 @@ namespace ProbablyStolenCollectAllWater
             Rules.Grades.Where(g => _entries.TryGetValue(g, out var e) && e != null ? e.Value : g.DefaultOn).ToList();
 
         /// <summary>
-        /// 這個水源要不要收：看開關（起水分收集器也有開關，起水塔也有，起蒸發器也有）；水培系統看種類的下拉是不是 Off。
-        /// 攔截在 Init 之前就掛上了，還沒讀設定時用預設值（水分收集器、水塔開，其他關）。
+        /// 這個水源要不要收：看開關（起水分收集器也有開關，起水塔也有，起蒸發器也有，起淨水塔也有）；水培系統看種類的下拉是不是 Off。
+        /// 攔截在 Init 之前就掛上了，還沒讀設定時用預設值（水分收集器、水塔、淨水塔開，其他關）。
         /// </summary>
         internal static bool IsOn(Rules.Source source)
         {

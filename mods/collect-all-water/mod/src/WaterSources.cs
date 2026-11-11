@@ -8,7 +8,8 @@ namespace ProbablyStolenCollectAllWater
     /// 找水源、算水量、收水。只讀遊戲記憶體裡的物品、呼叫遊戲自己手動倒水用的方法，不碰存檔檔案
     /// （水量本來就記在物品上，結果和玩家自己一個一個倒一樣）。
     /// 水源：水分收集器（預設開）、淨水器、蒸發器、自動售水機、冰箱、物品欄裡的容器、展示櫃、垃圾桶，各看設定的開關（Settings.IsOn）；
-    /// 另有 Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的蓄水箱（預設開）：只看物品識別值，不參考、不反射那兩個 mod。
+    /// 另有 Workshop 的水塔 mod（WaterTower、WaterTowerPlus）的蓄水箱（預設開）、淨水塔 mod（purify_tower）的淨水壺（預設開）：
+    /// 只看物品識別值，不參考、不反射那些 mod。淨水塔工作區裡的淨水器一律不收。
     /// 水培系統（2.3.0）：符合設定種類的（Settings.HydroponicKind，預設 Off＝不收），水格裡的容器水質到設定的門檻以上才收
     /// （Settings.HydroponicMinPurity，預設基礎水以上）。2.4.0 的種類 Pinned看水格的容器有沒有遊戲的「固定」（ItemPinHelper.IsPinned），不看作物。
     /// 蒸發器（2.3.0）：只收餾出液格裡的容器，輸入格（容器格）的不收。
@@ -30,6 +31,13 @@ namespace ProbablyStolenCollectAllWater
         const string TowerPlusId = "watertower_plus";
         const string TankId = "watertower_tank";
         const string TankPlusId = "watertower_plus_tank";
+        /// <summary>
+        /// 淨水塔 mod（「水塔：净水自动化」）的塔與淨水壺的物品識別值。塔是 MACHINE、買了放進店裡的物品欄
+        /// （GetAllOwnedItems 找得到它和子孫）；淨水壺是遊戲標準的液體容器（200 L 起），鎖在塔視窗的淨水壺格。
+        /// 待淨化壺（purify_tower_raw_jug）不認：裝的是要淨化的水，照舊是「其他機器裡」。
+        /// </summary>
+        const string PurifyTowerId = "purify_tower";
+        const string CleanJugId = "purify_tower_clean_jug";
         const string FridgeTag = "FRIDGE_TAG";
         const string BrokenTag = "BROKEN_MACHINE_TAG";
         /// <summary>
@@ -138,8 +146,9 @@ namespace ProbablyStolenCollectAllWater
         /// 找不到或讀不到時照算，免得遊戲結構和預期不同時整座塔收不到（判斷在 Rules.IsTowerTank）。
         /// 取水槽裡放的備用蓄水箱上層物品也是塔，分不出來、照收（很少見，不另外處理）。
         /// 不看格子的 IsRemoveLocked：讀檔後到水塔 mod 補鎖之前有空窗。
+        /// 淨水塔的淨水壺照同一套：淨水壺格在塔視窗裡，最近的上層物品就是塔；what 是 log 用的名稱（蓄水箱／淨水壺）。
         /// </summary>
-        static bool BelongsToTower(GameItem tower, GameItem tank, string kind, List<string> debug)
+        static bool BelongsToTower(GameItem tower, GameItem tank, string kind, string what, List<string> debug)
         {
             GameItem parent;
             try { parent = GraphUtils.FindParentType<GameItem>(tank.parentInventory); }
@@ -149,18 +158,43 @@ namespace ProbablyStolenCollectAllWater
                 return true;
             }
             bool belongs = Rules.IsTowerTank(parent != null, ReferenceEquals(parent, tower));
-            if (!belongs) debug?.Add($"{kind} 裡的 {tank.identifier} 放在 {parent.identifier} 裡，不算塔的蓄水箱");
+            if (!belongs) debug?.Add($"{kind} 裡的 {tank.identifier} 放在 {parent.identifier} 裡，不算塔的{what}");
             return belongs;
+        }
+
+        /// <summary>
+        /// 淨水塔裡的淨水器：all 裡每座淨水塔（識別值 purify_tower）子孫裡的 water_purifier。這些淨水器不算台數、
+        /// 容器不記進淨水器的容器格，容器格的水落到「其他機器裡」不收：塔的設計是沒到門檻的水留在淨水器裡繼續淨化、乾淨的水從淨水壺拿。
+        /// **不管那座塔壞了沒、淨水塔的開關開不開**都排除（Q5 A：兩個開關不互相影響）；不是自己的塔認不出來，見下面的限制。
+        /// 先另外跑一輪建好集合，再進機器迴圈：all 的順序沒有保證塔排在它的淨水器前面（GetAllOwnedItems 分區域列、會有重複，去重時留第一次出現的；
+        /// 遊戲或別的 mod 改了列舉的方式也可能變），邊跑邊記會漏掉排在塔前面的淨水器。
+        /// 塔的子孫順便記進 towerChildren，機器迴圈重複用，不再列舉一次。
+        /// 從上往下找（和「在機器裡」的集合同一個做法），不從每台淨水器往上找祖先。
+        /// 限制：all 只有自己的物品（GetAllOwnedItems 只列自己的），不是自己的淨水塔不在 all 裡，它裡面自己的淨水器認不出來；
+        /// 想不到實際會發生的情境（塔是在王爾德那裡買來的，一定是自己的）。
+        /// </summary>
+        static HashSet<GameItem> PurifiersInPurifyTowers(List<GameItem> all, Dictionary<GameItem, List<GameItem>> towerChildren)
+        {
+            var set = new HashSet<GameItem>();
+            foreach (var item in all)
+            {
+                if (item.identifier != PurifyTowerId) continue;
+                var children = GraphUtils.FindAllChildrenType<GameItem>(item);
+                towerChildren[item] = children;
+                foreach (var k in children)
+                    if (k != null && k.identifier == PurifierId) set.Add(k);
+            }
+            return set;
         }
 
         /// <summary>
         /// 掃店裡的水源。target（右鍵的容器）本身不算水源。除錯模式把經過記進 log。
         ///
         /// 做法：店裡自己的全部物品（AllItems，含 WaterTowerPlus 場景視窗裡的塔）先去重，再從上往下建幾個集合（GraphUtils.FindAllChildrenType，遊戲自己列舉店裡物品也用它）：
-        /// 每台機器（含兩種水塔）的子孫、自動售水機、展示櫃、垃圾桶、櫃台各自的子孫；水分收集器、淨水器的容器格、冰箱兩區裡的容器、塔裡的蓄水箱、
-        /// 符合設定種類的水培系統的水格、蒸發器的餾出液格另外記。
+        /// 每台機器（含兩種水塔、淨水塔）的子孫、自動售水機、展示櫃、垃圾桶、櫃台各自的子孫；水分收集器、淨水器的容器格、冰箱兩區裡的容器、塔裡的蓄水箱、
+        /// 淨水塔裡的淨水壺、符合設定種類的水培系統的水格、蒸發器的餾出液格另外記。淨水塔裡的淨水器先另外找出來（PurifiersInPurifyTowers），不算台數、容器格不記。
         /// 每個水容器照下面的優先順序歸到一層（先符合的算；判斷在 Rules.LayerOf、水源總數在 Rules.SourceCount，離線測試測得到）：
-        /// 自動售水機 ＞ 水塔的蓄水箱 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 水培系統的水格 ＞ 蒸發器的餾出液格 ＞
+        /// 自動售水機 ＞ 水塔的蓄水箱 ＞ 淨水塔的淨水壺 ＞ 水分收集器的容器格 ＞ 淨水器的容器格 ＞ 冰箱的兩區 ＞ 水培系統的水格 ＞ 蒸發器的餾出液格 ＞
         /// 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄裡的容器。
         /// 一個容器先歸層、再看那層的開關：關著的那層不收，但也不會因此掉到下一層（例如水分收集器的開關關了，容器格裡的不會被當成物品欄的收走）。
         /// 自動售水機只收直接放在水箱的水容器，與放在裡面的水分收集器、淨水器的容器；這個開關關著時，
@@ -201,34 +235,43 @@ namespace ProbablyStolenCollectAllWater
             onCounter.UnionWith(ChildrenOf(entry.backInvinvElementCounter));
             bool fountainOn = Settings.IsOn(Rules.Source.VendingFountain);
 
-            // 機器：子孫、水分收集器與淨水器的容器格、冰箱兩區裡的東西、水塔的蓄水箱、水培系統的水格、蒸發器的餾出液格
+            // 淨水塔裡的淨水器：先建好，不靠 all 的順序（PurifiersInPurifyTowers）
+            var towerChildren = new Dictionary<GameItem, List<GameItem>>();
+            var purifiersInPurifyTowers = PurifiersInPurifyTowers(all, towerChildren);
+
+            // 機器：子孫、水分收集器與淨水器的容器格、冰箱兩區裡的東西、水塔的蓄水箱、淨水塔的淨水壺、水培系統的水格、蒸發器的餾出液格
             var inMachine = new HashSet<GameItem>();
             var inMachineButFountain = new HashSet<GameItem>(); // 自動售水機本身以外的機器的子孫（放在水箱裡的水分收集器、淨水器的也算）
             var farmContainers = new HashSet<GameItem>();
             var purifierContainers = new HashSet<GameItem>();
             var inFridge = new HashSet<GameItem>();
             var towerTanks = new HashSet<GameItem>();
+            var purifyTowerJugs = new HashSet<GameItem>();
             var hydroponicContainers = new HashSet<GameItem>();
             var evaporatorContainers = new HashSet<GameItem>();
-            int farms = 0, purifiers = 0, fridges = 0, towers = 0, towersPlus = 0, hydroponics = 0, otherHydroponics = 0, evaporators = 0;
+            int farms = 0, purifiers = 0, fridges = 0, towers = 0, towersPlus = 0, purifyTowers = 0, hydroponics = 0, otherHydroponics = 0, evaporators = 0;
+            int purifiersSkippedInPurifyTowers = 0;
             var hydroponicKind = Settings.HydroponicKind; // 收哪些水培系統，一次掃描讀一次
             foreach (var item in all)
             {
                 bool isFarm = item.identifier == FarmId, isPurifier = item.identifier == PurifierId, isFridge = item.IsTag(FridgeTag);
                 bool isTower = IsTower(item), isHydroponic = item.IsTag(HydroponicTag), isEvaporator = item.identifier == EvaporatorId;
-                if (!isFarm && !isPurifier && !isFridge && !isTower && !isHydroponic && !isEvaporator && !IsMachine(item)) continue;
+                bool isPurifyTower = item.identifier == PurifyTowerId;
+                if (!isFarm && !isPurifier && !isFridge && !isTower && !isPurifyTower && !isHydroponic && !isEvaporator && !IsMachine(item)) continue;
                 bool notFountain = !ReferenceEquals(item, fountain);
-                var children = GraphUtils.FindAllChildrenType<GameItem>(item);
+                var children = towerChildren.TryGetValue(item, out var cached) ? cached : GraphUtils.FindAllChildrenType<GameItem>(item);
                 foreach (var k in children)
                 {
                     if (k == null) continue;
                     inMachine.Add(k);
                     if (notFountain) inMachineButFountain.Add(k);
                 }
-                if (!isFarm && !isPurifier && !isFridge && !isTower && !isHydroponic && !isEvaporator) continue;
+                if (!isFarm && !isPurifier && !isFridge && !isTower && !isPurifyTower && !isHydroponic && !isEvaporator) continue;
+                // 淨水塔裡的淨水器一律不收、不算台數；子孫上面已經記進「在機器裡」，容器格的水落到「其他機器裡」
+                if (isPurifier && purifiersInPurifyTowers.Contains(item)) { purifiersSkippedInPurifyTowers++; continue; }
                 bool isTowerPlus = isTower && item.identifier == TowerPlusId;
                 var kind = isFarm ? "水分收集器" : isPurifier ? "淨水器" : isFridge ? "冰箱" : isTowerPlus ? "水塔Plus" : isTower ? "水塔"
-                    : isEvaporator ? "蒸發器" : "水培系統";
+                    : isPurifyTower ? "淨水塔" : isEvaporator ? "蒸發器" : "水培系統";
                 void SkipMachine(string why) => debug?.Add($"{kind} {why}");
                 if (!GeneralHelper.IsItemOwned(item)) { SkipMachine("不是自己的"); continue; }
                 if (item.IsTag(BrokenTag)) { SkipMachine("損壞"); continue; }
@@ -241,8 +284,23 @@ namespace ProbablyStolenCollectAllWater
                     else towers++;
                     int tanks = 0;
                     foreach (var k in children)
-                        if (k != null && IsTank(k) && IsWaterContainer(k) && BelongsToTower(item, k, kind, debug)) { towerTanks.Add(k); tanks++; }
+                        if (k != null && IsTank(k) && IsWaterContainer(k) && BelongsToTower(item, k, kind, "蓄水箱", debug)) { towerTanks.Add(k); tanks++; }
                     if (tanks == 0) SkipMachine("裡面找不到蓄水箱");
+                    continue;
+                }
+                if (isPurifyTower)
+                {
+                    // 照水塔：一座算 1，不管淨水壺有沒有水、在不在、是不是右鍵的那個；只認直接屬於這座塔的淨水壺。
+                    // 待淨化壺、取水槽、工作區裡直接放的容器沒記進來，照舊是「其他機器裡」不收
+                    purifyTowers++;
+                    int jugs = 0;
+                    foreach (var k in children)
+                        if (k != null && k.identifier == CleanJugId && IsWaterContainer(k) && BelongsToTower(item, k, kind, "淨水壺", debug))
+                        {
+                            purifyTowerJugs.Add(k);
+                            jugs++;
+                        }
+                    if (jugs == 0) SkipMachine("裡面找不到淨水壺");
                     continue;
                 }
                 if (isFridge)
@@ -310,6 +368,7 @@ namespace ProbablyStolenCollectAllWater
                 {
                     InFountain = inFountain.Contains(c),
                     InTowerTank = towerTanks.Contains(c),
+                    InPurifyTowerJug = purifyTowerJugs.Contains(c),
                     InFarmSlot = farmContainers.Contains(c),
                     InPurifierSlot = purifierContainers.Contains(c),
                     InFridge = inFridge.Contains(c),
@@ -333,16 +392,18 @@ namespace ProbablyStolenCollectAllWater
                 result.Sources.Add(new Found { Container = c, Source = source, Parts = PartsOf(c), Grade = grade });
             }
 
-            // 找到的水源總數：機器算台數（水塔算座數）、自動售水機算 1、散放的三種算水容器的個數；只算開著的
+            // 找到的水源總數：機器算台數（水塔、淨水塔算座數）、自動售水機算 1、散放的三種算水容器的個數；只算開著的
             int FoundIn(Rules.Source s) => layerFound.TryGetValue(s, out var n) ? n : 0;
-            result.SourceCount = Rules.SourceCount(farms, purifiers, towers + towersPlus, hydroponics, evaporators, fridges, fountain != null,
+            result.SourceCount = Rules.SourceCount(farms, purifiers, towers + towersPlus, purifyTowers, hydroponics, evaporators, fridges, fountain != null,
                 FoundIn(Rules.Source.Inventory), FoundIn(Rules.Source.DisplayCase), FoundIn(Rules.Source.TrashCan), Settings.IsOn);
 
             if (debug != null)
             {
                 if (farms == 0) // 一台都沒有：列出有哪些物品，看識別值對不對、清單有沒有往箱子裡面找
                     debug.Add("物品種類：" + string.Join(",", all.Select(x => x.identifier).Distinct().Take(40)));
-                debug.Add($"水分收集器 {farms} 台、淨水器 {purifiers} 台、冰箱 {fridges} 台、水塔 {towers} 座、水塔Plus {towersPlus} 座、" +
+                if (purifiersSkippedInPurifyTowers > 0)
+                    debug.Add($"淨水器 {purifiersSkippedInPurifyTowers} 台在淨水塔裡，不收");
+                debug.Add($"水分收集器 {farms} 台、淨水器 {purifiers} 台、冰箱 {fridges} 台、水塔 {towers} 座、水塔Plus {towersPlus} 座、淨水塔 {purifyTowers} 座、" +
                     $"水培系統 {hydroponics} 台算（種類 {hydroponicKind}，其他 {otherHydroponics} 台，門檻 {hydroponicMin}）、蒸發器 {evaporators} 台、" +
                     $"自動售水機{(fountain != null ? "有" : "沒有")}");
                 debug.Add("各層的水容器：" + string.Join("、", Enum.GetValues(typeof(Rules.Source)).Cast<Rules.Source>().Select(s =>
@@ -592,8 +653,9 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 收水：開著的水源裡裝著這種水的容器，照 Rules.CollectOrder 的順序（層級：水分收集器 → 淨水器 → 水塔 →
-        /// 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃；前五層水多的先、後面水少的先），一個一個用遊戲手動倒水的方法倒進 target，
+        /// 收水：開著的水源裡裝著這種水的容器，照 Rules.CollectOrder 的順序（層級：水分收集器 → 淨水器 →
+        /// mod 水源（水塔、淨水塔整組，不分 mod）→ 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 → 自動售水機 → 展示櫃；蒸發器以前的水多的先、後面水少的先），
+        /// 一個一個用遊戲手動倒水的方法倒進 target，
         /// 倒滿或收完為止（剩不到 1 毫升就停，不去下一個搬零頭）。
         /// 不看 target 裡原本是什麼水（後半：看了等於免費驗水），混了就是混了，和手動倒一樣。
         /// 收完照手動倒水播一次聲音，不顯示文字：手動倒水是看**倒出來的那個**是不是濾水壺（water_pitcher）決定播濾水聲，

@@ -1,14 +1,14 @@
 # Probably Stolen 一鍵收水 mod（Collect All Water）
 
-*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus）時，也會收水塔蓄水箱裡的水。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus、水塔：淨水自動化）時，也會收水塔裡的水。遊戲官方格式的 mod（不需要 MelonLoader）。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Collect All Water 的最新版，標記 `collect-all-water-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, Hydroponic Systems, Evaporators, the Vending Fountain, Fridges and more, as well as the tanks of the Water Tower mods. See [English](#english) below.
+> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, Hydroponic Systems, Evaporators, the Vending Fountain, Fridges and more, as well as the water tower mods. See [English](#english) below.
 
 ## 功能
 
@@ -41,12 +41,18 @@
   - 基礎水、優質水、純水的按鈕預設關，也要在「Right-click menu」打開對應的水質，選單才有那一行。
   - 和其他水源一樣倒到右鍵的容器滿為止，水格的容器可能被倒空。
   - 只收水格裡直接放的那個容器，水培系統其他的格子不收。收水和手動把水倒走一樣，不另外改水培系統的狀態。
-- **水塔 mod 的蓄水箱**（2.2.0 起，設定段落「Mod water sources」的「收水塔」，預設開）：裝了 Steam 工作坊上 Hungo1998520 的水塔 mod（[水塔 Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556)、[水塔Plus WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)）時，也從水塔的 600L 蓄水箱收。
+- **水塔 mod 的蓄水箱**（2.2.0 起，設定段落「Mod water sources」的「收 Water Tower」，預設開）：裝了 Steam 工作坊上 Hungo1998520 的水塔 mod（[水塔 Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556)、[水塔Plus WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)）時，也從水塔的 600L 蓄水箱收。
   - 塔裡的淨水器每晚會淨化蓄水箱；這裡照水現在的水質收，**淨化中的水也會被收走**（和淨水器一樣）。
   - 塔的取水槽、過濾器格不收。塔工作區裡自己放了容器的水分收集器、淨水器，照它們自己的開關（收水分收集器、收淨水器）。
   - 右鍵蓄水箱本身也有收水按鈕，可以把各處的水集中到塔裡。
   - 沒裝水塔 mod 時這個開關沒有作用，設定裡的名稱後面會註明沒偵測到。
-- **收的順序**：水分收集器 → 淨水器 → 水塔 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，容器裝滿就停。水分收集器、淨水器、水塔、水培系統、蒸發器從最滿的先倒（容器裝不下全部時先清快滿的，免得水分收集器或水塔滿了、隔夜的產量浪費掉）；其他的從最少的先倒（一次清空最多個容器）。
+- **淨水塔的淨水壺**（2.5.0 起，設定段落「Mod water sources」的「收「水塔：淨水自動化」」，預設開）：裝了 Steam 工作坊上的 [水塔：净水自动化 Water Tower: Purification Automation](https://steamcommunity.com/sharedfiles/filedetails/?id=3834509812) 時，也從塔裡的淨水壺收。
+  - 淨水壺裡是塔淨化到設定純度的水，通常是優質水以上；基礎水、優質水、純水的按鈕預設關，也要在「Right-click menu」打開對應的水質。
+  - 待淨化壺、取水槽、工作區裡的容器不收。**工作區裡的淨水器也不收**，打開「收淨水器」也一樣：那些水還在等淨化到塔的設定。
+  - 右鍵兩把壺本身也有收水按鈕，例如把水分收集器的水集中倒進待淨化壺。
+  - 沒裝這個 mod 時開關沒有作用，設定裡的名稱後面會註明沒偵測到。
+- **收的順序**：水分收集器 → 淨水器 → mod 水源 → 水培系統 → 蒸發器 → 垃圾桶 → 物品欄裡的容器 → 冰箱 → 自動售水機 → 展示櫃，容器裝滿就停。水分收集器、淨水器、mod 水源、水培系統、蒸發器從最滿的先倒（容器裝不下全部時先清快滿的，免得水分收集器或水塔滿了、隔夜的產量浪費掉）；其他的從最少的先倒（一次清空最多個容器）。
+  - mod 水源：Water Tower、WaterTowerPlus 的蓄水箱和「水塔：淨水自動化」的淨水壺。這幾個不分是哪個 mod，一起從最滿的先倒。
 - **放在自動售水機裡的水分收集器、淨水器**：沒打開「收自動售水機」時不收、也不算進括號，特地放進去賣的水不會被倒走。自動售水機水箱裡直接放的水容器，右鍵照樣有收水按鈕（可以拿來補貨）。
 - **哪些容器有這個按鈕**：自己的水容器（水桶、水瓶、水罐、儲水罐、循環水養殖系統水箱…），以及還沒開始發酵的酒瓶。排水口、水龍頭沒有。發酵中、釀好的酒瓶不會被倒進水，也不會被當成水源。
 - **不檢查右鍵容器裡原本的水**：容器裡原本有別的水時會混在一起，和手動倒一樣。
@@ -75,7 +81,7 @@
 | 設定 | 預設 | 內容 |
 |---|---|---|
 | 收水分收集器（`SourceMoistureFarms`） | 開 | 店裡所有的水分收集器，含箱子裡的 |
-| 收淨水器（`SourcePurifiers`） | 關 | 淨水器裡的水，淨化到一半的也收 |
+| 收淨水器（`SourcePurifiers`） | 關 | 淨水器裡的水，淨化到一半的也收（「水塔：淨水自動化」工作區裡的不收） |
 | 收水培系統的水（`SourceHydroponics`，2.3.0 起） | 不收（Off） | 下拉：收哪些水培系統水格裡的容器。選項在遊戲裡是英文：Off＝不收、Hydroreed＝種著水培蘆葦的、Hydroreed (incl. harvested)＝再加上剛收成、作物輸出格裡有水培蘆葦種子的、Pinned＝水格裡的容器有右鍵「固定」的（2.4.0 起；任何作物、空著都算）、All＝所有水培系統 |
 | 水培的最低水質（`HydroponicMinQuality`，2.3.0 起） | 基礎水以上（Basewater or better） | 下拉：上一項選的水培系統，水質到這個等級以上才收（淨化途中的幽靈水不收）。選項：Basewater or better＝基礎水以上、High-Quality Water or better＝優質水以上、Pure Water＝純水 |
 | 收蒸發器（`SourceEvaporators`，2.3.0 起） | 關 | 蒸發器餾出液格裡的容器（容器格裡的不收），照實際水質收 |
@@ -89,7 +95,8 @@
 
 | 設定 | 預設 | 內容 |
 |---|---|---|
-| 收水塔（`SourceWaterTowers`） | 開 | 水塔 mod（Water Tower、WaterTowerPlus）的蓄水箱，淨化中的水也會被收走。沒裝水塔 mod 時名稱後面會註明沒偵測到 |
+| 收 Water Tower（`SourceWaterTowers`） | 開 | Water Tower mod（含同系列的 WaterTowerPlus）的蓄水箱，淨化中的水也會被收走。沒裝時名稱後面會註明沒偵測到 |
+| 收「水塔：淨水自動化」（`SourcePurifyTowers`） | 開 | 「水塔：淨水自動化」mod 的淨水壺；待淨化壺和工作區裡的淨水器不收。沒裝時名稱後面會註明沒偵測到 |
 
 水源的開關全部關掉（「收水培系統的水」是 Off）時，按鈕寫「(沒有水源)」。
 
@@ -98,7 +105,7 @@
 ## 語言
 
 - 按鈕與設定的文字跟著遊戲語言：中文介面是「收集」，其他語言是「Collect」。水的名稱用遊戲自己的翻譯，和水分收集器滑鼠提示上的一樣。
-- 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod（非官方）](https://www.nexusmods.com/probablystolen/mods/280)，按鈕和設定的字會跟著轉成繁體。
+- 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)，按鈕和設定的字會跟著轉成繁體。
 
 ## 安裝
 
@@ -136,11 +143,11 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 - 沒打開「收自動售水機」時，放在自動售水機裡的水分收集器、淨水器不收（見「功能」）。
 - 櫃檯上的水容器不收，暫放在櫃檯上的水要先移回物品欄。
 - 遊戲之後如果改了水分收集器、淨水器、冰箱、水容器或右鍵選單的做法，要等 mod 更新。
-- 水塔的支援照水塔 mod 1.0.3 的做法；水塔 mod 之後改了蓄水箱的做法時，要等本 mod 更新。
+- 水塔的支援照 Water Tower、WaterTowerPlus 1.0.3 與「水塔：淨水自動化」v0.5.4 的做法；它們之後改了蓄水箱、淨水壺的做法時，要等本 mod 更新。
 
 ## 相容性
 
-- **水塔 mod**（Water Tower、WaterTowerPlus）：支援，蓄水箱當成水源（見「功能」）。
+- **水塔 mod**（Water Tower、WaterTowerPlus、水塔：淨水自動化）：支援，蓄水箱與淨水壺當成水源（見「功能」）。
 - 其他也會改右鍵選單的 mod，可能和這個 mod 互相影響，沒有測試過。
 
 ## 從原始碼建置（開發者）
@@ -165,7 +172,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus) installed, it also collects from the towers' tanks. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV12). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
+A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers. Uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs).
 
@@ -200,12 +207,18 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - The Basewater, High-Quality Water and Pure Water buttons are off by default; turn on the matching water under "Right-click menu" too, so the menu gets that line.
   - Like the other sources, it pours until the right-clicked container is full, so the water slot's container may be emptied.
   - Only the container placed directly in the water slot is taken, nothing from the Hydroponic System's other slots. Collecting is just like pouring the water out by hand; nothing else about the Hydroponic System is changed.
-- **Water tower tanks** (from 2.2.0; "Collect from Water Towers" under "Mod water sources" in the settings, on by default): with Hungo1998520's water tower mods from the Steam Workshop installed ([Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556), [WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)), it also collects from the towers' 600L tanks.
+- **Water tower tanks** (from 2.2.0; "Collect from Water Tower" under "Mod water sources" in the settings, on by default): with Hungo1998520's water tower mods from the Steam Workshop installed ([Water Tower](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418556), [WaterTowerPlus](https://steamcommunity.com/sharedfiles/filedetails/?id=3829418785)), it also collects from the towers' 600L tanks.
   - The Water Purifiers in a tower purify its tank every night; this goes by the water's current quality, so **water still being purified is taken too** (as with Water Purifiers).
   - The tower's fill slot and filter slots are left alone. Moisture Farms and Water Purifiers in the tower's work area that hold their own container go by their own switches (Moisture Farms, Water Purifiers).
   - The tank itself gets the Collect button too, so you can gather water from everywhere into the tower.
-  - Without a water tower mod the switch does nothing, and its name in the settings says no water tower mod was detected.
-- **Order**: Moisture Farms → Water Purifiers → Water Towers → Hydroponic Systems → Evaporators → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case, stopping when the container is full. Moisture Farms, Water Purifiers, Water Towers, Hydroponic Systems and Evaporators go fullest first (if the container can't take it all, the ones about to overflow are emptied first, so a Moisture Farm's or a tower's next night's output isn't wasted); the rest go emptiest first, so as many containers as possible end up empty.
+  - Without a water tower mod the switch does nothing, and its name in the settings says the mod was not detected.
+- **Purification tower clean jug** (from 2.5.0; "Collect from Water Tower: Purification Automation" under "Mod water sources" in the settings, on by default): with [Water Tower: Purification Automation](https://steamcommunity.com/sharedfiles/filedetails/?id=3834509812) from the Steam Workshop installed, it also collects from the tower's clean jug.
+  - The clean jug holds water the tower has purified to the purity you set, usually High-Quality Water or better; the Basewater, High-Quality Water and Pure Water buttons are off by default, so turn on the matching water under "Right-click menu" too.
+  - The raw jug, the fill slot and containers in the work area are left alone. **The Water Purifiers in its work area are not taken either**, even with "Collect from Water Purifiers" on: their water is still on its way to the tower's target.
+  - Both jugs get the Collect button too, for example to gather your Moisture Farms' water into the raw jug.
+  - Without that mod the switch does nothing, and its name in the settings says the mod was not detected.
+- **Order**: Moisture Farms → Water Purifiers → mod water sources → Hydroponic Systems → Evaporators → Trash Can → containers in the inventory → Fridges → Vending Fountain → Display Case, stopping when the container is full. Moisture Farms, Water Purifiers, mod water sources, Hydroponic Systems and Evaporators go fullest first (if the container can't take it all, the ones about to overflow are emptied first, so a Moisture Farm's or a tower's next night's output isn't wasted); the rest go emptiest first, so as many containers as possible end up empty.
+  - Mod water sources: the tanks of Water Tower and WaterTowerPlus and the clean jugs of Water Tower: Purification Automation. They are poured together, fullest first, whichever mod they come from.
 - **Moisture Farms and Water Purifiers in the Vending Fountain** are left alone unless the Vending Fountain switch is on: they aren't collected from and aren't counted in the number, so the water you set aside to sell stays there. Water containers placed directly in the Vending Fountain's tanks still get the Collect button (handy for restocking).
 - **Which containers get the button**: your own water containers (Jugs of Water, Bottles of Water, the Water Pitcher, the Water Tank, the RAS Water Tank…) and Wine Bottles that haven't started fermenting. Water Drains and Water Faucets don't. Fermenting or finished wine is never filled, and never used as a source.
 - **The container you right-click isn't checked**: if it already holds a different water, they mix, just like pouring by hand.
@@ -232,7 +245,7 @@ With all four off, the menu is the usual seven buttons.
 | Setting | Default | What it does |
 |---|---|---|
 | Collect from Moisture Farms (`SourceMoistureFarms`) | on | Every Moisture Farm in your shop, including ones in boxes |
-| Collect from Water Purifiers (`SourcePurifiers`) | off | Water in Water Purifiers, including water still being purified |
+| Collect from Water Purifiers (`SourcePurifiers`) | off | Water in Water Purifiers, including water still being purified (not the ones in the work area of Water Tower: Purification Automation) |
 | Collect from Hydroponic Systems (`SourceHydroponics`, from 2.3.0) | Off | Dropdown: which Hydroponic Systems' water slot containers to collect from. Choices: Off, Hydroreed (growing Hydroreed), Hydroreed (incl. harvested) (also just harvested, with Hydroreed Seeds in Produce Output), Pinned (water slot container is pinned with right-click > Pin, whatever is growing or empty; from 2.4.0), All |
 | Hydroponics minimum quality (`HydroponicMinQuality`, from 2.3.0) | Basewater or better | Dropdown: the Hydroponic Systems chosen above are only collected from once their water reaches this quality (Ghostwater still being purified is never taken). Choices: Basewater or better, High-Quality Water or better, Pure Water |
 | Collect from Evaporators (`SourceEvaporators`, from 2.3.0) | off | The container in an Evaporator's Distillate slot (never the one in its Container slot), by its actual water quality |
@@ -246,7 +259,8 @@ With all four off, the menu is the usual seven buttons.
 
 | Setting | Default | What it does |
 |---|---|---|
-| Collect from Water Towers (`SourceWaterTowers`) | on | The tanks of the Water Tower and WaterTowerPlus mods, including water still being purified. Without a water tower mod, its name says none was detected |
+| Collect from Water Tower (`SourceWaterTowers`) | on | The tanks of the Water Tower mod, including WaterTowerPlus from the same series, and water still being purified. Without the mod, its name says it was not detected |
+| Collect from Water Tower: Purification Automation (`SourcePurifyTowers`) | on | The clean jug of that mod's tower; the raw jug and the purifiers in its work area are not taken. Without the mod, its name says it was not detected |
 
 With every source switched off (and "Collect from Hydroponic Systems" set to Off), the buttons say "(no water sources)".
 
@@ -286,11 +300,11 @@ The Demo version (v1.0.1 and earlier, MelonLoader) does not work on the full rel
 - Unless the Vending Fountain switch is on, Moisture Farms and Water Purifiers in the Vending Fountain aren't collected from (see Features).
 - Water containers on the counter are never taken; move water you left on the counter back to the inventory first.
 - If a game update changes how Moisture Farms, Water Purifiers, Fridges, water containers or the right-click menu work, wait for a mod update.
-- Water tower support follows how version 1.0.3 of the water tower mods works; if they change how their tanks work, wait for a mod update.
+- Water tower support follows how Water Tower and WaterTowerPlus 1.0.3 and Water Tower: Purification Automation 0.5.4 work; if they change how their tanks or jugs work, wait for a mod update.
 
 **Compatibility**
 
-- **Water tower mods** (Water Tower, WaterTowerPlus): supported; their tanks are a water source (see Features).
+- **Water tower mods** (Water Tower, WaterTowerPlus, Water Tower: Purification Automation): supported; their tanks and clean jugs are a water source (see Features).
 - Other mods that also change the right-click menu may interfere with this one; not tested.
 
 **Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\collect-all-water` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time; MelonLoader is not needed). It installs into `Mods\dbfoxtw.collect-all-water\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many sources of each kind were found and how much of each water there is every time you right-click a water container, and what each collection poured. `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
