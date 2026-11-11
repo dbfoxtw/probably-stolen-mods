@@ -1,7 +1,7 @@
-Probably Stolen 繁體中文化 mod（非官方） v{version}
+Probably Stolen 繁體中文化 mod v{version}
 ==================================================
 
-把遊戲內建的簡體中文，在顯示時轉成繁體中文（台灣用語）。非官方製作。
+把遊戲內建的簡體中文，在顯示時轉成繁體中文（台灣用語）。
 對應遊戲版本：正式版 1.0（VERSION 100-REV13）
 
 簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。
@@ -17,6 +17,7 @@ Probably Stolen 繁體中文化 mod（非官方） v{version}
    （解壓後是 Mods\dbfoxtw.zh-hant\manifest.xml）。
 2. 開遊戲，在主選單的「Mods」（模組）畫面啟用「Traditional Chinese Translation」，再重開遊戲。
 3. 在主選單右上角的語言選單選「Simplified Chinese」。裝了 mod 後，選單上會顯示「Traditional Chinese」。
+4. 切換語言後建議關掉遊戲重開，因為遊戲本身切換語言有時會出 bug（例如賣不掉水）。
 更新 mod 時：關閉遊戲，刪掉舊的 Mods\dbfoxtw.zh-hant 資料夾，再重做第 1 步（舊版留下的檔可能讓遊戲不能啟用 mod）。設定會保留。
 
 【單位用英文】
@@ -47,10 +48,10 @@ ModConfigs\dbfoxtw.zh-hant.json 與 ModData\dbfoxtw_zh-hant 資料夾（如果�
 - 遊戲的文字、名稱與素材，權利屬於 Questing Goose Studio。
 
 
-Probably Stolen Traditional Chinese mod (unofficial) v{version}
+Probably Stolen Traditional Chinese mod v{version}
 --------------------------------------------------------------
 
-Shows the game's Simplified Chinese text in Traditional Chinese (Taiwan). Unofficial.
+Shows the game's Simplified Chinese text in Traditional Chinese (Taiwan).
 Supported game version: full release 1.0 (VERSION 100-REV13)
 
 The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it.
@@ -69,6 +70,8 @@ Find the game folder: Steam library → right-click the game → Manage → Brow
    and restart the game.
 3. Choose "Simplified Chinese" in the language menu at the top right of the main menu.
    With the mod installed, the menu shows it as "Traditional Chinese".
+4. It's best to close and restart the game after switching languages, since the game itself
+   can have bugs after a language switch (for example, water that won't sell).
 To update the mod: close the game, delete the old Mods\dbfoxtw.zh-hant folder, and repeat step 1
 (files left over from an old version can stop the game from enabling the mod). Your settings are kept.
 

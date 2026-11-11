@@ -1,6 +1,6 @@
-# Probably Stolen 繁體中文化 mod（非官方）
+# Probably Stolen 繁體中文化 mod
 
-*Probably Stolen* 的繁體中文（台灣用語）顯示 mod，遊戲官方的 mod 格式（不需要 MelonLoader）。非官方製作。
+*Probably Stolen* 的繁體中文（台灣用語）顯示 mod，遊戲官方的 mod 格式（不需要 MelonLoader）。
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13）
 
@@ -8,7 +8,7 @@
 
 簡繁轉換用 OpenCC；台灣用語的潤稿、缺翻補譯和程式都是用 AI（Claude）做的。如果有翻不順的地方歡迎回報。這個 mod 還沒有做詳細測試，如果有任何 bug 也歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs)的 Bugs 分頁）。
 
-> Unofficial Traditional Chinese (Taiwan) display mod for *Probably Stolen*, in the game's official mod format (no MelonLoader needed). See [English](#english) below.
+> Traditional Chinese (Taiwan) display mod for *Probably Stolen*, in the game's official mod format (no MelonLoader needed). See [English](#english) below.
 
 ## 這是什麼
 
@@ -30,6 +30,7 @@
 2. 關閉遊戲，把壓縮檔裡的 `dbfoxtw.zh-hant` 資料夾**解壓縮到遊戲資料夾的 `Mods` 資料夾裡**（解壓後是 `Mods\dbfoxtw.zh-hant\manifest.xml`）。
 3. 開遊戲，在主選單的「Mods」（模組）畫面啟用「Traditional Chinese Translation」，再重開遊戲。
 4. 在主選單右上角的語言選單選「Simplified Chinese」。裝了 mod 後，選單上會顯示「Traditional Chinese」。
+5. 切換語言後建議關掉遊戲重開，因為遊戲本身切換語言有時會出 bug（例如賣不掉水）。
 
 更新 mod 時：關閉遊戲，刪掉舊的 `Mods\dbfoxtw.zh-hant` 資料夾，再重做第 2 步（舊版留下的檔可能讓遊戲不能啟用 mod）。設定會保留。
 
@@ -116,7 +117,7 @@ OpenCC 字典在建置時由 Python 套件產生（見 `tools/build_mod_data.py`
 
 ## English
 
-An unofficial mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: full release 1.0 (VERSION 100-REV13). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Traditional Chinese Translation, tagged `zh-hant-v…`).
+A mod that shows *Probably Stolen*'s Simplified Chinese text in Traditional Chinese (Taiwan). Supported game version: full release 1.0 (VERSION 100-REV13). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/280) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Traditional Chinese Translation, tagged `zh-hant-v…`).
 
 The Simplified-to-Traditional conversion uses OpenCC; the Taiwan-usage proofreading, the translations for lines missing from the Simplified Chinese table, and the code were all made with AI (Claude). If any line reads awkwardly, please report it. This mod has not been thoroughly tested yet, so bug reports are welcome too, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/280?tab=bugs).
 
@@ -134,6 +135,7 @@ This mod uses the game's official mod format; MelonLoader is not needed.
 2. Close the game and extract the `dbfoxtw.zh-hant` folder from the archive **into the `Mods` folder in the game folder** (you should get `Mods\dbfoxtw.zh-hant\manifest.xml`).
 3. Start the game, enable "Traditional Chinese Translation" on the Mods screen of the main menu, and restart the game.
 4. Choose "Simplified Chinese" in the language menu at the top right of the main menu. With the mod installed, it is shown as "Traditional Chinese".
+5. It's best to close and restart the game after switching languages, since the game itself can have bugs after a language switch (for example, water that won't sell).
 
 To update, close the game, delete the old `Mods\dbfoxtw.zh-hant` folder and repeat step 2. Your settings are kept.
 
