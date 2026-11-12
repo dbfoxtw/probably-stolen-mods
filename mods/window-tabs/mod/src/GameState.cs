@@ -4,11 +4,13 @@ using UnityEngine.Localization.Settings;
 
 namespace ProbablyStolenWindowTabs
 {
-    /// <summary>從遊戲記憶體讀狀態（存檔槽、這場遊戲的識別值、字型），不碰存檔檔案。寫法照一鍵關窗、交易所預覽 mod。</summary>
+    /// <summary>從遊戲記憶體讀狀態（存檔槽、這場遊戲的識別值、語言、字型），不碰存檔檔案。寫法照一鍵關窗、交易所預覽、視窗群組 mod。</summary>
     static class GameState
     {
         /// <summary>店鋪畫面的場景（主選單是 EmporiumMenu）。</summary>
         internal const string StoreScene = "InventoryScene";
+        /// <summary>繁中 mod 的 manifest ID（設定視窗的文字用繁中還是簡中，DetectLanguage）。</summary>
+        const string ZhHantModId = "dbfoxtw.zh-hant";
 
         /// <summary>
         /// 目前這場遊戲：PlayerStore.saveSlotId 與 runID（每開一場新遊戲產生一個 GUID）。
@@ -27,6 +29,38 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>目前的 PlayerStore；還沒有實例時回傳 null（不叫 Instance 屬性：它會建一個新的）。</summary>
         internal static PlayerStore Store() => PlayerStore.HasInstance ? PlayerStore.Instance : null;
+
+        /// <summary>
+        /// 某個 mod 這次有沒有真的跑起來（照視窗群組；遊戲的 mod 載入器，直接讀不是反射，不必宣告權限）。
+        /// 不用 ModLoader.IsModEnabled：它只看玩家勾選的清單，勾了但沒載入也是 true。LoadedMod.IsEnabled 要 Init／OnEnable 成功才是 true。
+        /// </summary>
+        static bool ModRunning(string modId)
+        {
+            try { return ModLoader.Mods.Exists(m => m != null && m.IsEnabled && m.Manifest != null && m.Manifest.ID == modId); }
+            catch { return false; }
+        }
+
+        static string LocaleCode()
+        {
+            try
+            {
+                var loc = LocalizationSettings.SelectedLocale;
+                return loc == null ? null : loc.Identifier.Code;
+            }
+            catch { return null; } // Localization 還沒初始化
+        }
+
+        /// <summary>遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的：中文時看繁中 mod 有沒有在跑。其他語系用英文（照視窗群組）。</summary>
+        internal static Lang DetectLanguage()
+        {
+            var code = LocaleCode();
+            if (code != null && code.StartsWith("zh", StringComparison.Ordinal))
+                return ModRunning(ZhHantModId) ? Lang.ZhHant : Lang.ZhHans;
+            return Lang.En;
+        }
+
+        /// <summary>目前語言的設定視窗文字（打開設定視窗時才取，切換語言後跟著變）。</summary>
+        internal static Strings S => Strings.For(DetectLanguage());
 
         /// <summary>
         /// 遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色；中文是 NotoSansSC 動態字型），寫法照待辦清單、交易所預覽 mod；

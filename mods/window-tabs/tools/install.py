@@ -30,7 +30,7 @@ MOD = modkit.OfficialMod(
     root=HERE.parent,
     mod_id="dbfoxtw.window-tabs",  # 和 mod/src/WindowTabsMod.cs 的 ModId 一致
     name="Window Tabs",
-    description=("Unofficial. Stack your container and machine windows into one window with tabs: drag a window by its "
+    description=("Stack your container and machine windows into one window with tabs: drag a window by its "
                  "title bar onto another window's title bar or tab strip to merge them, click a tab to switch, drag a tab "
                  "out to split it off. Tab groups are kept per save slot in the mod's own data, not in your save files."),
     assembly="ProbablyStolenWindowTabs",

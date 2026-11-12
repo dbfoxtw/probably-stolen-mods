@@ -1,18 +1,19 @@
 # Probably Stolen 視窗分頁 mod（Window Tabs）
 
-*Probably Stolen* 的 mod：把店裡的箱子、機器視窗疊成一個有分頁的視窗。把一個視窗拖到另一個視窗的標題列上就合併成分頁，點分頁切換，把分頁拖出來就拆開。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：把店裡的箱子、機器視窗疊成一個有分頁的視窗。抓著一個視窗的標題列拖到另一個視窗的標題列上就合併成分頁，點分頁切換，把分頁拖出來就拆開。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Tabs 的最新版，標記 `window-tabs-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): stack your container and machine windows into one window with tabs. Drag a window onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. See [English](#english) below.
+> A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window by its title bar onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. See [English](#english) below.
 
 ## 功能
 
-- **合併**：拖著一個視窗，讓滑鼠停在另一個視窗的標題列或分頁條上放開，兩個就疊成分頁。滑鼠移過去時會先出現一個虛線的預告分頁，寫著拖過來那個的名稱：停在標題列上＝加在最後；停在分頁條上兩個分頁中間，就插在那裡。停在視窗的其他地方只是普通的移動。
+- **合併**：抓著一個視窗的標題列拖，讓滑鼠停在另一個視窗的標題列或分頁條上放開，兩個就疊成分頁。滑鼠移過去時會先出現一個虛線的預告分頁，寫著拖過來那個的名稱：停在標題列上＝加在最後；停在分頁條上兩個分頁中間，就插在那裡。停在視窗的其他地方只是普通的移動。
+  - 抓標題列以外的地方拖（遊戲的視窗整塊都拖得動）只會移動，不出現預告分頁，放開也不合併。
   - 拖過來的變成目前那頁，位置用目標那組的。
   - 拖的視窗本身就有分頁時（分頁條跟著視窗走），整組一起併過去。
 - **切換**：點分頁就換成那個箱子，位置不變。沒在看的分頁其實是關著的視窗，所以一整組只算一個視窗。
@@ -23,21 +24,38 @@
   - 一排放不下就換行成好幾排，名稱全部看得到；點上排的分頁只會變成目前那頁的顏色，不和標題列接起來。
   - 分頁條會跑出畫面上緣時，視窗會被往下推。
 - **拖著物品停在分頁上**（單一物品或框選的一組物品都可以）：分頁先變亮、字變黃，約半秒後切到那頁，接著把物品放進去。
+- **按鍵切頁**：在設定裡設好「下一個分頁」「上一個分頁」的鍵（下面「設定」），按下去就切換滑鼠底下那組：游標在那組的視窗或分頁條上才算，被別的視窗蓋住的部分不算，游標不在任何一組上就不動作。
+  - 拖著物品或框選的一組物品時也能按，切過去照常放進去；拖著的箱子自己那頁跳過。
+  - 暫時打不開的（例如上鎖的）跳過，切到再下一頁。
+  - 打字時、拖視窗或分頁的途中不動作。
 - **關掉與打開**：視窗的 ×、ESC 會關掉整組（畫面上本來就只開著目前那頁）。之後在店裡雙擊組裡任何一個箱子，整組在上次的位置打開，雙擊的那個是目前那頁。整組開著時雙擊組裡另一個＝切到它，位置不動。
 - **可以組的**：店裡的箱子、機器、背包，以及垃圾桶、檔案箱、卡帶播放器。日曆、平板、文件這類紙張面板，客人的箱子，和店裡固定不能移動的格子都不行。
 - **賣掉、丟掉或帶出門的**：它的分頁先不顯示，但留在組裡，帶回店裡又會出現。暫時打不開的（例如上鎖的）切不過去，也拖不出來。
 - **和儲藏區的分頁不同**：遊戲的儲藏區擴建套件會在儲藏區的視窗裡面加分頁（「分頁1」「分頁2」…），那是同一個儲藏區裡的幾頁格子；這個 mod 的分頁是把不同的視窗疊在一起。兩個可以一起用：擴建過的儲藏區也能當這個 mod 的一頁，切走再切回來，它選的那個分頁會保持。
 - **什麼時候不動作**：不在店裡（出門時分頁條藏起來）、暫停選單或選項開著、拖著面板、拉框選取物品時。選好一組物品、放開滑鼠以後照常。
 
-沒有設定、不用按鍵，全部用滑鼠操作。分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
+分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
+
+## 設定
+
+在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，有兩欄按鍵，每欄旁邊的 i 有說明。設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.window-tabs.json`。
+
+| 設定 | 預設 | 內容 |
+|---|---|---|
+| 下一個分頁（`NextTab`） | 空白 | 把滑鼠底下那組切到下一頁的鍵，最後一頁之後回到第一頁 |
+| 上一個分頁（`PreviousTab`） | 空白 | 切到上一頁的鍵，第一頁之前是最後一頁 |
+
+- 寫法例如 `Ctrl+Tab`、`Ctrl+Shift+Tab`、`F5`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
+- 按了沒反應可能是被別的程式攔走了（例如 Steam 覆蓋介面預設是 Shift+Tab），請換一個鍵。
+- 遊戲的按鍵綁定或別的 mod 也用到同一個鍵時（例如把 Tab 綁給遊戲的功能），按下去兩邊都會動作。
 
 ## 語言
 
-分頁上寫的是遊戲裡的物品名稱，跟著遊戲語言（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時和視窗標題一樣是繁中）。mod 本身沒有文字。
+分頁上寫的是遊戲裡的物品名稱，跟著遊戲語言（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時和視窗標題一樣是繁中）。設定視窗的文字也跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文；段落的標題固定是英文的「Window Tabs」。
 
 ## 安裝
 
-這是遊戲官方格式的 mod，不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Window Tabs」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -48,7 +66,7 @@
 1. 從 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) 找標題是 Window Tabs 的最新版（標記 `window-tabs-v…`），下載 Assets 底下的 `ProbablyStolen-WindowTabs-<版本>.zip`，或到 [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) 下載。
 2. 關閉遊戲，把壓縮檔裡的 `dbfoxtw.window-tabs` 資料夾**解壓縮到遊戲資料夾的 `Mods` 資料夾裡**（解壓後是 `Mods\dbfoxtw.window-tabs\manifest.xml`）。
 3. 開遊戲，在主選單的「Mods」（模組）畫面啟用「Window Tabs」，再重開遊戲。
-4. 讀檔進到店鋪畫面，開兩個箱子，把一個拖到另一個的標題列上放開。
+4. 讀檔進到店鋪畫面，開兩個箱子，抓著一個的標題列拖到另一個的標題列上放開。
 
 更新 mod 時：關閉遊戲，刪掉舊的 `Mods\dbfoxtw.window-tabs` 資料夾，再重做第 2 步（舊版留下的檔可能讓遊戲不能啟用 mod）。分頁組會保留。
 
@@ -105,13 +123,14 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (VERSION 100-REV12). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
+A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window by its title bar onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs).
 
 **Features**
 
-- **Merge**: drag a window and release it with the mouse over another window's title bar or tab strip; the two become tabs. A dashed preview tab with the dragged window's name shows where it will go: over the title bar = at the end; between two tabs on the tab strip = right there. Releasing anywhere else on the window just moves your window as usual.
+- **Merge**: drag a window by its title bar and release it with the mouse over another window's title bar or tab strip; the two become tabs. A dashed preview tab with the dragged window's name shows where it will go: over the title bar = at the end; between two tabs on the tab strip = right there. Releasing anywhere else on the window just moves your window as usual.
+  - Dragging a window by anywhere other than its title bar (the game lets you drag a window by any part of it) just moves it: no preview tab, and no merge when you release.
   - The window you dragged becomes the current tab, at the target's position.
   - If the dragged window already has tabs (the tab strip moves with it), the whole set joins.
 - **Switch**: click a tab to show that container in the same spot. Tabs you aren't looking at are really closed windows, so a whole set counts as one window.
@@ -122,19 +141,34 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - Tabs that don't fit in one row wrap into more rows, so every name shows; clicking a tab in an upper row gives it the current tab's color but doesn't join it to the title bar.
   - If the tab strip would go off the top of the screen, the window is pushed down.
 - **Hover with an item**: while dragging an item (or a box-selected group of items), hold it over a tab; the tab lights up with yellow text and switches after about half a second, so you can drop the item in.
+- **Switch with keys**: set Next tab and Previous tab keys in the settings (see Settings below) and press them to switch the tab set under the mouse: the mouse has to be over that set's window or tab strip, parts covered by another window don't count, and nothing happens when the mouse isn't over any set.
+  - It also works while you're dragging an item or a box-selected group of items; drop it into the new tab as usual. The tab of the container you're dragging is skipped.
+  - Tabs that can't be opened right now (e.g. locked) are skipped.
+  - The keys do nothing while you're typing or dragging a window or tab.
 - **Close and open**: the window's ×, or Esc, closes the whole set (only the current tab is really open). Double-click any container of the set in your shop to open the set where it was, with that container as the current tab. While the set is open, double-clicking another container of it switches to that tab in place.
 - **What can be tabbed**: your shop's containers, machines and backpacks, and the Trash Can, the Dossier and the Cassette Player. Paper panels (the calendar, tablet, documents), a customer's box, and the shop's fixed storage that can't be moved can't.
 - **Sold, thrown away or taken out**: its tab is hidden but stays in the set, and comes back once the container is in the shop again. A container that can't be opened right now (e.g. locked) can't be switched to or dragged out.
 - **Not the Storage Bay's tabs**: the game's Storage Bay Expansion Kit adds tabs inside a Storage Bay's window (Tab 1, Tab 2…), pages of the same Storage Bay; this mod's tabs stack different windows together. The two work together: an expanded Storage Bay can be a tab of this mod too, and the tab it's on stays the same when you switch away and back.
 - **When it does nothing**: away from the shop (the tab strips are hidden), with the pause menu or options open, while dragging a panel, or while drawing a selection box around items. With a group of items selected (after you release the mouse), it works as usual.
 
-No settings, no keys: everything is done with the mouse. The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
+The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
-**Languages:** tabs show the game's item names in the game language (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280), like the window titles). The mod has no text of its own.
+**Settings:** open this mod's settings on the Mods screen of the main menu; there are two key fields, each with an i that explains it. Settings are stored in `ModConfigs\dbfoxtw.window-tabs.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
+
+| Setting | Default | What it does |
+|---|---|---|
+| Next tab (`NextTab`) | empty | Key that switches the tab set under the mouse to the next tab; after the last tab comes the first |
+| Previous tab (`PreviousTab`) | empty | Key that switches to the previous tab; before the first tab comes the last |
+
+- Write keys like `Ctrl+Tab`, `Ctrl+Shift+Tab` or `F5`; modifiers (Ctrl, Shift, Alt) must match exactly, either the left or the right one. Empty = not used; a field with a key name that isn't recognized is not used.
+- If a key does nothing, another program may be taking it (the Steam overlay uses Shift+Tab by default); pick another one.
+- If the game's key bindings or another mod use the same key (e.g. Tab bound to a game action), pressing it triggers both.
+
+**Languages:** tabs show the game's item names in the game language (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280), like the window titles). The settings window follows the game language too: Simplified Chinese when the game is in Chinese (Traditional Chinese with the Traditional Chinese mod), English otherwise; the section title is always "Window Tabs".
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. No permissions are needed, so there is no permission prompt when you enable it.
+No permissions are needed, so there is no permission prompt when you enable it.
 
 **From the Steam Workshop**: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), start the game, enable "Window Tabs" on the Mods screen of the main menu, and restart as prompted. Steam keeps it updated.
 
@@ -143,7 +177,7 @@ This mod uses the game's official mod format; MelonLoader is not needed. No perm
 1. Download `ProbablyStolen-WindowTabs-<version>.zip` from the latest release titled Window Tabs (tagged `window-tabs-v…`) on [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (under Assets) or from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061).
 2. Close the game and **extract the `dbfoxtw.window-tabs` folder into the `Mods` folder inside the game folder** (you should end up with `Mods\dbfoxtw.window-tabs\manifest.xml`).
 3. Start the game, enable "Window Tabs" on the Mods screen of the main menu, and restart the game.
-4. Load your save, open two containers and drop one onto the other's title bar.
+4. Load your save, open two containers, and drag one by its title bar onto the other's title bar.
 
 To update: close the game, delete the old `Mods\dbfoxtw.window-tabs` folder, and repeat step 2 (files left over from an old version may stop the game from enabling the mod). Your tab sets are kept. The Demo version (v1.0.0, MelonLoader) does not work on the full release.
 

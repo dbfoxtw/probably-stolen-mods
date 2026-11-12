@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ProbablyStolenWindowTabs
 {
-    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>拖著物品停在分頁上多久切過去（秒）。</summary>
@@ -349,5 +349,38 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         internal static bool MultiSelectBlocks(bool hasSelection, bool groupDragging, bool mouseHeld) =>
             hasSelection && !groupDragging && mouseHeld;
+
+        /// <summary>
+        /// 切頁鍵依序要試的分頁：分頁條上顯示的 count 頁裡，目前是第 current 頁，direction＝+1（下一頁）或 −1（上一頁）。
+        /// 從旁邊那頁開始繞一圈（最後一頁的下一頁是第一頁、第一頁的上一頁是最後一頁），不含目前那頁；只有一頁或 current 不在範圍裡時是空的。
+        /// 打不開、找不到、正被拖著的頁由呼叫的人跳過、試下一個（Tabs.HandleSwitchKeys）。
+        /// </summary>
+        internal static IEnumerable<int> SwitchCandidates(int count, int current, int direction)
+        {
+            if (count < 2 || current < 0 || current >= count || direction == 0) yield break;
+            int step = direction > 0 ? 1 : -1;
+            for (int i = 1; i < count; i++)
+                yield return ((current + step * i) % count + count) % count;
+        }
+
+        /// <summary>SwitchCandidates 裡第一個 usable 的；全部都不能用回傳 −1（不動作）。</summary>
+        internal static int NextTab(int count, int current, int direction, Func<int, bool> usable)
+        {
+            foreach (var i in SwitchCandidates(count, current, direction))
+                if (usable(i)) return i;
+            return -1;
+        }
+
+        /// <summary>剛凍住、還不知道游標底下是哪個分頁（StillFrozen 的 frozenId）。分頁的編號是物品的 uniqueId（正數），0＝不在分頁上。</summary>
+        internal const int UnknownTab = -1;
+
+        /// <summary>
+        /// 拖著物品時切過頁（按切頁鍵或停在分頁上切的）之後，停留切頁先凍住；這一幀還凍不凍（Tabs.HoverWhileDraggingItem）。
+        /// 每頁的視窗寬度不同，換頁後分頁條換行的位置跟著變，滑鼠沒動、游標底下卻換成別的分頁（2026-11-12 實機：按鍵切走後半秒又被停留切到別頁）。
+        /// 所以只有「游標底下的分頁換了，而且是滑鼠自己動的」才解開（玩家移到別的分頁上，或移出分頁條）；
+        /// 滑鼠沒動（重排）、還在同一個分頁上、剛凍住（frozenId 是 UnknownTab）都繼續凍著，呼叫的人記下現在底下的分頁（tabUnderMouse，0＝不在分頁上）。
+        /// </summary>
+        internal static bool StillFrozen(int frozenId, int tabUnderMouse, bool mouseMoved) =>
+            frozenId == UnknownTab || tabUnderMouse == frozenId || !mouseMoved;
     }
 }

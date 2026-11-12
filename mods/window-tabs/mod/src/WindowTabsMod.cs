@@ -6,7 +6,7 @@ namespace ProbablyStolenWindowTabs
 {
     /// <summary>
     /// 視窗分頁：把店裡的箱子、機器視窗疊成一個有分頁的視窗。把視窗的標題列拖到另一個視窗的標題列或分頁條上合併，
-    /// 把分頁拖出來拆開；沒在看的分頁其實是關著的視窗（Tabs）。不用任何按鍵。
+    /// 把分頁拖出來拆開；沒在看的分頁其實是關著的視窗（Tabs）。2.3.0 起有下一頁、上一頁的切頁鍵（ModConfig 的文字欄，預設不設，Settings）。
     /// 官方格式的 mod（manifest.xml 與 IMod，照一鍵關窗）：遊戲的 mod 載入器對每個 mod 都 PatchAll，但這裡沒有任何 [HarmonyPatch] 類別，
     /// 所以什麼都不掛（全部用每幀看視窗清單與滑鼠做）；接著呼叫 Init、OnEnable，結束遊戲時呼叫 OnDisable。
     /// 分頁組記在存檔資料夾的 ModData\dbfoxtw_window-tabs\slot_&lt;N&gt;.json（存檔槽位＋這場遊戲的 runID），
@@ -34,6 +34,7 @@ namespace ProbablyStolenWindowTabs
         public void Init(ModManifest manifest)
         {
             Log.Attach(new ModLog(manifest));
+            Settings.Init();
             Tabs.Init(new TabStore(name => ModHelper.ReadModDataFileText(ModId, name),
                                    (name, text) => ModHelper.WriteModDataFileText(ModId, name, text),
                                    w => Log.Warning(w)));
@@ -44,7 +45,7 @@ namespace ProbablyStolenWindowTabs
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             ModHook.OnGameLoadedLate += Tabs.OnGameLoaded;
-            Log.Msg($"資料：{DataFolder}\\slot_<N>.json");
+            Log.Msg($"資料：{DataFolder}\\slot_<N>.json；設定（ModConfigs\\{ModId}.json）：{Settings.Describe()}");
             Ready = true;
         }
 
@@ -79,7 +80,7 @@ namespace ProbablyStolenWindowTabs
                 EnsureDebugFlag();
                 if (scene.name != GameState.StoreScene) return;
                 InStore = true;
-                DebugLog("進店鋪畫面");
+                if (Debug) DebugLog($"進店鋪畫面；{Settings.Describe()}");
             }
             catch (Exception e) { Log.Error($"場景 {scene.name} 載入後的處理出錯：{e}"); }
         }

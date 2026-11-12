@@ -10,6 +10,7 @@ namespace ProbablyStolenWindowTabs
     /// 分頁的主邏輯：每幀（WindowTabsRunner.LateUpdate，遊戲與別的 mod 都開關完視窗之後）
     /// 1. 整理：一組只留一個開著的視窗、新打開的擺到這組的位置；
     /// 2. 滑鼠：點分頁切頁、拖分頁重排／移到別組／拖出來、拖視窗到別的標題列合併、拖著物品停在分頁上切頁；
+    ///    只有從自己的標題列開始拖的視窗才合併。接著看切頁鍵：切滑鼠底下那組（Settings）；
     /// 3. 畫分頁條（TabStrip）。
     /// 沒有攔遊戲的任何方法：開關視窗都用遊戲自己的方法（GameWindows），判斷都看視窗清單與滑鼠位置。
     /// 分頁組記在 mod 自己的檔案（TabStore），不碰存檔。
@@ -47,6 +48,11 @@ namespace ProbablyStolenWindowTabs
         /// <summary>按下時滑鼠底下最上面的視窗與它的位置：之後它在動＝遊戲在拖它。</summary>
         static PixelWindow _pressWindow;
         static Vector2 _pressWindowPos;
+        /// <summary>
+        /// 按下時游標在 _pressWindow 的標題列上：只有從自己的標題列開始拖才會合併。抓內容區拖照樣走 DragWindow
+        /// （Reconcile 靠它讓這組的位置跟著視窗改，不然之後切頁會開回舊位置），只是不找目標、不畫預告、放開不合併。
+        /// </summary>
+        static bool _pressOnTitle;
         static PixelWindow _dragWindow;
         /// <summary>這次拖曳時店裡自己的物品（只有店裡的箱子能組分頁，照視窗群組只存店裡的）。</summary>
         static HashSet<GameItem> _own;
@@ -76,6 +82,17 @@ namespace ProbablyStolenWindowTabs
 
         static int _hoverId;
         static float _hoverSince;
+        /// <summary>
+        /// 拖著物品時切過頁（按切頁鍵，或停在分頁上切的）之後，停留切頁先凍住：不標亮、不計時（HoverWhileDraggingItem），
+        /// 滑鼠自己移到別的分頁上或移出分頁條才解開（Rules.StillFrozen）。不然按鍵切走後，游標底下的分頁照樣畫成「快要切過去」的亮色，
+        /// 或半秒後又把玩家剛按鍵切走的頁切回來；而且換頁後分頁條會重排（每頁視窗寬度不同，換行的位置跟著變），
+        /// 滑鼠沒動、底下卻換成別的分頁，只記「按鍵時停著的那個分頁」擋不住（2026-11-12 實機）。
+        /// </summary>
+        static bool _hoverFrozen;
+        /// <summary>凍住時游標底下的分頁（0＝不在分頁上，Rules.UnknownTab＝剛凍住還沒看）。</summary>
+        static int _frozenId;
+        /// <summary>上一幀的游標位置：凍住時分辨「滑鼠自己動了」還是「分頁條在底下重排」。</summary>
+        static Vector2 _hoverMouse;
         static PointerEventData _ped;
         static readonly List<RaycastResult> _hits = new List<RaycastResult>();
 
@@ -94,6 +111,7 @@ namespace ProbablyStolenWindowTabs
             _itemsAt = -100f;
             _rec = null;
             _hoverId = 0;
+            _hoverFrozen = false;
             _wasHeld = false;
         }
 
@@ -244,6 +262,8 @@ namespace ProbablyStolenWindowTabs
                 {
                     HandleInput(r, windows, held);
                     windows = Scan(out byId); // 這一幀的動作可能開關了視窗：用動作後的狀態畫，免得分頁條閃一下
+                    // 切頁鍵放在滑鼠之後：這一幀滑鼠開始拖視窗或分頁了就不動作；切了頁同樣用切完的狀態畫
+                    if (HandleSwitchKeys(r)) Scan(out byId);
                 }
                 else if (_mode != Mode.Idle) { WindowTabsMod.DebugLog($"不能動作了（{why}），取消拖曳"); EndDrag(); }
                 else if (held && !_wasHeld) WindowTabsMod.DebugLog($"按下時不能動作：{why}");
@@ -370,6 +390,7 @@ namespace ProbablyStolenWindowTabs
                 case Mode.Idle:
                     if (draggingItem) { _mode = Mode.DragItem; HoverWhileDraggingItem(r, mouse); break; }
                     _hoverId = 0;
+                    _hoverFrozen = false;
                     if (!down) break;
                     var (strip, index) = RaycastTab(mouse, false);
                     if (strip != null && strip.Spec != null && index >= 0 && index < strip.Spec.Ids.Count)
@@ -384,6 +405,9 @@ namespace ProbablyStolenWindowTabs
                     // 可能是開始拖視窗（遊戲的視窗整塊背景都能拖）：記下滑鼠底下最上面的那個，之後看它有沒有在動
                     _pressWindow = TopWindowAt(windows, mouse);
                     _pressWindowPos = _pressWindow != null ? GameWindows.Position(_pressWindow) : default;
+                    // 記下是不是從它的標題列抓的。遊戲的視窗整塊都拖得動，抓內容區的空白處往別的視窗正上方疊時，
+                    // 游標常剛好落在對方的標題列或分頁條上，2.2.0 以前就這樣誤併（Workshop 的留言；2026-11-11 實機重現過）
+                    _pressOnTitle = _pressWindow != null && GameWindows.IsOverTitle(_pressWindow, mouse);
                     _mode = Mode.PressWindow;
                     break;
                 case Mode.PressTab:
@@ -417,10 +441,17 @@ namespace ProbablyStolenWindowTabs
                     if ((GameWindows.Position(_pressWindow) - _pressWindowPos).sqrMagnitude < 0.01f) break;
                     _dragWindow = _pressWindow;
                     _mode = Mode.DragWindow;
+                    _lastWhy = null;
+                    if (!_pressOnTitle)
+                    {
+                        // 抓內容區：只是遊戲自己的移動。不重抓店裡的物品（_own 只有找目標用得到）
+                        if (WindowTabsMod.Debug)
+                            WindowTabsMod.DebugLog($"開始拖視窗「{GameWindows.Title(_dragWindow)}」：從內容區抓，只移動");
+                        break;
+                    }
                     RefreshForDrag();
                     var di = GameWindows.OwnerItem(_dragWindow);
                     _dragLabel = di != null ? SafeName(di) : GameWindows.Title(_dragWindow);
-                    _lastWhy = null;
                     // _own 可能是 null（PlayerStore 還沒好、FindAllItem 丟例外）：字串只在除錯模式算，算的時候也不能丟例外
                     // （丟了這次拖曳會被取消，而且佔掉 LogOnce 的名額）
                     if (WindowTabsMod.Debug)
@@ -428,6 +459,12 @@ namespace ProbablyStolenWindowTabs
                     break;
                 case Mode.DragWindow:
                     if (_dragWindow == null || !_dragWindow.IsVisible()) { WindowTabsMod.DebugLog("拖著的視窗不見了，取消"); EndDrag(); break; }
+                    if (!_pressOnTitle)
+                    {
+                        // 從內容區抓的：不找目標、不畫預告分頁、放開不合併。這組的位置照樣由 Reconcile 跟著視窗改
+                        if (!held) EndDrag();
+                        break;
+                    }
                     _target = FindTarget(windows, mouse, _dragWindow, false);
                     UpdatePreviewLabel(r);
                     if (WindowTabsMod.Debug)
@@ -444,7 +481,7 @@ namespace ProbablyStolenWindowTabs
                     }
                     break;
                 case Mode.DragItem:
-                    if (!draggingItem) { _hoverId = 0; _mode = Mode.Idle; break; }
+                    if (!draggingItem) { _hoverId = 0; _hoverFrozen = false; _mode = Mode.Idle; break; }
                     HoverWhileDraggingItem(r, mouse);
                     break;
             }
@@ -494,6 +531,7 @@ namespace ProbablyStolenWindowTabs
             _pressStrip = null;
             _pressId = 0;
             _pressWindow = null;
+            _pressOnTitle = false;
             _dragWindow = null;
             _target = null;
             _own = null;
@@ -568,8 +606,19 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         static (TabStrip strip, int index) RaycastTab(Vector2 mouse, bool skipDragged)
         {
+            var go = FirstHit(mouse, skipDragged);
+            return go != null && TabStrip.ByGameObject.TryGetValue(go.GetInstanceID(), out var hit) ? hit : (null, -1);
+        }
+
+        /// <summary>
+        /// UGUI 射線打到的第一個東西（最上面的；沒有回傳 null）。和遊戲找滑鼠底下的元素（RenderHandler.RaycastFindParentElement）一樣用
+        /// EventSystem.RaycastAll，但不像它跳過沒有 TreeNodeRender 的物件：其他 mod 接射線的介面蓋在上面也算蓋住。
+        /// 視窗、面板都接射線，被蓋住的打不到。skipDragged：跳過遊戲畫拖曳中物品的那幾層（tempRoot、overlayRoot）。
+        /// </summary>
+        static GameObject FirstHit(Vector2 mouse, bool skipDragged)
+        {
             var es = EventSystem.current;
-            if (es == null) return (null, -1);
+            if (es == null) return null;
             if (_ped == null) _ped = new PointerEventData(es);
             _ped.position = mouse;
             _hits.Clear();
@@ -590,9 +639,103 @@ namespace ProbablyStolenWindowTabs
                 if (go == null) continue;
                 var t = go.transform;
                 if ((temp != null && t.IsChildOf(temp)) || (overlay != null && t.IsChildOf(overlay))) continue;
-                return TabStrip.ByGameObject.TryGetValue(go.GetInstanceID(), out var hit) ? hit : (null, -1);
+                return go;
             }
-            return (null, -1);
+            return null;
+        }
+
+        /// <summary>
+        /// 滑鼠底下最上面的東西屬於哪個開著的視窗（被別的視窗、面板、其他 mod 的介面蓋住的部分不算）：
+        /// 射線打到的第一個東西往上找，第一個是某個開著的視窗 handler 的就是它（視窗的部件、物品、分頁條都是 handler 底下的物件；
+        /// 往上找到的第一個＝最裡面那個，萬一視窗的 handler 疊在別的視窗底下也不會認錯）。打到的不屬於任何視窗（面板、店裡固定的格子以外的介面、
+        /// 什麼都沒打到）回傳 null。只看開著的視窗（WindowsHandler.visibleWindows），所以不分是不是分頁組，由呼叫的人判斷。
+        /// </summary>
+        static PixelWindow WindowUnderMouse(Vector2 mouse, bool skipDragged)
+        {
+            var go = FirstHit(mouse, skipDragged);
+            if (go == null) return null;
+            var byHandler = new Dictionary<Transform, PixelWindow>();
+            foreach (var w in GameWindows.VisibleWindows())
+            {
+                var handler = w.handler;
+                var rt = handler != null ? handler.rectTransform : null;
+                if (rt != null && !byHandler.ContainsKey(rt)) byHandler[rt] = w;
+            }
+            for (var t = go.transform; t != null; t = t.parent)
+                if (byHandler.TryGetValue(t, out var w)) return w;
+            return null;
+        }
+
+        /// <summary>
+        /// 切頁鍵：這一幀按下了設定的下一頁／上一頁的鍵，就把滑鼠底下那組照分頁條上顯示的順序切到下一頁或上一頁
+        /// （最後一頁的下一頁是第一頁，Rules.SwitchCandidates）。跳過找不到的、打不開的（上鎖的容器，或 Switch 開不起來）、正被拖著的箱子
+        /// 自己那頁；全部都跳過就不動作。切頁走 Switch（播開啟音效，和點分頁一樣）；拖著物品時和停在分頁上切頁走同一條路，
+        /// 遊戲的拖曳照常、可以放進新的那頁。不動作：打字中、選項正在設定按鍵、拖視窗或分頁的途中；
+        /// 暫停選單、選項、拖面板、拉框、外出由 Tick 的 CanAct 擋在前面。有切頁回傳 true。
+        /// 除錯 log 只在按下的那一幀寫（切了哪組、從哪頁到哪頁，或不動作的原因），不會每幀洗版。
+        /// </summary>
+        static bool HandleSwitchKeys(TabRecord r)
+        {
+            try
+            {
+                int dir = Settings.PressedDirection();
+                if (dir == 0) return false;
+                string key = dir > 0 ? "下一頁" : "上一頁";
+                // 選項正在擷取按鍵（和擷取結束的那一幀）：遊戲自己的快捷鍵也不動作（官方指南要求，照視窗群組）
+                if (KeyBindHelper.SuppressHotkeys) { WindowTabsMod.DebugLog($"切頁鍵（{key}）：選項正在設定按鍵，不動作"); return false; }
+                // 遊戲的打字判斷：isTyping 或任何輸入框有焦點；簡易待辦打字時也會讓它成立
+                if (StoreUIManager.IsAnyTyping()) { WindowTabsMod.DebugLog($"切頁鍵（{key}）：打字中，不動作"); return false; }
+                if (_mode != Mode.Idle && _mode != Mode.DragItem)
+                {
+                    WindowTabsMod.DebugLog($"切頁鍵（{key}）：拖視窗或分頁的途中（{_mode}），不動作");
+                    return false;
+                }
+                var mouse = (Vector2)Input.mousePosition;
+                var w = WindowUnderMouse(mouse, _mode == Mode.DragItem);
+                var item = w != null ? GameWindows.OwnerItem(w) : null;
+                var g = item != null && item.uniqueId != 0 ? r.Find(item.uniqueId) : null;
+                if (g == null)
+                {
+                    if (WindowTabsMod.Debug)
+                        WindowTabsMod.DebugLog($"切頁鍵（{key}）：游標不在任何一組上（{(w == null ? "底下不是開著的視窗" : $"「{GameWindows.Title(w)}」不在分頁組裡")}），不動作");
+                    return false;
+                }
+                int cur = item.uniqueId;
+                // 照分頁條上顯示的順序（和 UpdateStrips 一樣：找不到的物品不顯示，開著的那頁一定在）；剛重抓過，跳過時看的是最新的
+                var items = Items(true);
+                var order = g.Members.Where(id => id == cur || items.ContainsKey(id)).ToList();
+                int at = order.IndexOf(cur);
+                if (order.Count < 2)
+                {
+                    WindowTabsMod.DebugLog($"切頁鍵（{key}）：{Name(cur)} 那組只剩一頁，不動作");
+                    return false;
+                }
+                var tried = new HashSet<int>();
+                bool Usable(int i)
+                {
+                    if (tried.Contains(i)) return false;
+                    // 找不到、打不開（上鎖的容器）、正被拖著（遊戲拖箱子時把它的視窗藏起來）的跳過
+                    return items.TryGetValue(order[i], out var it) && GameWindows.CanOpen(it) && !GameWindows.IsBeingDragged(it);
+                }
+                while (true)
+                {
+                    int i = Rules.NextTab(order.Count, at, dir, Usable);
+                    if (i < 0) break;
+                    tried.Add(i);
+                    if (!Switch(r, g, w, order[i])) continue; // 開不起來：試再下一個
+                    // 拖著物品時：切完後停留切頁先凍住，游標底下的分頁不標亮、不計時，滑鼠移到別的分頁或移出分頁條才算（_hoverFrozen）
+                    FreezeHover();
+                    WindowTabsMod.DebugLog($"切頁鍵（{key}）：{Name(cur)} → {Name(order[i])}（那組 {order.Count} 頁的第 {at + 1} → {i + 1} 頁）");
+                    return true;
+                }
+                WindowTabsMod.DebugLog($"切頁鍵（{key}）：{Name(cur)} 那組的其他頁都找不到、打不開或正被拖著，不動作");
+                return false;
+            }
+            catch (Exception e)
+            {
+                LogOnce("切頁鍵", e);
+                return false;
+            }
         }
 
         /// <summary>
@@ -705,8 +848,17 @@ namespace ProbablyStolenWindowTabs
         static void HoverWhileDraggingItem(TabRecord r, Vector2 mouse)
         {
             var (strip, index) = RaycastTab(mouse, true);
-            if (strip == null || strip.Spec == null || index < 0 || index >= strip.Spec.Ids.Count) { _hoverId = 0; return; }
-            int id = strip.Spec.Ids[index];
+            bool onTab = strip != null && strip.Spec != null && index >= 0 && index < strip.Spec.Ids.Count;
+            int id = onTab ? strip.Spec.Ids[index] : 0;
+            bool moved = (mouse - _hoverMouse).sqrMagnitude > 0.25f;
+            _hoverMouse = mouse;
+            if (_hoverFrozen)
+            {
+                // 切過頁之後：滑鼠沒動（分頁條換頁後重排）或還在同一個分頁上就繼續凍著，記下現在底下的分頁
+                if (Rules.StillFrozen(_frozenId, id, moved)) { _frozenId = id; _hoverId = 0; return; }
+                _hoverFrozen = false;
+            }
+            if (!onTab) { _hoverId = 0; return; }
             if (id != _hoverId)
             {
                 _hoverId = id;
@@ -714,12 +866,21 @@ namespace ProbablyStolenWindowTabs
                 return;
             }
             if (Time.unscaledTime - _hoverSince < Rules.HoverSwitchSeconds) return;
-            _hoverSince = float.MaxValue; // 切過去後不再重複觸發；滑鼠移開再回來才會再算
+            _hoverSince = float.MaxValue; // 停在目前那頁、或切不過去的分頁上：不再重複觸發，滑鼠移開再回來才會再算
             var g = r.Find(id);
             if (g == null || g.Active == id) return;
             // 拖一組時，組裡任何一個箱子的分頁都不切
             if (Items().TryGetValue(id, out var item) && GameWindows.IsBeingDragged(item)) return;
-            Switch(r, g, strip.Window, id);
+            // 切過去後同樣凍住：新的那頁寬度不同、分頁條重排，滑鼠沒動也可能換成停在別的分頁上
+            if (Switch(r, g, strip.Window, id)) FreezeHover();
+        }
+
+        /// <summary>切過頁之後凍住停留切頁（_hoverFrozen）；下一幀起由 HoverWhileDraggingItem 看滑鼠有沒有自己移到別的分頁。</summary>
+        static void FreezeHover()
+        {
+            _hoverFrozen = true;
+            _frozenId = Rules.UnknownTab;
+            _hoverId = 0;
         }
 
         /// <summary>

@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.3.0（2026-11-12）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 只有抓著標題列拖才會合併：抓視窗其他地方拖只會移動，不出現預告分頁、放開也不合併（以前整個視窗都能拖去合併，容易不小心把兩組併成一組）。抓分頁拖照舊。
+- 新增「下一個分頁」「上一個分頁」兩個按鍵設定（預設空白，在主選單模組畫面的這個 mod 的設定裡填，例如 Ctrl+Tab、Ctrl+Shift+Tab）：切換滑鼠底下那組，拖著物品或框選的一組物品時也能按。
+- 對應遊戲版本改成 VERSION 100-REV13，也支援 beta 分支的 100-REV14。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- Windows now merge only when you drag them by the title bar: dragging by the rest of a window just moves it, with no preview tab and no merge (before, dragging by any part of a window could merge it, which made it easy to merge two sets by accident). Dragging tabs works as before.
+- New Next tab and Previous tab key settings (empty by default; fill them in this mod's settings on the Mods screen of the main menu, e.g. Ctrl+Tab, Ctrl+Shift+Tab): they switch the tab set under the mouse, also while you're dragging an item or a box-selected group of items.
+- Supported game version is now VERSION 100-REV13 (also the 100-REV14 beta).
+
 ## v2.2.0（2026-11-07）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）

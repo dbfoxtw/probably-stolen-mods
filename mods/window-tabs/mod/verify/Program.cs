@@ -8,7 +8,8 @@ namespace ProbablyStolenWindowTabs.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：合併、拆開、重排、分頁名稱的編號跟著箱子與預告分頁的名稱、
-    /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、讀檔後失效的編號、
+    /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、
+    /// 切頁鍵的寫法、切到哪頁與設定欄的文字、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
@@ -40,6 +41,9 @@ namespace ProbablyStolenWindowTabs.Verify
             LiftedReorderTest();
             PositionTest();
             MultiSelectTest();
+            HotkeyTest();
+            SwitchOrderTest();
+            StringsTest();
             StaleTest();
             StoreTest();
             DemoFileTest();
@@ -627,6 +631,125 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(!Rules.MultiSelectBlocks(true, false, false), "選好、放開（Selected）：照常");
             Check(!Rules.MultiSelectBlocks(true, true, true), "拖一組：照常（當成拖物品，停在分頁上切頁）");
             Check(!Rules.MultiSelectBlocks(true, true, false), "拖一組、滑鼠剛放開的那一幀：照常");
+        }
+
+        // ── 切頁鍵 ──
+
+        /// <summary>
+        /// 模擬 mod 裡的 Settings.Resolve（那邊用 Unity 的 KeyCode 列舉）：認得的 KeyCode 名稱（大小寫不拘）回傳正式的寫法，
+        /// 修飾鍵本身、滑鼠鍵、不存在的回傳 null（照視窗群組的離線測試）。
+        /// </summary>
+        static readonly string[] KnownKeys = Enumerable.Range(0, 10).Select(i => "Alpha" + i)
+            .Concat(Enumerable.Range(0, 10).Select(i => "Keypad" + i))
+            .Concat(Enumerable.Range(1, 15).Select(i => "F" + i))
+            .Concat(Enumerable.Range('A', 26).Select(c => ((char)c).ToString()))
+            .Concat(new[] { "Tab", "Backspace", "BackQuote", "Insert", "Home", "PageUp", "PageDown", "Delete", "Escape", "Space" })
+            .ToArray();
+
+        static string Resolve(string name) => KnownKeys.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+
+        static Hotkey P(string s, out string error) => Hotkey.Parse(s, Resolve, out error);
+
+        static void HotkeyTest()
+        {
+            var h = P("Ctrl+Tab", out var err);
+            Check(h != null && err == null, "Ctrl+Tab 讀得懂");
+            Check(h.Ctrl && !h.Shift && !h.Alt && h.Key == "Tab", "Ctrl+Tab 只有 Ctrl、主要的鍵是 Tab");
+            Eq(h.Display(), "Ctrl+Tab", "給玩家看的寫法");
+            h = P("ctrl+shift+tab", out err);
+            Check(h != null && h.Ctrl && h.Shift && !h.Alt && h.Key == "Tab", "大小寫不拘：ctrl+shift+tab");
+            Eq(P("Shift+Ctrl+Tab", out _).ToString(), P("Ctrl+Shift+Tab", out _).ToString(), "修飾鍵的順序不拘，正式寫法相同");
+            h = P("control + alt + pagedown", out err);
+            Check(h != null && h.Ctrl && h.Alt && !h.Shift && h.Key == "PageDown", "control 也算 Ctrl、可以有空白、KeyCode 名稱照正式寫法");
+            h = P("Ctrl+Shift+F1", out err);
+            Check(h != null && h.Ctrl && h.Shift && h.Key == "F1", "Ctrl+Shift+F1（視窗群組說明附的寫法）");
+            h = P("F5", out err);
+            Check(h != null && !h.Ctrl && !h.Shift && !h.Alt && h.Key == "F5", "沒有修飾鍵的 F5");
+            Eq(P("Ctrl+3", out _)?.Key, "Alpha3", "單一個數字是上排的數字鍵");
+            Eq(P("Num3", out _)?.Display(), "Num3", "Num3 是小鍵盤、照原樣顯示");
+
+            Check(P("", out err) == null && err == null, "空的＝不使用，不警告");
+            Check(P("   ", out err) == null && err == null, "只有空白＝不使用，不警告");
+            Check(P(null, out err) == null && err == null, "null＝不使用，不警告");
+            Check(P("Ctrl+", out err) == null && err != null, "只有修飾鍵、沒有主要的鍵：警告");
+            Check(P("Ctrl", out err) == null && err != null, "只寫 Ctrl：警告");
+            Check(P("Win+Tab", out err) == null && err != null, "不認得的修飾鍵：警告");
+            Check(P("Ctrl+Tabb", out err) == null && err != null, "不存在的鍵：警告");
+            Check(P("Ctrl+LeftControl", out err) == null && err != null, "修飾鍵本身不能當主要的鍵");
+
+            // 修飾鍵要完全相同才算：Ctrl+Shift+Tab 不會觸發 Ctrl+Tab，反過來也一樣
+            var next = P("Ctrl+Tab", out _);
+            var prev = P("Ctrl+Shift+Tab", out _);
+            Check(next.ModifiersMatch(true, false, false), "按 Ctrl 時 Ctrl+Tab 成立");
+            Check(!next.ModifiersMatch(true, true, false), "按 Ctrl+Shift 時 Ctrl+Tab 不成立");
+            Check(prev.ModifiersMatch(true, true, false), "按 Ctrl+Shift 時 Ctrl+Shift+Tab 成立");
+            Check(!prev.ModifiersMatch(true, false, false), "只按 Ctrl 時 Ctrl+Shift+Tab 不成立");
+            Check(!next.ModifiersMatch(true, false, true), "多按了 Alt 時 Ctrl+Tab 不成立");
+            Check(!next.ModifiersMatch(false, false, false), "沒按 Ctrl 時 Ctrl+Tab 不成立（單按 Tab）");
+
+            // 兩個設定讀成按鍵（Settings.Refresh 用的 SwitchKeys.Build）
+            var keys = SwitchKeys.Build("NextTab", "", "PreviousTab", "", Resolve);
+            Check(keys.Next == null && keys.Prev == null && keys.Warnings.Count == 0, "預設兩個都空：都不使用、不警告");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Tab", "PreviousTab", "Ctrl+Shift+Tab", Resolve);
+            Check(keys.Next?.ToString() == "Ctrl+Tab" && keys.Prev?.ToString() == "Ctrl+Shift+Tab" && keys.Warnings.Count == 0, "兩個都設：都有效");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Tab", "PreviousTab", "", Resolve);
+            Check(keys.Next != null && keys.Prev == null && keys.Warnings.Count == 0, "只設下一頁：上一頁不使用、不警告");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Nope", "PreviousTab", "Ctrl+Shift+Tab", Resolve);
+            Check(keys.Next == null && keys.Prev != null && keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("NextTab"), "下一頁寫錯：不使用、警告一次，上一頁照用");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Tab", "PreviousTab", "tab+ctrl", Resolve);
+            Check(keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("PreviousTab"), "上一頁寫錯（修飾鍵寫在後面）：警告");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Tab", "PreviousTab", "control+TAB", Resolve);
+            Check(keys.Next != null && keys.Prev == null && keys.Warnings.Count == 1, "兩個設成同一個鍵：只有下一頁有效、警告");
+        }
+
+        static void SwitchOrderTest()
+        {
+            Seq(Rules.SwitchCandidates(4, 1, 1), new[] { 2, 3, 0 }, "下一頁：從旁邊那頁開始繞一圈，不含目前那頁");
+            Seq(Rules.SwitchCandidates(4, 1, -1), new[] { 0, 3, 2 }, "上一頁：反過來繞");
+            Seq(Rules.SwitchCandidates(3, 2, 1), new[] { 0, 1 }, "最後一頁的下一頁是第一頁");
+            Seq(Rules.SwitchCandidates(3, 0, -1), new[] { 2, 1 }, "第一頁的上一頁是最後一頁");
+            Seq(Rules.SwitchCandidates(1, 0, 1), new int[0], "只有一頁：沒有可以切的");
+            Seq(Rules.SwitchCandidates(3, -1, 1), new int[0], "目前那頁不在裡面：不動作");
+            Seq(Rules.SwitchCandidates(3, 0, 0), new int[0], "沒有方向：不動作");
+
+            Eq(Rules.NextTab(4, 1, 1, i => true), 2, "下一頁");
+            Eq(Rules.NextTab(4, 1, -1, i => true), 0, "上一頁");
+            Eq(Rules.NextTab(4, 3, 1, i => true), 0, "最後一頁的下一頁回到第一頁");
+            Eq(Rules.NextTab(4, 0, -1, i => true), 3, "第一頁的上一頁是最後一頁");
+            Eq(Rules.NextTab(4, 1, 1, i => i != 2), 3, "下一頁打不開（上鎖的容器）：跳到再下一個");
+            Eq(Rules.NextTab(4, 1, 1, i => i == 0), 0, "後面的都不能用：繞回前面能用的");
+            Eq(Rules.NextTab(4, 1, -1, i => i != 0), 3, "上一頁跳過不能用的，繞到最後一頁");
+            Eq(Rules.NextTab(4, 1, 1, i => false), -1, "其他頁全都不能用：不動作");
+            Eq(Rules.NextTab(4, 1, 1, i => i == 1), -1, "只有目前那頁能用：不動作（不會切到自己）");
+            Eq(Rules.NextTab(2, 0, 1, i => true), 1, "兩頁：下一頁是另一頁");
+            Eq(Rules.NextTab(2, 0, -1, i => true), 1, "兩頁：上一頁也是另一頁");
+            Eq(Rules.NextTab(1, 0, 1, i => true), -1, "只有一頁：不動作");
+
+            // 切過頁之後的停留切頁凍結（2026-11-12 實機：換頁後分頁條重排，滑鼠沒動、底下換成別的分頁又被切走）
+            Check(Rules.StillFrozen(Rules.UnknownTab, 7, true), "剛凍住：不管底下是哪個、滑鼠有沒有動，先記下、繼續凍著");
+            Check(Rules.StillFrozen(5, 7, false), "滑鼠沒動、底下換成別的分頁（分頁條重排）：繼續凍著");
+            Check(Rules.StillFrozen(5, 0, false), "滑鼠沒動、分頁條縮走（底下沒有分頁了）：繼續凍著");
+            Check(Rules.StillFrozen(5, 5, true), "滑鼠在同一個分頁上動：繼續凍著（移開再回來才算）");
+            Check(!Rules.StillFrozen(5, 7, true), "滑鼠自己移到別的分頁上：解開");
+            Check(!Rules.StillFrozen(5, 0, true), "滑鼠移出分頁條：解開");
+            Check(!Rules.StillFrozen(0, 5, true), "凍住時不在分頁上、滑鼠移到分頁上：解開");
+        }
+
+        /// <summary>設定欄的三語文字（的稿）：說明欄有兩行，第二行是例子與「留空」。</summary>
+        static void StringsTest()
+        {
+            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
+            {
+                var s = Strings.For(lang);
+                Check(!string.IsNullOrEmpty(s.NextLabel) && !string.IsNullOrEmpty(s.PrevLabel), $"{lang}：兩欄都有標籤");
+                Eq(s.NextTip.Split('\n').Length, 2, $"{lang}：下一頁的說明是兩行");
+                Eq(s.PrevTip.Split('\n').Length, 2, $"{lang}：上一頁的說明是兩行");
+                Check(s.NextTip.Contains("Ctrl+Tab") && !s.NextTip.Contains("Shift"), $"{lang}：下一頁的例子是 Ctrl+Tab");
+                Check(s.PrevTip.Contains("Ctrl+Shift+Tab"), $"{lang}：上一頁的例子是 Ctrl+Shift+Tab");
+            }
+            Eq(Strings.For(Lang.ZhHant).NextLabel, "下一個分頁", "繁中的標籤");
+            Eq(Strings.For(Lang.ZhHans).PrevLabel, "上一个标签页", "簡中的標籤");
+            Eq(Strings.For(Lang.En).NextLabel, "Next tab", "英文的標籤");
         }
 
         static void StaleTest()
