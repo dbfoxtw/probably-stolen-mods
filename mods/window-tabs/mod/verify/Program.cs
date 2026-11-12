@@ -9,7 +9,7 @@ namespace ProbablyStolenWindowTabs.Verify
     /// <summary>
     /// 離線測試（不用開遊戲）：合併、拆開、重排、分頁名稱的編號跟著箱子與預告分頁的名稱、
     /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、
-    /// 切頁鍵的寫法、切到哪頁與設定欄的文字、讀檔後失效的編號、
+    /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
@@ -637,7 +637,7 @@ namespace ProbablyStolenWindowTabs.Verify
 
         /// <summary>
         /// 模擬 mod 裡的 Settings.Resolve（那邊用 Unity 的 KeyCode 列舉）：認得的 KeyCode 名稱（大小寫不拘）回傳正式的寫法，
-        /// 修飾鍵本身、滑鼠鍵、不存在的回傳 null（照視窗群組的離線測試）。
+        /// 修飾鍵本身、滑鼠鍵、不存在的回傳 null（照視窗群組的離線測試）。滑鼠側鍵（2.4.0 起）由 Hotkey.Parse 自己處理、不經過這裡。
         /// </summary>
         static readonly string[] KnownKeys = Enumerable.Range(0, 10).Select(i => "Alpha" + i)
             .Concat(Enumerable.Range(0, 10).Select(i => "Keypad" + i))
@@ -647,6 +647,17 @@ namespace ProbablyStolenWindowTabs.Verify
             .ToArray();
 
         static string Resolve(string name) => KnownKeys.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>
+        /// 故意放水的 resolve：連 Unity 的滑鼠名稱 Mouse0～Mouse6 也收（像沒擋滑鼠鍵的 Enum.TryParse）。
+        /// 用來確認 Hotkey.Parse 不會把玩家寫的「Mouse＋數字」交給 resolve：玩家寫的 Mouse3 是遊戲的中鍵，不能變成 Unity 的 KeyCode.Mouse3。
+        /// </summary>
+        static string LeakyResolve(string name)
+        {
+            for (int i = 0; i <= 6; i++)
+                if (string.Equals(name, "Mouse" + i, StringComparison.OrdinalIgnoreCase)) return "Mouse" + i;
+            return Resolve(name);
+        }
 
         static Hotkey P(string s, out string error) => Hotkey.Parse(s, Resolve, out error);
 
@@ -700,6 +711,70 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("PreviousTab"), "上一頁寫錯（修飾鍵寫在後面）：警告");
             keys = SwitchKeys.Build("NextTab", "Ctrl+Tab", "PreviousTab", "control+TAB", Resolve);
             Check(keys.Next != null && keys.Prev == null && keys.Warnings.Count == 1, "兩個設成同一個鍵：只有下一頁有效、警告");
+
+            MouseSideButtonTest();
+        }
+
+        /// <summary>
+        /// 滑鼠側鍵（2.4.0）：寫法照遊戲按鍵綁定的名稱 Mouse4～Mouse7，存成 Unity 的 KeyCode 名稱 Mouse3～Mouse6
+        /// （mod 裡 Settings.ToCode 直接拿 Key 轉 KeyCode）；左鍵、右鍵、中鍵與更後面的編號不收。
+        /// </summary>
+        static void MouseSideButtonTest()
+        {
+            // 遊戲的名稱 → Unity 的名稱（遊戲 KeyBindHelper.KeyName：Mouse 4 = KeyCode.Mouse3）
+            for (int n = 4; n <= 7; n++)
+            {
+                var m = P("Mouse" + n, out var e);
+                Check(m != null && e == null, $"Mouse{n} 收下");
+                Eq(m?.Key, "Mouse" + (n - 1), $"Mouse{n} 對到 Unity 的 KeyCode.Mouse{n - 1}");
+                Eq(m?.Display(), "Mouse" + n, $"Mouse{n} 給玩家看的是遊戲的名稱");
+                Check(m != null && !m.Ctrl && !m.Shift && !m.Alt, $"Mouse{n} 沒有修飾鍵");
+            }
+
+            // 大小寫與空白
+            Eq(P("mouse5", out _)?.Key, "Mouse4", "大小寫不拘：mouse5");
+            Eq(P("MOUSE5", out _)?.Key, "Mouse4", "大小寫不拘：MOUSE5");
+            Eq(P("mouse 5", out _)?.Key, "Mouse4", "Mouse 和數字中間有空白：mouse 5");
+            Eq(P("Mouse 4", out _)?.Key, "Mouse3", "Mouse 4（遊戲選項顯示的樣子）");
+            Eq(P("  Ctrl + Mouse 7 ", out _)?.ToString(), "Ctrl+Mouse6", "前後與加號旁的空白");
+
+            // 修飾鍵：完全相同才算
+            var cm = P("Ctrl+Mouse5", out var err);
+            Check(cm != null && err == null && cm.Ctrl && !cm.Shift && !cm.Alt && cm.Key == "Mouse4", "Ctrl+Mouse5：Ctrl 加 Unity 的 Mouse4");
+            Eq(cm?.Display(), "Ctrl+Mouse5", "Ctrl+Mouse5 給玩家看的是遊戲的名稱（不是 Ctrl+Mouse4）");
+            Eq(cm?.ToString(), "Ctrl+Mouse4", "正式寫法（比對重複用）是 Unity 的名稱");
+            Check(cm.ModifiersMatch(true, false, false), "按 Ctrl 時 Ctrl+Mouse5 成立");
+            Check(!cm.ModifiersMatch(false, false, false), "單按側鍵時 Ctrl+Mouse5 不成立");
+            Check(!cm.ModifiersMatch(true, true, false), "按 Ctrl+Shift 時 Ctrl+Mouse5 不成立");
+            Check(!P("Mouse5", out _).ModifiersMatch(true, false, false), "按著 Ctrl 時單獨的 Mouse5 不成立");
+            Eq(P("shift+alt+mouse6", out _)?.Display(), "Shift+Alt+Mouse6", "多個修飾鍵加側鍵");
+
+            // 左鍵、右鍵、中鍵與更後面的編號：不收、警告寫明只收側鍵
+            foreach (var bad in new[] { "Mouse0", "Mouse1", "Mouse2", "Mouse3", "Mouse8", "Mouse9", "Mouse10", "mouse 3", "Ctrl+Mouse3", "Mouse99999999999" })
+            {
+                Check(P(bad, out err) == null && err != null, $"{bad} 不收、有警告");
+                Check(err != null && err.Contains("只收側鍵") && err.Contains("Mouse4～Mouse7"), $"{bad} 的警告寫明只收側鍵 Mouse4～Mouse7");
+            }
+            // resolve 就算收 Unity 的滑鼠名稱，玩家寫的 Mouse3（遊戲的中鍵）也不會變成 Unity 的 Mouse3
+            Check(Hotkey.Parse("Mouse3", LeakyResolve, out err) == null && err != null, "Mouse3 不會被當成 Unity 的 KeyCode.Mouse3 收下");
+            Check(Hotkey.Parse("Mouse0", LeakyResolve, out err) == null && err != null, "Mouse0 不會被當成 Unity 的左鍵收下");
+            Eq(Hotkey.Parse("Mouse4", LeakyResolve, out _)?.Key, "Mouse3", "Mouse4 照遊戲的名稱換算，不是 Unity 的 Mouse4");
+            // 不是「Mouse＋數字」的照舊交給 resolve（不存在的鍵、一般的警告）
+            Check(P("MouseLeft", out err) == null && err != null && !err.Contains("只收側鍵"), "MouseLeft 不是遊戲的名稱：一般的「不是可以用的按鍵」");
+            Check(P("Mouse", out err) == null && err != null, "只寫 Mouse：不收");
+            Check(P("Mouse4a", out err) == null && err != null, "Mouse4a：不收");
+            Check(P("Tab", out err) != null && err == null, "鍵盤的鍵照舊");
+
+            // 兩欄寫成同一顆側鍵（寫法不同）：只有下一頁有效、警告
+            var keys = SwitchKeys.Build("NextTab", "Mouse4", "PreviousTab", "mouse 4", Resolve);
+            Check(keys.Next != null && keys.Prev == null && keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("PreviousTab"), "Mouse4 和 mouse 4 算同一個鍵：只有下一頁有效、警告");
+            keys = SwitchKeys.Build("NextTab", "Mouse5", "PreviousTab", "Mouse4", Resolve);
+            Check(keys.Next?.Key == "Mouse4" && keys.Prev?.Key == "Mouse3" && keys.Warnings.Count == 0, "下一頁 Mouse5、上一頁 Mouse4（說明的例子）：都有效");
+            keys = SwitchKeys.Build("NextTab", "Ctrl+Mouse5", "PreviousTab", "Mouse5", Resolve);
+            Check(keys.Next != null && keys.Prev != null && keys.Warnings.Count == 0, "同一顆側鍵、修飾鍵不同：不算重複");
+            keys = SwitchKeys.Build("NextTab", "Mouse3", "PreviousTab", "Mouse4", Resolve);
+            Check(keys.Next == null && keys.Prev?.Display() == "Mouse4" && keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("NextTab") && keys.Warnings[0].Contains("只收側鍵"),
+                "下一頁寫 Mouse3（中鍵）：不使用、警告只收側鍵，上一頁照用");
         }
 
         static void SwitchOrderTest()
@@ -746,7 +821,16 @@ namespace ProbablyStolenWindowTabs.Verify
                 Eq(s.PrevTip.Split('\n').Length, 2, $"{lang}：上一頁的說明是兩行");
                 Check(s.NextTip.Contains("Ctrl+Tab") && !s.NextTip.Contains("Shift"), $"{lang}：下一頁的例子是 Ctrl+Tab");
                 Check(s.PrevTip.Contains("Ctrl+Shift+Tab"), $"{lang}：上一頁的例子是 Ctrl+Shift+Tab");
+                // 2.4.0（的稿）：第二行的例子加滑鼠側鍵，下一頁 Mouse5、上一頁 Mouse4（照瀏覽器的前進、後退）
+                Check(s.NextTip.Split('\n')[1].Contains("Mouse5") && !s.NextTip.Contains("Mouse4"), $"{lang}：下一頁的例子有側鍵 Mouse5");
+                Check(s.PrevTip.Split('\n')[1].Contains("Mouse4") && !s.PrevTip.Contains("Mouse5"), $"{lang}：上一頁的例子有側鍵 Mouse4");
             }
+            Eq(Strings.For(Lang.En).NextTip.Split('\n')[1], "E.g. Ctrl+Tab, or the mouse side button Mouse5; empty = not used", "英文下一頁的第二行（定稿）");
+            Eq(Strings.For(Lang.En).PrevTip.Split('\n')[1], "E.g. Ctrl+Shift+Tab, or the mouse side button Mouse4; empty = not used", "英文上一頁的第二行（定稿）");
+            Eq(Strings.For(Lang.ZhHans).NextTip.Split('\n')[1], "例如 Ctrl+Tab，或鼠标侧键 Mouse5；留空＝不使用", "簡中下一頁的第二行（定稿）");
+            Eq(Strings.For(Lang.ZhHans).PrevTip.Split('\n')[1], "例如 Ctrl+Shift+Tab，或鼠标侧键 Mouse4；留空＝不使用", "簡中上一頁的第二行（定稿）");
+            Eq(Strings.For(Lang.ZhHant).NextTip.Split('\n')[1], "例如 Ctrl+Tab，或滑鼠側鍵 Mouse5；留空＝不使用", "繁中下一頁的第二行（定稿）");
+            Eq(Strings.For(Lang.ZhHant).PrevTip.Split('\n')[1], "例如 Ctrl+Shift+Tab，或滑鼠側鍵 Mouse4；留空＝不使用", "繁中上一頁的第二行（定稿）");
             Eq(Strings.For(Lang.ZhHant).NextLabel, "下一個分頁", "繁中的標籤");
             Eq(Strings.For(Lang.ZhHans).PrevLabel, "上一个标签页", "簡中的標籤");
             Eq(Strings.For(Lang.En).NextLabel, "Next tab", "英文的標籤");

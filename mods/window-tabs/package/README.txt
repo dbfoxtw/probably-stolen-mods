@@ -51,7 +51,10 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有兩欄按鍵（預設都是空白，留空＝不使用）：
 - 下一個分頁：把滑鼠底下那組切到下一頁，最後一頁之後回到第一頁。
 - 上一個分頁：切到上一頁，第一頁之前是最後一頁。
-寫法例如 Ctrl+Tab、Ctrl+Shift+Tab、F5；修飾鍵要完全一樣才算。按了沒反應可能是被別的程式攔走了，請換一個鍵。
+寫法例如 Ctrl+Tab、Ctrl+Shift+Tab、F5；修飾鍵要完全一樣才算。
+滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：Mouse4、Mouse5（例如 Mouse4、Ctrl+Mouse5）。
+主要的鍵（Ctrl+Tab 的 Tab）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵。
+按了沒反應可能是被別的程式攔走了，請換一個鍵。
 設定存在存檔資料夾的 ModConfigs\dbfoxtw.window-tabs.json。
 
 【說明】
@@ -149,9 +152,11 @@ Open this mod's settings on the Mods screen of the main menu. There are two key 
 empty = not used):
 - Next tab: switches the tab set under the mouse to the next tab; after the last tab comes the first.
 - Previous tab: switches to the previous tab; before the first tab comes the last.
-Write keys like Ctrl+Tab, Ctrl+Shift+Tab or F5; modifiers must match exactly. If a key does nothing, another
-program may be taking it; pick another one. Settings are stored in ModConfigs\dbfoxtw.window-tabs.json
-in the save folder.
+Write keys like Ctrl+Tab, Ctrl+Shift+Tab or F5; modifiers must match exactly. Mouse side buttons work too,
+named as in the game's Key Binds: Mouse4 and Mouse5 (e.g. Mouse4, Ctrl+Mouse5). If the main key (the Tab in
+Ctrl+Tab) is also used in the game's Key Binds, that game action happens too; pick another key. If a key does
+nothing, another program may be taking it; pick another one. Settings are stored in
+ModConfigs\dbfoxtw.window-tabs.json in the save folder.
 
 Notes
 - Your save files are never read or written. Tab sets are kept in

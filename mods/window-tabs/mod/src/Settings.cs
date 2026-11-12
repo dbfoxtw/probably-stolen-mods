@@ -6,7 +6,7 @@ namespace ProbablyStolenWindowTabs
     /// <summary>
     /// 設定（2.3.0 起，視窗分頁第一次有設定）：遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.window-tabs.json，
     /// 主選單的模組管理畫面裡有這個 mod 的設定視窗）。兩個文字欄：下一頁、上一頁的切頁鍵，預設都是空的＝不使用。
-    /// 寫法照視窗群組（Ctrl+Tab、Ctrl+Shift+F1；Hotkey.Parse）。不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：
+    /// 寫法照視窗群組（Ctrl+Tab、Ctrl+Shift+F1；Hotkey.Parse）；2.4.0 起另外收滑鼠側鍵 Mouse4～Mouse7（遊戲按鍵綁定的名稱）。不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：
     /// 它一列只存一個 KeyCode，表達不了 Ctrl+Tab 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart，照視窗群組）。
     /// </summary>
@@ -37,6 +37,8 @@ namespace ProbablyStolenWindowTabs
         /// <summary>
         /// 這一幀按下的切頁鍵：+1＝下一頁、−1＝上一頁、0＝沒有。修飾鍵要完全相同才算；左右兩邊都算（照視窗群組的 Keys.Pressed）。
         /// 兩個都沒設時每幀只比兩個字串就結束；有設時先看 Input.anyKeyDown，平常也是到那裡就結束。
+        /// 滑鼠側鍵（2.4.0 起）走同一條路：舊的 Input 系統的 GetKeyDown 收 KeyCode.Mouse3～Mouse6，anyKeyDown 對滑鼠鍵也成立。
+        /// 直接查 UnityEngine.Input，簡易待辦打字時擋的是遊戲的 KeyBindHelper 與 InputActionManager，擋不到這裡。
         /// 打字、選項正在設定按鍵這些「不動作」的判斷由呼叫的人（Tabs.HandleSwitchKeys）做。
         /// </summary>
         internal static int PressedDirection()
@@ -81,6 +83,9 @@ namespace ProbablyStolenWindowTabs
         /// <summary>
         /// Unity 的 KeyCode 名稱 → 正式的名稱；不能用的回傳 null（照視窗群組的 Settings.Resolve）：不存在、數字開頭
         /// （Enum.TryParse 會把「12345」這種沒定義的值也收下）、None、滑鼠鍵、搖桿鍵、修飾鍵本身（修飾鍵要寫在「+」前面）。
+        /// 2.4.0 起收的滑鼠側鍵不經過這裡：Hotkey.Parse 先把「Mouse＋數字」照遊戲按鍵綁定的名稱換成 Unity 的名稱（Mouse4 → Mouse3），
+        /// 這裡照舊擋掉所有 Unity 的滑鼠名稱，當第二道關：玩家寫的 Mouse3 是遊戲的中鍵，不能被當成 Unity 的 KeyCode.Mouse3（側鍵）收下。
+        /// 和視窗群組不一樣了（視窗群組不收滑鼠鍵，先不改）。
         /// </summary>
         static string Resolve(string name)
         {

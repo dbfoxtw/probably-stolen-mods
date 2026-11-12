@@ -7,17 +7,28 @@ namespace ProbablyStolenWindowTabs
     /// 一個切頁鍵：修飾鍵（Ctrl、Shift、Alt）加主要的鍵，用「+」連起來，例如 Ctrl+Tab、F1、Ctrl+Shift+F1，
     /// 大小寫不拘、修飾鍵順序不拘。寫法與解析照視窗群組 mod 的 Hotkey（兩邊的玩家寫的格式一樣，說明也能共用）。
     /// 主要的鍵是 Unity KeyCode 的名稱；單一個數字當成上排的數字（3 → Alpha3），Num3 當成小鍵盤（Keypad3）。
+    /// 2.4.0 起主要的鍵也可以是滑鼠側鍵，寫法照遊戲「按鍵綁定」顯示的名稱 Mouse4～Mouse7，
+    /// 不是 Unity 的名稱：遊戲的 KeyBindHelper.KeyName 把 KeyCode.Mouse3～Mouse6 顯示成「Mouse 4」～「Mouse 7」（差 1），
+    /// 玩家照遊戲選項寫 Mouse4，照 Unity 解讀會變成另一顆側鍵。這點和視窗群組的 Hotkey 不一樣了（視窗群組不收滑鼠鍵，先不改）。
     /// 不碰 Unity：KeyCode 名稱對不對由呼叫的人給的 resolve 判斷，離線測試 mod/verify 直接測。
     /// </summary>
     sealed class Hotkey
     {
         public bool Ctrl, Shift, Alt;
-        /// <summary>主要的鍵：resolve 後的 Unity KeyCode 名稱（大小寫照 KeyCode）。</summary>
+        /// <summary>
+        /// 主要的鍵：resolve 後的 Unity KeyCode 名稱（大小寫照 KeyCode）。滑鼠側鍵存 Unity 的名稱（玩家寫 Mouse4 → Mouse3），
+        /// 呼叫的人直接拿去轉 KeyCode；給玩家看時由 Display 換回遊戲的名稱。
+        /// </summary>
         public string Key = "";
+
+        /// <summary>遊戲按鍵綁定的滑鼠鍵名稱是 Unity 的編號加 1；本 mod 只收側鍵：遊戲的 Mouse4～Mouse7＝Unity 的 Mouse3～Mouse6。</summary>
+        const int FirstSideButton = 4, LastSideButton = 7;
 
         /// <summary>
         /// 讀設定的字串。空的回傳 null、error 也是 null（＝不使用）；格式不對回傳 null 並給 error。
         /// resolve：KeyCode 名稱 → 正式的名稱，不是可以用的鍵（不存在、滑鼠鍵、修飾鍵本身）回傳 null。
+        /// 「Mouse＋數字」在這裡先照遊戲的名稱處理、不交給 resolve：玩家寫的 Mouse3 是遊戲的中鍵，
+        /// 交給 resolve 就會被當成 Unity 的 KeyCode.Mouse3（第一顆側鍵）。
         /// </summary>
         public static Hotkey Parse(string s, Func<string, string> resolve, out string error)
         {
@@ -39,11 +50,38 @@ namespace ProbablyStolenWindowTabs
             }
             var key = parts[parts.Length - 1].Trim();
             if (key.Length == 0) { error = "最後要有一個主要的鍵（例如 Ctrl+Tab 的 Tab）"; return null; }
+            if (TryMouse(key, out var mouse))
+            {
+                if (mouse < FirstSideButton || mouse > LastSideButton)
+                {
+                    error = $"「{key}」不能用：滑鼠鍵只收側鍵 Mouse4～Mouse7（遊戲「按鍵綁定」的名稱；左鍵、右鍵、中鍵不行）";
+                    return null;
+                }
+                h.Key = "Mouse" + (mouse - 1);
+                return h;
+            }
             var name = Alias(key);
             var resolved = resolve(name);
-            if (resolved == null) { error = $"「{key}」不是可以用的按鍵（Unity 的 KeyCode 名稱，例如 Tab、F1、PageDown、Keypad3；滑鼠鍵與單獨的修飾鍵不行）"; return null; }
+            if (resolved == null) { error = $"「{key}」不是可以用的按鍵（Unity 的 KeyCode 名稱，例如 Tab、F1、PageDown、Keypad3，或滑鼠側鍵 Mouse4～Mouse7；單獨的修飾鍵不行）"; return null; }
             h.Key = resolved;
             return h;
+        }
+
+        /// <summary>
+        /// 「Mouse＋數字」（大小寫不拘、中間可以有空白：Mouse4、mouse 4）→ 遊戲按鍵綁定的編號。
+        /// 只要是這個樣子就當成滑鼠鍵，數字超出範圍由 Parse 警告，不會漏給 resolve。
+        /// </summary>
+        static bool TryMouse(string key, out int number)
+        {
+            number = 0;
+            const string p = "mouse";
+            if (!key.StartsWith(p, StringComparison.OrdinalIgnoreCase)) return false;
+            var digits = key.Substring(p.Length).Trim();
+            if (digits.Length == 0) return false;
+            foreach (var c in digits) if (c < '0' || c > '9') return false;
+            // 很長的一串數字放不進 int：一樣是滑鼠鍵的寫法，當成超出範圍
+            if (!int.TryParse(digits, out number)) number = int.MaxValue;
+            return true;
         }
 
         /// <summary>玩家常寫的別名：單一個數字是上排的數字鍵，Num3／Numpad3 是小鍵盤。</summary>
@@ -59,15 +97,19 @@ namespace ProbablyStolenWindowTabs
         /// <summary>修飾鍵要完全相同才算（Ctrl+Shift+Tab 不會觸發 Ctrl+Tab）。主要的鍵有沒有按下由呼叫的人查。</summary>
         public bool ModifiersMatch(bool ctrl, bool shift, bool alt) => Ctrl == ctrl && Shift == shift && Alt == alt;
 
-        /// <summary>正式的寫法（修飾鍵照 Ctrl、Shift、Alt 的順序）：比對重複、寫 log 用。</summary>
+        /// <summary>
+        /// 正式的寫法（修飾鍵照 Ctrl、Shift、Alt 的順序）：比對重複用。主要的鍵是 Unity 的名稱，
+        /// 所以 Mouse4 和 mouse 4 都是 Mouse3、算同一個鍵。
+        /// </summary>
         public override string ToString() => Prefix() + Key;
 
-        /// <summary>給玩家看的：Alpha3 → 3、Keypad3 → Num3。</summary>
+        /// <summary>給玩家看的（log 用）：Alpha3 → 3、Keypad3 → Num3、滑鼠側鍵換回遊戲的名稱（Unity 的 Mouse3 → Mouse4）。</summary>
         public string Display()
         {
             var k = Key;
             if (k.Length == 6 && k.StartsWith("Alpha", StringComparison.Ordinal) && char.IsDigit(k[5])) k = k.Substring(5);
             else if (k.Length == 7 && k.StartsWith("Keypad", StringComparison.Ordinal) && char.IsDigit(k[6])) k = "Num" + k[6];
+            else if (k.Length == 6 && k.StartsWith("Mouse", StringComparison.Ordinal) && char.IsDigit(k[5])) k = "Mouse" + (k[5] - '0' + 1);
             return Prefix() + k;
         }
 

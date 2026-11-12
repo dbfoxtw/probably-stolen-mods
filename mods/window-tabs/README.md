@@ -46,8 +46,9 @@
 | 上一個分頁（`PreviousTab`） | 空白 | 切到上一頁的鍵，第一頁之前是最後一頁 |
 
 - 寫法例如 `Ctrl+Tab`、`Ctrl+Shift+Tab`、`F5`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
+- 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：`Mouse4`、`Mouse5`（例如 `Mouse4`、`Ctrl+Mouse5`）。左鍵、右鍵、中鍵不行。
+- 主要的鍵（`Ctrl+Tab` 的 Tab）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵；別的 mod 也用到同一個鍵時一樣兩邊都會動作。
 - 按了沒反應可能是被別的程式攔走了（例如 Steam 覆蓋介面預設是 Shift+Tab），請換一個鍵。
-- 遊戲的按鍵綁定或別的 mod 也用到同一個鍵時（例如把 Tab 綁給遊戲的功能），按下去兩邊都會動作。
 
 ## 語言
 
@@ -161,8 +162,9 @@ The tab strips come from this mod, not the base game; please report problems to 
 | Previous tab (`PreviousTab`) | empty | Key that switches to the previous tab; before the first tab comes the last |
 
 - Write keys like `Ctrl+Tab`, `Ctrl+Shift+Tab` or `F5`; modifiers (Ctrl, Shift, Alt) must match exactly, either the left or the right one. Empty = not used; a field with a key name that isn't recognized is not used.
+- Mouse side buttons work too, named as in the game's Key Binds: `Mouse4` and `Mouse5` (e.g. `Mouse4`, `Ctrl+Mouse5`). The left, right and middle buttons can't be used.
+- If the main key (the Tab in `Ctrl+Tab`) is also used in the game's Key Binds, that game action happens too; pick another key. The same goes for another mod using the same key: both happen.
 - If a key does nothing, another program may be taking it (the Steam overlay uses Shift+Tab by default); pick another one.
-- If the game's key bindings or another mod use the same key (e.g. Tab bound to a game action), pressing it triggers both.
 
 **Languages:** tabs show the game's item names in the game language (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280), like the window titles). The settings window follows the game language too: Simplified Chinese when the game is in Chinese (Traditional Chinese with the Traditional Chinese mod), English otherwise; the section title is always "Window Tabs".
 

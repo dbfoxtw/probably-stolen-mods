@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.4.0（2026-11-13）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 「下一個分頁」「上一個分頁」也可以設成滑鼠側鍵（Mouse4、Mouse5，照遊戲按鍵綁定的名稱，例如 Mouse4、Ctrl+Mouse5）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- The Next tab and Previous tab keys can now be mouse side buttons (Mouse4 and Mouse5, named as in the game's Key Binds, e.g. Mouse4, Ctrl+Mouse5).
+
 ## v2.3.0（2026-11-12）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
