@@ -58,10 +58,39 @@ namespace ProbablyStolenItemQuickInfo
     enum LabelForm { Normal, Short, Split }
 
     /// <summary>
-    /// 名稱放哪裡：Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；Label＝標籤框的第一行（之前的樣子）。
-    /// 和 TextSize 一樣存名稱、下拉選單直接顯示名稱，名稱不要改；宣告順序就是下拉選單的順序（Top 在前）。
+    /// 名稱放哪裡：Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；InfoBox＝資訊框的第一行（之前的樣子）。
+    /// 和 TextSize 一樣存名稱、下拉選單直接顯示名稱，改名要轉玩家設定檔裡的舊值（下一行）；宣告順序就是下拉選單的順序（Top 在前）。
+    /// InfoBox 在 1.1.0 以前叫 Label：下拉選單直接顯示列舉名稱，Label 會和遊戲的標籤印表機（英文 Labeler）、提示框的 [Label] 混在一起；
+    /// 玩家看得到的「標籤」1.1.0 起改叫資訊框。舊值 Label 由 Settings.MigrateNamePosition 轉成 InfoBox（判斷在 Rules.IsOldNamePosition）。
     /// </summary>
-    enum NamePosition { Top, Label }
+    enum NamePosition { Top, InfoBox }
+
+    /// <summary>
+    /// 名稱看哪個開關：機器（有電池槽、沒壞）照「顯示機器名稱」，有自己視窗的（箱子、背包、倉庫、沒有電池槽或壞掉的機器）
+    /// 照「顯示箱子名稱」，其他物品（水桶、金屬錠…）照「顯示其他物品名稱」。按鍵的完整資訊（ItemReader.ReadBody）和常駐的名稱
+    /// （ItemReader.ReadName）都用同一個分類（Rules.NameKindOf），開關關掉的那種兩邊都不畫，不會一邊畫一邊不畫。
+    /// </summary>
+    enum NameKind { Machine, Container, Item }
+
+    /// <summary>
+    /// 這一幀畫什麼：None＝都不畫；Names＝只畫名稱（總是顯示名稱開著、沒按鍵時常駐）；Full＝完整資訊（按鍵）。
+    /// 判斷在 Rules.ShowStateOf，Runner 每幀照它切換。
+    /// </summary>
+    enum ShowState { None, Names, Full }
+
+    /// <summary>狀態轉換時要做的事（Rules.TransitionOf）。</summary>
+    readonly struct ShowTransition
+    {
+        public readonly bool Hide, RecomputeNow, FullStarted, FullEnded;
+
+        public ShowTransition(bool hide, bool recomputeNow, bool fullStarted, bool fullEnded)
+        {
+            Hide = hide;
+            RecomputeNow = recomputeNow;
+            FullStarted = fullStarted;
+            FullEnded = fullEnded;
+        }
+    }
 
     /// <summary>
     /// 機器今晚不會動的原因。
@@ -220,7 +249,7 @@ namespace ProbablyStolenItemQuickInfo
         ///   設定本來就是 Short（沒有長短不同的行）時直接看這一步。
         /// 沒有前綴、長短一樣的行（原因、電池的 100kJ、純度、+4kJ）不管多寬都不觸發：換短、拆兩行都不會讓它變窄，只會讓標籤變高，
         /// 所以照舊伸出去（原本是「整個標籤放不下就換」，只有原因比物品寬時也換短、拆兩行，審查發現）。剩幾天沒有前綴，只觸發換短、不觸發拆。
-        /// 名稱那行不算在判斷裡（名稱位置是 Label 時名稱在同一個框，框照樣以最寬的一行為寬）。
+        /// 名稱那行不算在判斷裡（名稱位置是 InfoBox 時名稱在同一個框，框照樣以最寬的一行為寬）。
         /// 拆兩行以後就照這樣畫，數值本身比物品寬時照樣伸出去。剛好等寬算放得下。
         /// available＝物品外框寬 − 左右內距；measure＝量一行字的寬（LabelRenderer 用 TMP 量，量的是繁中 mod 轉換後的字；離線測試用假的）。
         /// 只量會觸發的那幾行，同一個字只量一次。
@@ -250,7 +279,8 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 名稱放哪個框：Top 時名稱行（IsName，只有第一行會是）另外一個框、回傳它，其他行放進 info；
-        /// Label 時全部放進 info（名稱是資訊框的第一行），回 null。info 先清空。
+        /// InfoBox 時全部放進 info（名稱是資訊框的第一行），回 null。info 先清空。
+        /// 常駐的名稱也走這裡：只有名稱一行時，Top 是名稱框、InfoBox 是只有名稱一行的資訊框；按鍵時資訊加進同一個框、名稱留在第一行。
         /// </summary>
         internal static Line? SplitName(IReadOnlyList<Line> lines, NamePosition position, List<Line> info)
         {
@@ -268,7 +298,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static float RowSize(Line row, float infoSize, float nameSize) => row.IsName ? nameSize : infoSize;
 
         /// <summary>
-        /// 框的內距：照框裡名稱以外的行的字級算（名稱位置是 Label 時名稱字級比較大，內距不跟著變）；
+        /// 框的內距：照框裡名稱以外的行的字級算（名稱位置是 InfoBox 時名稱字級比較大，內距不跟著變）；
         /// 只有名稱的框（Top 的名稱框、或只有名稱的物品）照名稱的字級。
         /// </summary>
         internal static float Padding(IReadOnlyList<Line> lines, float infoSize, float nameSize)
@@ -475,22 +505,103 @@ namespace ProbablyStolenItemQuickInfo
         /// 玩家取的名稱整理成一行要顯示的字：照原樣、不翻譯、不截斷。換行、tab 這類控制字元換成空白（標籤一行一行排，
         /// 名稱要在同一行）；空的或只有空白回 null（沒有名稱行）。名稱裡的 TMP 標籤（&lt;color&gt; 之類）不在這裡處理：
         /// 標籤的 TMP 關掉 rich text 與控制字元的解析（LabelRenderer.NewText），照字面顯示，改不到我們的排版。
+        /// 大部分的名稱沒有控制字元：那時直接回原本的字串（同一個參考），不另外配置。常駐的名稱每 0.25 秒對畫面上每個取過名的物品叫一次，
+        /// 不按鍵時也一直跑，配置會累積成週期性的 GC 卡頓（1.0.1 修掉的那一類）。
         /// </summary>
         internal static string CleanName(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return null;
+            bool control = false, blank = true;
+            foreach (char c in raw)
+            {
+                if (char.IsControl(c)) control = true;
+                else if (!char.IsWhiteSpace(c)) blank = false;
+            }
+            // 控制字元換成空白後也算空白，所以「全是控制字元或空白」就是沒有名稱（和下面換完再 Trim 的結果一樣）
+            if (blank) return null;
+            if (!control) return raw;
             var chars = raw.ToCharArray();
             for (int i = 0; i < chars.Length; i++)
                 if (char.IsControl(chars[i])) chars[i] = ' ';
-            var s = new string(chars);
-            return s.Trim().Length == 0 ? null : s;
+            return new string(chars);
         }
 
         /// <summary>
-        /// 不是機器的物品要不要顯示名稱、看哪個開關：有自己視窗的（背包、箱子、倉庫、沒有電池槽或壞掉的機器）照「顯示箱子名稱」，
-        /// 其他物品（水桶、金屬錠…）照「顯示其他物品名稱」。機器照「顯示機器名稱」，在 MachineLines。
+        /// 名稱的分類（NameKind）：機器優先（機器也有自己的視窗），再看有沒有自己的視窗。machine＝有電池槽、沒壞（ItemReader.IsMachine，
+        /// 和畫機器標籤的條件一樣）；hasOwnWindow＝contentWindow 不是 null。
         /// </summary>
-        internal static bool ShowsName(bool hasOwnWindow, Display d) => hasOwnWindow ? d.ContainerName : d.ItemName;
+        internal static NameKind NameKindOf(bool machine, bool hasOwnWindow) =>
+            machine ? NameKind.Machine : hasOwnWindow ? NameKind.Container : NameKind.Item;
+
+        /// <summary>
+        /// 那種物品的名稱要不要顯示：機器照「顯示機器名稱」，有自己視窗的照「顯示箱子名稱」，其他物品照「顯示其他物品名稱」。
+        /// </summary>
+        internal static bool ShowsName(NameKind kind, Display d) => kind switch
+        {
+            NameKind.Machine => d.MachineName,
+            NameKind.Container => d.ContainerName,
+            _ => d.ItemName,
+        };
+
+        /// <summary>
+        /// 料斗自動編的號碼：遊戲替自己的料斗自動取名「#」加計數（HopperHelper.EnsureLabel），料斗一多，常駐的「#1」「#2」
+        /// 只會擋畫面，所以常駐時不畫；按鍵的完整資訊照舊畫。用原始的名稱判斷（CleanName 之前）：「#」後面一個以上的 ASCII 數字、
+        /// 前後沒有別的字（玩家自己改的「#1 水」「 #1」不算）。不是料斗的「#3」是玩家取的，照畫。
+        /// </summary>
+        internal static bool IsAutoHopperName(bool isHopper, string rawName)
+        {
+            if (!isHopper || rawName == null || rawName.Length < 2 || rawName[0] != '#') return false;
+            for (int i = 1; i < rawName.Length; i++)
+                if (rawName[i] < '0' || rawName[i] > '9') return false;
+            return true;
+        }
+
+        /// <summary>
+        /// 常駐時一個物品的行：只有名稱一行，或空的清單（開關關掉、沒取名、料斗自動編的號碼）。
+        /// show＝那種物品的名稱開關（ShowsName）。寫進 into（先清空）並回傳它：常駐時每 0.25 秒對每個物品叫一次，
+        /// 重用同一個清單、不每個物品配置一個（呼叫端用完就換下一個物品，LabelRenderer.Put 不留著傳進去的清單）。
+        /// </summary>
+        internal static List<Line> PinnedNameLines(string rawName, bool show, bool isHopper, List<Line> into)
+        {
+            into.Clear();
+            var name = show && !IsAutoHopperName(isHopper, rawName) ? CleanName(rawName) : null;
+            if (name != null) into.Add(new Line(name, LineColor.Name));
+            return into;
+        }
+
+        /// <summary>
+        /// 設定檔裡名稱位置的值是不是 1.1.0 以前的 Label（不分大小寫、前後的空白不算，和遊戲讀列舉的 Enum.Parse(ignoreCase) 一樣寬）。
+        /// 是的話 Settings.MigrateNamePosition 改成 InfoBox。
+        /// </summary>
+        internal static bool IsOldNamePosition(string raw) =>
+            raw != null && string.Equals(raw.Trim(), "Label", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// 這一幀畫什麼：
+        /// - 按鍵叫出來的（KeySwitch 說要顯示：Hold 按著、Toggle 開著，而且沒被擋）→ 完整資訊。
+        /// - 不然，總是顯示名稱開著、三個名稱開關至少開一個、不在過場 → 只畫名稱。打字、正在設定按鍵時 KeySwitch 被擋，
+        ///   這裡照樣畫名稱（擋的是按鍵，不是名稱）；沒綁鍵時也一樣。三個名稱開關全關時當作沒有常駐名稱（不每 0.25 秒白找一次）。
+        /// - 其他 → 都不畫。過場時一律不畫（KeySwitch 本來就把過場算被擋）。
+        /// </summary>
+        internal static ShowState ShowStateOf(bool keyShows, bool alwaysNames, bool anyNameSwitch, bool cinematic)
+        {
+            if (cinematic) return ShowState.None;
+            if (keyShows) return ShowState.Full;
+            return alwaysNames && anyNameSwitch ? ShowState.Names : ShowState.None;
+        }
+
+        /// <summary>
+        /// 這一幀從 prev 換到 next 時 Runner 要做的事（狀態沒變時全部是 false）：
+        /// - Hide：變成不畫（從名稱或完整資訊）→ 全部藏起來。
+        /// - RecomputeNow：變成名稱或完整資訊（含名稱↔完整）→ 這一幀就重算，不等 0.25 秒（放開鍵時資訊框要當幀消失）。
+        /// - FullStarted／FullEnded：完整資訊開始／結束（效能量測的「按下／按住」期間，Perf.StartShowing／StopShowing；除錯 log 的「顯示」那一行）。
+        ///   名稱↔不畫不算：常駐名稱不另外量，算在「沒按」的期間裡。
+        /// </summary>
+        internal static ShowTransition TransitionOf(ShowState prev, ShowState next) => new ShowTransition(
+            hide: next == ShowState.None && prev != ShowState.None,
+            recomputeNow: next != ShowState.None && next != prev,
+            fullStarted: next == ShowState.Full && prev != ShowState.Full,
+            fullEnded: prev == ShowState.Full && next != ShowState.Full);
 
         /// <summary>
         /// 前面加名稱那一行（名稱是第一行，淡藍色；畫在哪裡由名稱位置決定，LabelRenderer 照 IsName 分開）。
@@ -558,7 +669,7 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         internal static List<Line> MachineLines(Strings s, MachineInfo m, Display d)
         {
-            var lines = WithName(m.Name, d.MachineName, null);
+            var lines = WithName(m.Name, ShowsName(NameKind.Machine, d), null);
             if (d.MachineWater) AddWater(lines, s, m.Water, d);
             if (d.MachineProgress && m.HasProgress && !StopsTonight(m))
             {

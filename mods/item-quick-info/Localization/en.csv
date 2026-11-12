@@ -7,8 +7,10 @@ cfg_machine_name,Show machine names
 cfg_machine_name_tip,"Show the name you gave a machine, in light blue."
 cfg_item_name,Show other item names
 cfg_item_name_tip,"Show the name you gave any other item (for example a Jug of Water or a Metal Ingot), in light blue."
+cfg_always_names,Always show names
+cfg_always_names_tip,"When on, names stay on screen without the key; the other info still needs the key.\nWhich names appear still follows the three name switches below."
 cfg_name_position,Name position
-cfg_name_position_tip,Where names are shown.\nTop = centered at the top of the item\nLabel = first line of the label
+cfg_name_position_tip,Where names are shown.\nTop = centered at the top of the item\nInfoBox = first line of the info box
 cfg_name_text_size,Name text size
 cfg_name_text_size_tip,"Size of the names: Small, Medium or Large, the same sizes as Text size."
 cfg_water_volume,Show water volume
@@ -44,6 +46,6 @@ cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example High P
 cfg_key_mode,Key mode
 cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
 cfg_text_size,Text size
-cfg_text_size_tip,"Size of the label text (names follow Name text size): Small, Medium or Large. One item cell is 16 units; the text is 3.5, 4.5 or 6 units tall."
+cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium or Large. One item cell is 16 units; the text is 3.5, 4.5 or 6 units tall."
 cfg_prefix,Line prefixes
-cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that label uses short words.\nShort: W, Q, E, 3d, Out, H, U, D\nLong: Vol, Pur, Pwr, 3day, Output, Heat, Uses, Dur"
+cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that info box uses short words.\nShort: W, Q, E, 3d, Out, H, U, D\nLong: Vol, Pur, Pwr, 3day, Output, Heat, Uses, Dur"

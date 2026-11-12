@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -7,7 +8,7 @@ namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 設定（寫法照一鍵關窗的 Settings）：
-    /// - 每種資訊的開關、「一律顯示真實水質」「按鍵方式」「字級」「每行開頭的字」「名稱位置」「名稱文字大小」放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json，主選單模組畫面的齒輪）。
+    /// - 每種資訊的開關、「一律顯示真實水質」「按鍵方式」「字級」「每行開頭的字」「總是顯示名稱」「名稱位置」「名稱文字大小」放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json，主選單模組畫面的齒輪）。
     ///   每次重算標籤時才讀值，玩家按套用就生效（不標 requiresRestart）。
     /// - 顯示的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
     ///   ModData\dbfoxtw_item-quick-info\settings.json（{"key": "Tab"}，KeyCode 名稱）。不放 ModConfig：放了設定視窗會多一格同一個值的文字欄。
@@ -20,13 +21,16 @@ namespace ProbablyStolenItemQuickInfo
         internal const string KeyFile = "settings.json";
         /// <summary>
         /// 設定視窗的六個段落，照 Init 裡第一次定義的順序列（ModConfig 照第一次定義的順序列段落）：
-        /// Labels、Names、Water containers、Batteries、Machines、Items。遊戲直接顯示段落字串（不經過翻譯），
-        /// 段落又只能在 Init 時定（那時 mod 的 Localization 還沒載入），所以用英文。段落不存進設定檔（ModConfigs 只存 key 與值）。
+        /// General、Names、Water containers、Batteries、Machines、Items。遊戲直接顯示段落字串（不經過翻譯），
+        /// 段落又只能在 Init 時定（那時 mod 的 Localization 還沒載入），所以用英文。段落不存進設定檔（ModConfigs 只存 key 與值），
+        /// 所以第一段 1.1.0 從 Labels 改名 General（裡面是整個 mod 的設定，不只標籤）不用相容。
         /// </summary>
         const string SectionNames = "Names", SectionWater = "Water containers", SectionBatteries = "Batteries",
-            SectionMachines = "Machines", SectionItems = "Items", SectionLabels = "Labels";
+            SectionMachines = "Machines", SectionItems = "Items", SectionGeneral = "General";
+        /// <summary>名稱位置的 key（MigrateNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
+        const string NamePositionKey = "NamePosition";
 
-        static ConfigEntry<bool> _containerName, _machineName, _itemName, _waterVolume, _waterPurity, _realPurity, _batteryCharge, _batteryTonightCharge,
+        static ConfigEntry<bool> _alwaysNames, _containerName, _machineName, _itemName, _waterVolume, _waterPurity, _realPurity, _batteryCharge, _batteryTonightCharge,
             _machinePower, _machineTonightNet, _machineReason, _machineProgress, _machineOutput, _machineWater,
             _stolenHeat, _useCount, _durability, _ingotPurity;
         static ConfigEntry<KeyMode> _keyMode;
@@ -47,6 +51,15 @@ namespace ProbablyStolenItemQuickInfo
         internal static bool RealPurity => On(_realPurity) && On(_waterPurity);
 
         static bool On(ConfigEntry<bool> e) => e == null || e.Value;
+
+        /// <summary>
+        /// 總是顯示名稱（預設關）：開著時取過的名稱不用按鍵、一直顯示，其他資訊照舊要按鍵。每幀都讀（Runner），值是 ModConfig 記在記憶體裡的。
+        /// 還沒讀設定時照預設（關）。
+        /// </summary>
+        internal static bool AlwaysShowNames => _alwaysNames != null && _alwaysNames.Value;
+
+        /// <summary>三個名稱開關（箱子、機器、其他物品）至少開一個：全關時常駐的名稱沒東西可畫，Runner 不去找。每幀讀。</summary>
+        internal static bool AnyNameShown => On(_containerName) || On(_machineName) || On(_itemName);
 
         /// <summary>每種資訊顯示不顯示：每次重算時讀成一份，按套用就生效。還沒讀設定時全開（預設）。</summary>
         internal static Display ReadDisplay() => new Display
@@ -88,8 +101,8 @@ namespace ProbablyStolenItemQuickInfo
         internal static PrefixStyle Prefix => _prefix != null ? _prefix.Value : PrefixStyle.Long;
 
         /// <summary>
-        /// 名稱位置（預設 Top＝名稱自己一個框、貼在物品上緣置中；Label＝標籤框的第一行）。三種名稱（箱子、機器、其他物品）都照它。
-        /// 和字級一樣下拉選單直接顯示名稱（Top／Label，Top 在前），說明裡寫中文對照。
+        /// 名稱位置（預設 Top＝名稱自己一個框、貼在物品上緣置中；InfoBox＝資訊框的第一行）。三種名稱（箱子、機器、其他物品）都照它。
+        /// 和字級一樣下拉選單直接顯示名稱（Top／InfoBox，Top 在前），說明裡寫中文對照。InfoBox 在 1.1.0 以前叫 Label（MigrateNamePosition）。
         /// </summary>
         internal static NamePosition NamePosition => _namePosition != null ? _namePosition.Value : NamePosition.Top;
 
@@ -102,15 +115,20 @@ namespace ProbablyStolenItemQuickInfo
         {
             var cfg = ModConfig.For(ItemQuickInfoMod.ModId);
             // key 名稱存進玩家的設定檔，定了就不要改（改了玩家的設定讀不回來）
-            // Labels 段排第一：按鍵方式、字級、前綴是整個 mod 的設定，打開設定視窗先看到；段落照第一次定義的順序，所以先定義。
+            // General 段排第一（1.1.0 以前叫 Labels）：按鍵方式、字級、前綴是整個 mod 的設定，打開設定視窗先看到；
+            // 段落照第一次定義的順序，所以先定義。
             // 段落內照定義的順序列：按鍵方式排最前面，接著每行開頭的字、文字大小（2026-11-08 使用者要的，原本文字大小在前）
-            _keyMode = cfg.DefineEnum("KeyMode", KeyMode.Hold, SectionLabels, () => L("cfg_key_mode"), () => L("cfg_key_mode_tip"));
-            _prefix = cfg.DefineEnum("Prefix", PrefixStyle.Long, SectionLabels, () => L("cfg_prefix"), () => L("cfg_prefix_tip"));
-            _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionLabels, () => L("cfg_text_size"), () => L("cfg_text_size_tip"));
-            // Names 段接在 Labels 後面：名稱在物品上緣（Top）或標籤的第一行（Label），都在資訊的上面，
+            _keyMode = cfg.DefineEnum("KeyMode", KeyMode.Hold, SectionGeneral, () => L("cfg_key_mode"), () => L("cfg_key_mode_tip"));
+            _prefix = cfg.DefineEnum("Prefix", PrefixStyle.Long, SectionGeneral, () => L("cfg_prefix"), () => L("cfg_prefix_tip"));
+            _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionGeneral, () => L("cfg_text_size"), () => L("cfg_text_size_tip"));
+            // Names 段接在 General 後面：名稱在物品上緣（Top）或資訊框的第一行（InfoBox），都在資訊的上面，
             // 所以排在資訊的段落前面，資訊的段落再照標籤由上往下的順序排。
-            // 段落裡名稱位置、名稱文字大小排最前面，三個名稱開關在後面（2026-11-08 使用者要的，取代 的「接在開關後面」）
-            _namePosition = cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => L("cfg_name_position"), () => L("cfg_name_position_tip"));
+            // 段落裡總是顯示名稱排最前面（決定名稱什麼時候出現，比位置、大小更先要看到），接著名稱位置、名稱文字大小，
+            // 三個名稱開關在後面（2026-11-08 使用者要的，取代 的「接在開關後面」）
+            _alwaysNames = cfg.Define("AlwaysShowNames", false, SectionNames, () => L("cfg_always_names"), () => L("cfg_always_names_tip"));
+            // 選項 Label 改名 InfoBox：舊值要在 DefineEnum 讀值之前先探測，DefineEnum 之後再改（MigrateNamePosition）
+            _namePosition = MigrateNamePosition(cfg, () =>
+                cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => L("cfg_name_position"), () => L("cfg_name_position_tip")));
             _nameTextSize = cfg.DefineEnum("NameTextSize", TextSize.Large, SectionNames, () => L("cfg_name_text_size"), () => L("cfg_name_text_size_tip"));
             _containerName = cfg.Define("ShowContainerName", true, SectionNames, () => L("cfg_container_name"), () => L("cfg_container_name_tip"));
             _machineName = cfg.Define("ShowMachineName", true, SectionNames, () => L("cfg_machine_name"), () => L("cfg_machine_name_tip"));
@@ -138,6 +156,51 @@ namespace ProbablyStolenItemQuickInfo
             _durability = cfg.Define("ShowDurability", true, SectionItems, () => L("cfg_durability"), () => L("cfg_durability_tip"));
             _ingotPurity = cfg.Define("ShowIngotPurity", true, SectionItems, () => L("cfg_ingot_purity"), () => L("cfg_ingot_purity_tip"));
             LoadKey();
+        }
+
+        /// <summary>
+        /// 名稱位置的選項 Label 在 1.1.0 改名 InfoBox，玩家設定檔裡的舊值 Label 自動轉成 InfoBox；define 是名稱位置本來的 DefineEnum。
+        /// 不能直接讀：遊戲在 DefineEnum 時用 Enum.Parse 讀存起來的字串，讀不懂的 Label 只記警告、換成預設的 Top，原始字串拿不到；
+        /// 改成有 choices 的文字型也不行（值不在 choices 裡會被直接換成預設值）。所以先用同一個 key 定義一個沒有 choices 的文字型探測
+        /// （原樣拿到存的字串），讀完馬上從 ModConfig 的清單拿掉（設定視窗不多一列、DefineEnum 不會變成「定義兩次」），再照常 DefineEnum；
+        /// 探測到 Label 就 Set(InfoBox)（遊戲會存回設定檔，下次就是 InfoBox）。轉的那一次遊戲照樣記一行 Label 讀不懂的警告，之後不會再有。
+        /// ModConfig.Entries 現在是內部的 List，不是 List 時（遊戲改了）不探測、記一行（不能留下探測的設定項），存著 Label 的玩家名稱位置變回預設 Top。
+        /// 探測出錯也一樣跳過，不能讓設定整個壞掉。之後不想轉的話，拿掉這個方法、Init 直接叫 define 就好。
+        /// </summary>
+        static ConfigEntry<NamePosition> MigrateNamePosition(ModConfig cfg, Func<ConfigEntry<NamePosition>> define)
+        {
+            bool old = false;
+            try
+            {
+                if (cfg.Entries is List<ConfigEntry> list)
+                {
+                    try
+                    {
+                        var probe = cfg.Define(NamePositionKey, "", SectionNames, null);
+                        old = Rules.IsOldNamePosition(probe.Value);
+                    }
+                    finally
+                    {
+                        // 探測一定要拿掉（中途出錯也是）：DefineEnum 還沒叫，清單裡這個 key 只會是探測
+                        list.RemoveAll(e => e != null && e.Key == NamePositionKey);
+                    }
+                }
+                else ItemQuickInfoMod.Log.Warning("讀不到設定的清單（ModConfig.Entries 不是 List），名稱位置的舊值 Label 不轉成 InfoBox");
+            }
+            catch (Exception e)
+            {
+                old = false;
+                ItemQuickInfoMod.Log.Warning($"檢查名稱位置的舊值失敗（不轉換）：{e.Message}");
+            }
+            var entry = define();
+            if (!old) return entry;
+            try
+            {
+                entry.Set(NamePosition.InfoBox);
+                ItemQuickInfoMod.Log.Msg("名稱位置的舊值 Label 轉成 InfoBox（1.1.0 改名）");
+            }
+            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"名稱位置的舊值 Label 轉成 InfoBox 失敗：{e.Message}"); }
+            return entry;
         }
 
         /// <summary>
@@ -219,7 +282,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static string Describe()
         {
             var d = ReadDisplay();
-            return $"按鍵={Key}、按鍵方式={KeyMode}、箱子名稱={d.ContainerName}、機器名稱={d.MachineName}、其他物品名稱={d.ItemName}、名稱位置={NamePosition}、名稱字級={NameTextSize}、"
+            return $"按鍵={Key}、按鍵方式={KeyMode}、總是顯示名稱={AlwaysShowNames}、箱子名稱={d.ContainerName}、機器名稱={d.MachineName}、其他物品名稱={d.ItemName}、名稱位置={NamePosition}、名稱字級={NameTextSize}、"
                  + $"水量={d.WaterVolume}、水質={d.WaterPurity}、一律顯示真實水質={RealPurity}、電池={d.BatteryCharge}、電池今晚充電={d.BatteryTonightCharge}、"
                  + $"機器電量={d.MachinePower}、機器今晚收支={d.MachineTonightNet}、原因={d.MachineReason}、進度={d.MachineProgress}、成品數={d.MachineOutput}、機器裡的水={d.MachineWater}、"
                  + $"熱度={d.StolenHeat}、使用次數={d.UseCount}、耐久度={d.Durability}、金屬錠純度={d.IngotPurity}、字級={TextSize}、前綴={Prefix}";

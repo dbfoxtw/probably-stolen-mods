@@ -51,7 +51,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 畫面上看得到的物品：啟用中的 TreeNodeRender 裡，是物品本身那個節點（GameItemElement.handler；物品的 middle、
         /// background 等子節點的 element 是空的），再用 IsShown 篩。關著的視窗整個停用（PixelWindow 關閉時 SetActive(false)），
-        /// 裡面的物品自然不在。任何場景都算（店裡、開著的視窗、櫃檯）。只在顯示中（按著鍵，或 Toggle 開著）每 0.25 秒叫一次（Runner）。
+        /// 裡面的物品自然不在。任何場景都算（店裡、開著的視窗、櫃檯）。顯示中（按著鍵，或 Toggle 開著）每 0.25 秒叫一次（Runner）；總是顯示名稱開著時，不按鍵也每 0.25 秒叫一次（常駐的名稱）。
         /// 順序是階層的順序（一個場景的根物件接一個），1.0.0 是 FindObjectsOfType 的順序。Runner、LabelRenderer 不靠順序；
         /// 只影響物件池裡哪個框給哪個物品，所以兩個物品的標籤疊到時哪個在上面可能和 1.0.0 不同（現在和物品自己的上下一致：後面的在上面）。
         /// nodes：找到幾個節點（效能 log 的「節點」；每個物品約 10 個，比物品數更能看出這一步多重）。
@@ -241,7 +241,8 @@ namespace ProbablyStolenItemQuickInfo
         /// - 機器（有電池槽、沒壞）：名稱、水、質、剩幾天、原因、成品、電、今晚的電力收支（Rules.MachineLines；名稱照「顯示機器名稱」）。
         /// - 其他物品：水容器、電池的行（機器電池槽裡的電池今晚那行寫機器的收支），取過名的前面再加名稱：有自己視窗的（contentWindow 不是 null：背包、箱子、倉庫、沒有電池槽的機器、
         ///   壞掉的機器）照「顯示箱子名稱」，其他（水桶、金屬錠…）照「顯示其他物品名稱」。只有名稱的（取了名的背包）標籤就只有那一行。
-        /// 名稱只有玩家取過的（GeneralHelper.GetCustomName：CUSTOM_NAME_TAG 啟用的字串；藍色標籤印表機取的，漏斗自動編的 #1 也算），
+        /// 名稱只有玩家取過的（GeneralHelper.GetCustomName：CUSTOM_NAME_TAG 啟用的字串；藍色標籤印表機取的，料斗自動編的 #1 也算；
+        /// 常駐的名稱不畫料斗的號碼，見 ReadName），
         /// 客人的物品也照樣顯示（遊戲的提示框看得到）。
         /// 上面的行之後，任何物品（含機器、箱子、櫃檯上客人的東西）再接耐久度、金屬錠純度、使用次數、熱度（ReadExtras），
         /// 熱度永遠是最後一行。
@@ -252,7 +253,9 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>本來的那幾種（機器、水容器、電池、箱子的名稱）的行；不是這幾種回 null。說明見 Read。</summary>
         static List<Line> ReadBody(GameItem item, ReadContext ctx)
         {
-            if (item.IsTag(RechargeableTag) && !item.IsTag(BrokenTag))
+            // 名稱的分類和常駐的名稱（ReadName）共用：哪種物品看哪個名稱開關，兩條路一定一樣
+            var kind = NameKindOf(item);
+            if (kind == NameKind.Machine)
             {
                 var m = MachineRules.Read(item, ctx);
                 if (m != null) return Rules.MachineLines(ctx.S, m, ctx.D);
@@ -281,8 +284,29 @@ namespace ProbablyStolenItemQuickInfo
             }
             // 名稱：有自己視窗的照「顯示箱子名稱」，其他物品照「顯示其他物品名稱」。
             // 開關關掉或沒取名時直接回 body，不另外配置清單（大部分的物品；每 0.25 秒對畫面上每個物品叫一次）
-            if (!Rules.ShowsName(item.contentWindow != null, ctx.D) || !GeneralHelper.HasCustomName(item)) return body;
+            if (!Rules.ShowsName(kind, ctx.D) || !GeneralHelper.HasCustomName(item)) return body;
             return Rules.WithName(GeneralHelper.GetCustomName(item), true, body);
+        }
+
+        /// <summary>
+        /// 畫機器標籤的條件：有電池槽的機器（MACHINE_RECHARGABLE_TAG，MachineHelper.SetupBatterySlot 設的）、沒壞、
+        /// 電池槽拿得到（MachineRules.Read 也只在拿不到電池槽時回 null）。
+        /// </summary>
+        static bool IsMachine(GameItem item) =>
+            item.IsTag(RechargeableTag) && !item.IsTag(BrokenTag) && MachineHelper.GetBatterySlot(item) != null;
+
+        /// <summary>名稱看哪個開關（Rules.NameKindOf）：按鍵的完整資訊（ReadBody）和常駐的名稱（ReadName）共用。</summary>
+        static NameKind NameKindOf(GameItem item) => Rules.NameKindOf(IsMachine(item), item.contentWindow != null);
+
+        /// <summary>
+        /// 常駐時這個物品的行（總是顯示名稱）：只有名稱一行，或 null／空的清單（沒取名、那種的名稱開關關掉、料斗自動編的號碼）。
+        /// 只讀名稱：不讀水、電、機器、熱度這些，也不碰 ReadContext 的全店清單與今晚的充電表（常駐時每 0.25 秒對畫面上每個物品叫一次，要便宜）。
+        /// 先看有沒有取名（一個 IsTag，大部分的物品到這裡就結束），再分類。行寫進 into（先清空）並回傳它，不每個物品配置清單（Rules.PinnedNameLines）。
+        /// </summary>
+        internal static List<Line> ReadName(GameItem item, Display d, List<Line> into)
+        {
+            if (!GeneralHelper.HasCustomName(item) || !Rules.ShowsName(NameKindOf(item), d)) return null;
+            return Rules.PinnedNameLines(GeneralHelper.GetCustomName(item), true, HopperHelper.IsHopper(item), into);
         }
 
         /// <summary>

@@ -36,9 +36,10 @@ namespace ProbablyStolenItemQuickInfo
     ///
     /// 圖層掛 CanvasGroup（不擋射線、不能互動）：不影響提示框、點擊、拖曳；LayoutElement.ignoreLayout 免得被版面配置排進去。
     /// 一個物品最多兩個框：資訊框貼在物品外框（GameItemElement.middle，大小＝外框格數 × 格子）的左下角往上、往右長；
-    /// 名稱位置是 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長（名稱位置是 Label 時名稱是資訊框的第一行）。
+    /// 名稱位置是 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長（名稱位置是 InfoBox 時名稱是資訊框的第一行）。
     /// 都換算到圖層的座標，超出物品也沒關係。
-    /// 物件用池子重複用；不顯示時（放開鍵、Toggle 關掉）整個圖層停用；圖層跟著遊戲的節點銷毀（場景卸載時 Reset 清參照）。
+    /// 物件用池子重複用；不畫時（放開鍵、Toggle 關掉、被擋；總是顯示名稱開著時這些情形照樣畫名稱、圖層不停用，只有過場時才不畫）整個圖層停用；
+    /// 圖層跟著遊戲的節點銷毀（場景卸載時 Reset 清參照）。
     /// 圖層新建時排在最後，第一次 End 時再移到物品的子節點後面。
     /// </summary>
     static class LabelRenderer
@@ -57,8 +58,16 @@ namespace ProbablyStolenItemQuickInfo
             public GameObject Go;
             public RectTransform Rt;
             public readonly List<TextMeshProUGUI> Texts = new List<TextMeshProUGUI>();
-            /// <summary>上次排好的內容（字＋顏色＋字級＋字型＋物品寬度…），一樣就不重排（TMP 改字會重建網格）。</summary>
+            /// <summary>
+            /// 上次排好的內容（字＋顏色＋字級＋字型＋物品寬度…），一樣就不重排（TMP 改字會重建網格）。只有名稱一行的框（FillSingleName）
+            /// 是 SingleNameKey，內容另外記在 Name* 欄位。排的途中是 null（出錯時留著 null，下一輪重排）。
+            /// </summary>
             public string Key;
+            /// <summary>只有名稱一行時上次排好的字、顏色、名稱字級、字型（Key 是 SingleNameKey 時才有意義）。</summary>
+            public string NameText;
+            public LineColor NameColor;
+            public float NameSize;
+            public TMP_FontAsset NameFont;
             /// <summary>這一輪這個物品有沒有用到這個框（沒用到的一直藏著）。</summary>
             public bool Used;
             /// <summary>
@@ -93,6 +102,12 @@ namespace ProbablyStolenItemQuickInfo
         static readonly Dictionary<int, Layer> _layers = new Dictionary<int, Layer>();
         static readonly Vector3[] _corners = new Vector3[4];
         static readonly List<Line> _info = new List<Line>();
+        /// <summary>只有名稱一行時給 SetRows 的清單（重用，不每次配置）。</summary>
+        static readonly List<Line> _single = new List<Line>(1);
+        /// <summary>
+        /// 只有名稱一行的框的 Key：不會和 Key() 組出來的字串一樣（那些以字級的數字開頭），所以完整資訊換過來一定重排，換回名稱也一定重排。
+        /// </summary>
+        const string SingleNameKey = "\u0002name";
 
         /// <summary>這一輪重算開始：每個圖層從第 0 個標籤開始重用。</summary>
         internal static void Begin()
@@ -152,7 +167,10 @@ namespace ProbablyStolenItemQuickInfo
             layer.Rt.SetSiblingIndex(self < b ? b : b + 1);
         }
 
-        /// <summary>不顯示了（放開鍵、Toggle 關掉、被擋）：全部藏起來（物件留著下次用）。</summary>
+        /// <summary>
+        /// 不畫了（放開鍵、Toggle 關掉、被擋；總是顯示名稱開著時這些情形會改畫名稱，不叫這裡，只有過場、或常駐的名稱重算不出來時才叫）：
+        /// 全部藏起來（物件留著下次用）。
+        /// </summary>
         internal static void HideAll()
         {
             foreach (var layer in _layers.Values)
@@ -177,7 +195,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 給一個物品畫（或更新）標籤。找不到宿主節點時不畫，回 false。
-        /// 名稱位置是 Top 時名稱行（IsName）另外畫在名稱框，其他行在資訊框；Label 時全部在資訊框（名稱是第一行、字級照名稱的）。
+        /// 名稱位置是 Top 時名稱行（IsName）另外畫在名稱框，其他行在資訊框；InfoBox 時全部在資訊框（名稱是第一行、字級照名稱的）。
         /// </summary>
         internal static bool Put(GameItemElement item, List<Line> lines, LabelStyle style)
         {
@@ -360,10 +378,17 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 資訊框（名稱位置是 Label 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，/// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），再排字。內距照名稱以外的行的字級算（只有名稱時照名稱的）。
+        /// 資訊框（名稱位置是 InfoBox 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，/// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），再排字。內距照名稱以外的行的字級算（只有名稱時照名稱的）。
         /// </summary>
         static void FillInfo(Layer layer, Box box, List<Line> lines, LabelStyle style, float itemWidth)
         {
+            // 只有名稱一行（名稱位置是 InfoBox 時的常駐名稱、只有名稱的箱子）：排法不看物品寬度（名稱行不算進 ChooseForm），
+            // 走不組 Key 的那條，內容沒變時不配置（常駐時每 0.25 秒一次）
+            if (lines.Count == 1 && lines[0].IsName)
+            {
+                FillSingleName(box, lines[0], style);
+                return;
+            }
             string key = Key(lines, style, itemWidth);
             if (key == box.Key) return;
             // 排版成功才記下內容；中途出錯時清掉，下一輪重排（第一版先記下，出錯後一直跳過、標籤壞著，審查發現）
@@ -380,14 +405,28 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>名稱框（名稱位置是 Top）：一行，字級照名稱文字大小，內距也照它。</summary>
-        static void FillName(Box box, Line name, LabelStyle style)
+        static void FillName(Box box, Line name, LabelStyle style) => FillSingleName(box, name, style);
+
+        /// <summary>
+        /// 只有名稱一行的框（Top 的名稱框、InfoBox 時只有名稱的資訊框）。排出來只看字、顏色、名稱字級、字型（內距、框高照名稱字級，
+        /// 不量物品寬度），所以直接和上次的這幾個比，一樣就不重排、不組 Key、不配置：常駐的名稱不按鍵也每 0.25 秒對每個名稱叫一次，
+        /// 每次配置會累積成週期性的 GC 卡頓。快取的規則和 FillInfo 一樣：排之前先清掉 Key、排版成功才記下，出錯時留著 null 下一輪重排。
+        /// Key 換成別的內容（完整資訊的 Key）時這裡的欄位自動失效（只有 Key 是 SingleNameKey 時才比）。
+        /// </summary>
+        static void FillSingleName(Box box, Line name, LabelStyle style)
         {
-            string key = Key(new List<Line> { name }, style, float.PositiveInfinity);
-            if (key == box.Key) return;
+            if (ReferenceEquals(box.Key, SingleNameKey) && box.NameText == name.Text && box.NameColor == name.Color
+                && box.NameSize == style.NameSize && ReferenceEquals(box.NameFont, style.Font)) return;
             box.Key = null;
-            var rows = new List<Line> { name };
-            SetRows(box, rows, style, Rules.Padding(rows, style.InfoSize, style.NameSize));
-            box.Key = key;
+            _single.Clear();
+            _single.Add(name);
+            try { SetRows(box, _single, style, Rules.Padding(_single, style.InfoSize, style.NameSize)); }
+            finally { _single.Clear(); }
+            box.NameText = name.Text;
+            box.NameColor = name.Color;
+            box.NameSize = style.NameSize;
+            box.NameFont = style.Font;
+            box.Key = SingleNameKey;
         }
 
         /// <summary>

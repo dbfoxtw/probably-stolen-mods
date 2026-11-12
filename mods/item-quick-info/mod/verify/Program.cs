@@ -15,7 +15,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 贓物熱度／使用次數／耐久度／金屬錠純度的行、前綴的長短、一格寬放不下時的排法（長→短→拆兩行）、名稱位置與名稱字級、
     /// 機器裡的水（水耕機、循環水養殖系統）、輸出區的成品數、今晚的充電（紅字用早充後的電量、電池的 +NkJ）、
     /// 機器今晚的電力收支（先充再扣、警報系統先扣再充、每晚耗電、+4kJ／-8kJ 的行）、缺電（別的原因優先、判紅看今晚會扣的電）、
-    /// 按鍵的 Hold／Toggle（KeySwitch）、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
+    /// 按鍵的 Hold／Toggle（KeySwitch）、這一幀畫什麼（ShowStateOf：不畫、常駐名稱、完整資訊）、常駐名稱（分類、料斗自動編的號碼）、
+    /// 名稱位置舊值 Label 的轉換、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
     /// 三語字串（每個都有、英文只用 ASCII）、設定的順序與預設（Settings.cs 的原始碼）、設定的標籤與說明（Localization 的 csv）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify -c Release
     /// </summary>
@@ -50,6 +51,9 @@ namespace ProbablyStolenItemQuickInfo.Verify
             FeatureRules();
             Prefixes();
             KeySwitches();
+            ShowStates();
+            PinnedNames();
+            NamePositionMigration();
             PerfMeasure();
             Purifier();
             Furnace();
@@ -413,13 +417,25 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Join(Rules.WithName("Tank", true, body)), "Tank / W 4000ml / Q 98.52%", "有視窗的水容器：名稱在第一行");
             Eq(Join(Rules.WithName("Tank", false, body)), "W 4000ml / Q 98.52%", "名稱開關關掉：只剩其他行");
 
-            // 不是機器的物品看哪個開關：有自己視窗的照「顯示箱子名稱」，其他（水桶、金屬錠…）照「顯示其他物品的名稱」
-            Check(Rules.ShowsName(true, All), "箱子、預設：顯示名稱");
-            Check(!Rules.ShowsName(true, new Display { ContainerName = false }), "箱子、關箱子名稱：不顯示");
-            Check(Rules.ShowsName(true, new Display { ItemName = false }), "箱子、關其他物品名稱：照樣顯示");
-            Check(Rules.ShowsName(false, All), "其他物品、預設：顯示名稱");
-            Check(!Rules.ShowsName(false, new Display { ItemName = false }), "其他物品、關其他物品名稱：不顯示");
-            Check(Rules.ShowsName(false, new Display { ContainerName = false }), "其他物品、關箱子名稱：照樣顯示");
+            // 看哪個開關：機器照「顯示機器名稱」，有自己視窗的照「顯示箱子名稱」，其他（水桶、金屬錠…）照「顯示其他物品的名稱」
+            Eq(Rules.NameKindOf(true, true), NameKind.Machine, "機器（也有自己的視窗）：機器");
+            Eq(Rules.NameKindOf(true, false), NameKind.Machine, "機器：機器");
+            Eq(Rules.NameKindOf(false, true), NameKind.Container, "有自己視窗、不是機器（含沒有電池槽、壞掉的機器）：箱子");
+            Eq(Rules.NameKindOf(false, false), NameKind.Item, "其他物品");
+            var container = Rules.NameKindOf(false, true);
+            var other = Rules.NameKindOf(false, false);
+            var machine = Rules.NameKindOf(true, true);
+            Check(Rules.ShowsName(container, All), "箱子、預設：顯示名稱");
+            Check(!Rules.ShowsName(container, new Display { ContainerName = false }), "箱子、關箱子名稱：不顯示");
+            Check(Rules.ShowsName(container, new Display { ItemName = false }), "箱子、關其他物品名稱：照樣顯示");
+            Check(Rules.ShowsName(container, new Display { MachineName = false }), "箱子、關機器名稱：照樣顯示");
+            Check(Rules.ShowsName(other, All), "其他物品、預設：顯示名稱");
+            Check(!Rules.ShowsName(other, new Display { ItemName = false }), "其他物品、關其他物品名稱：不顯示");
+            Check(Rules.ShowsName(other, new Display { ContainerName = false }), "其他物品、關箱子名稱：照樣顯示");
+            Check(Rules.ShowsName(other, new Display { MachineName = false }), "其他物品、關機器名稱：照樣顯示");
+            Check(Rules.ShowsName(machine, All), "機器、預設：顯示名稱");
+            Check(!Rules.ShowsName(machine, new Display { MachineName = false }), "機器、關機器名稱：不顯示");
+            Check(Rules.ShowsName(machine, new Display { ContainerName = false, ItemName = false }), "機器、關箱子與其他物品名稱：照樣顯示");
             Eq(Join(Rules.WithName("粗過濾", true, Rules.WaterLines(HantL, Water(4000000, 9852, PurityKnown.Exact), All))), "粗過濾 / 水量 4000ml / 水質 98.52%",
                 "取了名的水桶：名稱在第一行，下面水量、水質");
             Eq(Join(Rules.WithName("Ingot A", true, Rules.ExtraLines(EnL, new ItemExtras { IngotPurity = "INGOT_PURITY_HIGH" }, All))), "Ingot A / High Purity",
@@ -526,6 +542,173 @@ namespace ProbablyStolenItemQuickInfo.Verify
             new KeySwitch().Step(Hold, true, false, true, counting);
             new KeySwitch().Step(Toggle, true, true, true, counting);
             Eq(asked, 2, "Hold 按著、Toggle 按下時才問被擋");
+        }
+
+        /// <summary>
+        /// 這一幀畫什麼（Rules.ShowStateOf）：按鍵叫出來的是完整資訊；不然總是顯示名稱開著、名稱開關至少開一個、不在過場就只畫名稱；
+        /// 其他都不畫。接上 KeySwitch 測：打字、設定按鍵擋住按鍵時名稱照樣常駐；沒綁鍵時名稱也常駐；過場時全部藏。
+        /// ShowStateOf 的參數：按鍵要不要顯示、總是顯示名稱、名稱開關至少開一個、過場。
+        /// </summary>
+        static void ShowStates()
+        {
+            const ShowState None = ShowState.None, Names = ShowState.Names, Full = ShowState.Full;
+            // 真值表：16 種
+            foreach (bool key in new[] { false, true })
+                foreach (bool always in new[] { false, true })
+                    foreach (bool any in new[] { false, true })
+                        foreach (bool cine in new[] { false, true })
+                        {
+                            var expected = cine ? None : key ? Full : always && any ? Names : None;
+                            Eq(Rules.ShowStateOf(key, always, any, cine), expected, $"按鍵={key}、總是顯示名稱={always}、名稱開關={any}、過場={cine}");
+                        }
+            Eq(Rules.ShowStateOf(false, false, true, false), None, "總是顯示名稱關（預設）、沒按：不畫（和 1.0.1 一樣）");
+            Eq(Rules.ShowStateOf(true, false, true, false), Full, "總是顯示名稱關、按著：完整資訊（和 1.0.1 一樣）");
+            Eq(Rules.ShowStateOf(false, true, true, false), Names, "總是顯示名稱開、沒按：只畫名稱");
+            Eq(Rules.ShowStateOf(true, true, true, false), Full, "總是顯示名稱開、按著：完整資訊");
+            Eq(Rules.ShowStateOf(false, true, false, false), None, "三個名稱開關全關：當作沒有常駐名稱");
+            Eq(Rules.ShowStateOf(true, true, false, false), Full, "名稱開關全關、按著：照樣完整資訊");
+            Eq(Rules.ShowStateOf(false, true, true, true), None, "過場：常駐名稱藏起來");
+
+            // 接上 KeySwitch：Runner 每幀先問 KeySwitch，再交給 ShowStateOf
+            const KeyMode Hold = KeyMode.Hold, Toggle = KeyMode.Toggle;
+            ShowState Frame(KeySwitch k, KeyMode mode, bool bound, bool down, bool held, Func<bool> blocked, bool always = true, bool cine = false) =>
+                Rules.ShowStateOf(k.Step(mode, bound, down, held, blocked), always, true, cine);
+            var h = new KeySwitch();
+            Eq(Frame(h, Hold, true, false, false, NotBlocked), Names, "Hold 沒按：只畫名稱");
+            Eq(Frame(h, Hold, true, true, true, NotBlocked), Full, "Hold 按下：完整資訊");
+            Eq(Frame(h, Hold, true, false, true, NotBlocked), Full, "Hold 按著：完整資訊");
+            Eq(Frame(h, Hold, true, false, false, NotBlocked), Names, "Hold 放開：回到只畫名稱");
+            Eq(Frame(h, Hold, true, false, true, IsBlocked), Names, "Hold 按著但在打字（被擋）：照樣畫名稱");
+            Eq(Frame(h, Hold, true, false, true, IsBlocked, cine: true), None, "Hold 按著、過場（被擋）：全部藏");
+            Eq(Frame(h, Hold, true, false, false, NotBlocked, always: false), None, "總是顯示名稱關、沒按：不畫");
+            var t = new KeySwitch();
+            Eq(Frame(t, Toggle, true, true, true, NotBlocked), Full, "Toggle 按一下：完整資訊");
+            Eq(Frame(t, Toggle, true, false, false, IsBlocked), Names, "Toggle 開著、在打字（被擋）：照樣畫名稱");
+            Check(t.On, "Toggle 開著、在打字：開關不變");
+            Eq(Frame(t, Toggle, true, true, true, IsBlocked), Names, "Toggle 開著、在輸入框按 Tab（被擋）：名稱照樣、不切換");
+            Eq(Frame(t, Toggle, true, false, false, NotBlocked), Full, "打字結束：完整資訊自己再出現");
+            Eq(Frame(t, Toggle, true, true, true, NotBlocked), Names, "Toggle 再按一下：回到只畫名稱");
+            Eq(Frame(t, Toggle, true, false, false, NotBlocked), Names, "Toggle 關著：只畫名稱");
+            Eq(Frame(t, Toggle, true, false, false, NotBlocked, cine: true), None, "Toggle 關著、過場：全部藏");
+            var u = new KeySwitch();
+            Eq(Frame(u, Hold, false, false, false, NotBlocked), Names, "沒綁鍵（Hold）：名稱照樣常駐");
+            Eq(Frame(u, Toggle, false, false, false, NotBlocked), Names, "沒綁鍵（Toggle）：名稱照樣常駐");
+            Eq(Frame(u, Toggle, false, false, false, NotBlocked, always: false), None, "沒綁鍵、總是顯示名稱關：不畫");
+
+            // 狀態轉換時要做的事（Rules.TransitionOf）：9 種轉換。藏起來、當幀重算、完整資訊開始（Perf.StartShowing）、完整資訊結束（Perf.StopShowing）
+            var table = new (ShowState prev, ShowState next, bool hide, bool now, bool started, bool ended, string what)[]
+            {
+                (None, None, false, false, false, false, "不畫→不畫：什麼都不做"),
+                (None, Names, false, true, false, false, "不畫→名稱：當幀重算"),
+                (None, Full, false, true, true, false, "不畫→完整（按下）：當幀重算、完整開始"),
+                (Names, None, true, false, false, false, "名稱→不畫（過場）：藏起來"),
+                (Names, Names, false, false, false, false, "名稱→名稱：照 0.25 秒"),
+                (Names, Full, false, true, true, false, "名稱→完整（按下）：當幀重算、完整開始"),
+                (Full, None, true, false, false, true, "完整→不畫（放開）：藏起來、完整結束"),
+                (Full, Names, false, true, false, true, "完整→名稱（放開）：當幀重算（資訊框當幀消失）、完整結束"),
+                (Full, Full, false, false, false, false, "完整→完整：照 0.25 秒"),
+            };
+            foreach (var (prev, next, hide, now, started, ended, what) in table)
+            {
+                var tr = Rules.TransitionOf(prev, next);
+                Check(tr.Hide == hide && tr.RecomputeNow == now && tr.FullStarted == started && tr.FullEnded == ended,
+                    $"{what}（實際：藏={tr.Hide}、當幀重算={tr.RecomputeNow}、完整開始={tr.FullStarted}、完整結束={tr.FullEnded}）");
+            }
+        }
+
+        /// <summary>
+        /// 常駐的名稱：料斗自動編的號碼（Rules.IsAutoHopperName：料斗、原始名稱是「#」加一個以上的 ASCII 數字）不畫；
+        /// 只有名稱一行（Rules.PinnedNameLines，寫進重用的清單），開關關掉或沒取名時空的；CleanName 沒有要換的字時回同一個字串（不配置）；
+        /// ItemReader 的按鍵完整讀法（ReadBody）和常駐（ReadName）用同一個分類（原始碼檢查）。
+        /// </summary>
+        static void PinnedNames()
+        {
+            Check(Rules.IsAutoHopperName(true, "#1"), "料斗的 #1：自動編的號碼");
+            Check(Rules.IsAutoHopperName(true, "#12"), "料斗的 #12：自動編的號碼");
+            Check(Rules.IsAutoHopperName(true, "#0123456789"), "料斗的 #0123456789：自動編的號碼");
+            Check(!Rules.IsAutoHopperName(true, "#"), "料斗的 #：不是（沒有數字）");
+            Check(!Rules.IsAutoHopperName(true, "#a"), "料斗的 #a：不是");
+            Check(!Rules.IsAutoHopperName(true, "#1a"), "料斗的 #1a：不是");
+            Check(!Rules.IsAutoHopperName(true, " #1"), "料斗的「 #1」（前面有空白）：不是");
+            Check(!Rules.IsAutoHopperName(true, "#1 "), "料斗的「#1 」（後面有空白）：不是");
+            Check(!Rules.IsAutoHopperName(true, "#１"), "料斗的 #１（全形數字）：不是");
+            Check(!Rules.IsAutoHopperName(true, "1"), "料斗的 1：不是");
+            Check(!Rules.IsAutoHopperName(true, "水 #1"), "料斗的「水 #1」：不是");
+            Check(!Rules.IsAutoHopperName(true, ""), "料斗、空字串：不是");
+            Check(!Rules.IsAutoHopperName(true, null), "料斗、沒取名：不是");
+            Check(!Rules.IsAutoHopperName(false, "#3"), "不是料斗的 #3：不是（玩家取的）");
+
+            Eq(Join(Rules.PinnedNameLines("Box", true, false, new List<Line>())), "Box", "常駐：只有名稱一行");
+            Eq(Rules.PinnedNameLines("Box", true, false, new List<Line>())[0].Color, LineColor.Name, "常駐的名稱淡藍色（外觀不變）");
+            Eq(Rules.PinnedNameLines("Box", false, false, new List<Line>()).Count, 0, "常駐、那種的名稱開關關掉：沒有");
+            Eq(Rules.PinnedNameLines(null, true, false, new List<Line>()).Count, 0, "常駐、沒取名：沒有");
+            Eq(Rules.PinnedNameLines("  ", true, false, new List<Line>()).Count, 0, "常駐、名稱只有空白：沒有");
+            Eq(Rules.PinnedNameLines("#1", true, true, new List<Line>()).Count, 0, "常駐、料斗的 #1：不畫");
+            Eq(Join(Rules.PinnedNameLines("#3", true, false, new List<Line>())), "#3", "常駐、不是料斗的 #3：照畫");
+            Eq(Join(Rules.PinnedNameLines("Intake A", true, true, new List<Line>())), "Intake A", "常駐、玩家改過名的料斗：照畫");
+            Eq(Join(Rules.PinnedNameLines("#1 水", true, true, new List<Line>())), "#1 水", "常駐、料斗的「#1 水」：照畫");
+            Eq(Join(Rules.PinnedNameLines("A\nB", true, false, new List<Line>())), "A B", "常駐的名稱也照 CleanName 換掉換行");
+            // 按鍵的完整資訊照舊畫料斗的號碼（WithName 不看料斗）
+            Eq(Join(Rules.WithName("#1", true, null)), "#1", "按鍵：料斗的 #1 照舊畫");
+
+            // 重用清單（常駐時不每個物品配置）：寫進傳進去的清單、先清掉上一個物品的行
+            var reuse = new List<Line>();
+            Check(ReferenceEquals(Rules.PinnedNameLines("Box A", true, false, reuse), reuse), "PinnedNameLines 回傳傳進去的清單");
+            Eq(Join(reuse), "Box A", "重用的清單：第一個物品");
+            Rules.PinnedNameLines("Box B", true, false, reuse);
+            Eq(Join(reuse), "Box B", "重用的清單：第二個物品蓋掉第一個（不會變兩行）");
+            Rules.PinnedNameLines("#2", true, true, reuse);
+            Eq(reuse.Count, 0, "重用的清單：不畫的物品清空（不留著上一個的名稱）");
+            Rules.PinnedNameLines("Box C", false, false, reuse);
+            Eq(reuse.Count, 0, "重用的清單：開關關掉時清空");
+
+            // CleanName 不用換字時回同一個字串（不配置）
+            string plain = "Purifier A";
+            Check(ReferenceEquals(Rules.CleanName(plain), plain), "CleanName：沒有控制字元時回同一個字串");
+            string spaced = " Box ";
+            Check(ReferenceEquals(Rules.CleanName(spaced), spaced), "CleanName：前後空白照原樣、回同一個字串");
+            string cjk = "淨水 A";
+            Check(ReferenceEquals(Rules.CleanName(cjk), cjk), "CleanName：中文回同一個字串");
+            Eq(Rules.CleanName("\u0001\u0002"), null, "CleanName：只有控制字元（不是空白的那種）：沒有名稱");
+            Eq(Rules.CleanName("\u0001 \n"), null, "CleanName：控制字元加空白：沒有名稱");
+            Eq(Rules.CleanName("A\u0001"), "A ", "CleanName：不是空白的控制字元也換成空白");
+            Eq(Rules.CleanName("\u00a0"), null, "CleanName：只有不換行空白：沒有名稱（和 Trim 一樣）");
+
+            // 分類（原始碼檢查）：按鍵的完整讀法與常駐的名稱都用 ItemReader.NameKindOf(item)，機器的條件含拿得到電池槽（MachineRules.Read 只在拿不到時回 null）
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            string reader = File.ReadAllText(Path.Combine(root, "mod", "src", "ItemReader.cs"));
+            string Body(string signature)
+            {
+                int i = reader.IndexOf(signature, StringComparison.Ordinal);
+                if (i < 0) return "";
+                int j = reader.IndexOf("\n        }\n", i, StringComparison.Ordinal);
+                return j < 0 ? reader.Substring(i) : reader.Substring(i, j - i);
+            }
+            string readBody = Body("static List<Line> ReadBody(GameItem item, ReadContext ctx)");
+            string readName = Body("internal static List<Line> ReadName(GameItem item, Display d, List<Line> into)");
+            Check(readBody.Contains("var kind = NameKindOf(item);"), "ReadBody 用 NameKindOf(item) 分類");
+            Check(readBody.Contains("if (kind == NameKind.Machine)"), "ReadBody 的機器分支看 kind == NameKind.Machine");
+            Check(readBody.Contains("Rules.ShowsName(kind, ctx.D)"), "ReadBody 的名稱開關看同一個 kind");
+            Check(readName.Contains("Rules.ShowsName(NameKindOf(item), d)"), "ReadName 用 NameKindOf(item) 分類");
+            Check(readName.Contains("HopperHelper.IsHopper(item)") && readName.Contains("into"), "ReadName 看料斗、寫進傳進來的清單");
+            Check(!readName.Contains("ReadWater") && !readName.Contains("MachineRules") && !readName.Contains("ReadExtras") && !readName.Contains("ReadContext"),
+                "ReadName 只讀名稱（不讀水、機器、其他資訊，不碰 ReadContext）");
+            Check(Regex.IsMatch(reader, "static bool IsMachine\\(GameItem item\\) =>\\s*item\\.IsTag\\(RechargeableTag\\) && !item\\.IsTag\\(BrokenTag\\) && MachineHelper\\.GetBatterySlot\\(item\\) != null;"),
+                "IsMachine：有電池槽 tag、沒壞、拿得到電池槽");
+            Check(reader.Contains("static NameKind NameKindOf(GameItem item) => Rules.NameKindOf(IsMachine(item), item.contentWindow != null);"),
+                "NameKindOf(item)：機器看 IsMachine、箱子看 contentWindow");
+        }
+
+        /// <summary>
+        /// 名稱位置的選項 Label 改名 InfoBox（Rules.IsOldNamePosition）：設定檔存的 Label（不分大小寫、前後空白不算）要轉；
+        /// Top、InfoBox、空的、沒有值的不轉。
+        /// </summary>
+        static void NamePositionMigration()
+        {
+            foreach (var v in new[] { "Label", "label", " Label ", "LABEL", "\tLabel" })
+                Check(Rules.IsOldNamePosition(v), $"「{v}」要轉成 InfoBox");
+            foreach (var v in new[] { "Top", "InfoBox", "", " ", null, "Labels", "Label1", "InfoBox Label" })
+                Check(!Rules.IsOldNamePosition(v), $"「{v ?? "null"}」不轉");
         }
 
         /// <summary>
@@ -1053,20 +1236,29 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// 名稱位置與名稱字級：Top 時名稱另外一個框、資訊框沒有名稱；Label 時名稱是資訊框的第一行；
+        /// 名稱位置與名稱字級：Top 時名稱另外一個框、資訊框沒有名稱；InfoBox 時名稱是資訊框的第一行；
         /// 名稱行的字級照名稱文字大小、行高跟著；內距照名稱以外的行（只有名稱時照名稱的）。
         /// </summary>
         static void NameLayout()
         {
-            Eq(string.Join(",", Enum.GetNames(typeof(NamePosition))), "Top,Label", "名稱位置存的名稱與下拉選單的順序（Top 在前）");
+            Eq(string.Join(",", Enum.GetNames(typeof(NamePosition))), "Top,InfoBox", "名稱位置存的名稱與下拉選單的順序（Top 在前，Label 改名 InfoBox）");
             var lines = Rules.WithName("Tank", true, Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All));
             var info = new List<Line> { new Line("leftover") };
             var name = Rules.SplitName(lines, NamePosition.Top, info);
             Check(name.HasValue && name.Value.Text == "Tank" && name.Value.IsName, "Top：名稱另外一個框");
             Eq(Join(info), "Vol 4000ml / Pur 98.52%", "Top：資訊框沒有名稱（先清掉上一次的）");
-            name = Rules.SplitName(lines, NamePosition.Label, info);
-            Check(!name.HasValue, "Label：沒有名稱框");
-            Eq(Join(info), "Tank / Vol 4000ml / Pur 98.52%", "Label：名稱是資訊框的第一行");
+            name = Rules.SplitName(lines, NamePosition.InfoBox, info);
+            Check(!name.HasValue, "InfoBox：沒有名稱框");
+            Eq(Join(info), "Tank / Vol 4000ml / Pur 98.52%", "InfoBox：名稱是資訊框的第一行");
+            // 常駐的名稱：只有名稱一行。Top 是名稱框；InfoBox 是只有名稱一行的資訊框，按鍵時資訊加進同一個框、名稱留在第一行
+            var pinned = Rules.PinnedNameLines("Tank", true, false, new List<Line>());
+            name = Rules.SplitName(pinned, NamePosition.Top, info);
+            Check(name.HasValue && name.Value.Text == "Tank" && info.Count == 0, "常駐、Top：只有名稱框");
+            name = Rules.SplitName(pinned, NamePosition.InfoBox, info);
+            Check(!name.HasValue && Join(info) == "Tank" && info[0].IsName, "常駐、InfoBox：資訊框只有名稱一行");
+            Check(Near(Rules.Padding(info, 4.5f, 6f), 6f * Rules.PaddingRatio), "常駐、InfoBox：只有名稱的資訊框內距照名稱的字級");
+            name = Rules.SplitName(lines, NamePosition.InfoBox, info);
+            Check(!name.HasValue && info[0].Text == "Tank" && info.Count == 3, "按鍵、InfoBox：資訊加進同一個框，名稱留在第一行");
             name = Rules.SplitName(Rules.WithName("Box", true, null), NamePosition.Top, info);
             Check(name.HasValue && name.Value.Text == "Box" && info.Count == 0, "Top、只有名稱的箱子：只有名稱框");
             name = Rules.SplitName(Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All), NamePosition.Top, info);
@@ -1081,7 +1273,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Rules.RowSize(new Line("Tank", LineColor.Name), 4.5f, 6f), 6f, "名稱行照名稱文字大小");
             Eq(Rules.RowSize(new Line("W 1ml"), 4.5f, 6f), 4.5f, "其他行照文字大小");
             Eq(Rules.RowSize(new Line("Tank", LineColor.Name), 6f, 3.5f), 3.5f, "名稱也可以比較小");
-            Check(Near(Rules.Padding(lines, 4.5f, 6f), 4.5f * Rules.PaddingRatio), "Label：內距照名稱以外的行的字級");
+            Check(Near(Rules.Padding(lines, 4.5f, 6f), 4.5f * Rules.PaddingRatio), "InfoBox：內距照名稱以外的行的字級");
             Check(Near(Rules.Padding(new List<Line> { new Line("Tank", LineColor.Name) }, 4.5f, 6f), 6f * Rules.PaddingRatio), "只有名稱的框：內距照名稱的字級");
             Check(Near(Rules.BoxHeight(lines, 4.5f, 6f, 0.5f), 1f + 6f * Rules.LineHeightRatio + 2f * 4.5f * Rules.LineHeightRatio), "框高：名稱那行照名稱字級的行高");
             Check(Near(Rules.BoxHeight(new List<Line> { new Line("Tank", LineColor.Name) }, 4.5f, 6f, 0.9f), 1.8f + 6f * Rules.LineHeightRatio), "名稱框的高");
@@ -1522,7 +1714,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// 設定的段落、順序與預設（Settings.cs 的原始碼）：段落照 Labels、Names、Water containers、Batteries、Machines、Items，
+        /// 設定的段落、順序與預設（Settings.cs 的原始碼）：段落照 General、Names、Water containers、Batteries、Machines、Items，
         /// 段落內照定義的順序；新設定的 key 與預設（名稱位置 Top、名稱文字大小 Large、三個新開關開）。key 存進玩家的設定檔，不能改名
         /// （的 ShowMachineTonightNet 是發布前改的）。
         /// </summary>
@@ -1535,8 +1727,9 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var expected = new (string section, string keys)[]
             {
                 // 2026-11-08 使用者要的：每行開頭的字排在文字大小前面；名稱位置、名稱文字大小排在 Names 段最前面
-                ("SectionLabels", "KeyMode,Prefix,TextSize"),
-                ("SectionNames", "NamePosition,NameTextSize,ShowContainerName,ShowMachineName,ShowItemName"),
+                ("SectionGeneral", "KeyMode,Prefix,TextSize"),
+                // 總是顯示名稱排在 Names 段最前面
+                ("SectionNames", "AlwaysShowNames,NamePosition,NameTextSize,ShowContainerName,ShowMachineName,ShowItemName"),
                 ("SectionWater", "ShowWaterVolume,ShowWaterPurity,ShowRealPurity"),
                 ("SectionBatteries", "ShowBatteryCharge,ShowBatteryTonightCharge"),
                 ("SectionMachines", "ShowMachinePower,ShowMachineTonightNet,ShowMachineReason,ShowMachineProgress,ShowMachineOutput,ShowMachineWater"),
@@ -1545,9 +1738,19 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(string.Join(",", defs.Select(x => x.section).Distinct()), string.Join(",", expected.Select(x => x.section)), "段落的順序（照第一次定義）");
             foreach (var (section, keys) in expected)
                 Eq(string.Join(",", defs.Where(x => x.section == section).Select(x => x.key)), keys, $"{section} 裡的順序");
-            Eq(defs.Count, 23, "設定共 23 個");
+            Eq(defs.Count, 24, "設定共 24 個");
             string Default(string key) => defs.FirstOrDefault(x => x.key == key).def;
             Eq(Default("NamePosition"), "NamePosition.Top", "名稱位置預設 Top");
+            Eq(Default("AlwaysShowNames"), "false", "總是顯示名稱預設關");
+            Check(settings.Contains("_alwaysNames != null && _alwaysNames.Value"), "AlwaysShowNames 屬性還沒讀設定時是關的");
+            // 段落改名：段落字串是 General，舊的 Labels 不見了
+            Check(settings.Contains("SectionGeneral = \"General\"") && !settings.Contains("\"Labels\""), "第一段的段落字串是 General");
+            // 名稱位置的舊值轉換：探測用同一個 key、沒有 choices 的文字型，讀完一定拿掉，DefineEnum 包在 MigrateNamePosition 裡
+            Check(settings.Contains("const string NamePositionKey = \"NamePosition\";"), "探測的 key 和名稱位置的 key 一樣");
+            Check(Regex.IsMatch(settings, "MigrateNamePosition\\(cfg, \\(\\) =>\\s*cfg\\.DefineEnum\\(\"NamePosition\""), "名稱位置的 DefineEnum 經過 MigrateNamePosition");
+            Check(settings.Contains("cfg.Define(NamePositionKey, \"\", SectionNames, null)"), "探測是沒有 choices 的文字型（有 choices 的會把 Label 換成預設值）");
+            Check(settings.Contains("list.RemoveAll(e => e != null && e.Key == NamePositionKey)"), "探測讀完拿掉（設定視窗不多一列）");
+            Check(settings.Contains("entry.Set(NamePosition.InfoBox)"), "舊值 Label 轉成 InfoBox");
             Eq(Default("NameTextSize"), "TextSize.Large", "名稱文字大小預設 Large");
             foreach (var key in new[] { "ShowBatteryTonightCharge", "ShowMachineTonightNet", "ShowMachineOutput" })
                 Eq(Default(key), "true", $"{key} 預設開");
@@ -1851,7 +2054,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             string settings = File.ReadAllText(Path.Combine(root, "mod", "src", "Settings.cs"));
             var used = Regex.Matches(settings, "L\\(\"([a-z_]+)\"\\)").Select(m => m.Groups[1].Value).Distinct().ToList();
             var labels = used.Where(k => !k.EndsWith("_tip")).ToList();
-            Eq(labels.Count, 24, "Settings 用到的標籤數（23 個設定＋按鍵）");
+            Eq(labels.Count, 25, "Settings 用到的標籤數（24 個設定＋按鍵）");
             foreach (var k in labels)
             {
                 Check(used.Contains(k + "_tip"), $"Settings 的 {k} 有說明");
@@ -1941,8 +2144,20 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 {
                     var rows = np.Split('\n');
                     Eq(rows.Length, 3, $"{name} cfg_name_position_tip 三行");
-                    Check(rows.Length == 3 && rows[1].StartsWith("Top" + sep) && rows[2].StartsWith("Label" + sep), $"{name} cfg_name_position_tip 的選項 Top、Label 各一行");
+                    Check(rows.Length == 3 && rows[1].StartsWith("Top" + sep) && rows[2].StartsWith("InfoBox" + sep), $"{name} cfg_name_position_tip 的選項 Top、InfoBox 各一行");
                 }
+            // 總是顯示名稱：兩份都有，說明兩行（開著時的樣子、哪幾種名稱照三個開關）
+            Check(en.TryGetValue("cfg_always_names", out var anEn) && anEn == "Always show names", "en.csv cfg_always_names");
+            Check(zh.TryGetValue("cfg_always_names", out var anZh) && anZh == "总是显示名称", "zh.csv cfg_always_names");
+            Check(en.TryGetValue("cfg_always_names_tip", out var atEn) && atEn.Split('\n').Length == 2 && atEn.Contains("without the key") && atEn.Contains("three name switches"),
+                "en.csv cfg_always_names_tip 兩行：不用按鍵、照三個名稱開關");
+            Check(zh.TryGetValue("cfg_always_names_tip", out var atZh) && atZh.Split('\n').Length == 2 && atZh.Contains("不用按键") && atZh.Contains("三个名称开关"),
+                "zh.csv cfg_always_names_tip 兩行：不用按鍵、照三個名稱開關");
+            // 「標籤」改叫「資訊框」：csv 的值裡不再有 label／标签（第一行的 # 註解不算，ReadCsv 已經跳過）
+            foreach (var (k, v) in en)
+                Check(!v.ToLowerInvariant().Contains("label"), $"en.csv {k} 沒有 label");
+            foreach (var (k, v) in zh)
+                Check(!v.Contains("标签"), $"zh.csv {k} 沒有标签");
             Check(zh.TryGetValue("cfg_name_position_tip", out var npZh) && npZh.Contains("置中") && !npZh.Contains("居中"), "zh.csv cfg_name_position_tip 寫置中");
             // 名稱位置改由設定決定：三個名稱開關不再寫「第一行」
             foreach (var key in new[] { "cfg_container_name_tip", "cfg_machine_name_tip", "cfg_item_name_tip" })

@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v1.1.0（2026-11-13）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+
+- 新設定「總是顯示名稱」（Names 段，一開始是關的）：打開後名稱不用按鍵、一直顯示，其他資訊照舊按鍵才顯示。料斗自動編的號碼（#1、#2…）照舊只在按鍵時顯示。
+- 畫在物品上的框改叫「資訊框」，免得和遊戲的標籤印表機搞混：設定的段落 Labels 改名 General，名稱位置的選項 Label 改名 InfoBox（原本選 Label 的會自動換成 InfoBox）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13)
+
+- New setting Always show names (Names section, off at first): names stay on screen without the key; the other info still needs the key. Hopper numbers the game assigns (#1, #2…) still show only with the key.
+- The boxes drawn on items are now called info boxes, so they aren't mixed up with the game's Labeler: the Labels section of the settings is now General, and the Name position option Label is now InfoBox (a saved Label switches to InfoBox automatically).
+
 ## v1.0.1（2026-11-09）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13）

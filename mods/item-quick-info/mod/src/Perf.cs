@@ -9,7 +9,8 @@ namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 效能量測：只在除錯模式，mod 資料夾有 debug 或 perf 標記時才量。
-    /// 以期間為單位：「顯示中」（開始顯示到不顯示）、「沒顯示」（不顯示到下次開始顯示），只在期間的邊界寫 Player.log，不每幀寫。
+    /// 以期間為單位：「顯示中」（完整資訊開始顯示到結束）、「沒顯示」（完整資訊結束到下次開始），只在期間的邊界寫 Player.log，不每幀寫。
+    /// 這裡的「顯示」一律指按鍵的完整資訊：總是顯示名稱開著時，常駐的名稱不算顯示中，成本算在「沒顯示」的期間裡。
     /// perf 標記開著時，每次開始顯示換一種對照組模式（PerfCycle），用來量 mod 自己計時量不到的成本（改了 UI 位置後 Unity 重建畫布、標籤本身的繪製）。
     /// 每次放開鍵時另外核對找節點的新找法和舊找法找到的一樣（CheckFind）。
     /// 沒有標記時 On 是 false：Runner、LabelRenderer 每個量測點只多一個 bool 判斷，這裡什麼都不做、不配置。
@@ -56,8 +57,11 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>現在的對照組模式（還沒開始量、沒有 perf 標記時永遠是正常）。</summary>
         internal static PerfMode Mode => _cycle != null ? _cycle.Current : PerfMode.Normal;
 
-        /// <summary>擺位置時位置沒變就不設（對照組「位置沒變不重設」）。</summary>
-        internal static bool SkipSamePosition => On && _cycle != null && PerfModes.SkipsSamePosition(_cycle.Current);
+        /// <summary>
+        /// 擺位置時位置沒變就不設（對照組「位置沒變不重設」）。只在完整資訊的期間（_showing）：放開鍵後模式還留著，
+        /// 常駐的名稱（總是顯示名稱）不套用對照組。
+        /// </summary>
+        internal static bool SkipSamePosition => On && _showing && _cycle != null && PerfModes.SkipsSamePosition(_cycle.Current);
 
         internal static long Now() => Stopwatch.GetTimestamp();
 
@@ -89,7 +93,7 @@ namespace ProbablyStolenItemQuickInfo
             _startFrame = false;
         }
 
-        /// <summary>從不顯示變成顯示（Runner.Tick）：寫剛結束的「沒顯示」，換這次的模式，開始一段「顯示中」。</summary>
+        /// <summary>完整資訊開始（Runner.Tick；從不畫或只畫名稱進來都算）：寫剛結束的「沒顯示」，換這次的模式，開始一段「顯示中」。</summary>
         internal static void StartShowing()
         {
             if (!_ready || _showing) return;
@@ -107,7 +111,7 @@ namespace ProbablyStolenItemQuickInfo
             BeginPeriod();
         }
 
-        /// <summary>從顯示變成不顯示（Runner.Tick）：寫「按下」與剛結束的「顯示中」，開始一段「沒顯示」。</summary>
+        /// <summary>完整資訊結束（Runner.Tick；變成不畫或只畫名稱都算）：寫「按下」與剛結束的「顯示中」，開始一段「沒顯示」。</summary>
         internal static void StopShowing()
         {
             if (!_ready || !_showing) return;
