@@ -30,7 +30,7 @@ MOD = modkit.OfficialMod(
     root=HERE.parent,
     mod_id="dbfoxtw.close-all-windows",  # 和 mod/src/CloseAllWindowsMod.cs 的 ModId 一致
     name="Close All Windows",
-    description=("Unofficial. Press Backspace to close every container and machine window at once "
+    description=("Press Backspace to close every container and machine window at once "
                  "(change the key in Options > Key Binds). Click the lock left of a window's close button to keep "
                  "that window open: locked windows are skipped by this key, by Esc and by the game's limit on open "
                  "windows. Documents and everything else Esc can close can be included in the mod settings. "

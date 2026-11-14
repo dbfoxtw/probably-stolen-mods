@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 namespace ProbablyStolenCloseAllWindows.Verify
 {
     /// <summary>
-    /// 離線測試（不用開遊戲）：一鍵關閉的分組規則、鎖的資料檔。
+    /// 離線測試（不用開遊戲）：一鍵關閉的分組規則、鎖的資料檔、介面字串挑語言（LocPick，2.3.0 起）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -30,8 +30,56 @@ namespace ProbablyStolenCloseAllWindows.Verify
             Closing();
             EndOfDayClose();
             Store();
+            LocPickTest();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
+        }
+
+        /// <summary>
+        /// Loc 的挑法（LocPick）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；Format 照遊戲的 GetLocalized。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Next tab", ["de"] = "Nächster Tab", ["fr"] = "Onglet suivant" }, len),
+                "fr", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string>
+                {
+                    ["en"] = new string('a', 500) + "\n" + new string('a', 100),
+                    ["de"] = new string('a', 480) + "\n" + new string('a', 450),
+                }, len), "de", "說明框折行後 de 比較高：en 500＋100、de 480＋450 挑 de");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            // 寬度照寬度函式量，不是字數
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
         }
 
         /// <summary>

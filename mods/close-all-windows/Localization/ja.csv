@@ -1,0 +1,11 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized). Format: key,value
+key_close_all,すべてのウィンドウを閉じる
+key_close_all_tip,容器と機械のウィンドウをまとめて閉じる（MODの設定でオンにすれば、書類やEscで閉じられるその他のものも閉じる）。ロックしたウィンドウは開いたまま。
+cfg_containers,容器と機械のウィンドウを閉じる
+cfg_containers_tip,容器と機械のウィンドウを閉じる。ロックしたものは除く（ウィンドウの閉じるボタンの左にある南京錠をクリックするとロックできる）。キーは「設定 > キー割り当て」で設定する（デフォルト：Backspace）。
+cfg_documents,書類を閉じる
+cfg_documents_tip,「書類」アイテムから開いた紙も閉じる（新聞、メモ、ガイド、名刺…）。
+cfg_others,Escで閉じられるその他すべてを閉じる
+cfg_others_tip,Escで閉じられるその他のものもすべて閉じる：カレンダー、タブレット、電話、スキャナー、「1日を終える」、ワイルド・ネットワーク、Escで閉じる他のMODのウィンドウ（ポーズメニューと設定は除く）。
+cfg_show_locks,南京錠を表示
+cfg_show_locks_tip,容器と機械のウィンドウで、閉じるボタンの左に南京錠を表示する。オフにすると南京錠が隠れ、すべてのウィンドウがロックなしとして扱われる：Esc、「すべてのウィンドウを閉じる」キー、ウィンドウ25個の上限で通常どおり閉じる。ロックしたウィンドウは記憶され、オンに戻すと再びロックされる。

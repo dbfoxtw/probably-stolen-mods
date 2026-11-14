@@ -12,7 +12,8 @@ namespace ProbablyStolenCloseAllWindows
     /// - 一鍵關閉的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
     ///   ModData\dbfoxtw_close-all-windows\settings.json（{"key": "Backspace"}，KeyCode 名稱，人看得懂）。
     ///   不放 ModConfig：放了 mod 設定視窗會多一格同一個值的文字欄。
-    /// 標籤與說明在 mod 的 Localization\en.csv、zh.csv（ModHelper.GetLocalized；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
+    /// 標籤與說明在 mod 的 Localization\en.csv、zh.csv（2.3.0 起經過 Loc.Get：最長字串模式與手寫繁中的挑法，其他照舊是
+    /// ModHelper.GetLocalized；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
     /// Demo 時 MelonPreferences.cfg 的 [CloseAllWindows] 不搬過來（讀它要宣告檔案權限）。
     /// </summary>
     static class Settings
@@ -50,16 +51,14 @@ namespace ProbablyStolenCloseAllWindows
         /// </summary>
         internal static bool ShowLocks => _showLocks == null || _showLocks.Value;
 
-        static string L(string key) => ModHelper.GetLocalized(CloseAllWindowsMod.ModId, key);
-
         internal static void Init()
         {
             var cfg = ModConfig.For(CloseAllWindowsMod.ModId);
-            _containers = cfg.Define("CloseContainers", true, Section, () => L("cfg_containers"), () => L("cfg_containers_tip"));
-            _documents = cfg.Define("CloseDocuments", false, Section, () => L("cfg_documents"), () => L("cfg_documents_tip"));
-            _others = cfg.Define("CloseOthers", false, Section, () => L("cfg_others"), () => L("cfg_others_tip"));
+            _containers = cfg.Define("CloseContainers", true, Section, () => Loc.Get("cfg_containers"), () => Loc.Get("cfg_containers_tip"));
+            _documents = cfg.Define("CloseDocuments", false, Section, () => Loc.Get("cfg_documents"), () => Loc.Get("cfg_documents_tip"));
+            _others = cfg.Define("CloseOthers", false, Section, () => Loc.Get("cfg_others"), () => Loc.Get("cfg_others_tip"));
             // 2.1.0 新增的排在最後：2.0.0 的三組範圍在設定視窗裡的位置不變
-            _showLocks = cfg.Define(ShowLocksKey, true, Section, () => L("cfg_show_locks"), () => L("cfg_show_locks_tip"));
+            _showLocks = cfg.Define(ShowLocksKey, true, Section, () => Loc.Get("cfg_show_locks"), () => Loc.Get("cfg_show_locks_tip"));
             LoadKey();
         }
 
@@ -139,7 +138,7 @@ namespace ProbablyStolenCloseAllWindows
         {
             GameOptionRegistry.EnsureVanilla();
             ModHelper.AddGameOptionKeyBind(CloseAllWindowsMod.ModId, ModHelper.OPTION_SECTION_KEYBIND, "close_all",
-                () => L("key_close_all"), () => _key, SetKey, () => L("key_close_all_tip"));
+                () => Loc.Get("key_close_all"), () => _key, SetKey, () => Loc.Get("key_close_all_tip"));
         }
 
         internal static string Describe() => $"按鍵={Key}、{Scope}、顯示鎖頭={ShowLocks}";

@@ -1,0 +1,11 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized). Format: key,value
+key_close_all,Cerrar todas las ventanas
+key_close_all_tip,Cierra a la vez las ventanas de contenedores y máquinas (y también los documentos y todo lo demás que cierra Esc, si lo activas en los ajustes del mod). Las ventanas bloqueadas se quedan abiertas.
+cfg_containers,Cerrar ventanas de contenedores y máquinas
+cfg_containers_tip,Cierra las ventanas de contenedores y máquinas, salvo las bloqueadas (para bloquear una, haz clic en el candado a la izquierda de su botón de cerrar). La tecla se asigna en Opciones > Controles (por defecto: Backspace).
+cfg_documents,Cerrar documentos
+cfg_documents_tip,Cierra también los papeles abiertos desde objetos de tipo Documento (periódico, notas, guías, tarjetas de visita…).
+cfg_others,Cerrar todo lo demás que cierra Esc
+cfg_others_tip,Cierra también todo lo demás que cierra Esc: calendario, tablet, teléfono, escáneres, Terminar el día, Red de contactos de Wild y las ventanas de otros mods que se cierran con Esc (no el menú de pausa ni Opciones).
+cfg_show_locks,Mostrar candados
+cfg_show_locks_tip,Muestra el candado a la izquierda del botón de cerrar en las ventanas de contenedores y máquinas. Si lo desactivas, los candados se ocultan y todas las ventanas cuentan como desbloqueadas: Esc, la tecla «Cerrar todas las ventanas» y el límite de 25 ventanas las cierran como siempre. Las ventanas bloqueadas se recuerdan y vuelven a bloquearse al activarlo de nuevo.

@@ -1,14 +1,14 @@
 # Probably Stolen 一鍵關窗 mod（Close All Windows）
 
-*Probably Stolen* 的 mod：按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Close All Windows 的最新版，標記 `close-all-windows-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/720?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. See [English](#english) below.
+> A mod for *Probably Stolen*: press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. See [English](#english) below.
 
 ## 功能
 
@@ -48,12 +48,12 @@
 
 ## 語言
 
-- 按鍵綁定與設定的文字跟著遊戲語言：中文介面是中文，其他語言是英文。鎖頭沒有文字，遊戲的任何語言都能用。
-- 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod（非官方）](https://www.nexusmods.com/probablystolen/mods/280)，按鍵綁定和設定的字會跟著轉成繁體。
+- 按鍵綁定與設定的文字跟著遊戲語言：英文、簡中、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言是英文。鎖頭沒有文字，遊戲的任何語言都能用。
+- 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)，按鍵綁定和設定的字會跟著轉成繁體。
 
 ## 安裝
 
-這是遊戲官方格式的 mod（裝在遊戲資料夾的 `Mods` 裡），不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Close All Windows」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -104,7 +104,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 一般玩家請看上面的「安裝」，不需要建置。
 
-需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。不需要 MelonLoader。
+需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。
 
 原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/close-all-windows` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\close-all-windows` 資料夾裡執行。
 
@@ -122,7 +122,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV12). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Close All Windows, tagged `close-all-windows-v…`).
+A mod for *Probably Stolen*: press one key to close all the container and machine windows in your shop, and lock the ones you want to keep open. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/720) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Close All Windows, tagged `close-all-windows-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/720?tab=bugs).
 
@@ -161,11 +161,11 @@ The padlock and the hotkey come from this mod, not the base game; please report 
 
 The switches are kept in `ModConfigs\dbfoxtw.close-all-windows.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
-**Languages:** the key bind and the settings are in Chinese when the game is in Chinese, and in English in every other language. The padlock has no text, so it works with any game language. The game's Chinese is Simplified only, so this mod's Chinese is Simplified too; the fan-made [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) converts it to Traditional Chinese.
+**Languages:** the key bind and the settings follow the game language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish, English for any other language. The padlock has no text, so it works with any game language. The game's Chinese is Simplified only, so this mod's Chinese is Simplified too; the fan-made [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) converts it to Traditional Chinese.
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. It needs no capabilities, so there is no permission prompt when you activate it.
+It needs no capabilities, so there is no permission prompt when you activate it.
 
 From the Steam Workshop: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091), start the game, activate "Close All Windows" on the Mods screen of the main menu and restart as prompted. Steam keeps it updated.
 
@@ -201,6 +201,6 @@ The Demo version (v1.0.1 and earlier, MelonLoader) does not work on the full rel
 - [Window Groups](https://www.nexusmods.com/probablystolen/mods/804): reads this mod's locks, so locked windows aren't closed when you recall a group. From Window Groups 2.1.0, when pressing a group's recall key again closes the whole group, locked windows close too by default (you can change that in Window Groups' settings); with "Show locks" turned off here, Window Groups treats every window as unlocked (needs Window Groups 2.1.0 or later).
 - Other mods that also change window title bars or window behavior (e.g. add buttons to title bars, or change how Esc or the window limit works) may overlap the padlock or interfere with it; not tested.
 
-**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\close-all-windows` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time; MelonLoader is not needed). It installs into `Mods\dbfoxtw.close-all-windows\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, the open windows and panels, their group and whether they were closed each time you press the key, plus what the padlocks and Esc did. `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.close-all-windows` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\close-all-windows` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time). It installs into `Mods\dbfoxtw.close-all-windows\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, the open windows and panels, their group and whether they were closed each time you press the key, plus what the padlocks and Esc did. `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.close-all-windows` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this folder (`mods/close-all-windows`). The padlock icon is pixel art drawn by the code, not a game asset. The game's text, names, and assets belong to Questing Goose Studio. Harmony (MIT) comes with the game and is not distributed with this mod.

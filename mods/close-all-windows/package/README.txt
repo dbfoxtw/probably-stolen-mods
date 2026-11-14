@@ -1,15 +1,15 @@
 Probably Stolen 一鍵關窗 mod（Close All Windows） v{version}
 ==========================================================
 
-按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+按一個鍵，一次關掉店裡開著的箱子和機器視窗；想留著的視窗用鎖頭鎖住。
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/720?tab=bugs
  或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
-這是遊戲官方格式的 mod，不需要 MelonLoader，也不需要任何權限（啟用時不會跳出權限確認）。
+不需要任何權限（啟用時不會跳出權限確認）。
 也可以從 Steam 工作坊訂閱（https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091），訂閱後照第 2 步啟用。
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
 
@@ -55,7 +55,8 @@ ModConfigs\dbfoxtw.close-all-windows.json 與 ModData\dbfoxtw_close-all-windows 
 - 不讀寫遊戲的存檔檔案。鎖住了哪些箱子存在存檔資料夾的 ModData\dbfoxtw_close-all-windows\slot_<N>.json
   （每個存檔槽一個，鎖上、解鎖時馬上存），同一槽開了新遊戲就重新開始；按鍵存在同一個資料夾的 settings.json。
   不會跟著 Steam 雲端同步。
-- 按鍵綁定與設定的文字：中文介面是中文（簡體），其他語言是英文；裝了繁體中文化 mod 會跟著轉成繁體。
+- 按鍵綁定與設定的文字跟著遊戲語言：英文、簡中、俄、德、日、法、西班牙、波蘭文，
+  其他語言是英文；裝了繁體中文化 mod 會跟著轉成繁體。
   鎖頭沒有文字，遊戲的任何語言都能用。
 - 已知限制：最窄的容器（單格、一欄寬的）放不下鎖頭，沒有鎖頭，也一律當成沒鎖。
   儲物協調器按快捷鍵關掉一整組時，鎖住的也會關；協調器的鍵不要設成和一鍵關閉同一個。
@@ -77,8 +78,8 @@ Probably Stolen Close All Windows mod v{version}
 ------------------------------------------------
 
 Press one key to close all the container and machine windows in your shop,
-and lock the ones you want to keep open. Unofficial.
-Supported game version: full release 1.0 (VERSION 100-REV12)
+and lock the ones you want to keep open.
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -86,7 +87,7 @@ Bug reports are welcome
  or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
-This mod uses the game's official mod format; MelonLoader is not needed, and it needs no capabilities
+This mod needs no capabilities
 (no permission prompt when you activate it). Also available on the Steam Workshop (https://steamcommunity.com/sharedfiles/filedetails/?id=3829075091);
 after subscribing, activate it as in step 2.
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -149,8 +150,8 @@ Notes
   ModData\dbfoxtw_close-all-windows\slot_<N>.json in the save folder (one per save slot, saved as soon as
   you lock or unlock); starting a new game in a slot starts with no locks. The key is in settings.json
   in the same folder. Not synced by Steam Cloud.
-- The key bind and the settings are in Chinese (Simplified) when the game is in Chinese, and in English
-  otherwise. The padlock has no text, so it works with any game language.
+- The key bind and the settings follow the game language: English, Simplified Chinese, Russian, German,
+  Japanese, French, Spanish or Polish, English otherwise. The padlock has no text, so it works with any game language.
 - Known limitations: the narrowest containers (one slot or one column wide) get no padlock and always
   count as unlocked. When the Storage Coordinator closes a whole group with its hotkey, locked windows
   close too; don't give a group the same key as this mod. Other mods' windows are closed by

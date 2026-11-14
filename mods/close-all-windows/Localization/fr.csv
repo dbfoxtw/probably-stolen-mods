@@ -1,0 +1,11 @@
+# Libellés et infobulles des réglages et du raccourci de ce mod (ModHelper.GetLocalized). Format : key,value
+key_close_all,Fermer toutes les fenêtres
+key_close_all_tip,Ferme d'un coup les fenêtres des conteneurs et des machines (ainsi que les documents et tout le reste qu'Esc peut fermer, si c'est activé dans les réglages du mod). Les fenêtres verrouillées restent ouvertes.
+cfg_containers,Fermer les conteneurs et machines
+cfg_containers_tip,Ferme les fenêtres des conteneurs et des machines, sauf celles qui sont verrouillées (cliquez sur le cadenas à gauche du bouton de fermeture d'une fenêtre pour la verrouiller). La touche se règle dans Paramètres > Raccourcis (par défaut : Backspace).
+cfg_documents,Fermer les documents
+cfg_documents_tip,Ferme aussi les feuilles ouvertes depuis les objets de type Document (quotidien, notes, guides, cartes de visite…).
+cfg_others,Fermer tout le reste qu'Esc peut fermer
+cfg_others_tip,Ferme aussi tout le reste qu'Esc peut fermer : calendrier, tablette, téléphone, scanners, Mettre fin à la journée, Réseau de Wild et les fenêtres d'autres mods qui se ferment avec Esc (sauf le menu pause et les Paramètres).
+cfg_show_locks,Afficher les cadenas
+cfg_show_locks_tip,Affiche le cadenas à gauche du bouton de fermeture des fenêtres de conteneurs et de machines. Désactivé, les cadenas sont masqués et toutes les fenêtres comptent comme déverrouillées : Esc, la touche « Fermer toutes les fenêtres » et la limite de 25 fenêtres les ferment normalement. Les fenêtres que vous aviez verrouillées sont mémorisées et le redeviennent quand vous réactivez cette option.

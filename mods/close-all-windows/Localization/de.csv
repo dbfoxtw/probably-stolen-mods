@@ -1,0 +1,11 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized), German. Format: key,value
+key_close_all,Alle Fenster schließen
+key_close_all_tip,Schließt Behälter- und Gerätefenster auf einmal (auch Dokumente und alles andere, was Esc schließen kann, wenn in den Mod-Einstellungen eingeschaltet). Gesperrte Fenster bleiben offen.
+cfg_containers,Behälter- und Gerätefenster schließen
+cfg_containers_tip,Schließt die Fenster von Behältern und Geräten, außer den gesperrten (zum Sperren auf das Schloss links neben dem Schließen-Knopf eines Fensters klicken). Die Taste stellst du unter Optionen > Tastenbelegung ein (Standard: Backspace).
+cfg_documents,Dokumente schließen
+cfg_documents_tip,Schließt auch Blätter, die aus Gegenständen vom Typ „Dokument“ geöffnet wurden (Zeitung, Notizen, Leitfäden, Visitenkarten …).
+cfg_others,Alles andere schließen, was Esc schließt
+cfg_others_tip,Schließt auch alles andere, was Esc schließen kann: Kalender, Tablet, Telefon, Scanner, „Tag beenden“, „Wilds Netzwerk“ und Fenster anderer Mods, die sich mit Esc schließen (außer Pausenmenü und Optionen).
+cfg_show_locks,Schlösser anzeigen
+cfg_show_locks_tip,Zeigt das Schloss links neben dem Schließen-Knopf von Behälter- und Gerätefenstern. Ist die Einstellung aus, sind die Schlösser ausgeblendet und jedes Fenster gilt als nicht gesperrt: Esc, die Taste „Alle Fenster schließen“ und das Limit von 25 Fenstern schließen sie wie gewohnt. Deine gesperrten Fenster werden gemerkt und sind wieder gesperrt, wenn du die Einstellung wieder einschaltest.

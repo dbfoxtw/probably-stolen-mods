@@ -1,0 +1,11 @@
+# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized), Polish. Format: key,value
+key_close_all,Zamknij wszystkie okna
+key_close_all_tip,Zamyka naraz okna pojemników i maszyn (a także dokumenty i wszystko inne, co zamyka Esc, jeśli włączono to w ustawieniach modyfikacji). Zablokowane okna pozostają otwarte.
+cfg_containers,Zamykaj okna pojemników i maszyn
+cfg_containers_tip,Zamyka okna pojemników i maszyn oprócz zablokowanych (aby zablokować okno, kliknij kłódkę po lewej od jego przycisku zamykania). Klawisz można ustawić w: Opcje > Przypisanie klawiszy (domyślnie: Backspace).
+cfg_documents,Zamykaj dokumenty
+cfg_documents_tip,Zamyka też kartki otwierane z przedmiotów typu Dokumenty (gazeta, notatki, poradniki, wizytówki…).
+cfg_others,Zamykaj wszystko inne, co zamyka Esc
+cfg_others_tip,Zamyka też wszystko inne, co zamyka Esc: kalendarz, tablet, telefon, skanery, ekran „Zakończ dzień”, Sieć Wilda oraz okna innych modyfikacji zamykane klawiszem Esc (oprócz menu pauzy i Opcji).
+cfg_show_locks,Pokazuj kłódki
+cfg_show_locks_tip,Pokazuje kłódkę po lewej od przycisku zamykania w oknach pojemników i maszyn. Po wyłączeniu kłódki są ukryte, a każde okno liczy się jako odblokowane: Esc, klawisz „Zamknij wszystkie okna” i limit 25 okien zamykają je jak zwykle. Zablokowane przez ciebie okna są zapamiętywane i po ponownym włączeniu tej opcji znów będą zablokowane.

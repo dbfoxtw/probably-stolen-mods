@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：一鍵關閉的分組規則、鎖的資料檔（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：一鍵關閉的分組規則、鎖的資料檔、介面字串挑語言（LocPick）（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="..\src\Rules.cs" Link="Rules.cs" />
     <Compile Include="..\src\LockStore.cs" Link="LockStore.cs" />
+    <Compile Include="..\src\LocPick.cs" Link="LocPick.cs" />
   </ItemGroup>
 
   <ItemGroup>
