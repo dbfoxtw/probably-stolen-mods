@@ -1,0 +1,140 @@
+# Item Quick Info : textes de ce mod (ModHelper.GetLocalized). Format : key,value (une entrée par ligne ; \n = retour à la ligne).
+# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, place disponible, sens de {0}, {1}...).
+# Deux parties : libellés et infobulles des réglages et du raccourci (key_, cfg_), puis le texte des encadrés d'infos dessinés sur les objets (info_, à la fin).
+# Dans les infobulles, {0}, {1}... sont des exemples que le mod remplit avec le texte des encadrés d'infos ci-dessous (ex. « V 4000ml » / « Vol 4000ml »).
+# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes (Top, InfoBox, Small, Medium, Large, Hold, Toggle, Short, Long) restent en anglais.
+key_show_info,Afficher les infos des objets
+key_show_info_tip,"Maintenez cette touche pour afficher les infos des objets à l'écran, selon vos réglages et le type d'objet. Relâchez-la pour les masquer. Si « Mode de la touche » est sur Toggle, appuyez une fois pour afficher et une autre fois pour masquer."
+cfg_container_name,Afficher le nom des conteneurs
+cfg_container_name_tip,"Affiche en bleu clair le nom que vous avez donné à une caisse, un sac à dos, un casier de rangement ou tout autre objet qui ouvre sa propre fenêtre."
+cfg_machine_name,Afficher le nom des machines
+cfg_machine_name_tip,Affiche en bleu clair le nom que vous avez donné à une machine.
+cfg_item_name,Afficher le nom des autres objets
+cfg_item_name_tip,Affiche en bleu clair le nom que vous avez donné à tout autre objet (par exemple un bidon d'eau ou un lingot de métal).
+cfg_always_names,Toujours afficher les noms
+cfg_always_names_tip,"Activé : les noms restent à l'écran sans la touche ; les autres infos demandent toujours la touche.\nLes noms affichés suivent toujours les trois réglages de noms ci-dessous."
+cfg_name_position,Position des noms
+cfg_name_position_tip,Où les noms sont affichés.\nTop = centrés en haut de l'objet\nInfoBox = première ligne de l'encadré d'infos
+cfg_name_text_size,Taille du texte des noms
+cfg_name_text_size_tip,"Taille des noms : Small, Medium ou Large, les mêmes tailles que pour « Taille du texte »."
+cfg_water_volume,Afficher le volume d'eau
+# {0} = ligne du volume avec le préfixe court (« V 4000ml »), {1} = avec le préfixe long (« Vol 4000ml »)
+cfg_water_volume_tip,"Affiche la quantité d'eau d'un récipient, en ml.\nShort : {0}\nLong : {1}"
+cfg_water_purity,Afficher la pureté de l'eau
+# {0} = ligne de la pureté avec le préfixe court (« P 98.52% »), {1} = avec le préfixe long (« Pur 98.52% »)
+cfg_water_purity_tip,Affiche la pureté de l'eau d'un récipient (pas pour les récipients vides).\nShort : {0}\nLong : {1}
+cfg_real_purity,Toujours afficher la pureté réelle de l'eau
+cfg_real_purity_tip,"Désactivé : l'eau analysée affiche le % exact, les autres affichent ?.\nActivé : chaque récipient affiche sa pureté réelle, sans analyse (vous voyez aussi quand un client ment).\nNécessite que « Afficher la pureté de l'eau » soit activé."
+cfg_battery_charge,Afficher la charge des batteries
+cfg_battery_charge_tip,"Affiche l'énergie qu'il reste dans une batterie, par exemple 8kJ."
+cfg_battery_tonight_charge,Afficher la recharge de cette nuit
+cfg_battery_tonight_charge_tip,"Affiche en vert de combien une batterie sera rechargée cette nuit, par exemple +4kJ. Masqué quand elle est pleine ou ne sera pas rechargée."
+cfg_machine_power,Afficher l'énergie des machines
+# {0} = ligne de l'énergie avec le préfixe court (« É 87kJ »), {1} = avec le préfixe long (« Éner 87kJ »)
+cfg_machine_power_tip,Affiche l'énergie qu'il reste dans la batterie d'une machine. La ligne passe au rouge quand elle ne suffit pas pour cette nuit.\nShort : {0}\nLong : {1}
+cfg_machine_tonight_net,Afficher le bilan d'énergie de cette nuit
+cfg_machine_tonight_net_tip,"Affiche de combien la batterie d'une machine va changer cette nuit (recharge moins consommation), sous la ligne d'énergie.\nHausse : en vert, par exemple +4kJ\nBaisse : en orange, par exemple -8kJ\nMasqué quand rien ne change ou que la ligne d'énergie est rouge."
+cfg_machine_reason,Afficher pourquoi une machine ne tournera pas
+# {0}, {1}, {2} = trois des raisons ci-dessous (info_reason_no_input, info_reason_no_power, info_reason_output_full)
+cfg_machine_reason_tip,"Affiche une courte raison en orange quand une machine ne tournera pas cette nuit, par exemple « {0} », « {1} » ou « {2} »."
+cfg_machine_progress,Afficher la progression des machines
+# {0} = 3 jours restants en forme courte (« 3j »), {1} = en forme longue (« 3 jours »)
+cfg_machine_progress_tip,"Affiche combien de jours il faut encore à une machine, à sa vitesse de progression actuelle. Les changements ultérieurs dus aux effets de module comme « Surcharge » ou « Obsolescence programmée » ne sont pas prévus. Masqué quand elle ne tournera pas cette nuit.\nShort : {0}\nLong : {1}"
+cfg_machine_output,Afficher le nombre d'objets en sortie
+# {0} = ligne de la sortie avec le préfixe court (« S 7 »), {1} = avec le préfixe long (« Sortie 7 »)
+cfg_machine_output_tip,Affiche combien d'objets se trouvent dans la sortie d'une machine (les trémies d'entrée et de sortie ne comptent pas).\nShort : {0}\nLong : {1}
+cfg_machine_water,Afficher l'eau dans les machines
+# {0} / {1} = préfixes courts du volume et de la pureté (« V » / « P »), {2} / {3} = les longs (« Vol » / « Pur »)
+cfg_machine_water_tip,Affiche le volume et la pureté de l'eau à l'intérieur d'une machine. Les deux lignes suivent aussi « Afficher le volume d'eau » et « Afficher la pureté de l'eau ».\nShort : {0} / {1}\nLong : {2} / {3}
+cfg_stolen_heat,Afficher le danger des objets volés
+# {0} = ligne du danger avec le préfixe court (« R 45% »), {1} = avec le préfixe long (« Dang 45% »)
+cfg_stolen_heat_tip,Affiche en rouge le danger d'un objet volé.\nShort : {0}\nLong : {1}
+cfg_use_count,Afficher les utilisations restantes
+# {0} = ligne des utilisations avec le préfixe court (« U 3 »), {1} = avec le préfixe long (« Util 3 »)
+cfg_use_count_tip,Affiche combien d'utilisations il reste à un objet. En rouge quand il n'en reste plus.\nShort : {0}\nLong : {1}
+cfg_durability,Afficher la durabilité
+# {0} = ligne de la durabilité avec le préfixe court (« D 320 »), {1} = avec le préfixe long (« Dur 320 »)
+cfg_durability_tip,Affiche la durabilité d'un objet. En orange à 1/4 ou moins.\nShort : {0}\nLong : {1}
+cfg_ingot_purity,Afficher la pureté des lingots
+# {0} = un des niveaux de pureté ci-dessous (info_ingot_high, « Élevée »)
+cfg_ingot_purity_tip,"Affiche le niveau de pureté d'un lingot de métal, par exemple « {0} »."
+cfg_key_mode,Mode de la touche
+cfg_key_mode_tip,"Choisissez s'il faut maintenir la touche « Afficher les infos des objets » ou appuyer dessus pour basculer.\nHold = affiche tant qu'elle est maintenue, masque quand vous la relâchez\nToggle = appuyez une fois pour afficher, encore une fois pour masquer ; se désactive quand vous chargez une sauvegarde ou revenez au menu principal"
+cfg_text_size,Taille du texte
+cfg_text_size_tip,"Taille du texte des encadrés d'infos (les noms suivent « Taille du texte des noms ») : Small, Medium ou Large. Une case d'objet fait 16 unités ; le texte fait 3,5 ; 4,5 ou 6 unités de haut."
+cfg_prefix,Préfixes des lignes
+# {0} à {7} = préfixes courts, {8} à {15} = préfixes longs, dans cet ordre : volume d'eau, pureté de l'eau, énergie de la machine,
+# 3 jours restants, nombre en sortie, danger, utilisations restantes, durabilité. Séparateur : « , ».
+cfg_prefix_tip,"Choisissez des mots courts ou longs en début de ligne. Quand Long ne tient pas dans la largeur de l'objet, cet encadré d'infos utilise les mots courts.\nShort : {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\nLong : {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}"
+
+# ---- Encadrés d'infos : le texte dessiné sur les objets pendant que la touche est maintenue ----
+# L'encadré est dans le coin inférieur gauche de l'objet et très étroit : une case fait 16 unités de large et le texte 3,5 à 6 unités
+# de haut, donc un objet d'une case n'a la place que pour 6 à 8 lettres par ligne. Chaque entrée doit être la plus courte possible.
+
+# Préfixes des lignes : le mot avant la valeur, suivi d'une espace et du nombre (« V 4000ml »).
+# _short = une lettre. _long = abréviation ou mot court de 3 à 5 lettres.
+# Volume d'eau d'un récipient ou d'une machine (« Vol 4000ml »)
+info_prefix_water_short,V
+info_prefix_water_long,Vol
+# Pureté de l'eau (« Pur 98.52% »)
+info_prefix_purity_short,P
+info_prefix_purity_long,Pur
+# Énergie restante dans la batterie d'une machine (« Éner 87kJ »)
+info_prefix_power_short,É
+info_prefix_power_long,Éner
+# Nombre d'objets dans la sortie d'une machine (« Sortie 7 »). Ici, court = jusqu'à 3 lettres, long = jusqu'à 6.
+info_prefix_output_short,S
+info_prefix_output_long,Sortie
+# Danger d'un objet volé (« Dang 45% ») ; le jeu appelle la « heat » anglaise « danger ». Court : R (risque), car D sert à la durabilité.
+info_prefix_heat_short,R
+info_prefix_heat_long,Dang
+# Utilisations restantes (« Util 3 »)
+info_prefix_uses_short,U
+info_prefix_uses_long,Util
+# Durabilité (« Dur 320 »)
+info_prefix_durability_short,D
+info_prefix_durability_long,Dur
+
+# Progression d'une machine : nombre de jours avant la fin. Pas de préfixe : c'est toute la ligne. {0} = nombre de jours.
+# info_days_short : forme la plus courte, la même pour tous les nombres (« 3j »). info_days_long : en toutes lettres, .one (0 et 1) et .other.
+info_days_short,{0}j
+info_days_long.one,{0} jour
+info_days_long.other,{0} jours
+
+# Ligne d'énergie quand l'emplacement de batterie contient une source sans charge propre (alimentation extérieure) : « Éner ext ».
+info_power_external,ext
+
+# Estimation du volume d'eau, à la place des ml quand le récipient n'a pas de graduation (« Vol Quasi plein »). Du plein au vide.
+info_estimate_full,Plein
+info_estimate_almost_full,Quasi plein
+info_estimate_over_half,Plus de moitié
+info_estimate_half,Moitié
+info_estimate_under_half,Moins de moitié
+info_estimate_almost_empty,Quasi vide
+info_estimate_empty,Vide
+
+# Pourquoi une machine ne tournera pas cette nuit : ligne orange à part, sans préfixe. Mots du jeu : Matériaux, Puce, Carte, Graine,
+# Disquette, Récipient, Module(s).
+info_reason_no_input,Sans matériaux
+info_reason_no_chip,Sans puce
+info_reason_no_card,Sans carte
+info_reason_no_seed,Sans graine
+info_reason_no_disk,Sans disquette
+info_reason_no_water,Sans eau
+info_reason_no_container,Sans récipient
+info_reason_output_full,Sortie pleine
+info_reason_max_purity,Pureté max
+info_reason_no_module,Sans module
+info_reason_blocked,Bloqué
+info_reason_no_power,Sans énergie
+
+# Niveaux de pureté des lingots de métal, du meilleur au pire. Seulement le niveau, sans le mot « pureté » : l'encadré est dessiné
+# sur le lingot, et une ligne courte risque moins d'être coupée par le bord de l'inventaire. D'après les noms du jeu
+# (mech_condition_*_purity), au féminin pour s'accorder avec « pureté » sous-entendu ; « élevée » remplace « supérieure »
+# du jeu (plus court, et fait la paire avec « faible »).
+info_ingot_perfect,Parfaite
+info_ingot_very_high,Très élevée
+info_ingot_high,Élevée
+info_ingot_fair,Acceptable
+info_ingot_low,Faible
+info_ingot_very_low,Très faible

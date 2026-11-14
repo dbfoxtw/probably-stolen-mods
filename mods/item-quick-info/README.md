@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。遊戲官方格式的 mod（不需要 MelonLoader）。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)（訂閱就好，見下面「安裝」），或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Item Quick Info 的最新版，標記 `item-quick-info-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -54,8 +54,8 @@
 
 ## 語言
 
-- 資訊框、按鍵綁定與設定的文字跟著遊戲語言：中文介面是中文，其他語言是英文。
-- 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod（非官方）](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)，資訊框、按鍵綁定和設定的字會變成繁體。
+- 資訊框、按鍵綁定與設定的文字跟著遊戲語言：英文、簡中（有裝 [繁中 mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380) 時是繁中）、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言是英文。
+- 設定視窗裡段落的標題（General、Names…）和下拉選單的選項固定是英文。
 
 ## 安裝
 
@@ -119,7 +119,7 @@
 
 ## English
 
-A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. It uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV13). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
+A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. It uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or a comment on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383).
 
@@ -136,7 +136,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - Power: the energy left in the machine's battery, red when it's not enough for tonight.
   - Tonight's net energy (charged minus used), under the power line: green when it goes up, e.g. `+4kJ`; orange when it goes down, e.g. `-8kJ`.
   - Why it won't run tonight (in orange), e.g. No input, No power, Output full.
-  - Days left, e.g. `3day`.
+  - Days left, e.g. `3 days`.
   - How many items are in its output (Intake and Outlet Hoppers don't count).
   - Volume and purity of the water inside the machine.
 - **Any item**: durability (orange at 1/4 or less), a Metal Ingot's purity grade, uses left (red when used up), and the heat of a stolen item (in red).
@@ -164,7 +164,7 @@ The names and info boxes come from this mod, not the base game; please report pr
 
 Always show names starts off; all the other switches start on. The settings are kept in `ModConfigs\dbfoxtw.item-quick-info.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
-**Languages:** the info boxes, the key bind and the settings are in Chinese when the game is in Chinese, and in English in every other language. The game's Chinese is Simplified only, so this mod's Chinese is Simplified too; the fan-made [Traditional Chinese Translation](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380) shows it in Traditional Chinese.
+**Languages:** the info boxes, the key bind and the settings follow the game language: English, Simplified Chinese (Traditional Chinese with the [Traditional Chinese mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)), Russian, German, Japanese, French, Spanish or Polish, English for any other language. Section titles (General, Names…) and dropdown options in the settings window are always in English.
 
 **Install**
 

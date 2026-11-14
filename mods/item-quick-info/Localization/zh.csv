@@ -1,4 +1,6 @@
-# 本模组设置与按键绑定的标签和说明（ModHelper.GetLocalized）。格式：key,值
+# 本模组的文字（ModHelper.GetLocalized）。格式：key,值
+# 分两部分：设置与按键绑定的标签和说明（key_、cfg_），以及画在物品上的信息框文字（info_，在最后）。
+# 说明里的 {0}、{1}… 是例子，由模组用下面信息框的文字（目前的语言）填进去（例如「水 4000ml」「水量 4000ml」），说明和信息框上的字才会一样。每个占位符都要保留。
 key_show_info,显示物品信息
 key_show_info_tip,按住时根据设置和物品种类显示物品信息，放开就消失。设置改成 Toggle 时，按一下显示、再按一下消失。
 cfg_container_name,显示箱子名称
@@ -14,9 +16,11 @@ cfg_name_position_tip,名称显示的位置。\nTop＝物品上方置中\nInfoBo
 cfg_name_text_size,名称文字大小
 cfg_name_text_size_tip,名称的文字大小：Small（小）、Medium（中）、Large（大），大小和“文字大小”的三级一样。
 cfg_water_volume,显示水量
-cfg_water_volume_tip,显示容器里有多少水，单位毫升。\nShort：水 4000ml\nLong：水量 4000ml
+# {0}＝短前缀的水量那行（水 4000ml），{1}＝长前缀的（水量 4000ml）
+cfg_water_volume_tip,显示容器里有多少水，单位毫升。\nShort：{0}\nLong：{1}
 cfg_water_purity,显示水质
-cfg_water_purity_tip,显示容器里的水的纯度（空的容器不显示）。\nShort：质 98.52%\nLong：水质 98.52%
+# {0}＝短前缀的水质那行（质 98.52%），{1}＝长前缀的（水质 98.52%）
+cfg_water_purity_tip,显示容器里的水的纯度（空的容器不显示）。\nShort：{0}\nLong：{1}
 cfg_real_purity,总是显示真实水质
 cfg_real_purity_tip,关闭：扫描过的显示百分比，其他显示 ?。\n打开：全部显示真实水质，不用再检测（客人谎报也看得出来）。\n要先打开“显示水质”。
 cfg_battery_charge,显示电池电量
@@ -24,28 +28,104 @@ cfg_battery_charge_tip,显示电池剩下的能量，例如 8kJ。
 cfg_battery_tonight_charge,显示今晚会充多少电
 cfg_battery_tonight_charge_tip,电池今晚会充电时，在下面用绿字显示会充多少，例如 +4kJ。充满或今晚不会充时不显示。
 cfg_machine_power,显示电量
-cfg_machine_power_tip,显示机器里电池剩下的能量。不够今晚用时这一行变红。\nShort：电 87kJ\nLong：电力 87kJ
+# {0}＝短前缀的电量那行（电 87kJ），{1}＝长前缀的（电力 87kJ）
+cfg_machine_power_tip,显示机器里电池剩下的能量。不够今晚用时这一行变红。\nShort：{0}\nLong：{1}
 cfg_machine_tonight_net,显示今晚的电力收支
 cfg_machine_tonight_net_tip,显示机器今晚的电量会变多少（会充进来的减掉会用掉的），在电力那行下面。\n增加：绿字，例如 +4kJ\n减少：橙字，例如 -8kJ\n不变或电力那行变红时不显示。
 cfg_machine_reason,显示今晚不会运作的原因
-cfg_machine_reason_tip,机器今晚不会运作时，用橙色显示简短的原因，例如缺料、缺电、产出满了。
+# {0}、{1}、{2}＝下面的三个原因（info_reason_no_input、info_reason_no_power、info_reason_output_full）
+cfg_machine_reason_tip,机器今晚不会运作时，用橙色显示简短的原因，例如{0}、{1}、{2}。
 cfg_machine_progress,显示进度
-cfg_machine_progress_tip,显示机器还要几天完成，按现在的作业速度算，不推算过载、退化等模组效果之后的变化。今晚不会运作时不显示。\nShort：3天\nLong：剩3天
+# {0}＝剩 3 天的短写法（3天），{1}＝长写法（剩3天）
+cfg_machine_progress_tip,显示机器还要几天完成，按现在的作业速度算，不推算过载、退化等模组效果之后的变化。今晚不会运作时不显示。\nShort：{0}\nLong：{1}
 cfg_machine_output,显示输出区的成品数
-cfg_machine_output_tip,机器的输出区有东西时，显示一共有几个（进料斗、出料斗不算）。\nShort：成 7\nLong：成品 7
+# {0}＝短前缀的成品数那行（成 7），{1}＝长前缀的（成品 7）
+cfg_machine_output_tip,机器的输出区有东西时，显示一共有几个（进料斗、出料斗不算）。\nShort：{0}\nLong：{1}
 cfg_machine_water,显示机器里的水信息
-cfg_machine_water_tip,显示机器里面的水的水量和水质。这两行另外按“显示水量”“显示水质”两个设置显示。\nShort：水／质\nLong：水量／水质
+# {0}／{1}＝短的水量、水质前缀（水／质），{2}／{3}＝长的（水量／水质）
+cfg_machine_water_tip,显示机器里面的水的水量和水质。这两行另外按“显示水量”“显示水质”两个设置显示。\nShort：{0}／{1}\nLong：{2}／{3}
 cfg_stolen_heat,显示赃物热度
-cfg_stolen_heat_tip,用红色显示赃物的热度。\nShort：热 45%\nLong：热度 45%
+# {0}＝短前缀的热度那行（热 45%），{1}＝长前缀的（热度 45%）
+cfg_stolen_heat_tip,用红色显示赃物的热度。\nShort：{0}\nLong：{1}
 cfg_use_count,显示使用次数
-cfg_use_count_tip,显示还能用几次。用完时变红。\nShort：剩 3\nLong：剩余 3
+# {0}＝短前缀的使用次数那行（剩 3），{1}＝长前缀的（剩余 3）
+cfg_use_count_tip,显示还能用几次。用完时变红。\nShort：{0}\nLong：{1}
 cfg_durability,显示耐久度
-cfg_durability_tip,显示耐久度。剩 1/4 以下时变成橙色。\nShort：耐 320\nLong：耐久 320
+# {0}＝短前缀的耐久度那行（耐 320），{1}＝长前缀的（耐久 320）
+cfg_durability_tip,显示耐久度。剩 1/4 以下时变成橙色。\nShort：{0}\nLong：{1}
 cfg_ingot_purity,显示金属锭纯度
-cfg_ingot_purity_tip,在金属锭上显示纯度的等级，例如“高纯度”。
+# {0}＝下面的一个纯度等级（info_ingot_high，高纯度）
+cfg_ingot_purity_tip,在金属锭上显示纯度的等级，例如“{0}”。
 cfg_key_mode,按键方式
 cfg_key_mode_tip,选择“显示物品信息”这个键要按住，还是按一下切换。\nHold＝按住时显示，放开就消失\nToggle＝按一下显示，再按一下消失；读档、回主菜单时自动关闭
 cfg_text_size,文字大小
 cfg_text_size_tip,信息框的文字大小（名称另外看“名称文字大小”）：Small（小）、Medium（中）、Large（大）。一个物品格是 16 单位，文字高 3.5、4.5 或 6 单位。
 cfg_prefix,每行开头的字
-cfg_prefix_tip,每行开头用短的字还是长的词。Long 放不下物品宽度时，那个信息框改用短的。\nShort：水、质、电、3天、成、热、剩、耐\nLong：水量、水质、电力、剩3天、成品、热度、剩余、耐久
+# {0}～{7}＝短的前缀，{8}～{15}＝长的，顺序是水量、水质、机器的电、剩 3 天、成品数、热度、使用次数、耐久度
+cfg_prefix_tip,每行开头用短的字还是长的词。Long 放不下物品宽度时，那个信息框改用短的。\nShort：{0}、{1}、{2}、{3}、{4}、{5}、{6}、{7}\nLong：{8}、{9}、{10}、{11}、{12}、{13}、{14}、{15}
+
+# ---- 信息框：按住按键时画在物品上的字 ----
+# 信息框在物品的左下角，很窄：一个物品格 16 单位宽，字高 3.5～6 单位。每条都尽量短。
+# 长前缀放不下时整个信息框改用短前缀，还放不下就把「前缀 数值」拆成两行；没有前缀的行（原因、纯度等级）放不下就伸出去。
+# 繁中 mod 有在跑时用 zh-Hant.csv 的手写繁中，这份是简中。
+
+# 每行的前缀，后面空一格接数值（水 4000ml）。_short 是一个字，_long 是两个字的词。
+# 水容器、机器里的水量
+info_prefix_water_short,水
+info_prefix_water_long,水量
+# 水质
+info_prefix_purity_short,质
+info_prefix_purity_long,水质
+# 机器电池剩下的电
+info_prefix_power_short,电
+info_prefix_power_long,电力
+# 机器输出区的成品数
+info_prefix_output_short,成
+info_prefix_output_long,成品
+# 赃物热度
+info_prefix_heat_short,热
+info_prefix_heat_long,热度
+# 剩几次可以用
+info_prefix_uses_short,剩
+info_prefix_uses_long,剩余
+# 耐久度
+info_prefix_durability_short,耐
+info_prefix_durability_long,耐久
+
+# 机器还要几天完成（没有前缀，整行就是这个）。{0}＝天数。短的不分单复数；长的照单复数分，中文只有 .other。
+info_days_short,{0}天
+info_days_long.other,剩{0}天
+
+# 机器的电池槽放的是没有自己电量的电源（接外部电）时，电那行写的字
+info_power_external,外部
+
+# 水量的估计（容器没有刻度时代替毫升），从满到空
+info_estimate_full,满
+info_estimate_almost_full,快满
+info_estimate_over_half,过半
+info_estimate_half,半满
+info_estimate_under_half,不到半
+info_estimate_almost_empty,快空
+info_estimate_empty,空
+
+# 机器今晚不会运作的原因（橙色、自己一行、没有前缀），用词照游戏的字串表
+info_reason_no_input,缺料
+info_reason_no_chip,缺芯片
+info_reason_no_card,缺钥匙卡
+info_reason_no_seed,缺种子
+info_reason_no_disk,缺数据盘
+info_reason_no_water,缺水
+info_reason_no_container,没容器
+info_reason_output_full,产出满了
+info_reason_max_purity,已净化完
+info_reason_no_module,缺模组
+info_reason_blocked,无法开始
+info_reason_no_power,缺电
+
+# 金属锭纯度的等级，从好到差，照游戏字串表的 mech_condition_*_purity
+info_ingot_perfect,完美纯度
+info_ingot_very_high,极高纯度
+info_ingot_high,高纯度
+info_ingot_fair,中等纯度
+info_ingot_low,低纯度
+info_ingot_very_low,极低纯度

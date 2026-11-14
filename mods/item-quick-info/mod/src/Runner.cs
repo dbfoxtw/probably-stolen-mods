@@ -170,7 +170,7 @@ namespace ProbablyStolenItemQuickInfo
             if (font == null) return;
             var ctx = new ReadContext
             {
-                S = Strings.For(GameState.DetectLanguage(), Settings.Prefix),
+                S = GameState.Words(Settings.Prefix),
                 D = Settings.ReadDisplay(),
                 RealPurity = Settings.RealPurity,
             };

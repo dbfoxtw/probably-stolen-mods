@@ -1,5 +1,23 @@
 # 版本紀錄（Changelog）
 
+## v1.2.0（2026-11-15）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 資訊框和設定的文字多了俄文、德文、日文、法文、西班牙文、波蘭文，跟著遊戲的語言切換。
+- 英文的剩幾天照單複數寫：1 day、3 days（原本是 3day）。
+- 金屬錠的純度在英文、德文、法文、西班牙文、俄文、波蘭文只寫等級（例如 Very High，原本是 Very High Purity），比較不會被旁邊的框或物品欄的邊框蓋住。
+- 也支援 beta 分支的 VERSION 100-REV14。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- Info boxes and settings are now also in Russian, German, Japanese, French, Spanish and Polish, following the game's language.
+- Days left in English now uses singular and plural: 1 day, 3 days (was 3day).
+- Metal Ingot purity now shows only the grade in English, German, French, Spanish, Russian and Polish (e.g. Very High instead of Very High Purity), so it's less often covered by other info boxes or the inventory edge.
+- Also supports the 100-REV14 beta.
+
 ## v1.1.0（2026-11-13）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13）

@@ -12,7 +12,8 @@ namespace ProbablyStolenItemQuickInfo
     ///   每次重算標籤時才讀值，玩家按套用就生效（不標 requiresRestart）。
     /// - 顯示的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
     ///   ModData\dbfoxtw_item-quick-info\settings.json（{"key": "Tab"}，KeyCode 名稱）。不放 ModConfig：放了設定視窗會多一格同一個值的文字欄。
-    /// 標籤與說明在 mod 的 Localization\en.csv、zh.csv（ModHelper.GetLocalized；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
+    /// 標籤與說明在 mod 的 Localization\*.csv（Loc.Get；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
+    /// 說明裡長短的例子（Short：水 4000ml…）、原因與純度的例子由 Tips 用資訊框的字填進去，說明和資訊框上的字不會對不上。
     /// </summary>
     static class Settings
     {
@@ -109,7 +110,10 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>名稱的字級（預設大）：三級和「文字大小」一樣（Rules.FontSize）；「文字大小」只管名稱以外的行。</summary>
         internal static TextSize NameTextSize => _nameTextSize != null ? _nameTextSize.Value : TextSize.Large;
 
-        static string L(string key) => ModHelper.GetLocalized(ItemQuickInfoMod.ModId, key);
+        /// <summary>
+        /// 說明裡例子用的資訊框字串：目前語言、長前綴的那份（短的是 Short）。打開設定視窗、顯示說明時才取，換了語言也跟著換。
+        /// </summary>
+        static Strings Words => GameState.Words(PrefixStyle.Long);
 
         internal static void Init()
         {
@@ -118,43 +122,43 @@ namespace ProbablyStolenItemQuickInfo
             // General 段排第一（1.1.0 以前叫 Labels）：按鍵方式、字級、前綴是整個 mod 的設定，打開設定視窗先看到；
             // 段落照第一次定義的順序，所以先定義。
             // 段落內照定義的順序列：按鍵方式排最前面，接著每行開頭的字、文字大小（2026-11-08 使用者要的，原本文字大小在前）
-            _keyMode = cfg.DefineEnum("KeyMode", KeyMode.Hold, SectionGeneral, () => L("cfg_key_mode"), () => L("cfg_key_mode_tip"));
-            _prefix = cfg.DefineEnum("Prefix", PrefixStyle.Long, SectionGeneral, () => L("cfg_prefix"), () => L("cfg_prefix_tip"));
-            _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionGeneral, () => L("cfg_text_size"), () => L("cfg_text_size_tip"));
+            _keyMode = cfg.DefineEnum("KeyMode", KeyMode.Hold, SectionGeneral, () => Loc.Get("cfg_key_mode"), () => Loc.Get("cfg_key_mode_tip"));
+            _prefix = cfg.DefineEnum("Prefix", PrefixStyle.Long, SectionGeneral, () => Loc.Get("cfg_prefix"), () => Tips.Prefix(Words));
+            _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionGeneral, () => Loc.Get("cfg_text_size"), () => Loc.Get("cfg_text_size_tip"));
             // Names 段接在 General 後面：名稱在物品上緣（Top）或資訊框的第一行（InfoBox），都在資訊的上面，
             // 所以排在資訊的段落前面，資訊的段落再照標籤由上往下的順序排。
             // 段落裡總是顯示名稱排最前面（決定名稱什麼時候出現，比位置、大小更先要看到），接著名稱位置、名稱文字大小，
-            // 三個名稱開關在後面（2026-11-08 使用者要的，取代 的「接在開關後面」）
-            _alwaysNames = cfg.Define("AlwaysShowNames", false, SectionNames, () => L("cfg_always_names"), () => L("cfg_always_names_tip"));
+            // 三個名稱開關在後面（2026-11-08 使用者要的；原本名稱位置、名稱文字大小接在三個開關後面）
+            _alwaysNames = cfg.Define("AlwaysShowNames", false, SectionNames, () => Loc.Get("cfg_always_names"), () => Loc.Get("cfg_always_names_tip"));
             // 選項 Label 改名 InfoBox：舊值要在 DefineEnum 讀值之前先探測，DefineEnum 之後再改（MigrateNamePosition）
             _namePosition = MigrateNamePosition(cfg, () =>
-                cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => L("cfg_name_position"), () => L("cfg_name_position_tip")));
-            _nameTextSize = cfg.DefineEnum("NameTextSize", TextSize.Large, SectionNames, () => L("cfg_name_text_size"), () => L("cfg_name_text_size_tip"));
-            _containerName = cfg.Define("ShowContainerName", true, SectionNames, () => L("cfg_container_name"), () => L("cfg_container_name_tip"));
-            _machineName = cfg.Define("ShowMachineName", true, SectionNames, () => L("cfg_machine_name"), () => L("cfg_machine_name_tip"));
+                cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => Loc.Get("cfg_name_position"), () => Loc.Get("cfg_name_position_tip")));
+            _nameTextSize = cfg.DefineEnum("NameTextSize", TextSize.Large, SectionNames, () => Loc.Get("cfg_name_text_size"), () => Loc.Get("cfg_name_text_size_tip"));
+            _containerName = cfg.Define("ShowContainerName", true, SectionNames, () => Loc.Get("cfg_container_name"), () => Loc.Get("cfg_container_name_tip"));
+            _machineName = cfg.Define("ShowMachineName", true, SectionNames, () => Loc.Get("cfg_machine_name"), () => Loc.Get("cfg_machine_name_tip"));
             // 其他物品的名稱：水桶、金屬錠這些沒有自己視窗的物品，排在箱子、機器後面
-            _itemName = cfg.Define("ShowItemName", true, SectionNames, () => L("cfg_item_name"), () => L("cfg_item_name_tip"));
-            _waterVolume = cfg.Define("ShowWaterVolume", true, SectionWater, () => L("cfg_water_volume"), () => L("cfg_water_volume_tip"));
-            _waterPurity = cfg.Define("ShowWaterPurity", true, SectionWater, () => L("cfg_water_purity"), () => L("cfg_water_purity_tip"));
+            _itemName = cfg.Define("ShowItemName", true, SectionNames, () => Loc.Get("cfg_item_name"), () => Loc.Get("cfg_item_name_tip"));
+            _waterVolume = cfg.Define("ShowWaterVolume", true, SectionWater, () => Loc.Get("cfg_water_volume"), () => Tips.WaterVolume(Words));
+            _waterPurity = cfg.Define("ShowWaterPurity", true, SectionWater, () => Loc.Get("cfg_water_purity"), () => Tips.WaterPurity(Words));
             // 預設開（發布前改的；原本 是預設關）
-            _realPurity = cfg.Define("ShowRealPurity", true, SectionWater, () => L("cfg_real_purity"), () => L("cfg_real_purity_tip"));
-            _batteryCharge = cfg.Define("ShowBatteryCharge", true, SectionBatteries, () => L("cfg_battery_charge"), () => L("cfg_battery_charge_tip"));
+            _realPurity = cfg.Define("ShowRealPurity", true, SectionWater, () => Loc.Get("cfg_real_purity"), () => Loc.Get("cfg_real_purity_tip"));
+            _batteryCharge = cfg.Define("ShowBatteryCharge", true, SectionBatteries, () => Loc.Get("cfg_battery_charge"), () => Loc.Get("cfg_battery_charge_tip"));
             // 電池今晚會充多少、機器今晚的電力收支（取代機器的今晚會充多少），各自接在電量後面
-            _batteryTonightCharge = cfg.Define("ShowBatteryTonightCharge", true, SectionBatteries, () => L("cfg_battery_tonight_charge"), () => L("cfg_battery_tonight_charge_tip"));
-            _machinePower = cfg.Define("ShowMachinePower", true, SectionMachines, () => L("cfg_machine_power"), () => L("cfg_machine_power_tip"));
+            _batteryTonightCharge = cfg.Define("ShowBatteryTonightCharge", true, SectionBatteries, () => Loc.Get("cfg_battery_tonight_charge"), () => Loc.Get("cfg_battery_tonight_charge_tip"));
+            _machinePower = cfg.Define("ShowMachinePower", true, SectionMachines, () => Loc.Get("cfg_machine_power"), () => Tips.MachinePower(Words));
             // key 從 ShowMachineTonightCharge 改名（還沒發布，沒有玩家的設定要相容）
-            _machineTonightNet = cfg.Define("ShowMachineTonightNet", true, SectionMachines, () => L("cfg_machine_tonight_net"), () => L("cfg_machine_tonight_net_tip"));
-            _machineReason = cfg.Define("ShowMachineReason", true, SectionMachines, () => L("cfg_machine_reason"), () => L("cfg_machine_reason_tip"));
-            _machineProgress = cfg.Define("ShowMachineProgress", true, SectionMachines, () => L("cfg_machine_progress"), () => L("cfg_machine_progress_tip"));
+            _machineTonightNet = cfg.Define("ShowMachineTonightNet", true, SectionMachines, () => Loc.Get("cfg_machine_tonight_net"), () => Loc.Get("cfg_machine_tonight_net_tip"));
+            _machineReason = cfg.Define("ShowMachineReason", true, SectionMachines, () => Loc.Get("cfg_machine_reason"), () => Tips.MachineReason(Words));
+            _machineProgress = cfg.Define("ShowMachineProgress", true, SectionMachines, () => Loc.Get("cfg_machine_progress"), () => Tips.MachineProgress(Words));
             // 輸出區的成品數接在進度後面
-            _machineOutput = cfg.Define("ShowMachineOutput", true, SectionMachines, () => L("cfg_machine_output"), () => L("cfg_machine_output_tip"));
-            _machineWater = cfg.Define("ShowMachineWater", true, SectionMachines, () => L("cfg_machine_water"), () => L("cfg_machine_water_tip"));
+            _machineOutput = cfg.Define("ShowMachineOutput", true, SectionMachines, () => Loc.Get("cfg_machine_output"), () => Tips.MachineOutput(Words));
+            _machineWater = cfg.Define("ShowMachineWater", true, SectionMachines, () => Loc.Get("cfg_machine_water"), () => Tips.MachineWater(Words));
             // Items 段：任何物品都可能有的資訊，排在 Machines 後面。四個開關的順序是熱度、使用次數、耐久度、純度
             // （和標籤上的行序不同，標籤是耐久度、純度、使用次數、熱度）
-            _stolenHeat = cfg.Define("ShowStolenHeat", true, SectionItems, () => L("cfg_stolen_heat"), () => L("cfg_stolen_heat_tip"));
-            _useCount = cfg.Define("ShowUseCount", true, SectionItems, () => L("cfg_use_count"), () => L("cfg_use_count_tip"));
-            _durability = cfg.Define("ShowDurability", true, SectionItems, () => L("cfg_durability"), () => L("cfg_durability_tip"));
-            _ingotPurity = cfg.Define("ShowIngotPurity", true, SectionItems, () => L("cfg_ingot_purity"), () => L("cfg_ingot_purity_tip"));
+            _stolenHeat = cfg.Define("ShowStolenHeat", true, SectionItems, () => Loc.Get("cfg_stolen_heat"), () => Tips.StolenHeat(Words));
+            _useCount = cfg.Define("ShowUseCount", true, SectionItems, () => Loc.Get("cfg_use_count"), () => Tips.UseCount(Words));
+            _durability = cfg.Define("ShowDurability", true, SectionItems, () => Loc.Get("cfg_durability"), () => Tips.Durability(Words));
+            _ingotPurity = cfg.Define("ShowIngotPurity", true, SectionItems, () => Loc.Get("cfg_ingot_purity"), () => Tips.IngotPurity(Words));
             LoadKey();
         }
 
@@ -276,7 +280,7 @@ namespace ProbablyStolenItemQuickInfo
         {
             GameOptionRegistry.EnsureVanilla();
             ModHelper.AddGameOptionKeyBind(ItemQuickInfoMod.ModId, ModHelper.OPTION_SECTION_KEYBIND, "show_info",
-                () => L("key_show_info"), () => _key, SetKey, () => L("key_show_info_tip"));
+                () => Loc.Get("key_show_info"), () => _key, SetKey, () => Loc.Get("key_show_info_tip"));
         }
 
         internal static string Describe()

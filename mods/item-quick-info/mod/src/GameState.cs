@@ -6,22 +6,12 @@ using UnityEngine.UI;
 
 namespace ProbablyStolenItemQuickInfo
 {
-    /// <summary>從遊戲記憶體讀狀態（語言、字型、打字中、過場），不碰存檔檔案。語言與字型照交易所預覽 mod 的 GameState。</summary>
+    /// <summary>
+    /// 從遊戲記憶體讀狀態（語言、字型、打字中、過場），不碰存檔檔案。語言與字型照交易所預覽 mod 的 GameState。
+    /// 1.2.0 起資訊框的字照遊戲的 8 種語言由 Loc 挑（原本這裡的 DetectLanguage 只分英文、簡中、繁中），這裡只給 Strings 判斷換語言的值（Words）。
+    /// </summary>
     static class GameState
     {
-        /// <summary>繁中 mod 的 manifest ID。</summary>
-        const string ZhHantModId = "dbfoxtw.zh-hant";
-
-        /// <summary>
-        /// 繁中 mod 這次有沒有真的跑起來（遊戲的 mod 載入器；直接讀不是反射，不必宣告權限）。
-        /// 不用 ModLoader.IsModEnabled：它只看玩家勾選的清單，勾了但沒載入也是 true（官方格式寫法.md「設定與偵測其他 mod」）。
-        /// </summary>
-        internal static bool ZhHantModLoaded()
-        {
-            try { return ModLoader.Mods.Exists(m => m != null && m.IsEnabled && m.Manifest != null && m.Manifest.ID == ZhHantModId); }
-            catch { return false; }
-        }
-
         internal static string LocaleCode()
         {
             try
@@ -32,13 +22,18 @@ namespace ProbablyStolenItemQuickInfo
             catch { return null; } // Localization 還沒初始化
         }
 
-        /// <summary>遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的：中文時看有沒有啟用繁中 mod。其他語系用英文。</summary>
-        internal static Lang DetectLanguage()
+        /// <summary>
+        /// 資訊框的字（目前語言、前綴長短；Strings.For 換語言時才重建）。遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的：
+        /// 中文時才去看繁中 mod 有沒有在跑（Loc.ZhHantModRunning，和 Loc 取字共用同一份記住的結果），其他語言不看。
+        /// 挑字本身在 Loc（沒有那個語言的 csv 時用英文）。
+        /// 語言沒變時只讀語系代碼、比三個值，不配置記憶體（Runner 每 0.25 秒叫一次）：繁中 mod 找過一次以後只讀存著的 IsEnabled，
+        /// 不再複製 mod 清單（只有遊戲剛載入、mod 還沒登記完的那段會翻清單）。
+        /// </summary>
+        internal static Strings Words(PrefixStyle style)
         {
             var code = LocaleCode();
-            if (code != null && code.StartsWith("zh", StringComparison.Ordinal))
-                return ZhHantModLoaded() ? Lang.ZhHant : Lang.ZhHans;
-            return Lang.En;
+            bool zhHant = code != null && code.StartsWith("zh", StringComparison.Ordinal) && Loc.ZhHantModRunning();
+            return Strings.For(code, zhHant, Loc.LongestMode, style);
         }
 
         /// <summary>

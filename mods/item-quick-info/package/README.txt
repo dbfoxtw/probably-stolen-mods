@@ -3,7 +3,7 @@ Probably Stolen 物品速覽 mod（Item Quick Info） v{version}
 
 按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、
 機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383 的留言
@@ -56,8 +56,8 @@ ModConfigs\dbfoxtw.item-quick-info.json 與 ModData\dbfoxtw_item-quick-info 資�
 
 【說明】
 - 不讀寫遊戲的存檔檔案，也不改任何物品：只讀物品身上的資訊、畫自己的資訊框。
-- 資訊框與設定的字跟著遊戲語言（中文介面是中文，其他語言是英文）。遊戲的中文只有簡體，
-  這個 mod 的中文也是簡體字；裝了繁體中文化 mod 會變成繁體。
+- 資訊框與設定的字跟著遊戲語言：英文、簡中（裝了繁體中文化 mod 時是繁中）、俄文、德文、日文、
+  法文、西班牙文、波蘭文，其他語言是英文。
 - 已知限制：剩幾天照機器現在的作業速度算，假設之後每晚都會運作，模組效果之後改了速度，天數會跟著變。
   原因與收支只看機器裡現在的東西（接了進料斗的機器，材料格空著時會寫缺料、收支不扣今晚的耗電）。
   名稱或資訊框比物品寬時會伸出物品外，蓋住旁邊的物品。遊戲之後如果改了物品或機器的做法，要等 mod 更新。
@@ -76,7 +76,7 @@ Probably Stolen Item Quick Info mod v{version}
 Hold a key (Tab by default) to show key info right on the items on screen: water volume and purity,
 battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left,
 stolen heat and the names you gave things. Release to hide.
-Supported game version: full release 1.0 (VERSION 100-REV13)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -118,7 +118,7 @@ Features
   (e.g. +4kJ).
 - Machines: power (red when it's not enough for tonight), tonight's net energy (green when it goes up,
   orange when it goes down, e.g. +4kJ, -8kJ), why it won't run tonight (in orange, e.g. No input, No power,
-  Output full), days left (e.g. 3day), how many items are in its output (Intake and Outlet Hoppers
+  Output full), days left (e.g. 3 days), how many items are in its output (Intake and Outlet Hoppers
   don't count), and the volume and purity of the water inside it.
 - Any item: durability (orange at 1/4 or less), a Metal Ingot's purity grade, uses left (red when used up),
   and the heat of a stolen item (in red).
@@ -148,7 +148,9 @@ Settings
 Notes
 - Your save files are never read or written, and no item is changed: the mod only reads what's on
   the items and draws its own info boxes.
-- The info boxes and settings are in Chinese when the game is in Chinese, and in English in every other language.
+- The info boxes and settings follow the game language: English, Simplified Chinese (Traditional Chinese
+  with the Traditional Chinese mod), Russian, German, Japanese, French, Spanish or Polish,
+  English for any other language.
 - Known limitations: days left goes by the machine's current Progress Speed and assumes it runs every night;
   if module effects change the speed later, the days change with it. Reasons and tonight's net energy only
   look at what's in the machine now (a machine fed by an Intake Hopper says No input while its input slot

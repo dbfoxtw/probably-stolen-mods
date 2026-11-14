@@ -78,7 +78,7 @@ namespace ProbablyStolenItemQuickInfo
     /// <summary>
     /// 每台機器今晚會不會動（機器裡的水與輸出區的格子，判斷表在）。不碰 Unity，離線測試也編這個檔。
     /// 照各機器每晚處理（onCycleEndSlotItemFunc）的判斷順序，取第一個擋住的原因。Decide 不看電：遊戲先看電的，這裡跳過電、照樣往下看，
-    /// 別的原因優先（A1：電量那行開著時紅字本來就看得到，先告訴你還缺什麼）；都沒有別的原因、電又不夠今晚用時才是缺電
+    /// 別的原因優先（電量那行開著時紅字本來就看得到，先告訴你還缺什麼）；都沒有別的原因、電又不夠今晚用時才是缺電
     /// （WithPower，電那行照樣變紅）。門檻與順序照抄遊戲（出處寫在各方法），遊戲改了要跟著改。
     /// </summary>
     static class MachineLogic
@@ -161,8 +161,8 @@ namespace ProbablyStolenItemQuickInfo
         /// - Deal Maker（deal_maker）：0。每晚不扣，白天有客人時按啟動才扣（正式版其實拿不到，以防萬一）。
         /// - 高級渦輪增壓器（turbo_booster_adv）：儲能 ≥ 15 時 0（每晚處理只把它設成準備好，不扣電），不然是 drawnPower
         ///   （遊戲寫死扣 5，和 tag 一樣）。
-        /// - 其他：drawnPower。認得的機器、超科技渦輪增壓器（充能速度就是 tag）、警報系統、幻影投影機、別的 mod 的機器（B2：
-        ///   和紅字、遊戲提示框的假設一樣，當作每晚都扣）。沒有這個 tag 的（瓶子印表機、箱子販賣機、改造體掃描器）自然是 0。
+        /// - 其他：drawnPower。認得的機器、超科技渦輪增壓器（充能速度就是 tag）、警報系統、幻影投影機、別的 mod 的機器（和紅字、
+        ///   遊戲提示框的假設一樣，當作每晚都扣）。沒有這個 tag 的（瓶子印表機、箱子販賣機、改造體掃描器）自然是 0。
         /// 今晚會不會真的運作另外看（Rules.TonightDraw）。負數當 0。
         /// </summary>
         internal static int NightlyPowerUse(string identifier, int drawnPower, int turboCharge)
@@ -175,8 +175,8 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 電那行要不要判斷紅不紅：遊戲提示框的條件是機器有 machinery／machinery_drawn_power 標記（machineryTag）、
         /// 每晚耗電 &gt; 0；這裡把耗電換成今晚會扣的電（NightlyPowerUse），讓紅字＝今晚缺電。所以高級渦輪增壓器儲能滿 15 時
-        /// （那晚遊戲不扣電，準備好以後拿去對機器用也不需要電池）不紅，電池槽空的時候也一樣（A4）；Deal Maker（每晚不扣，
-        /// 正式版拿不到）照同一個原則一併不紅（主線實作時的判斷）。這兩台都和遊戲提示框的「能量不足」不一致。
+        /// （那晚遊戲不扣電，準備好以後拿去對機器用也不需要電池）不紅，電池槽空的時候也一樣；Deal Maker（每晚不扣，
+        /// 正式版拿不到）照同一個原則一併不紅（實作時定的）。這兩台都和遊戲提示框的「能量不足」不一致。
         /// 夠不夠用照舊和 machinery_drawn_power 比（MachineRules.ReadPower）。
         /// </summary>
         internal static bool ChecksPower(bool machineryTag, string identifier, int drawnPower, int turboCharge) =>
@@ -184,8 +184,8 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 加上缺電之後的原因：Decide 找不到別的原因（None）、今晚會跑（runsTonight，：客人的、不在店裡各區的照舊不寫原因）、
-        /// 電那行是紅字（insufficient，電不夠今晚用）時是缺電，其他照 Decide 的。原因照舊只有一行，別的原因優先（A1）。
-        /// 電池槽空、機器每晚要用電時 insufficient 也成立（MachineRules.ReadPower），一樣寫缺電，不另外寫「沒電池」（A2）。
+        /// 電那行是紅字（insufficient，電不夠今晚用）時是缺電，其他照 Decide 的。原因照舊只有一行，別的原因優先。
+        /// 電池槽空、機器每晚要用電時 insufficient 也成立（MachineRules.ReadPower），一樣寫缺電，不另外寫「沒電池」。
         /// </summary>
         internal static Reason WithPower(Reason reason, bool runsTonight, bool insufficient) =>
             reason == Reason.None && runsTonight && insufficient ? Reason.NoPower : reason;

@@ -11,6 +11,8 @@ Probably Stolen_Data\Managed（只讀）。
                                        --perf：量效能用（自動加 --debug），另外放 perf 標記檔：每按一次顯示的鍵換一種對照組模式
                                        （正常、不擺位置、不重算、都不做、位置沒變不重設），物品內容不記。
                                        一般安裝會清空 mod 資料夾，perf 標記就沒了）
+                                       --longest：看字串長度用（自動加 --debug），另外放 longest 標記檔：資訊框與設定的字
+                                       都改顯示英、德、法、西、俄、波蘭文裡最寬的那個（install-longest.bat）
   python tools/install.py uninstall    移除 Mods\dbfoxtw.item-quick-info\（設定 ModConfigs 與資料 ModData：按鍵、字級保留，
                                        訊息會說在哪裡）
   python tools/install.py package      編譯後打包給玩家的 zip（build\ProbablyStolen-ItemQuickInfo-<版本>.zip，最上層是

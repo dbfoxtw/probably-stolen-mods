@@ -17,7 +17,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 機器今晚的電力收支（先充再扣、警報系統先扣再充、每晚耗電、+4kJ／-8kJ 的行）、缺電（別的原因優先、判紅看今晚會扣的電）、
     /// 按鍵的 Hold／Toggle（KeySwitch）、這一幀畫什麼（ShowStateOf：不畫、常駐名稱、完整資訊）、常駐名稱（分類、料斗自動編的號碼）、
     /// 名稱位置舊值 Label 的轉換、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
-    /// 三語字串（每個都有、英文只用 ASCII）、設定的順序與預設（Settings.cs 的原始碼）、設定的標籤與說明（Localization 的 csv）。
+    /// 資訊框的字（1.2.0 起在 public/Localization 的 csv，經過假的 Loc（FakeLoc.cs，照遊戲的解析規則讀）建 Strings：en、zh、zh-Hant 每個都有）、
+    /// 換語言時才重建（語言沒變不配置記憶體）、剩幾天的單複數（超過查表時用代表數字查建好的格式，和直接取的一樣、切語言也不變）、
+    /// LocPick（最長字串模式、手寫繁中、單複數的字形）、找繁中 mod 的找過就記住（LookupOnce）、
+    /// 設定的順序與預設（Settings.cs 的原始碼）、設定的標籤與說明（Localization 的 csv，說明的例子由 Tips 填）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -68,13 +71,18 @@ namespace ProbablyStolenItemQuickInfo.Verify
             SettingsOrder();
             StringTables();
             Localization();
+            LocPickTest();
+            LookupOnceTest();
+            StringCache();
+            LocFiles();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
 
-        // 原本的測試用短的前綴（一個字、一個字母）寫；長的（預設）另外測（Prefixes、Extras）
-        static readonly Strings En = Strings.For(Lang.En, PrefixStyle.Short), Hans = Strings.For(Lang.ZhHans, PrefixStyle.Short), Hant = Strings.For(Lang.ZhHant, PrefixStyle.Short);
-        static readonly Strings EnL = Strings.For(Lang.En, PrefixStyle.Long), HansL = Strings.For(Lang.ZhHans, PrefixStyle.Long), HantL = Strings.For(Lang.ZhHant, PrefixStyle.Long);
+        // 原本的測試用短的前綴（一個字、一個字母）寫；長的（預設）另外測（Prefixes、Extras）。
+        // 1.2.0 起 Strings 只存目前語言的一份，換語言就重建：先建長的，短的取它的 Short（長短才是同一次建的、Short 指得到）
+        static readonly Strings EnL = LangStrings.For(Lang.En, PrefixStyle.Long), HansL = LangStrings.For(Lang.ZhHans, PrefixStyle.Long), HantL = LangStrings.For(Lang.ZhHant, PrefixStyle.Long);
+        static readonly Strings En = EnL.Short, Hans = HansL.Short, Hant = HantL.Short;
         static readonly Display All = new Display();
 
         /// <summary>ml（照遊戲 ToString("F0") 四捨五入）、kJ、字級、設定存的名稱。</summary>
@@ -275,7 +283,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
         /// <summary>
         /// 剩幾天：(目標 − 目前) ÷ 每晚點數，有餘數進一；剩一晚以內、已經到目標都算 1；每晚點數 0 以下不顯示；大數不溢位。
-        /// 字樣：英文短 3d、長 3day（1 天也是 1day），中文短 3天、長 剩3天。
+        /// 字樣：英文短 3d（1 天也是 1d），長的照單複數 1 day／3 days（1.2.0 起；1.1.0 是 3day），中文短 3天、長 剩3天（不分單複數）。
         /// </summary>
         static void Days()
         {
@@ -298,7 +306,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var words = new (Strings s, string what, string three, string one)[]
             {
                 (En, "英文短", "3d", "1d"),
-                (EnL, "英文長", "3day", "1day"),
+                (EnL, "英文長", "3 days", "1 day"),
                 (Hans, "簡中短", "3天", "1天"),
                 (HansL, "簡中長", "剩3天", "剩1天"),
                 (Hant, "繁中短", "3天", "1天"),
@@ -315,6 +323,68 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 Eq(lines[0].Color, LineColor.White, w.what + "：進度白字");
             }
             Eq(En.DaysText(4294967295L), "4294967295d", "大數照寫");
+            Eq(EnL.DaysText(21), "21 days", "英文長：21 天用複數（只有 1 是單數）");
+            Eq(EnL.DaysText(30), "30 days", "英文長：查表的最後一格");
+            Eq(EnL.DaysText(31), "31 days", "英文長：超過查表的現場排");
+            Eq(EnL.DaysText(4294967297L), "4294967297 days", "英文長：超過 int 的大數照寫、用複數");
+            Eq(EnL.DaysText(4294967295L), "4294967295 days", "英文長：超過 int、後兩位 95 用複數");
+            // 建好的 Strings 是快照：長寫法的格式建的時候就取好，之後假 Loc 切到別的語言，超過查表的天數也照建的時候的語言
+            Loc.Use(Lang.ZhHans);
+            Eq(EnL.DaysText(31), "31 days", "英文長：Loc 切到簡中以後，超過查表的天數還是英文");
+            Eq(EnL.DaysText(101), "101 days", "英文長：Loc 切到簡中以後，101 天還是英文的複數");
+            Eq(HantL.DaysText(31), "剩31天", "繁中長：Loc 切到簡中（繁中 mod 沒跑）以後還是手寫繁中");
+            Loc.Use(Lang.En);
+            Eq(HansL.DaysText(45), "剩45天", "簡中長：Loc 切到英文以後還是簡中");
+            DaysPlural();
+        }
+
+        /// <summary>
+        /// 剩幾天的長寫法超過查表時，用 LocPick.PluralSample 的代表數字查建的時候取好的格式：
+        /// 代表數字挑出的字形要和原本的數字一樣（en、de、fr、es、ru、pl、ja、zh，含 0、1、負數、超過 int 的大數），
+        /// 而且建好的 Strings 排出來的字和直接叫 Loc.Plural(n) 一樣（每種有 csv 的語言、繁中 mod 有跑時的手寫繁中）。
+        /// </summary>
+        static void DaysPlural()
+        {
+            var langs = new[] { "en", "de", "fr", "es", "ru", "pl", "ja", "zh" };
+            var samples = new long[] { 0, 1, 2, 5, 11, 12, 14, 21, 22, 25, 99, 100, 101, 102, 111, 112, 114, 121, 1001, 1011, 1012 };
+            foreach (var lang in langs)
+            {
+                foreach (var n in samples)
+                    Eq(LocPick.PluralCategory(lang, LocPick.PluralSample(n)), LocPick.PluralCategory(lang, (int)n), $"{lang} 的 {n}：代表數字的字形一樣");
+                bool all = true;
+                for (int n = -300; n <= 20000; n++)
+                    if (LocPick.PluralCategory(lang, LocPick.PluralSample(n)) != LocPick.PluralCategory(lang, n)) { all = false; break; }
+                Check(all, $"{lang}：-300～20000 每個數字的代表數字字形都一樣");
+                // 超過 int 的天數：PluralCategory 收 int，拿「後三位＋1000」（不是 0、1，個位與後兩位一樣）當對照
+                foreach (var big in new[] { 4294967295L, 4294967297L, 4294967301L, 4294967311L, 4294967312L, 4294967322L, long.MaxValue, long.MinValue, -4294967301L })
+                {
+                    long m1000 = big % 1000;
+                    if (m1000 < 0) m1000 = -m1000;
+                    Eq(LocPick.PluralCategory(lang, LocPick.PluralSample(big)), LocPick.PluralCategory(lang, (int)m1000 + 1000), $"{lang} 的 {big}：代表數字的字形一樣");
+                }
+            }
+            Check(Enumerable.Range(-1000, 3000).All(n => LocPick.PluralSample(n) >= 0 && LocPick.PluralSample(n) < LocPick.PluralSamples)
+                && LocPick.PluralSample(long.MinValue) < LocPick.PluralSamples && LocPick.PluralSample(long.MaxValue) < LocPick.PluralSamples,
+                "代表數字都在表裡（0～PluralSamples-1）");
+            Eq(LocPick.PluralSample(0), 0, "0 的代表是 0");
+            Eq(LocPick.PluralSample(1), 1, "1 的代表是 1");
+            Eq(LocPick.PluralSample(-1), 1, "-1 的代表是 1（看絕對值）");
+            Eq(LocPick.PluralSample(2), 102, "2 的代表是 102");
+            Eq(LocPick.PluralSample(111), 111, "111 的代表是 111");
+            Eq(LocPick.PluralSample(4294967312L), 112, "超過 int：後兩位＋100");
+
+            // 建好的 Strings 和直接叫 Loc.Plural 排出來的一樣（現在讀得到的每種語言的 csv；繁中 mod 有跑時的手寫繁中）
+            var days = new long[] { 0, 1, 2, 3, 5, 11, 12, 21, 22, 25, 30, 31, 41, 99, 100, 101, 102, 111, 112, 121, 1000, 1001, 1012, 1022 };
+            foreach (var lang in langs.Where(l => Loc.Tables.ContainsKey(l)).Concat(new[] { Lang.ZhHant }))
+            {
+                var s = LangStrings.For(lang);
+                foreach (var n in days)
+                {
+                    string direct = Loc.Plural("info_days_long", (int)n, n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    Eq(s.DaysText(n), direct, $"{lang} 長：{n} 天和直接取的一樣");
+                }
+            }
+            Loc.Use(Lang.En);
         }
 
         static MachineInfo Progressing(Reason reason = Reason.None, bool insufficient = false, PowerKind power = PowerKind.Battery, int speed = 24) => new MachineInfo
@@ -438,7 +508,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Rules.ShowsName(machine, new Display { ContainerName = false, ItemName = false }), "機器、關箱子與其他物品名稱：照樣顯示");
             Eq(Join(Rules.WithName("粗過濾", true, Rules.WaterLines(HantL, Water(4000000, 9852, PurityKnown.Exact), All))), "粗過濾 / 水量 4000ml / 水質 98.52%",
                 "取了名的水桶：名稱在第一行，下面水量、水質");
-            Eq(Join(Rules.WithName("Ingot A", true, Rules.ExtraLines(EnL, new ItemExtras { IngotPurity = "INGOT_PURITY_HIGH" }, All))), "Ingot A / High Purity",
+            Eq(Join(Rules.WithName("Ingot A", true, Rules.ExtraLines(EnL, new ItemExtras { IngotPurity = "INGOT_PURITY_HIGH" }, All))), "Ingot A / High",
                 "取了名的金屬錠：名稱在第一行，下面純度");
 
             var m = FullMachine();
@@ -1153,7 +1223,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Forms(ml, LabelForm.Short), "2天 / 成 7 / 電 87kJ / +4kJ", "整個換短的：剩幾天也是 2天");
             Eq(Forms(ml, LabelForm.Split), "2天 / 成 / 7 / 電 / 87kJ / +4kJ", "拆兩行：有前綴的才拆，剩幾天、+4kJ 不拆");
             var mlEn = Rules.MachineLines(EnL, machine, All);
-            Eq(Forms(mlEn, LabelForm.Short), "2d / Out 7 / E 87kJ / +4kJ", "英文整個換短的：2day → 2d");
+            Eq(Forms(mlEn, LabelForm.Short), "2d / Out 7 / E 87kJ / +4kJ", "英文整個換短的：2 days → 2d");
             Eq(Forms(mlEn, LabelForm.Split), "2d / Out / 7 / E / 87kJ / +4kJ", "英文拆兩行");
             // 只有一行放不下，其他行也一起換
             var mixed = Rules.WithExtras(Rules.BatteryLines(100, All), HantL, Dur(400, 400), All);
@@ -1317,7 +1387,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var start = new MachineInfo { HasProgress = true, ProgressCurrent = 0, ProgressTarget = 16, ProgressSpeed = 8, Power = PowerKind.Battery, Energy = 50 };
             Eq(Join(Rules.MachineLines(HantL, start, All)), "剩2天 / 電力 50kJ", "今晚開始的水耕機：剩2天");
             Eq(Join(Rules.MachineLines(Hant, start, All)), "2天 / 電 50kJ", "短：2天");
-            Eq(Join(Rules.MachineLines(EnL, start, All)), "2day / Pwr 50kJ", "英文長：2day");
+            Eq(Join(Rules.MachineLines(EnL, start, All)), "2 days / Pwr 50kJ", "英文長：2 days");
             start.Insufficient = true;
             Eq(Join(Rules.MachineLines(HantL, start, All)), "電力 50kJ", "今晚開始但電不夠：不寫剩幾天");
             start.Insufficient = false;
@@ -1423,7 +1493,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var m = new MachineInfo { HasProgress = true, ProgressCurrent = 0, ProgressTarget = 16, ProgressSpeed = 8, Power = PowerKind.Battery, Energy = 3,
                 Insufficient = !Rules.EnoughAfterEarly(3, 100, 2, 5) };
             var lines = Rules.MachineLines(EnL, m, All);
-            Eq(Join(lines), "2day / Pwr 3kJ", "現在 3kJ、耗電 5、陣列早充 2：不紅、照樣算剩幾天");
+            Eq(Join(lines), "2 days / Pwr 3kJ", "現在 3kJ、耗電 5、陣列早充 2：不紅、照樣算剩幾天");
             Eq(lines[1].Color, LineColor.White, "早充後夠：白");
             Check(!Rules.StopsTonight(m), "早充後夠：今晚會動");
             m.Insufficient = !Rules.EnoughAfterEarly(3, 100, 0, 5);
@@ -1503,7 +1573,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Rules.TonightDraw(true, Reason.MaxPurity, false, 8), 0, "已淨化完：不扣");
             Eq(Rules.TonightDraw(true, Reason.None, true, 8), 0, "電不夠：不扣");
             Eq(Rules.TonightDraw(true, Reason.None, false, 0), 0, "耗電 0：不扣");
-            // 淨水器、蒸餾器在水質看不到時 Decide 回 None：當作會運作、算支出（B1）
+            // 淨水器、蒸餾器在水質看不到時 Decide 回 None：當作會運作、算支出（和原因那行一致、不洩漏水質）
             var hidden = new MachineFacts { HasContainer = true, ContainerTotal = 1000, ContainerWater = 1000, PurifierCap = 9900, PurityVisible = false };
             var (purReason, _) = MachineLogic.Decide(MachineKind.Purifier, hidden);
             Eq(Rules.TonightDraw(true, purReason, false, 4), 4, "淨水器水質看不到：當作會運作、扣電");
@@ -1546,7 +1616,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Rules.MachineLines(EnL, down, All).All(l => l.Prefix == null || l.Text != "-8kJ"), "-8kJ 沒有前綴（不拆）");
             Eq(Rules.MachineLines(EnL, down, All).Last().Short, "-8kJ", "-8kJ 長短一樣");
             Eq(Join(Rules.MachineLines(EnL, new MachineInfo { Power = PowerKind.Battery, Energy = 100, TonightNet = 0 }, All)), "Pwr 100kJ", "收支 0：不顯示");
-            // 電那行紅字（電不夠今晚用）時不顯示，有收入也不顯示（A4）
+            // 電那行紅字（電不夠今晚用）時不顯示，有收入也不顯示
             Eq(Join(Rules.MachineLines(EnL, new MachineInfo { Power = PowerKind.Battery, Energy = 3, Insufficient = true, TonightNet = 2 }, All)), "Pwr 3kJ", "紅字：有收入也不顯示");
             Eq(Rules.MachineLines(EnL, new MachineInfo { Power = PowerKind.Battery, Energy = 3, Insufficient = true, TonightNet = 2 }, new Display { MachinePower = false }).Count, 0,
                 "電量那行關掉時照樣看紅字的判斷：不顯示");
@@ -1653,7 +1723,6 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Hant.NoPower, "缺電", "繁中缺電");
             Eq(Hans.NoPower, "缺电", "簡中缺电");
             Eq(En.NoPower, "No power", "英文 No power");
-            Check(En.NoPower.All(c => c < 128), "英文的缺電只用 ASCII");
             Eq(Join(Rules.MachineLines(HantL, new MachineInfo { Reason = Reason.NoPower, Power = PowerKind.Empty, Insufficient = true }, All)), "缺電 / 電力 -",
                 "電池槽空：缺電＋電力 -（不另外寫沒電池）");
             Eq(Join(Rules.MachineLines(HantL, new MachineInfo { Reason = Reason.NoPower, Power = PowerKind.External, Insufficient = true }, All)), "缺電 / 電力 外部",
@@ -1665,7 +1734,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var progressing = Progressing(Reason.NoPower, true);
             progressing.TonightNet = 2;
             Eq(Join(Rules.MachineLines(EnL, progressing, All)), "No power / Pwr 50kJ", "缺電：沒有剩幾天、沒有收支");
-            Eq(Rules.MachineLines(EnL, progressing, new Display { MachinePower = false }).Count(l => l.Text == "3day" || l.Text == "+2kJ"), 0,
+            Eq(Rules.MachineLines(EnL, progressing, new Display { MachinePower = false }).Count(l => l.Text == "3 days" || l.Text == "+2kJ"), 0,
                 "缺電、電量那行關掉：照樣沒有剩幾天與收支");
             Eq(Rules.StopsTonight(Progressing(Reason.NoPower, true)), Rules.StopsTonight(Progressing(Reason.None, true)), "StopsTonight：缺電和以前的紅字一樣");
             Check(Rules.StopsTonight(Progressing(Reason.NoPower, true)), "StopsTonight：缺電今晚不會動");
@@ -1698,7 +1767,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(alarmEarly.Reason, Reason.NoPower, "警報系統 1kJ＋早充 4、耗電 2：早充不算，缺電");
             var projector = Pipeline(MachineKind.Other, new MachineFacts(), "mirage_projector", 1, 4, 2, 0);
             Eq(Join(Rules.MachineLines(EnL, projector, All)), "Pwr 1kJ / +2kJ", "幻影投影機 1kJ＋早充 4、耗電 2：不缺電、收支 +2");
-            // 高級渦輪增壓器儲能滿、電池槽空：白字「電力 -」、不寫缺電（A4）
+            // 高級渦輪增壓器儲能滿、電池槽空：白字「電力 -」、不寫缺電（那晚遊戲不扣電）
             bool readyCheck = MachineLogic.ChecksPower(true, "turbo_booster_adv", 5, 15);
             var turboEmpty = new MachineInfo { Reason = MachineLogic.WithPower(Reason.None, true, readyCheck), Power = PowerKind.Empty, Insufficient = readyCheck };
             Eq(Join(Rules.MachineLines(HantL, turboEmpty, All)), "電力 -", "高級渦輪增壓器儲能滿、電池槽空：不寫缺電");
@@ -1803,8 +1872,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Rules.FeatureVisible(false, true, true) && Rules.FeatureShowsReal(false, true, false), "hidden 但檢測過：讀真值");
             // 沒有額外資訊時 WithExtras 回原本的 body（同一個物件，不另外配置）
             var body = new List<Line> { new Line("x") };
-            Check(ReferenceEquals(Rules.WithExtras(body, Strings.For(Lang.En), null, new Display()), body), "沒有額外資訊時回原本的 body");
-            Check(Rules.WithExtras(null, Strings.For(Lang.En), null, new Display()) == null, "沒有額外資訊、也沒有 body 時回 null");
+            Check(ReferenceEquals(Rules.WithExtras(body, LangStrings.For(Lang.En), null, new Display()), body), "沒有額外資訊時回原本的 body");
+            Check(Rules.WithExtras(null, LangStrings.For(Lang.En), null, new Display()) == null, "沒有額外資訊、也沒有 body 時回 null");
         }
 
         static void Extras()
@@ -1812,8 +1881,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 字：三語 × 短／長
             var cases = new (Strings s, string what, string heat, string uses, string dur, string ingot)[]
             {
-                (En, "英文短", "H 45%", "U 3", "D 320", "High Purity"),
-                (EnL, "英文長", "Heat 45%", "Uses 3", "Dur 320", "High Purity"),
+                (En, "英文短", "H 45%", "U 3", "D 320", "High"),
+                (EnL, "英文長", "Heat 45%", "Uses 3", "Dur 320", "High"),
                 (Hans, "簡中短", "热 45%", "剩 3", "耐 320", "高纯度"),
                 (HansL, "簡中長", "热度 45%", "剩余 3", "耐久 320", "高纯度"),
                 (Hant, "繁中短", "熱 45%", "剩 3", "耐 320", "高純度"),
@@ -1829,11 +1898,21 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
             // 金屬錠純度：六級照遊戲的順序、認不得的不顯示
             Eq(string.Join(",", Rules.IngotPurityConstants.Select(k => Join(Rules.ExtraLines(EnL, Ingot(k), All)))),
-                "Perfect Purity,Very High Purity,High Purity,Fair Purity,Low Purity,Very Low Purity", "英文純度六級");
+                "Perfect,Very High,High,Fair,Low,Very Low", "英文純度六級");
             Eq(string.Join(",", Rules.IngotPurityConstants.Select(k => Join(Rules.ExtraLines(HantL, Ingot(k), All)))),
                 "完美純度,極高純度,高純度,中等純度,低純度,極低純度", "繁中純度六級（遊戲字串表 mech_condition_*_purity）");
             Eq(string.Join(",", Rules.IngotPurityConstants.Select(k => Join(Rules.ExtraLines(HansL, Ingot(k), All)))),
                 "完美纯度,极高纯度,高纯度,中等纯度,低纯度,极低纯度", "簡中純度六級");
+            // 西文 6 種只寫等級，不含「純度」那個詞（框畫在金屬錠上；俄文的整句會伸出物品欄邊框、法西文被切的是等級本身）；
+            // 六級彼此不重複。中文、日文照遊戲的字（本來就短）。
+            foreach (var (lang, word) in new[] { ("en", "purity"), ("de", "reinheit"), ("fr", "pureté"), ("es", "pureza"), ("ru", "чистот"), ("pl", "czysto") })
+            {
+                if (!Loc.Tables.TryGetValue(lang, out var table)) { Check(false, $"{lang}.csv 讀得到"); continue; }
+                var grades = new[] { "perfect", "very_high", "high", "fair", "low", "very_low" }
+                    .Select(g => table.TryGetValue("info_ingot_" + g, out var v) ? v : null).ToArray();
+                Check(grades.All(v => !string.IsNullOrEmpty(v) && !v.ToLowerInvariant().Contains(word)), $"{lang} 金屬錠純度只寫等級（不含 {word}）");
+                Check(grades.Distinct().Count() == grades.Length, $"{lang} 金屬錠純度六級不重複");
+            }
             Eq(Rules.ExtraLines(EnL, Ingot("INGOT_PURITY_INCONCLUSIVE"), All).Count, 0, "認不得的純度常數：不顯示");
             Eq(Rules.ExtraLines(EnL, Ingot(""), All).Count, 0, "空的純度字串：不顯示");
             Eq(Rules.ExtraLines(EnL, Ingot(null), All).Count, 0, "沒有純度：不顯示");
@@ -1859,10 +1938,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
             // 行序：耐久度、純度、使用次數、熱度（熱度最後），接在本來的行後面
             var all = Rules.ExtraLines(EnL, AllExtras(), All);
-            Eq(Join(all), "Dur 320 / High Purity / Uses 3 / Heat 45%", "行序：耐久度、純度、使用次數、熱度");
+            Eq(Join(all), "Dur 320 / High / Uses 3 / Heat 45%", "行序：耐久度、純度、使用次數、熱度");
             Eq(string.Join(",", all.Select(l => l.Color)), "White,White,White,Red", "顏色：只有熱度紅");
             var tank = Rules.WithExtras(Rules.WithName("Tank", true, Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All)), EnL, AllExtras(), All);
-            Eq(Join(tank), "Tank / Vol 4000ml / Pur 98.52% / Dur 320 / High Purity / Uses 3 / Heat 45%",
+            Eq(Join(tank), "Tank / Vol 4000ml / Pur 98.52% / Dur 320 / High / Uses 3 / Heat 45%",
                 "名稱、水量、水質、耐久度、純度、使用次數、熱度");
             Eq(tank[0].Color, LineColor.Name, "名稱照樣淡藍、在第一行");
             var m = FullMachine();
@@ -1870,7 +1949,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var machine = Rules.WithExtras(Rules.MachineLines(EnL, m, All), EnL, Heat(75), All);
             Eq(Join(machine), "Purifier A / Vol 4000ml / Pur 99.01% / Max purity / Pwr 87kJ / Heat 75%", "機器的行之後才是熱度（最後一行）");
             Eq(string.Join(",", machine.Select(l => l.Color)), "Name,White,White,Orange,Red,Red", "機器：電不夠紅、熱度紅");
-            Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, RunningMachine(), All), EnL, Heat(75), All)), "Vol 4000ml / Pur 99.01% / 3day / Pwr 87kJ / Heat 75%",
+            Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, RunningMachine(), All), EnL, Heat(75), All)), "Vol 4000ml / Pur 99.01% / 3 days / Pwr 87kJ / Heat 75%",
                 "運作中的機器：剩幾天在電前面、熱度最後");
             Eq(Join(Rules.WithExtras(Rules.BatteryLines(8, All), Hant, Heat(25), All)), "8kJ / 熱 25%", "電池（沒有前綴）之後接熱度");
             Eq(Join(Rules.WithExtras(null, HantL, Heat(25), All)), "熱度 25%", "其他物品（不是本來那幾種）只有熱度");
@@ -1880,15 +1959,15 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
             // 開關：各自關掉只少那一行
             var x = AllExtras();
-            Eq(Join(Rules.ExtraLines(EnL, x, new Display { Durability = false })), "High Purity / Uses 3 / Heat 45%", "關耐久度");
+            Eq(Join(Rules.ExtraLines(EnL, x, new Display { Durability = false })), "High / Uses 3 / Heat 45%", "關耐久度");
             Eq(Join(Rules.ExtraLines(EnL, x, new Display { IngotPurity = false })), "Dur 320 / Uses 3 / Heat 45%", "關金屬錠純度");
-            Eq(Join(Rules.ExtraLines(EnL, x, new Display { UseCount = false })), "Dur 320 / High Purity / Heat 45%", "關使用次數");
-            Eq(Join(Rules.ExtraLines(EnL, x, new Display { StolenHeat = false })), "Dur 320 / High Purity / Uses 3", "關熱度");
+            Eq(Join(Rules.ExtraLines(EnL, x, new Display { UseCount = false })), "Dur 320 / High / Heat 45%", "關使用次數");
+            Eq(Join(Rules.ExtraLines(EnL, x, new Display { StolenHeat = false })), "Dur 320 / High / Uses 3", "關熱度");
             Eq(Rules.ExtraLines(EnL, x, ExtrasOff).Count, 0, "四個都關：沒有行");
             Check(Rules.WithExtras(null, EnL, x, ExtrasOff) == null, "只有這四種資訊的物品、四個都關：沒有標籤");
             var off = new Display { ContainerName = false, MachineName = false, WaterVolume = false, WaterPurity = false, BatteryCharge = false,
                 MachinePower = false, MachineReason = false, MachineProgress = false, MachineWater = false };
-            Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, m, off), EnL, x, off)), "Dur 320 / High Purity / Uses 3 / Heat 45%",
+            Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, m, off), EnL, x, off)), "Dur 320 / High / Uses 3 / Heat 45%",
                 "原本的開關全關：不影響這四種");
             Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, m, ExtrasOff), EnL, x, ExtrasOff)),
                 "Purifier A / Vol 4000ml / Pur 99.01% / Max purity / Pwr 87kJ", "這四個全關：不影響機器的行");
@@ -1907,15 +1986,18 @@ namespace ProbablyStolenItemQuickInfo.Verify
         /// </summary>
         static void Prefixes()
         {
-            Check(ReferenceEquals(Strings.For(Lang.En), EnL), "預設是長的（英文）");
-            Check(ReferenceEquals(Strings.For(Lang.ZhHant), HantL), "預設是長的（繁中）");
-            Check(ReferenceEquals(Strings.For(Lang.ZhHans, PrefixStyle.Short), Hans), "同一份字串（不每次配置）");
-            Check(ReferenceEquals(Strings.For(Lang.ZhHans, PrefixStyle.Long), HansL), "同一份字串（長）");
+            var def = LangStrings.For(Lang.En);
+            Eq(def.Water, EnL.Water, "預設是長的（英文）");
+            Check(!ReferenceEquals(def, def.Short), "預設是長的那份（Short 指向另一份）");
+            Eq(LangStrings.For(Lang.ZhHant).Water, HantL.Water, "預設是長的（繁中）");
+            var hans = LangStrings.For(Lang.ZhHans);
+            Check(ReferenceEquals(LangStrings.For(Lang.ZhHans, PrefixStyle.Short), hans.Short), "語言沒變：同一份字串（不每次配置）");
+            Check(ReferenceEquals(LangStrings.For(Lang.ZhHans, PrefixStyle.Long), hans), "語言沒變：同一份字串（長）");
 
             var table = new (Strings s, string what, string expected)[]
             {
                 (En, "英文短", "W,Q,E,3d,Out,H,U,D"),
-                (EnL, "英文長", "Vol,Pur,Pwr,3day,Output,Heat,Uses,Dur"),
+                (EnL, "英文長", "Vol,Pur,Pwr,3 days,Output,Heat,Uses,Dur"),
                 (Hans, "簡中短", "水,质,电,3天,成,热,剩,耐"),
                 (HansL, "簡中長", "水量,水质,电力,剩3天,成品,热度,剩余,耐久"),
                 (Hant, "繁中短", "水,質,電,3天,成,熱,剩,耐"),
@@ -1952,9 +2034,9 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Join(Rules.WithExtras(Rules.MachineLines(HansL, m, All), HansL, AllExtras(), All)),
                 "Purifier A / 水量 4000ml / 水质 99.01% / 剩3天 / 电力 87kJ / 耐久 320 / 高纯度 / 剩余 3 / 热度 45%", "簡中長：整個標籤");
             Eq(Join(Rules.WithExtras(Rules.MachineLines(EnL, m, All), EnL, AllExtras(), All)),
-                "Purifier A / Vol 4000ml / Pur 99.01% / 3day / Pwr 87kJ / Dur 320 / High Purity / Uses 3 / Heat 45%", "英文長：整個標籤");
+                "Purifier A / Vol 4000ml / Pur 99.01% / 3 days / Pwr 87kJ / Dur 320 / High / Uses 3 / Heat 45%", "英文長：整個標籤");
             Eq(Join(Rules.WithExtras(Rules.MachineLines(En, m, All), En, AllExtras(), All)),
-                "Purifier A / W 4000ml / Q 99.01% / 3d / E 87kJ / D 320 / High Purity / U 3 / H 45%", "英文短：整個標籤");
+                "Purifier A / W 4000ml / Q 99.01% / 3d / E 87kJ / D 320 / High / U 3 / H 45%", "英文短：整個標籤");
             Eq(Join(Rules.MachineLines(HantL, FullMachine(), All)), "水量 4000ml / 水質 99.01% / 已淨化完 / 電力 87kJ", "繁中長：有原因的機器");
             Eq(Join(Rules.MachineLines(EnL, new MachineInfo { Power = PowerKind.External }, All)), "Pwr ext", "英文長：外部電源");
             Eq(Join(Rules.MachineLines(HantL, new MachineInfo { Power = PowerKind.Empty }, All)), "電力 -", "繁中長：沒放電池");
@@ -1966,7 +2048,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 "原因沒有前綴（長短一樣）");
         }
 
-        /// <summary>三語字串：每個欄位都有字、估計七段都有字、每個原因都有字、純度六級都有字（長短兩份都測）；英文（含共用的範圍字串）只用 ASCII。</summary>
+        /// <summary>三語字串：每個欄位都有字、估計七段都有字、每個原因都有字、純度六級都有字（長短兩份都測）。</summary>
         static void StringTables()
         {
             foreach (var (name, s) in new[] { ("En", En), ("ZhHans", Hans), ("ZhHant", Hant), ("EnLong", EnL), ("ZhHansLong", HansL), ("ZhHantLong", HantL) })
@@ -1992,28 +2074,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Hans.NoModule, "缺模组", "簡中缺模组（遊戲的「模組」簡中是模组）");
             Eq(Hant.Blocked, "無法開始", "繁中無法開始");
             Check(!Equals(Hans.NoChip, Hant.NoChip), "簡繁的晶片用詞不同（芯片／晶片）");
-
-            // 英文介面：遊戲的英文字型缺很多符號，所有會出現在英文標籤上的字都要是 ASCII
-            var english = new List<string>();
-            foreach (var f in typeof(Strings).GetFields(BindingFlags.Instance | BindingFlags.Public))
-                foreach (var en in new[] { En, EnL })
-                {
-                    if (f.GetValue(en) is string str) english.Add(str);
-                    else if (f.GetValue(en) is string[] arr) english.AddRange(arr);
-                }
-            english.AddRange(Rules.PurityRanges);
-            english.Add(Join(Rules.MachineLines(En, FullMachine(), All)));
-            english.Add(Join(Rules.WaterLines(En, Water(1, 1, PurityKnown.Unknown), All)));
-            english.Add(Join(Rules.WithExtras(Rules.MachineLines(EnL, FullMachine(), All), EnL, AllExtras(), All)));
-            english.Add(Join(Rules.WithExtras(Rules.MachineLines(En, FullMachine(), All), En, AllExtras(), All)));
-            english.Add(Join(Rules.WithExtras(Rules.MachineLines(En, RunningMachine(), All), En, AllExtras(), All)));
-            english.Add(Join(Rules.WithExtras(Rules.MachineLines(EnL, RunningMachine(), All), EnL, AllExtras(), All)));
-            english.Add(Join(Rules.MachineLines(EnL, LoadedMachine(), All)));
-            english.Add(Join(Rules.MachineLines(En, LoadedMachine(), All)));
-            english.Add(Join(Rules.Rows(Rules.MachineLines(EnL, LoadedMachine(), All), LabelForm.Split)));
-            english.Add(Join(Rules.BatteryLines(96, All, 4)));
-            foreach (var str in english)
-                Check(str.All(c => c < 128), $"英文只用 ASCII：「{str}」");
+            // 1.2.0 起不再檢查「英文只用 ASCII」：各語言的缺字由根目錄的 tools/locale_check.py 對遊戲的字型檢查
         }
 
         /// <summary>這個檔所在的資料夾（編譯時的路徑；離線測試只在開發的電腦上跑）。</summary>
@@ -2042,33 +2103,47 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// 設定與按鍵的標籤、說明（public/Localization 的 en.csv、zh.csv）：Settings 用到的每個 key 兩份都有標籤與 _tip、csv 沒有多出沒用到的；
-        /// 有前綴的那幾行的開關，說明最後兩行是 Short 在上、Long 在下的例子，例子和標籤實際畫的字一樣；
-        /// 沒有前綴的不加；前綴設定的說明列出全部對照；英文只用 ASCII。
+        /// 設定與按鍵的標籤、說明（public/Localization 的 en.csv、zh.csv）：Settings 用到的每個 key 兩份都有標籤與 _tip、csv 沒有多出沒用到的
+        /// （1.2.0 起 csv 也放資訊框的字，Strings.cs 用到的 key 也算用到）；
+        /// 有前綴的那幾行的開關，說明最後兩行是 Short 在上、Long 在下的例子。1.2.0 起例子在 csv 裡是佔位符、由 Tips 用資訊框的字填，
+        /// 所以比的是填好的說明（en、zh、繁中 mod 有跑時的 zh-Hant 三種），例子和標籤實際畫的字一樣、沒有殘留的大括號；
+        /// 沒有前綴的不加；前綴設定的說明列出全部對照。
         /// </summary>
         static void Localization()
         {
             string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
-            var en = ReadCsv(Path.Combine(root, "public", "Localization", "en.csv"));
-            var zh = ReadCsv(Path.Combine(root, "public", "Localization", "zh.csv"));
+            // csv 的資料夾和假 Loc 找的同一個（私人 repo 是 public/Localization，公開 repo 是 mod 資料夾的 Localization）
+            string locDir = Loc.LocalizationDir;
+            var en = ReadCsv(Path.Combine(locDir, "en.csv"));
+            var zh = ReadCsv(Path.Combine(locDir, "zh.csv"));
+            var hant = ReadCsv(Path.Combine(locDir, "zh-Hant.csv"));
             string settings = File.ReadAllText(Path.Combine(root, "mod", "src", "Settings.cs"));
-            var used = Regex.Matches(settings, "L\\(\"([a-z_]+)\"\\)").Select(m => m.Groups[1].Value).Distinct().ToList();
+            string tipsSrc = File.ReadAllText(Path.Combine(root, "mod", "src", "Tips.cs"));
+            string stringsSrc = File.ReadAllText(Path.Combine(root, "mod", "src", "Strings.cs"));
+            List<string> Keys(string src, string method) =>
+                Regex.Matches(src, "Loc\\." + method + "\\(\\s*\"([a-z_.]+)\"").Select(m => m.Groups[1].Value).Distinct().ToList();
+            var used = Keys(settings, "Get").Concat(Keys(tipsSrc, "Get")).Distinct().ToList();
+            var infoKeys = Keys(stringsSrc, "Get");
+            var infoPlurals = Keys(stringsSrc, "Plural");
+            Check(!settings.Contains("ModHelper.GetLocalized"), "Settings 取字都經過 Loc（最長字串模式也涵蓋設定）");
             var labels = used.Where(k => !k.EndsWith("_tip")).ToList();
             Eq(labels.Count, 25, "Settings 用到的標籤數（24 個設定＋按鍵）");
             foreach (var k in labels)
             {
                 Check(used.Contains(k + "_tip"), $"Settings 的 {k} 有說明");
-                foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
+                foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh), ("zh-Hant.csv", hant) })
                 {
                     Check(csv.TryGetValue(k, out var v) && v.Trim().Length > 0, $"{name} 有 {k}");
                     Check(csv.TryGetValue(k + "_tip", out var t) && t.Trim().Length > 0, $"{name} 有 {k}_tip");
                 }
             }
-            foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
+            bool Used(string k) => used.Contains(k) || infoKeys.Contains(k) || infoPlurals.Any(b => k.StartsWith(b + ".", StringComparison.Ordinal));
+            foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh), ("zh-Hant.csv", hant) })
                 foreach (var k in csv.Keys)
-                    Check(used.Contains(k), $"{name} 的 {k} 有用到（沒有打錯或多出來的）");
-            foreach (var (k, v) in en)
-                Check(v.All(c => c < 128), $"en.csv 只用 ASCII：{k}");
+                    Check(Used(k), $"{name} 的 {k} 有用到（沒有打錯或多出來的）");
+            // zh-Hant.csv 放齊 en.csv 的每個 key（設定也是手寫繁中，照簡易待辦、視窗群組；tools/locale_check.py 也這樣要求）。
+            // 單複數的字形（key 帶 .one／.other）中文只有 .other，另外比。
+            Check(en.Keys.Where(k => !k.Contains('.')).All(hant.ContainsKey), "zh-Hant.csv 有 en.csv 的每個 key");
 
             // 有前綴的行：說明最後兩行是例子，Short 在上、Long 在下，例子和標籤實際畫的一樣
             var w = Water(4000000, 9852, PurityKnown.Exact);
@@ -2076,34 +2151,52 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var progress = new MachineInfo { HasProgress = true, ProgressCurrent = 40, ProgressTarget = 100, ProgressSpeed = 24 };
             var output = new MachineInfo { OutputCount = 7 };
             var noPower = new Display { MachinePower = false };
-            var examples = new (string key, Func<Strings, string> line, Func<Strings, string> zhLine)[]
+            var examples = new (string key, Func<Strings, string> tip, Func<Strings, string> line, Func<Strings, string> zhLine)[]
             {
-                ("cfg_water_volume", s => Join(Rules.WaterLines(s, w, new Display { WaterPurity = false })), null),
-                ("cfg_water_purity", s => Join(Rules.WaterLines(s, w, new Display { WaterVolume = false })), null),
-                ("cfg_machine_power", s => Join(Rules.MachineLines(s, power, All)), null),
-                ("cfg_machine_progress", s => Join(Rules.MachineLines(s, progress, noPower)), null),
-                ("cfg_machine_output", s => Join(Rules.MachineLines(s, output, noPower)), null),
-                ("cfg_machine_water", s => $"{s.Water} / {s.Quality}", s => $"{s.Water}／{s.Quality}"),
-                ("cfg_stolen_heat", s => Join(Rules.ExtraLines(s, Heat(45), All)), null),
-                ("cfg_use_count", s => Join(Rules.ExtraLines(s, Uses(3), All)), null),
-                ("cfg_durability", s => Join(Rules.ExtraLines(s, Dur(320, 400), All)), null),
+                ("cfg_water_volume", Tips.WaterVolume, s => Join(Rules.WaterLines(s, w, new Display { WaterPurity = false })), null),
+                ("cfg_water_purity", Tips.WaterPurity, s => Join(Rules.WaterLines(s, w, new Display { WaterVolume = false })), null),
+                ("cfg_machine_power", Tips.MachinePower, s => Join(Rules.MachineLines(s, power, All)), null),
+                ("cfg_machine_progress", Tips.MachineProgress, s => Join(Rules.MachineLines(s, progress, noPower)), null),
+                ("cfg_machine_output", Tips.MachineOutput, s => Join(Rules.MachineLines(s, output, noPower)), null),
+                ("cfg_machine_water", Tips.MachineWater, s => $"{s.Water} / {s.Quality}", s => $"{s.Water}／{s.Quality}"),
+                ("cfg_stolen_heat", Tips.StolenHeat, s => Join(Rules.ExtraLines(s, Heat(45), All)), null),
+                ("cfg_use_count", Tips.UseCount, s => Join(Rules.ExtraLines(s, Uses(3), All)), null),
+                ("cfg_durability", Tips.Durability, s => Join(Rules.ExtraLines(s, Dur(320, 400), All)), null),
             };
-            foreach (var (key, line, zhLine) in examples)
+            var langs = new (string lang, string sep, Strings longS)[] { (Lang.En, ": ", EnL), (Lang.ZhHans, "：", HansL), (Lang.ZhHant, "：", HantL) };
+            foreach (var (key, tipOf, line, zhLine) in examples)
             {
-                foreach (var (name, csv, sep, shortS, longS, f) in new[]
+                foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh), ("zh-Hant.csv", hant) })
+                    Check(csv.TryGetValue(key + "_tip", out var raw) && raw.Contains("{0}") && raw.Contains("{1}"), $"{name} {key}_tip 的例子是佔位符（由程式填）");
+                foreach (var (lang, sep, longS) in langs)
                 {
-                    ("en.csv", en, ": ", En, EnL, line),
-                    ("zh.csv", zh, "：", Hans, HansL, zhLine ?? line),
-                })
-                {
-                    if (!csv.TryGetValue(key + "_tip", out var tip)) continue; // 上面已經記失敗
-                    var rows = tip.Split('\n');
-                    Check(rows.Length >= 3, $"{name} {key}_tip 有說明和兩行例子");
+                    var f = lang == Lang.En ? line : zhLine ?? line;
+                    Loc.Use(lang);
+                    var rows = tipOf(longS).Split('\n');
+                    Check(rows.Length >= 3, $"{lang} {key}_tip 有說明和兩行例子");
                     if (rows.Length < 3) continue;
-                    Eq(rows[rows.Length - 2], "Short" + sep + f(shortS), $"{name} {key}_tip 倒數第二行是 Short 的例子");
-                    Eq(rows[rows.Length - 1], "Long" + sep + f(longS), $"{name} {key}_tip 最後一行是 Long 的例子");
+                    Eq(rows[rows.Length - 2], "Short" + sep + f(longS.Short), $"{lang} {key}_tip 倒數第二行是 Short 的例子");
+                    Eq(rows[rows.Length - 1], "Long" + sep + f(longS), $"{lang} {key}_tip 最後一行是 Long 的例子");
                 }
             }
+            // 填好的說明沒有殘留的大括號（佔位符都填得進去；格式寫壞的話 LocPick.Format 會回傳原字串，這裡就抓得到）
+            var allTips = new (string what, Func<Strings, string> tip)[]
+            {
+                ("水量", Tips.WaterVolume), ("水質", Tips.WaterPurity), ("機器電量", Tips.MachinePower), ("進度", Tips.MachineProgress),
+                ("成品數", Tips.MachineOutput), ("機器裡的水", Tips.MachineWater), ("熱度", Tips.StolenHeat), ("使用次數", Tips.UseCount),
+                ("耐久度", Tips.Durability), ("原因", Tips.MachineReason), ("金屬錠純度", Tips.IngotPurity), ("前綴", Tips.Prefix),
+            };
+            foreach (var (lang, _, longS) in langs)
+                foreach (var (what, tipOf) in allTips)
+                {
+                    Loc.Use(lang);
+                    var filled = tipOf(longS);
+                    Check(filled.Length > 0 && !filled.Contains('{') && !filled.Contains('}'), $"{lang} {what}的說明填完沒有殘留的大括號：{filled}");
+                }
+            // 繁中 mod 有跑時：說明和例子都是 zh-Hant.csv 的手寫繁中
+            Loc.Use(Lang.ZhHant);
+            Check(Tips.WaterPurity(HantL).EndsWith("\nShort：質 98.52%\nLong：水質 98.52%") && Tips.WaterPurity(HantL).StartsWith("顯示容器"),
+                "zh-Hant：說明與例子都用 zh-Hant.csv 的字");
             // 沒有前綴的不加例子
             foreach (var key in new[] { "cfg_container_name", "cfg_machine_name", "cfg_item_name", "cfg_machine_reason", "cfg_battery_charge", "cfg_real_purity", "cfg_ingot_purity", "cfg_text_size",
                 "cfg_name_position", "cfg_name_text_size", "cfg_battery_tonight_charge", "cfg_machine_tonight_net" })
@@ -2131,13 +2224,25 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 "en.csv cfg_machine_tonight_net_tip 寫綠、橘與紅字時不顯示");
             Check(zh.TryGetValue("cfg_machine_tonight_net_tip", out var ntZh) && ntZh.Contains("绿字") && ntZh.Contains("橙字") && ntZh.Contains("电力那行变红时不显示"),
                 "zh.csv cfg_machine_tonight_net_tip 寫綠、橘與紅字時不顯示");
-            // 今晚不會運作的原因（B2）：例子的缺水換成缺電，照舊三個；例子和標籤畫的字一樣
-            Eq(en.TryGetValue("cfg_machine_reason_tip", out var mrEn) ? mrEn : null,
-                "Show a short reason in orange when a machine won't run tonight, for example No input, No power or Output full.", "en.csv cfg_machine_reason_tip");
-            Eq(zh.TryGetValue("cfg_machine_reason_tip", out var mrZh) ? mrZh : null,
-                "机器今晚不会运作时，用橙色显示简短的原因，例如缺料、缺电、产出满了。", "zh.csv cfg_machine_reason_tip");
-            Check(mrEn != null && mrEn.Contains($"{En.NoInput}, {En.NoPower} or {En.OutputFull}."), "en.csv cfg_machine_reason_tip 的例子和標籤的字一樣");
-            Check(mrZh != null && mrZh.Contains($"{Hans.NoInput}、{Hans.NoPower}、{Hans.OutputFull}。"), "zh.csv cfg_machine_reason_tip 的例子和標籤的字一樣");
+            // 今晚不會運作的原因：例子的缺水換成缺電，照舊三個（缺電是後來加的原因，「顯示電量」關掉時只有原因那行會說，說明要讓人知道有它）；
+            // 例子由 Tips 用標籤的字填
+            Loc.Use(Lang.En);
+            var mrEn = Tips.MachineReason(EnL);
+            Eq(mrEn, "Show a short reason in orange when a machine won't run tonight, for example No input, No power or Output full.", "en cfg_machine_reason_tip");
+            Loc.Use(Lang.ZhHans);
+            var mrZh = Tips.MachineReason(HansL);
+            Eq(mrZh, "机器今晚不会运作时，用橙色显示简短的原因，例如缺料、缺电、产出满了。", "zh cfg_machine_reason_tip");
+            Check(mrEn.Contains($"{En.NoInput}, {En.NoPower} or {En.OutputFull}."), "en cfg_machine_reason_tip 的例子和標籤的字一樣");
+            Check(mrZh.Contains($"{Hans.NoInput}、{Hans.NoPower}、{Hans.OutputFull}。"), "zh cfg_machine_reason_tip 的例子和標籤的字一樣");
+            Loc.Use(Lang.ZhHant);
+            Check(Tips.MachineReason(HantL).Contains("缺料、缺電、產出滿了。"), "zh-Hant cfg_machine_reason_tip 的例子是手寫繁中的原因");
+            // 金屬錠純度：例子是高純度（標籤畫的字）
+            Loc.Use(Lang.En);
+            Eq(Tips.IngotPurity(EnL), "Show the purity grade of a Metal Ingot, for example High.", "en cfg_ingot_purity_tip");
+            Loc.Use(Lang.ZhHans);
+            Eq(Tips.IngotPurity(HansL), "在金属锭上显示纯度的等级，例如“高纯度”。", "zh cfg_ingot_purity_tip");
+            Loc.Use(Lang.ZhHant);
+            Check(Tips.IngotPurity(HantL).Contains("「高純度」"), "zh-Hant cfg_ingot_purity_tip 的例子是高純度（台灣用「」）");
             // 名稱位置：兩個選項各一行，用下拉選單顯示的英文名稱；簡中寫「置中」（繁中 mod 不會把「居中」轉成「置中」）
             foreach (var (name, csv, sep) in new[] { ("en.csv", en, " = "), ("zh.csv", zh, "＝") })
                 if (csv.TryGetValue("cfg_name_position_tip", out var np))
@@ -2153,7 +2258,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 "en.csv cfg_always_names_tip 兩行：不用按鍵、照三個名稱開關");
             Check(zh.TryGetValue("cfg_always_names_tip", out var atZh) && atZh.Split('\n').Length == 2 && atZh.Contains("不用按键") && atZh.Contains("三个名称开关"),
                 "zh.csv cfg_always_names_tip 兩行：不用按鍵、照三個名稱開關");
-            // 「標籤」改叫「資訊框」：csv 的值裡不再有 label／标签（第一行的 # 註解不算，ReadCsv 已經跳過）
+            // 「標籤」改叫「資訊框」：csv 的值裡不再有 label／标签（# 註解不算，ReadCsv 已經跳過）
             foreach (var (k, v) in en)
                 Check(!v.ToLowerInvariant().Contains("label"), $"en.csv {k} 沒有 label");
             foreach (var (k, v) in zh)
@@ -2201,17 +2306,25 @@ namespace ProbablyStolenItemQuickInfo.Verify
             }
             Check(en.TryGetValue("key_show_info", out var keyNameEn) && !keyNameEn.ToLowerInvariant().Contains("hold"), "en.csv key_show_info 不分模式（不寫 hold）");
             Check(zh.TryGetValue("key_show_info", out var keyNameZh) && !keyNameZh.Contains("按住"), "zh.csv key_show_info 不分模式（不寫按住）");
-            // 剩幾天的字樣出現在前綴與進度的說明
-            Check(en.TryGetValue("cfg_prefix_tip", out var pEn) && pEn.Contains("3d,") && pEn.Contains("3day,") && !pEn.Contains("Prog"), "en.csv cfg_prefix_tip 是剩幾天的字樣");
-            Check(zh.TryGetValue("cfg_prefix_tip", out var pZh) && pZh.Contains("、3天、") && pZh.Contains("、剩3天、") && !pZh.Contains("进度"), "zh.csv cfg_prefix_tip 是剩幾天的字樣");
+            // 剩幾天的字樣出現在前綴與進度的說明（1.2.0 起英文長的是 3 days）
+            Loc.Use(Lang.En);
+            var pEn = Tips.Prefix(EnL);
+            Loc.Use(Lang.ZhHans);
+            var pZh = Tips.Prefix(HansL);
+            Check(pEn.Contains("3d,") && pEn.Contains("3 days,") && !pEn.Contains("Prog"), "en cfg_prefix_tip 是剩幾天的字樣");
+            Check(pZh.Contains("、3天、") && pZh.Contains("、剩3天、") && !pZh.Contains("进度"), "zh cfg_prefix_tip 是剩幾天的字樣");
             // 成品數的前綴（Out／Output、成／成品）也在前綴的對照裡
-            Check(pEn != null && pEn.Contains(", Out,") && pEn.Contains(", Output,"), "en.csv cfg_prefix_tip 有 Out／Output");
-            Check(pZh != null && pZh.Contains("、成、") && pZh.Contains("、成品、"), "zh.csv cfg_prefix_tip 有 成／成品");
-            Check(en.TryGetValue("cfg_machine_progress_tip", out var mpEn) && mpEn.EndsWith("\nShort: 3d\nLong: 3day"), "en.csv cfg_machine_progress_tip 的例子");
-            Check(zh.TryGetValue("cfg_machine_progress_tip", out var mpZh) && mpZh.EndsWith("\nShort：3天\nLong：剩3天"), "zh.csv cfg_machine_progress_tip 的例子");
+            Check(pEn.Contains(", Out,") && pEn.Contains(", Output,"), "en cfg_prefix_tip 有 Out／Output");
+            Check(pZh.Contains("、成、") && pZh.Contains("、成品、"), "zh cfg_prefix_tip 有 成／成品");
+            Loc.Use(Lang.En);
+            var mpEn = Tips.MachineProgress(EnL);
+            Loc.Use(Lang.ZhHans);
+            var mpZh = Tips.MachineProgress(HansL);
+            Check(mpEn.EndsWith("\nShort: 3d\nLong: 3 days"), "en cfg_machine_progress_tip 的例子");
+            Check(mpZh.EndsWith("\nShort：3天\nLong：剩3天"), "zh cfg_machine_progress_tip 的例子");
             // 剩幾天照現在的作業速度算、不推算模組效果之後的變化（2026-11-08 使用者要寫進說明）；模組效果用遊戲的名稱
-            Check(mpEn != null && mpEn.Contains("Progress Speed") && mpEn.Contains("Overcharged") && mpEn.Contains("Degrading"), "en.csv cfg_machine_progress_tip 寫不推算模組效果");
-            Check(mpZh != null && mpZh.Contains("作业速度") && mpZh.Contains("过载") && mpZh.Contains("退化"), "zh.csv cfg_machine_progress_tip 寫不推算模組效果");
+            Check(mpEn.Contains("Progress Speed") && mpEn.Contains("Overcharged") && mpEn.Contains("Degrading"), "en cfg_machine_progress_tip 寫不推算模組效果");
+            Check(mpZh.Contains("作业速度") && mpZh.Contains("过载") && mpZh.Contains("退化"), "zh cfg_machine_progress_tip 寫不推算模組效果");
             // 真實水質的說明分三行：關、開、要先開顯示水質
             foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
                 if (csv.TryGetValue("cfg_real_purity_tip", out var rp))
@@ -2232,21 +2345,19 @@ namespace ProbablyStolenItemQuickInfo.Verify
             foreach (var (k, v) in zh)
                 Check(!v.Contains("默认"), $"zh.csv {k} 沒提預設");
 
-            // 前綴設定的說明：最後兩行列出全部對照，Short 在上
-            if (en.TryGetValue("cfg_prefix_tip", out var enTip))
+            // 前綴設定的說明：最後兩行列出全部對照，Short 在上（三種語言都用資訊框的字填）
+            foreach (var (lang, sep, longS) in langs)
             {
-                var rows = enTip.Split('\n');
-                Eq(rows.Length, 3, "en.csv cfg_prefix_tip 三行");
-                Eq(rows[rows.Length - 2], "Short: " + string.Join(", ", PrefixesOf(En)), "en.csv cfg_prefix_tip 的 Short 對照");
-                Eq(rows[rows.Length - 1], "Long: " + string.Join(", ", PrefixesOf(EnL)), "en.csv cfg_prefix_tip 的 Long 對照");
+                string join = lang == Lang.En ? ", " : "、";
+                Loc.Use(lang);
+                var rows = Tips.Prefix(longS).Split('\n');
+                Eq(rows.Length, 3, $"{lang} cfg_prefix_tip 三行");
+                if (rows.Length != 3) continue;
+                Eq(rows[1], "Short" + sep + string.Join(join, PrefixesOf(longS.Short)), $"{lang} cfg_prefix_tip 的 Short 對照");
+                Eq(rows[2], "Long" + sep + string.Join(join, PrefixesOf(longS)), $"{lang} cfg_prefix_tip 的 Long 對照");
             }
-            if (zh.TryGetValue("cfg_prefix_tip", out var zhTip))
-            {
-                var rows = zhTip.Split('\n');
-                Eq(rows.Length, 3, "zh.csv cfg_prefix_tip 三行");
-                Eq(rows[rows.Length - 2], "Short：" + string.Join("、", PrefixesOf(Hans)), "zh.csv cfg_prefix_tip 的 Short 對照");
-                Eq(rows[rows.Length - 1], "Long：" + string.Join("、", PrefixesOf(HansL)), "zh.csv cfg_prefix_tip 的 Long 對照");
-            }
+            Loc.Use(Lang.ZhHant);
+            Check(Tips.Prefix(HantL).EndsWith("\nShort：水、質、電、3天、成、熱、剩、耐\nLong：水量、水質、電力、剩3天、成品、熱度、剩餘、耐久"), "zh-Hant cfg_prefix_tip 的對照是手寫繁中");
 
             // 按鍵的說明不列資訊的種類，只說照設定和物品種類（加新資訊時不用跟著改）
             if (en.TryGetValue("key_show_info_tip", out var keyEn))
@@ -2254,5 +2365,251 @@ namespace ProbablyStolenItemQuickInfo.Verify
             if (zh.TryGetValue("key_show_info_tip", out var keyZh))
                 Check(keyZh.Contains("设置") && !keyZh.Contains("耐久度"), "zh.csv key_show_info_tip 只說照設定，不列種類");
         }
+
+        // ── 多語系（1.2.0） ──
+
+        /// <summary>
+        /// Loc 的挑法（LocPick，照視窗群組的測試）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；Format 照遊戲的 GetLocalized；單複數的字形（PluralCategory、PluralKey）。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Vol", ["de"] = "Menge", ["fr"] = "Vol" }, len), "de", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en", "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
+
+            // 單複數的字形（CLDR 的整數規則）
+            void Cat(string lang, int n, string expected) => Eq(LocPick.PluralCategory(lang, n), expected, $"{lang ?? "null"} 的 {n}");
+            Cat("en", 0, "other"); Cat("en", 1, "one"); Cat("en", 2, "other");
+            Cat("fr", 0, "one"); Cat("fr", 1, "one"); Cat("fr", 2, "other");
+            Cat("ru", 1, "one"); Cat("ru", 2, "few"); Cat("ru", 4, "few"); Cat("ru", 5, "many"); Cat("ru", 11, "many"); Cat("ru", 12, "many");
+            Cat("ru", 14, "many"); Cat("ru", 21, "one"); Cat("ru", 22, "few"); Cat("ru", 25, "many"); Cat("ru", 101, "one"); Cat("ru", 111, "many");
+            Cat("ru", 112, "many");
+            Cat("pl", 1, "one"); Cat("pl", 2, "few"); Cat("pl", 4, "few"); Cat("pl", 5, "many"); Cat("pl", 12, "many"); Cat("pl", 22, "few");
+            Cat("pl", 25, "many"); Cat("pl", 112, "many");
+            Cat("ja", 1, "other"); Cat("zh", 1, "other"); Cat("zh-Hant", 1, "other"); Cat(null, 1, "other"); Cat("", 1, "other");
+            Eq(LocPick.PluralKey("info_days_long", "few"), "info_days_long.few", "單複數組的 key");
+        }
+
+        /// <summary>
+        /// 找繁中 mod 的「找過就記住」（LookupOnce；mod 的 Loc.ZhHantModRunning 用，settled＝我們自己的 csv 讀到了）：
+        /// 找到以後不再找；清單還沒齊時沒找到，下次再找；清單齊了還沒找到，記住「沒有」、不再找；找的時候出錯不記結果。
+        /// </summary>
+        static void LookupOnceTest()
+        {
+            int calls = 0;
+            string inList = null;
+            Func<string> find = () => { calls++; return inList; };
+
+            var a = new LookupOnce<string>();
+            Eq(a.Get(find, false), null, "清單還沒齊、沒找到：null");
+            Eq(a.Get(find, false), null, "清單還沒齊、還是沒找到：null");
+            Eq(calls, 2, "清單還沒齊時每次都再找");
+            inList = "zh-hant";
+            Eq(a.Get(find, false), "zh-hant", "後來登記進清單：找到");
+            inList = null;
+            Eq(a.Get(find, true), "zh-hant", "找到以後回傳存著的那個");
+            Eq(calls, 3, "找到以後不再找");
+
+            calls = 0;
+            inList = null;
+            var b = new LookupOnce<string>();
+            Eq(b.Get(find, true), null, "清單齊了、沒找到：null");
+            inList = "zh-hant";
+            Eq(b.Get(find, true), null, "記住沒有以後不再找（清單齊了以後不會多 mod）");
+            Eq(b.Get(find, false), null, "記住沒有以後，settled 是 false 也不再找");
+            Eq(calls, 1, "清單齊了沒找到：只找一次");
+
+            var c = new LookupOnce<string>();
+            bool threw = false;
+            try { c.Get(() => throw new InvalidOperationException("清單讀不到"), true); }
+            catch (InvalidOperationException) { threw = true; }
+            Check(threw, "找的時候出錯：例外照丟（mod 的 Loc 接住、當作沒在跑）");
+            Eq(c.Get(() => "zh-hant", true), "zh-hant", "出錯那次不算「沒有」：下次照樣找得到");
+
+            // 找到以後不配置記憶體（每 0.25 秒都問）
+            var d = new LookupOnce<string>();
+            Func<string> found = () => "zh-hant";
+            d.Get(found, true);
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 1000; i++) d.Get(found, true);
+            Eq(GC.GetAllocatedBytesForCurrentThread() - before, 0L, "找到以後再問不配置記憶體");
+        }
+
+        /// <summary>
+        /// Strings 只在換語言時重建（Strings.For）：語言、繁中 mod、最長字串模式三個值沒變時回傳同一份、不配置記憶體（每 0.25 秒都叫）；
+        /// 任何一個變了就重建、字跟著換；剩幾天查表也不配置；csv 還沒讀到時建來用但不存；最長字串模式挑得到（目前西文只有 en，
+        /// 另外塞一份假的 de 看挑不挑得到比較寬的）；遊戲是 it、ko 這種 mod 沒有 csv 的語言時用英文。
+        /// </summary>
+        static void StringCache()
+        {
+            Loc.Use(Lang.En);
+            var a = Strings.For("en", false, false);
+            var b = Strings.For("en", false, false);
+            Check(ReferenceEquals(a, b), "語言沒變：回傳同一份");
+            Check(ReferenceEquals(Strings.For("en", false, false, PrefixStyle.Short), a.Short), "語言沒變：短的也是同一份");
+            a.DaysText(3);
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < 1000; i++)
+            {
+                Strings.For("en", false, false);
+                Strings.For("en", false, false, PrefixStyle.Short);
+                a.DaysText(3);
+                a.Short.DaysText(17);
+            }
+            Eq(GC.GetAllocatedBytesForCurrentThread() - before, 0L, "語言沒變時 Strings.For 與剩幾天（30 天以內）不配置記憶體");
+
+            Loc.Use(Lang.ZhHans);
+            var zh = Strings.For("zh", false, false);
+            Check(!ReferenceEquals(zh, a), "換成中文：重建");
+            Eq(zh.Quality, "水质", "換成中文：簡中的字");
+            Loc.Use(Lang.ZhHant);
+            var hant = Strings.For("zh", true, false);
+            Check(!ReferenceEquals(hant, zh), "繁中 mod 開始跑：重建");
+            Eq(hant.Quality, "水質", "繁中 mod 有跑：手寫繁中");
+            Eq(hant.DaysText(1), "剩1天", "繁中：剩1天");
+            Check(ReferenceEquals(Strings.For("zh", true, false), hant), "繁中沒變：同一份");
+            Loc.Use(Lang.ZhHans);
+            Eq(Strings.For("zh", false, false).Quality, "水质", "繁中 mod 停了：換回簡中");
+
+            // 不認得的語言（遊戲字串表裡的空殼 it、ko，mod 沒有它們的 csv）：照遊戲的查法退回英文
+            foreach (var code in new[] { "it", "ko", "pt-BR" })
+            {
+                Loc.Use(code);
+                var s = Strings.For(code, false, false);
+                Eq(s.Water, "Vol", $"{code}：沒有 csv，用英文");
+                Eq(s.DaysText(1), "1 day", $"{code}：剩幾天也用英文的單複數");
+            }
+
+            // csv 還沒讀到：建來用，但不存（下次再建）
+            Loc.Use(Lang.En);
+            var ready = Strings.For("en", false, false);
+            Loc.NotReady = true;
+            var x = Strings.For("de", false, false);
+            var y = Strings.For("de", false, false);
+            Loc.NotReady = false;
+            Check(!ReferenceEquals(x, y), "csv 還沒讀到：每次都重建、不存");
+            Check(ReferenceEquals(Strings.For("en", false, false), ready), "csv 還沒讀到時建的沒有蓋掉存著的那份");
+
+            // 最長字串模式：每個 key 在 en、de、fr、es、ru、pl 裡挑最寬的。
+            // 先用真的 csv（6 種語言都在）看會挑到英文以外的語言，再把西文的表拿開、只留 en，用控制過的假 de 測挑法，測完放回去。
+            Loc.Longest = true;
+            Loc.Picks.Clear();
+            Loc.Use(Lang.En);
+            var real = Strings.For("en", false, true);
+            Check(Loc.Picks.Values.Any(v => v != "en"), "最長字串模式（真的 csv）：有 key 挑到英文以外的語言");
+            Check(real.Water.Length > 0 && real.DaysText(3).Contains("3"), "最長字串模式（真的 csv）：前綴、剩幾天都有字");
+            var savedWestern = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var code in new[] { "de", "fr", "es", "ru", "pl" })
+                if (Loc.Tables.TryGetValue(code, out var t)) { savedWestern[code] = t; Loc.Tables.Remove(code); }
+            Loc.Longest = false;
+            Strings.For("en", false, false); // 換回非最長，下面的「開了：重建」才比得出來
+            Loc.Longest = true;
+            Loc.Picks.Clear();
+            var longest = LangStrings.For(Lang.En);
+            Check(!ReferenceEquals(longest, ready), "最長字串模式開了：重建");
+            Eq(longest.Water, "Vol", "最長字串模式：西文只有 en 時用 en");
+            Eq(longest.DaysText(3), "3 days", "最長字串模式：剩幾天（單複數）也挑得到");
+            Check(Loc.Picks.Count > 0 && Loc.Picks.Values.All(v => v == "en"), "最長字串模式：每個 key 都挑了語言（目前都是 en）");
+            Loc.Tables["de"] = new Dictionary<string, string>
+            {
+                ["info_prefix_water_long"] = "Wassermenge",
+                ["info_days_long.other"] = "{0} Tage übrig",
+            };
+            var withDe = LangStrings.For(Lang.En);
+            Check(ReferenceEquals(withDe, longest), "最長字串模式沒變：同一份（不重建）");
+            Loc.Use(Lang.En);
+            var rebuilt = Strings.For("de", false, true);
+            Eq(rebuilt.Water, "Wassermenge", "最長字串模式：挑比較寬的 de");
+            Eq(rebuilt.Quality, "Pur", "最長字串模式：de 沒有的 key 用 en");
+            Eq(rebuilt.DaysText(3), "3 Tage übrig", "最長字串模式：單複數照各自語言的字形挑最寬的");
+            Eq(rebuilt.Short.Water, "W", "最長字串模式：短的前綴照樣挑（de 沒有就 en）");
+            Loc.Tables.Remove("de");
+            foreach (var kv in savedWestern) Loc.Tables[kv.Key] = kv.Value;
+            Loc.Longest = false;
+            Loc.Use(Lang.En);
+            Eq(Strings.For("en", false, false).Water, "Vol", "最長字串模式關掉：回到英文");
+        }
+
+        /// <summary>
+        /// csv 本身（假 Loc 讀到的）：讀的時候沒有問題；en、zh、zh-Hant 都在；資訊框的每個 key 三份都有（zh-Hant 是手寫繁中、和簡中分得開）；
+        /// 剩幾天的長寫法 en 是 one、other 兩個字形，中文只有 other，字形裡不寫死數字；每個 Strings 欄位三種語言都取得到。
+        /// key 與佔位符的完整比對交給根目錄的 tools/locale_check.py。
+        /// </summary>
+        static void LocFiles()
+        {
+            Loc.Use(Lang.En);
+            Check(Loc.Tables.ContainsKey("en") && Loc.Tables.ContainsKey("zh") && Loc.Tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
+            if (!Loc.Tables.TryGetValue("en", out var en) || !Loc.Tables.TryGetValue("zh", out var zh) || !Loc.Tables.TryGetValue("zh-Hant", out var hant)) return;
+            foreach (var k in en.Keys.Where(k => k.StartsWith("info_", StringComparison.Ordinal) && !k.StartsWith("info_days_long.", StringComparison.Ordinal)))
+            {
+                Check(zh.ContainsKey(k), $"zh.csv 有資訊框的 {k}");
+                Check(hant.ContainsKey(k), $"zh-Hant.csv 有資訊框的 {k}");
+            }
+            const string days = "info_days_long";
+            Check(en.ContainsKey(days + ".one") && en.ContainsKey(days + ".other") && !en.ContainsKey(days), "en 的剩幾天（長）是 one、other 兩個字形");
+            Check(zh.ContainsKey(days + ".other") && !zh.ContainsKey(days + ".one") && hant.ContainsKey(days + ".other") && !hant.ContainsKey(days + ".one"),
+                "中文的剩幾天（長）只有 other");
+            foreach (var (name, table) in new[] { ("en", en), ("zh", zh), ("zh-Hant", hant) })
+                foreach (var form in new[] { ".one", ".other" })
+                    if (table.TryGetValue(days + form, out var t))
+                        Check(t.Contains("{0}") && !t.Replace("{0}", "").Any(char.IsDigit), $"{name} 的 {days}{form} 用 {{0}}、不寫死數字：{t}");
+            Check(!en.ContainsKey("info_days_short.one") && en.ContainsKey("info_days_short"), "剩幾天（短）不分單複數");
+
+            // 剩幾天：長的照單複數，短的不分
+            foreach (var (lang, one, three) in new[] { (Lang.En, "1 day", "3 days"), (Lang.ZhHans, "剩1天", "剩3天"), (Lang.ZhHant, "剩1天", "剩3天") })
+            {
+                var s = LangStrings.For(lang);
+                Eq(s.DaysText(1), one, $"{lang} 長：1 天");
+                Eq(s.DaysText(3), three, $"{lang} 長：3 天");
+            }
+            Eq(LangStrings.For(Lang.En, PrefixStyle.Short).DaysText(1), "1d", "en 短：1 天不分單複數");
+
+            // 每個 Strings 欄位三種語言都取得到（不是 key 本身），繁中 mod 有跑時是手寫繁中
+            foreach (var (lang, longS) in new[] { (Lang.En, EnL), (Lang.ZhHans, HansL), (Lang.ZhHant, HantL) })
+                foreach (var s in new[] { longS, longS.Short })
+                    foreach (var f in typeof(Strings).GetFields(BindingFlags.Instance | BindingFlags.Public))
+                    {
+                        var values = f.GetValue(s) is string[] arr ? arr : new[] { (string)f.GetValue(s) };
+                        foreach (var v in values)
+                            Check(!string.IsNullOrWhiteSpace(v) && !v.StartsWith("info_", StringComparison.Ordinal), $"{lang} 的 {f.Name} 取得到字：{v}");
+                    }
+            Eq(HantL.Quality, "水質", "zh-Hant：手寫繁中的水質");
+            Eq(HansL.Quality, "水质", "zh：簡中的水质");
+            Eq(Hant.NoDisk, "缺資料碟", "zh-Hant：資料碟");
+            Eq(En.Estimates[EstimateLast], "Empty", "en：水量估計的最後一段");
+            // 讀 csv 的問題與程式用到、csv 卻找不到的 key（前面所有取字的測試累積下來的；LocFiles 排在最後）
+            foreach (var p in Loc.Problems) Check(false, p);
+        }
+
+        const int EstimateLast = 6;
     }
 }

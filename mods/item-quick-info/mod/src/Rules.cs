@@ -95,7 +95,7 @@ namespace ProbablyStolenItemQuickInfo
     /// <summary>
     /// 機器今晚不會動的原因。
     /// NoModule：印表機的晶片要的模組沒裝（CanStart 不成立）；Blocked：DNA 編輯器有計畫但被擋（blockedReason）。
-    /// NoPower：缺電（取代 的「電不夠不算原因」）：沒有別的原因、今晚會跑、電那行紅字（電不夠今晚用）時才是
+    /// NoPower：缺電（取代以前的「電不夠不算原因」）：沒有別的原因、今晚會跑、電那行紅字（電不夠今晚用）時才是
     /// （MachineLogic.WithPower）。「顯示電量」關掉時紅字看不到，沒有這個原因就沒有地方告訴你這台今晚不會動。
     /// </summary>
     enum Reason { None, NoInput, NoChip, NoCard, NoSeed, NoDisk, NoWater, NoContainer, OutputFull, MaxPurity, NoModule, Blocked, NoPower }
@@ -212,7 +212,7 @@ namespace ProbablyStolenItemQuickInfo
         public bool WaterVolume = true, WaterPurity = true;
         /// <summary>單獨的電池的電量、今晚會充多少（兩個各自獨立）。</summary>
         public bool BatteryCharge = true, BatteryTonightCharge = true;
-        /// <summary>機器的電量、今晚的電力收支（取代 的機器今晚會充多少）、原因、進度、輸出區的成品數、機器裡的水。</summary>
+        /// <summary>機器的電量、今晚的電力收支（取代以前的機器今晚會充多少）、原因、進度、輸出區的成品數、機器裡的水。</summary>
         public bool MachinePower = true, MachineTonightNet = true, MachineReason = true, MachineProgress = true, MachineOutput = true, MachineWater = true;
         /// <summary>任何物品的贓物熱度、使用次數、耐久度、金屬錠純度。</summary>
         public bool StolenHeat = true, UseCount = true, Durability = true, IngotPurity = true;
@@ -455,7 +455,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 今晚會扣多少電：遊戲今晚會跑這台（runsTonight）、沒有原因（MachineLogic.Decide）、電夠今晚用
         /// （!insufficient，和紅字同一個判斷）時是今晚的耗電（MachineLogic.NightlyPowerUse），不然 0。
         /// 遊戲每台機器都是確定要運作才扣電，電不夠時 DrawPowerSource 一點都不扣。
-        /// 淨水器、蒸餾器在水質看不到時 Decide 回 None，照這裡當作會運作、算支出（B1，不洩漏已淨化完）。
+        /// 淨水器、蒸餾器在水質看不到時 Decide 回 None，照這裡當作會運作、算支出（不洩漏已淨化完）。
         /// 缺電（NoPower）時有原因、insufficient 也成立，兩個條件都不扣。
         /// </summary>
         internal static int TonightDraw(bool runsTonight, Reason reason, bool insufficient, int use) =>
@@ -661,7 +661,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 機器的行，行序：名稱、水、質、剩幾天、原因、成品、電、今晚的電力收支。
         /// 原因橘色、只有一行；電不夠今晚用時電那行紅色，沒有別的原因、今晚會跑時原因那行是缺電（MachineRules 填好 Reason，這裡照樣畫）；
         /// 今晚的電力收支（有容量的電池才有）正的綠字「+4kJ」、負的橘字「-8kJ」，
-        /// 0 不顯示，電不夠今晚用（電那行紅字）時也不顯示（有收入也不顯示，A4；電量那行關掉時照樣看紅字的判斷）。
+        /// 0 不顯示，電不夠今晚用（電那行紅字）時也不顯示（有收入也不顯示；電量那行關掉時照樣看紅字的判斷）。
         /// 有原因的機器今晚不扣電，收支只會是正的或 0，所以負數的橘字和原因的橘字不會同時出現（缺電時收支整行不顯示）。
         /// 進度寫剩幾天（「剩3天」「3d」，沒有前綴），今晚不會動（StopsTonight）或算不出天數時不寫。成品數 0 不顯示。
         /// 每種各自照開關：名稱、機器裡的水（再分水量、水質兩個開關）、進度、原因、成品數、電、今晚的電力收支（和電那行各自獨立）。
@@ -746,7 +746,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 任何物品都有可能的行，行序：耐久度、金屬錠純度、使用次數、熱度（熱度永遠是最後一行）。
         /// - 耐久度 `耐久 320`：只寫剩多少，剩 1/4 以下（值 × 4 ≤ 上限）橘字；上限 0 以下不顯示。
-        /// - 金屬錠純度：遊戲的等級名稱（`高純度`），不加前綴、白字；認不得的常數不顯示。
+        /// - 金屬錠純度：遊戲的等級名稱（`高純度`；西文只寫等級 `High`），不加前綴、白字；認不得的常數不顯示。
         /// - 使用次數 `剩餘 3`：只寫剩幾次；剩 0 次紅字。不顯示幾天後補。
         /// - 熱度 `熱度 45%`：一律紅字（照遊戲提示框的 LightRed）。
         /// 每種各自照開關；x 是 null 或全關時是空的清單。

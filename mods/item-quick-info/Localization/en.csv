@@ -1,4 +1,7 @@
-# Labels and tooltips of this mod's settings and key bind (ModHelper.GetLocalized). Format: key,value
+# Text of this mod (ModHelper.GetLocalized). Format: key,value
+# Two parts: the labels and tooltips of the settings and key bind (key_, cfg_), then the info box text drawn on the items (info_, at the end).
+# In tooltips, {0}, {1}... are examples the mod fills in with the info box text below for the current language
+# (for example "W 4000ml" / "Vol 4000ml"), so the tooltip always shows exactly what the info box shows. Keep every placeholder.
 key_show_info,Show item info
 key_show_info_tip,"Hold to show item info on the items on screen, based on your settings and the item type. Release to hide. With Key mode set to Toggle, press once to show and again to hide."
 cfg_container_name,Show container names
@@ -14,9 +17,11 @@ cfg_name_position_tip,Where names are shown.\nTop = centered at the top of the i
 cfg_name_text_size,Name text size
 cfg_name_text_size_tip,"Size of the names: Small, Medium or Large, the same sizes as Text size."
 cfg_water_volume,Show water volume
-cfg_water_volume_tip,"Show how much water a container holds, in ml.\nShort: W 4000ml\nLong: Vol 4000ml"
+# {0} = the volume line with the short prefix ("W 4000ml"), {1} = with the long prefix ("Vol 4000ml")
+cfg_water_volume_tip,"Show how much water a container holds, in ml.\nShort: {0}\nLong: {1}"
 cfg_water_purity,Show water purity
-cfg_water_purity_tip,"Show the purity of the water in a container (not for empty ones).\nShort: Q 98.52%\nLong: Pur 98.52%"
+# {0} = the purity line with the short prefix ("Q 98.52%"), {1} = with the long prefix ("Pur 98.52%")
+cfg_water_purity_tip,"Show the purity of the water in a container (not for empty ones).\nShort: {0}\nLong: {1}"
 cfg_real_purity,Always show real water purity
 cfg_real_purity_tip,"Off: scanned water shows the exact %, other water shows ?.\nOn: every container shows its real purity, no testing needed (you can also tell when a client lies).\nNeeds Show water purity on."
 cfg_battery_charge,Show battery charge
@@ -24,28 +29,126 @@ cfg_battery_charge_tip,"Show how much energy a battery has left, for example 8kJ
 cfg_battery_tonight_charge,Show tonight's charge
 cfg_battery_tonight_charge_tip,"Show in green how much a battery will be charged tonight, for example +4kJ. Hidden when it is full or won't be charged."
 cfg_machine_power,Show machine power
-cfg_machine_power_tip,"Show the energy left in a machine's battery. The line turns red when it is not enough for tonight.\nShort: E 87kJ\nLong: Pwr 87kJ"
+# {0} = the power line with the short prefix ("E 87kJ"), {1} = with the long prefix ("Pwr 87kJ")
+cfg_machine_power_tip,"Show the energy left in a machine's battery. The line turns red when it is not enough for tonight.\nShort: {0}\nLong: {1}"
 cfg_machine_tonight_net,Show tonight's net energy
 cfg_machine_tonight_net_tip,"Show how much a machine's battery will change tonight (charged minus used), under the power line.\nUp: green, for example +4kJ\nDown: orange, for example -8kJ\nHidden when it won't change or the power line is red."
 cfg_machine_reason,Show why a machine won't run tonight
-cfg_machine_reason_tip,"Show a short reason in orange when a machine won't run tonight, for example No input, No power or Output full."
+# {0}, {1}, {2} = three of the reasons below (info_reason_no_input, info_reason_no_power, info_reason_output_full)
+cfg_machine_reason_tip,"Show a short reason in orange when a machine won't run tonight, for example {0}, {1} or {2}."
 cfg_machine_progress,Show machine progress
-cfg_machine_progress_tip,"Show how many days a machine still needs, at its current Progress Speed. Later changes from module effects like Overcharged or Degrading are not predicted. Hidden when it won't run tonight.\nShort: 3d\nLong: 3day"
+# {0} = 3 days left in the short form ("3d"), {1} = in the long form ("3 days")
+cfg_machine_progress_tip,"Show how many days a machine still needs, at its current Progress Speed. Later changes from module effects like Overcharged or Degrading are not predicted. Hidden when it won't run tonight.\nShort: {0}\nLong: {1}"
 cfg_machine_output,Show output count
-cfg_machine_output_tip,Show how many items are in a machine's output (Intake and Outlet Hoppers don't count).\nShort: Out 7\nLong: Output 7
+# {0} = the output line with the short prefix ("Out 7"), {1} = with the long prefix ("Output 7")
+cfg_machine_output_tip,Show how many items are in a machine's output (Intake and Outlet Hoppers don't count).\nShort: {0}\nLong: {1}
 cfg_machine_water,Show water info in machines
-cfg_machine_water_tip,Show the volume and purity of the water inside a machine. The two lines also follow Show water volume and Show water purity.\nShort: W / Q\nLong: Vol / Pur
+# {0} / {1} = the short volume and purity prefixes ("W" / "Q"), {2} / {3} = the long ones ("Vol" / "Pur")
+cfg_machine_water_tip,Show the volume and purity of the water inside a machine. The two lines also follow Show water volume and Show water purity.\nShort: {0} / {1}\nLong: {2} / {3}
 cfg_stolen_heat,Show stolen heat
-cfg_stolen_heat_tip,"Show the heat of a stolen item in red.\nShort: H 45%\nLong: Heat 45%"
+# {0} = the heat line with the short prefix ("H 45%"), {1} = with the long prefix ("Heat 45%")
+cfg_stolen_heat_tip,"Show the heat of a stolen item in red.\nShort: {0}\nLong: {1}"
 cfg_use_count,Show uses left
-cfg_use_count_tip,"Show how many uses an item has left. Red when used up.\nShort: U 3\nLong: Uses 3"
+# {0} = the uses line with the short prefix ("U 3"), {1} = with the long prefix ("Uses 3")
+cfg_use_count_tip,"Show how many uses an item has left. Red when used up.\nShort: {0}\nLong: {1}"
 cfg_durability,Show durability
-cfg_durability_tip,"Show an item's durability. Orange at 1/4 or less.\nShort: D 320\nLong: Dur 320"
+# {0} = the durability line with the short prefix ("D 320"), {1} = with the long prefix ("Dur 320")
+cfg_durability_tip,"Show an item's durability. Orange at 1/4 or less.\nShort: {0}\nLong: {1}"
 cfg_ingot_purity,Show ingot purity
-cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example High Purity."
+# {0} = one of the purity grades below (info_ingot_high, "High")
+cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example {0}."
 cfg_key_mode,Key mode
 cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
 cfg_text_size,Text size
 cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium or Large. One item cell is 16 units; the text is 3.5, 4.5 or 6 units tall."
 cfg_prefix,Line prefixes
-cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that info box uses short words.\nShort: W, Q, E, 3d, Out, H, U, D\nLong: Vol, Pur, Pwr, 3day, Output, Heat, Uses, Dur"
+# {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
+# 3 days left, output count, stolen heat, uses left, durability. The separator (", ") is yours to choose for your language.
+cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that info box uses short words.\nShort: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\nLong: {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}"
+
+# ---- Info box: the text drawn on the items while the key is held ----
+# The info box sits on the item's lower-left corner and is very narrow: one item cell is 16 units wide and the text is
+# 3.5 to 6 units tall, so a 1-cell item fits only about 6 to 8 letters per line. Keep every entry as short as you can.
+# When a line with the long prefix doesn't fit, the whole box switches to the short prefixes; if that still doesn't fit,
+# "prefix value" is split into two lines. Lines without a prefix (reasons, purity grades) just stick out.
+
+# Line prefixes: the word before the value, followed by a space and the number ("W 4000ml").
+# _short = one letter (Japanese and Chinese: one character). _long = a 3 to 5 letter abbreviation or short word, like Vol, Pur, Pwr.
+# Water volume of a container or machine ("Vol 4000ml")
+info_prefix_water_short,W
+info_prefix_water_long,Vol
+# Water purity ("Pur 98.52%")
+info_prefix_purity_short,Q
+info_prefix_purity_long,Pur
+# Energy left in a machine's battery ("Pwr 87kJ")
+info_prefix_power_short,E
+info_prefix_power_long,Pwr
+# Number of items in a machine's output ("Output 7"). Short is up to 3 letters here, long up to 6.
+info_prefix_output_short,Out
+info_prefix_output_long,Output
+# Heat of a stolen item ("Heat 45%")
+info_prefix_heat_short,H
+info_prefix_heat_long,Heat
+# Uses left ("Uses 3")
+info_prefix_uses_short,U
+info_prefix_uses_long,Uses
+# Durability ("Dur 320")
+info_prefix_durability_short,D
+info_prefix_durability_long,Dur
+
+# Machine progress: how many days until the machine finishes. No prefix: this is the whole line. {0} = number of days.
+# info_days_short: shortest form, the same for every number ("3d").
+# info_days_long: written out, with the singular/plural forms your language needs (.one, .other; Russian and Polish .one, .few, .many;
+# Japanese and Chinese only .other). Always write {0}, never the number itself.
+info_days_short,{0}d
+info_days_long.one,{0} day
+info_days_long.other,{0} days
+
+# Machine power line when the battery slot holds a power source without its own charge (it runs on outside power): "Pwr ext".
+# 3 to 5 letters.
+info_power_external,ext
+
+# Water volume estimate, shown instead of ml when the container has no scale ("Vol Almost full"). From full to empty. Short words.
+info_estimate_full,Full
+info_estimate_almost_full,Almost full
+info_estimate_over_half,Over half
+info_estimate_half,Half
+info_estimate_under_half,Under half
+info_estimate_almost_empty,Almost empty
+info_estimate_empty,Empty
+
+# Why a machine won't run tonight: its own orange line, no prefix. Keep each one to 1 to 3 short words.
+# Nothing to work on in the input
+info_reason_no_input,No input
+# 3D printer: no chip in its chip slot (use the game's word for the chip)
+info_reason_no_chip,No chip
+# No keycard where one is needed
+info_reason_no_card,No card
+# Hydroponics: no seed
+info_reason_no_seed,No seed
+# DNA editor: no data disk
+info_reason_no_disk,No disk
+info_reason_no_water,No water
+# No empty container for the output
+info_reason_no_container,No container
+# The output is full
+info_reason_output_full,Output full
+# Purifier: the water already has the highest purity it can reach
+info_reason_max_purity,Max purity
+# 3D printer: missing a module (use the game's word for module)
+info_reason_no_module,No module
+# DNA editor: the game says it cannot start
+info_reason_blocked,Blocked
+# Not enough energy for tonight
+info_reason_no_power,No power
+
+# Metal Ingot purity grades, from best to worst. Only the grade, without the word "purity":
+# the info box sits on the ingot, and a short line is less often cut off by the inventory edge
+# or covered by other info boxes. Base it on the game's grade names (mech_condition_*_purity)
+# and keep it as short as reads naturally in your language. Chinese and Japanese keep the game's names (already short).
+info_ingot_perfect,Perfect
+info_ingot_very_high,Very High
+info_ingot_high,High
+info_ingot_fair,Fair
+info_ingot_low,Low
+info_ingot_very_low,Very Low

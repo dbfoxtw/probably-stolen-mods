@@ -1,0 +1,130 @@
+# 手寫的繁中（台灣用語）：遊戲是中文、繁中 mod（dbfoxtw.zh-hant）有在跑時，mod 的 Loc 用這份。格式：key,值
+# key 和 en.csv、zh.csv 一樣（tools/locale_check.py 要求），用詞照遊戲字串表與繁中 mod。
+# 前半是設定與按鍵綁定的標籤和說明（key_、cfg_；從 zh.csv 轉過再校），後半是資訊框的字（info_）。
+# 說明裡的 {0}、{1}… 是 mod 用下面資訊框的字填進去的例子，每個都要留著。
+key_show_info,顯示物品資訊
+key_show_info_tip,按住時根據設定和物品種類顯示物品資訊，放開就消失。設定改成 Toggle 時，按一下顯示、再按一下消失。
+cfg_container_name,顯示箱子名稱
+cfg_container_name_tip,在箱子、背包、儲藏區等打得開、有自己視窗的物品上，用淺藍色顯示你取的名稱。
+cfg_machine_name,顯示機器名稱
+cfg_machine_name_tip,在機器上用淺藍色顯示你取的名稱。
+cfg_item_name,顯示其他物品名稱
+cfg_item_name_tip,在箱子、機器以外的物品上（例如水桶、金屬錠），用淺藍色顯示你取的名稱。
+cfg_always_names,總是顯示名稱
+cfg_always_names_tip,打開時，名稱不用按鍵也一直顯示；其他資訊照舊要按鍵才顯示。\n顯示哪幾種名稱，照舊看下面三個名稱開關。
+cfg_name_position,名稱位置
+cfg_name_position_tip,名稱顯示的位置。\nTop＝物品上方置中\nInfoBox＝顯示在資訊框的第一行
+cfg_name_text_size,名稱文字大小
+cfg_name_text_size_tip,名稱的文字大小：Small（小）、Medium（中）、Large（大），大小和「文字大小」的三級一樣。
+cfg_water_volume,顯示水量
+# {0}＝短前綴的水量那行（水 4000ml），{1}＝長前綴的（水量 4000ml）
+cfg_water_volume_tip,顯示容器裡有多少水，單位毫升。\nShort：{0}\nLong：{1}
+cfg_water_purity,顯示水質
+# {0}＝短前綴的水質那行（質 98.52%），{1}＝長前綴的（水質 98.52%）
+cfg_water_purity_tip,顯示容器裡的水的純度（空的容器不顯示）。\nShort：{0}\nLong：{1}
+cfg_real_purity,總是顯示真實水質
+cfg_real_purity_tip,關閉：掃描過的顯示百分比，其他顯示 ?。\n打開：全部顯示真實水質，不用再檢測（客人謊報也看得出來）。\n要先打開「顯示水質」。
+cfg_battery_charge,顯示電池電量
+cfg_battery_charge_tip,顯示電池剩下的能量，例如 8kJ。
+cfg_battery_tonight_charge,顯示今晚會充多少電
+cfg_battery_tonight_charge_tip,電池今晚會充電時，在下面用綠字顯示會充多少，例如 +4kJ。充滿或今晚不會充時不顯示。
+cfg_machine_power,顯示電量
+# {0}＝短前綴的電量那行（電 87kJ），{1}＝長前綴的（電力 87kJ）
+cfg_machine_power_tip,顯示機器裡電池剩下的能量。不夠今晚用時這一行變紅。\nShort：{0}\nLong：{1}
+cfg_machine_tonight_net,顯示今晚的電力收支
+cfg_machine_tonight_net_tip,顯示機器今晚的電量會變多少（會充進來的減掉會用掉的），在電力那行下面。\n增加：綠字，例如 +4kJ\n減少：橘字，例如 -8kJ\n不變或電力那行變紅時不顯示。
+cfg_machine_reason,顯示今晚不會運作的原因
+# {0}、{1}、{2}＝下面的三個原因（info_reason_no_input、info_reason_no_power、info_reason_output_full）
+cfg_machine_reason_tip,機器今晚不會運作時，用橘色顯示簡短的原因，例如{0}、{1}、{2}。
+cfg_machine_progress,顯示進度
+# {0}＝剩 3 天的短寫法（3天），{1}＝長寫法（剩3天）
+cfg_machine_progress_tip,顯示機器還要幾天完成，按現在的作業速度算，不推算過載、退化等模組效果之後的變化。今晚不會運作時不顯示。\nShort：{0}\nLong：{1}
+cfg_machine_output,顯示輸出區的成品數
+# {0}＝短前綴的成品數那行（成 7），{1}＝長前綴的（成品 7）
+cfg_machine_output_tip,機器的輸出區有東西時，顯示一共有幾個（進料斗、出料斗不算）。\nShort：{0}\nLong：{1}
+cfg_machine_water,顯示機器裡的水資訊
+# {0}／{1}＝短的水量、水質前綴（水／質），{2}／{3}＝長的（水量／水質）
+cfg_machine_water_tip,顯示機器裡面的水的水量和水質。這兩行另外按「顯示水量」「顯示水質」兩個設定顯示。\nShort：{0}／{1}\nLong：{2}／{3}
+cfg_stolen_heat,顯示贓物熱度
+# {0}＝短前綴的熱度那行（熱 45%），{1}＝長前綴的（熱度 45%）
+cfg_stolen_heat_tip,用紅色顯示贓物的熱度。\nShort：{0}\nLong：{1}
+cfg_use_count,顯示使用次數
+# {0}＝短前綴的使用次數那行（剩 3），{1}＝長前綴的（剩餘 3）
+cfg_use_count_tip,顯示還能用幾次。用完時變紅。\nShort：{0}\nLong：{1}
+cfg_durability,顯示耐久度
+# {0}＝短前綴的耐久度那行（耐 320），{1}＝長前綴的（耐久 320）
+cfg_durability_tip,顯示耐久度。剩 1/4 以下時變成橘色。\nShort：{0}\nLong：{1}
+cfg_ingot_purity,顯示金屬錠純度
+# {0}＝下面的一個純度等級（info_ingot_high，高純度）
+cfg_ingot_purity_tip,在金屬錠上顯示純度的等級，例如「{0}」。
+cfg_key_mode,按鍵方式
+cfg_key_mode_tip,選擇「顯示物品資訊」這個鍵要按住，還是按一下切換。\nHold＝按住時顯示，放開就消失\nToggle＝按一下顯示，再按一下消失；讀檔、回主選單時自動關閉
+cfg_text_size,文字大小
+cfg_text_size_tip,資訊框的文字大小（名稱另外看「名稱文字大小」）：Small（小）、Medium（中）、Large（大）。一個物品格是 16 單位，文字高 3.5、4.5 或 6 單位。
+cfg_prefix,每行開頭的字
+# {0}～{7}＝短的前綴，{8}～{15}＝長的，順序是水量、水質、機器的電、剩 3 天、成品數、熱度、使用次數、耐久度
+cfg_prefix_tip,每行開頭用短的字還是長的詞。Long 放不下物品寬度時，那個資訊框改用短的。\nShort：{0}、{1}、{2}、{3}、{4}、{5}、{6}、{7}\nLong：{8}、{9}、{10}、{11}、{12}、{13}、{14}、{15}
+
+# ---- 資訊框：按住鍵時畫在物品上的字 ----
+# 資訊框在物品的左下角，很窄：一個物品格 16 單位寬，字高 3.5～6 單位。每條都盡量短。
+
+# 每行的前綴，後面空一格接數值（水 4000ml）。_short 是一個字，_long 是兩個字的詞。
+# 水容器、機器裡的水量
+info_prefix_water_short,水
+info_prefix_water_long,水量
+# 水質
+info_prefix_purity_short,質
+info_prefix_purity_long,水質
+# 機器電池剩下的電
+info_prefix_power_short,電
+info_prefix_power_long,電力
+# 機器輸出區的成品數
+info_prefix_output_short,成
+info_prefix_output_long,成品
+# 贓物熱度
+info_prefix_heat_short,熱
+info_prefix_heat_long,熱度
+# 剩幾次可以用
+info_prefix_uses_short,剩
+info_prefix_uses_long,剩餘
+# 耐久度
+info_prefix_durability_short,耐
+info_prefix_durability_long,耐久
+
+# 機器還要幾天完成（沒有前綴，整行就是這個）。{0}＝天數。短的不分單複數；長的照單複數分，中文只有 .other。
+info_days_short,{0}天
+info_days_long.other,剩{0}天
+
+# 機器的電池槽放的是沒有自己電量的電源（接外部電）時，電那行寫的字
+info_power_external,外部
+
+# 水量的估計（容器沒有刻度時代替毫升），從滿到空
+info_estimate_full,滿
+info_estimate_almost_full,快滿
+info_estimate_over_half,過半
+info_estimate_half,半滿
+info_estimate_under_half,不到半
+info_estimate_almost_empty,快空
+info_estimate_empty,空
+
+# 機器今晚不會運作的原因（橘色、自己一行、沒有前綴），用詞照遊戲的字串表（晶片、鑰匙卡、資料碟、模組、無法開始）
+info_reason_no_input,缺料
+info_reason_no_chip,缺晶片
+info_reason_no_card,缺鑰匙卡
+info_reason_no_seed,缺種子
+info_reason_no_disk,缺資料碟
+info_reason_no_water,缺水
+info_reason_no_container,沒容器
+info_reason_output_full,產出滿了
+info_reason_max_purity,已淨化完
+info_reason_no_module,缺模組
+info_reason_blocked,無法開始
+info_reason_no_power,缺電
+
+# 金屬錠純度的等級，從好到差，照遊戲字串表的 mech_condition_*_purity
+info_ingot_perfect,完美純度
+info_ingot_very_high,極高純度
+info_ingot_high,高純度
+info_ingot_fair,中等純度
+info_ingot_low,低純度
+info_ingot_very_low,極低純度

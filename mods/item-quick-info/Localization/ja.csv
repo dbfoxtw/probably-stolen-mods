@@ -1,0 +1,145 @@
+# Japanese (ja) text of Item Quick Info (ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
+# Format: key,value. \n is a line break. Two parts: the labels and tooltips of the settings and key bind (key_, cfg_), then the info box text drawn on the items (info_, at the end).
+# In tooltips, {0}, {1}... are filled in by the mod with the info box text below (for example "水 4000ml" / "水量 4000ml"). Keep every placeholder.
+# The dropdown choices (Top, InfoBox, Small, Medium, Large, Hold, Toggle) and the Short / Long labels stay in English, as in the settings window.
+# Game words follow the game's Japanese string table (水差し, インゴット, 投入ホッパー, 排出ホッパー, 進行速度, 過充電, 劣化, ヒート値, 耐久性, 残り使用回数).
+key_show_info,アイテム情報を表示
+key_show_info_tip,押している間、設定とアイテムの種類に応じて、画面上のアイテムに情報を表示する。離すと消える。「キーモード」をToggleにすると、1回押すと表示、もう1回押すと消える。
+cfg_container_name,容器の名前を表示
+cfg_container_name_tip,箱、カバン、保管ケースなど、専用のウィンドウが開くアイテムに付けた名前を水色で表示する。
+cfg_machine_name,機械の名前を表示
+cfg_machine_name_tip,機械に付けた名前を水色で表示する。
+cfg_item_name,その他のアイテムの名前を表示
+cfg_item_name_tip,その他のアイテム（水差しやインゴットなど）に付けた名前を水色で表示する。
+cfg_always_names,名前を常に表示
+cfg_always_names_tip,オンにすると、キーを押さなくても名前が表示されたままになる。その他の情報は今までどおりキーが必要。\nどの名前を表示するかは、今までどおり下にある3つの名前の設定に従う。
+cfg_name_position,名前の位置
+cfg_name_position_tip,名前を表示する位置。\nTop＝アイテムの上部中央\nInfoBox＝情報ボックスの1行目
+cfg_name_text_size,名前の文字サイズ
+cfg_name_text_size_tip,名前の大きさ：Small、Medium、Large（「文字サイズ」と同じ3段階）。
+cfg_water_volume,水量を表示
+# {0} = the volume line with the short prefix ("水 4000ml"), {1} = with the long prefix ("水量 4000ml")
+cfg_water_volume_tip,容器に入っている水の量をmlで表示する。\nShort：{0}\nLong：{1}
+cfg_water_purity,水の純度を表示
+# {0} = the purity line with the short prefix ("純 98.52%"), {1} = with the long prefix ("純度 98.52%")
+cfg_water_purity_tip,容器に入っている水の純度を表示する（空の容器は除く）。\nShort：{0}\nLong：{1}
+cfg_real_purity,水の実際の純度を常に表示
+cfg_real_purity_tip,オフ：スキャンした水は正確な%を、それ以外の水は?を表示する。\nオン：すべての容器で実際の純度を表示し、検査は不要（客の嘘も見抜ける）。\n「水の純度を表示」がオンのときだけ有効。
+cfg_battery_charge,バッテリー残量を表示
+cfg_battery_charge_tip,バッテリーに残っているエネルギーを表示する（例：8kJ）。
+cfg_battery_tonight_charge,今夜の充電量を表示
+cfg_battery_tonight_charge_tip,バッテリーが今夜どれだけ充電されるかを緑色で表示する（例：+4kJ）。満タンのときや充電されないときは表示しない。
+cfg_machine_power,機械の電力を表示
+# {0} = the power line with the short prefix ("電 87kJ"), {1} = with the long prefix ("電力 87kJ")
+cfg_machine_power_tip,機械のバッテリーに残っているエネルギーを表示する。今夜の分に足りないときは、この行が赤色になる。\nShort：{0}\nLong：{1}
+cfg_machine_tonight_net,今夜のエネルギー収支を表示
+cfg_machine_tonight_net_tip,機械のバッテリーが今夜どれだけ増減するか（充電される量から使う量を引いたもの）を、電力の行の下に表示する。\n増える：緑色（例：+4kJ）\n減る：オレンジ色（例：-8kJ）\n変わらないときや、電力の行が赤色のときは表示しない。
+cfg_machine_reason,機械が今夜動かない理由を表示
+# {0}, {1}, {2} = three of the reasons below (info_reason_no_input, info_reason_no_power, info_reason_output_full)
+cfg_machine_reason_tip,機械が今夜動かないとき、短い理由をオレンジ色で表示する（例：「{0}」「{1}」「{2}」）。
+cfg_machine_progress,機械の進捗を表示
+# {0} = 3 days left in the short form ("3日"), {1} = in the long form ("あと3日")
+cfg_machine_progress_tip,機械があと何日で完成するかを、現在の進行速度で計算して表示する。過充電や劣化などのモジュール効果によるその後の変化は予測しない。今夜動かないときは表示しない。\nShort：{0}\nLong：{1}
+cfg_machine_output,出力の個数を表示
+# {0} = the output line with the short prefix ("出 7"), {1} = with the long prefix ("出力 7")
+cfg_machine_output_tip,機械の出力にあるアイテムの個数を表示する（投入ホッパーと排出ホッパーは数えない）。\nShort：{0}\nLong：{1}
+cfg_machine_water,機械の中の水の情報を表示
+# {0} / {1} = the short volume and purity prefixes ("水" / "純"), {2} / {3} = the long ones ("水量" / "純度")
+cfg_machine_water_tip,機械の中にある水の量と純度を表示する。この2行は「水量を表示」「水の純度を表示」の設定にも従う。\nShort：{0}／{1}\nLong：{2}／{3}
+cfg_stolen_heat,盗品のヒート値を表示
+# {0} = the heat line with the short prefix ("熱 45%"), {1} = with the long prefix ("ヒート 45%")
+cfg_stolen_heat_tip,盗品のヒート値を赤色で表示する。\nShort：{0}\nLong：{1}
+cfg_use_count,残り使用回数を表示
+# {0} = the uses line with the short prefix ("残 3"), {1} = with the long prefix ("残り 3")
+cfg_use_count_tip,アイテムの残り使用回数を表示する。使い切ると赤色になる。\nShort：{0}\nLong：{1}
+cfg_durability,耐久性を表示
+# {0} = the durability line with the short prefix ("耐 320"), {1} = with the long prefix ("耐久 320")
+cfg_durability_tip,アイテムの耐久性を表示する。1/4以下になるとオレンジ色になる。\nShort：{0}\nLong：{1}
+cfg_ingot_purity,インゴットの純度を表示
+# {0} = one of the purity grades below (info_ingot_high, "高い")
+cfg_ingot_purity_tip,インゴットの純度の等級を表示する（例：「{0}」）。
+cfg_key_mode,キーモード
+cfg_key_mode_tip,「アイテム情報を表示」キーを押している間だけ表示するか、押すたびに切り替えるかを選ぶ。\nHold＝押している間は表示し、離すと消える\nToggle＝1回押すと表示、もう1回押すと消える。セーブデータをロードしたときや、メインメニューに戻ったときはオフになる
+cfg_text_size,文字サイズ
+cfg_text_size_tip,情報ボックスの文字の大きさ（名前は「名前の文字サイズ」に従う）：Small、Medium、Large。アイテム1マスは16単位で、文字の高さは3.5、4.5、6単位。
+cfg_prefix,行頭の言葉
+# {0} to {7} = the short prefixes, {8} to {15} = the long ones: water volume, water purity, machine power,
+# 3 days left, output count, stolen heat, uses left, durability. Separated with "、".
+cfg_prefix_tip,各行の頭を短い言葉にするか、長い言葉にするかを選ぶ。Longがアイテムの幅に収まらないときは、その情報ボックスは短い言葉を使う。\nShort：{0}、{1}、{2}、{3}、{4}、{5}、{6}、{7}\nLong：{8}、{9}、{10}、{11}、{12}、{13}、{14}、{15}
+
+# ---- Info box: the text drawn on the items while the key is held ----
+# The info box sits on the item's lower-left corner and is very narrow: a 1-cell item fits only 3 to 4 full-width characters per line.
+# When a line with the long prefix doesn't fit, the whole box switches to the short prefixes; if that still doesn't fit,
+# "prefix value" is split into two lines. Lines without a prefix (reasons, purity grades) just stick out.
+
+# Line prefixes, followed by a space and the value ("水 4000ml"). _short = one kanji (all different), _long = a two-character word.
+# Water volume of a container or machine
+info_prefix_water_short,水
+info_prefix_water_long,水量
+# Water purity (the game says 純度)
+info_prefix_purity_short,純
+info_prefix_purity_long,純度
+# Energy left in a machine's battery (the game's slot name 電力)
+info_prefix_power_short,電
+info_prefix_power_long,電力
+# Number of items in a machine's output (the game's slot name 出力)
+info_prefix_output_short,出
+info_prefix_output_long,出力
+# Heat of a stolen item (the game says ヒート値)
+info_prefix_heat_short,熱
+info_prefix_heat_long,ヒート
+# Uses left (the game says 残り使用回数)
+info_prefix_uses_short,残
+info_prefix_uses_long,残り
+# Durability (the game says 耐久性)
+info_prefix_durability_short,耐
+info_prefix_durability_long,耐久
+
+# Machine progress: days until the machine finishes, the whole line. {0} = number of days. Japanese has one plural form: only .other.
+info_days_short,{0}日
+info_days_long.other,あと{0}日
+
+# Machine power line when the battery slot holds a power source without its own charge (outside power)
+info_power_external,外部
+
+# Water volume estimate, shown instead of ml when the container has no scale. From full to empty.
+info_estimate_full,満杯
+info_estimate_almost_full,ほぼ満杯
+info_estimate_over_half,半分超
+info_estimate_half,半分
+info_estimate_under_half,半分未満
+info_estimate_almost_empty,ほぼ空
+info_estimate_empty,空
+
+# Why a machine won't run tonight: its own orange line, no prefix. Game words: 入力, チップ, カードキー, 種, ディスク, 容器, 出力, 最大純度, モジュール, 電力不足.
+# Nothing to work on in the input
+info_reason_no_input,入力なし
+# 3D printer: no chip in its chip slot
+info_reason_no_chip,チップなし
+# No keycard where one is needed
+info_reason_no_card,カードキーなし
+# Hydroponics: no seed
+info_reason_no_seed,種なし
+# DNA Manipulator: no data disk
+info_reason_no_disk,ディスクなし
+info_reason_no_water,水なし
+# No empty container for the output
+info_reason_no_container,容器なし
+# The output is full
+info_reason_output_full,出力満杯
+# Water Purifier: the water already has the highest purity it can reach
+info_reason_max_purity,最大純度
+# 3D printer: missing a module
+info_reason_no_module,モジュールなし
+# DNA Manipulator: the game says it cannot start
+info_reason_blocked,開始不可
+# Not enough energy for tonight
+info_reason_no_power,電力不足
+
+# Metal Ingot purity grades, from best to worst: copied from the game's mech_condition_*_purity.
+info_ingot_perfect,最高
+info_ingot_very_high,非常に高い
+info_ingot_high,高い
+info_ingot_fair,普通
+info_ingot_low,低い
+info_ingot_very_low,非常に低い
