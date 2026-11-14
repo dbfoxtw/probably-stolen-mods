@@ -41,6 +41,12 @@ ZIP_EDITION = "Demo"
 GAME_VERSIONS = ["0.46", "1.0"]
 # 遊戲的 Application.persistentDataPath（存檔、官方 mod 的設定 ModConfigs\ 與資料 ModData\ 都在這裡）；只拿來印訊息
 DATA_ROOT = Path(os.environ.get("USERPROFILE", "~")) / "AppData" / "LocalLow" / "Questing Goose Studio" / "Probably Stolen"
+# 官方格式的「最長字串模式」標記檔（install --longest）：mod 用 ModHelper.ModFileExists(<ID>, "longest") 判斷，
+# 有這個檔時每條介面字串都改顯示西文語言（en、de、fr、es、ru、pl，遊戲給它們同一個字型）裡最寬的那個，
+# 遊戲維持英文跑一輪，就看得到每個地方最長的字擠不擠得下
+LONGEST_FILE = "longest"
+LONGEST_NOTE = ("這個檔存在時是最長字串模式（開發版）：mod 的每條介面字串都改顯示英文、德文、法文、西文、俄文、波蘭文裡"
+                "最寬的那個，用來檢查版面擠不擠得下。測完用一般的安裝重裝就會拿掉。\n")
 
 
 def _steam_library_dirs() -> list[Path]:
@@ -443,8 +449,9 @@ class OfficialMod:
         if extra:
             extra(dest)
 
-    def install(self, game: Path, debug: bool, extra: Callable[[Path], None] | None = None) -> None:
-        """裝到 <遊戲>\\Mods\\<mod_id>\\：先清空資料夾（舊版留下的檔，尤其是沒列在 manifest 的 dll，會讓 mod 不能啟用）。"""
+    def install(self, game: Path, debug: bool, extra: Callable[[Path], None] | None = None, longest: bool = False) -> None:
+        """裝到 <遊戲>\\Mods\\<mod_id>\\：先清空資料夾（舊版留下的檔，尤其是沒列在 manifest 的 dll，會讓 mod 不能啟用）。
+        longest：另外放最長字串模式的標記檔（LONGEST_FILE）；一般安裝會清空資料夾，標記自然就沒了。"""
         require_game_closed()
         dest = self.mod_dir(game)
         if dest.exists():
@@ -452,7 +459,12 @@ class OfficialMod:
         self.fill(dest, self.version(), extra)
         if debug:
             (dest / self.debug_file).write_text(self.debug_note, encoding="utf-8")
-        print(f"已安裝到 {dest}{'（除錯模式）' if debug else ''}")
+        if longest:
+            (dest / LONGEST_FILE).write_text(LONGEST_NOTE, encoding="utf-8")
+        mode = "（除錯模式、最長字串模式）" if longest else "（除錯模式）" if debug else ""
+        print(f"已安裝到 {dest}{mode}")
+        if longest:
+            print("  最長字串模式：每條介面字串顯示西文語言裡最寬的那個；測完用一般的安裝（install.bat）重裝就會拿掉。")
         self.print_locations()
         print("第一次安裝：開遊戲後在主選單的 mod 管理畫面啟用這個 mod，再重開遊戲。之後更新只要重新安裝、重開遊戲。")
 
@@ -486,13 +498,19 @@ class OfficialMod:
 
 
 def official_main(mod: OfficialMod) -> None:
-    """官方格式的 tools/install.py 命令列：build／install [--debug]／uninstall／package [--out]，都可加 --game。"""
+    """官方格式的 tools/install.py 命令列：build／install [--debug] [--longest]／uninstall／package [--out]，都可加 --game。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("action", choices=["build", "install", "uninstall", "package"])
     ap.add_argument("--game")
     ap.add_argument("--debug", action="store_true", help="除錯模式（見 tools/install.py 開頭的說明）")
+    ap.add_argument("--longest", action="store_true",
+                    help="最長字串模式（install 用，自動加 --debug）：每條介面字串顯示西文語言裡最寬的那個")
     ap.add_argument("--out", type=Path, default=mod.root / "build", help="package 的輸出資料夾")
     args = ap.parse_args()
+    if args.longest:
+        args.debug = True
+        if args.action != "install":
+            print("--longest 只在 install 時有用，這次不會放標記。")
     game = find_game_dir(args.game, demo=False)
     if args.action == "uninstall":
         mod.uninstall(game)
@@ -501,6 +519,6 @@ def official_main(mod: OfficialMod) -> None:
         require_game_closed()
     mod.build(game)
     if args.action == "install":
-        mod.install(game, args.debug)
+        mod.install(game, args.debug, longest=args.longest)
     elif args.action == "package":
         mod.package(args.out)
