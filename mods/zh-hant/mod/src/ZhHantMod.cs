@@ -135,6 +135,9 @@ namespace ProbablyStolenZhHant
                 // indent.tsv 讀不懂的行：只略過那一行（那一篇照原樣不縮排），其他照用；Load 只跑一次，每行只記一次
                 foreach (var bad in tr.IndentBadLines)
                     Warning($"indent.tsv 有一行讀不懂，略過（那一篇照原樣不縮排）：{bad.Replace("\t", "<Tab>")}");
+                // terms.tsv 第三欄寫錯的行：換詞照用，只是那個詞不當詞觸發（別的 mod 一行只有這個詞、沒有簡體專用字時不轉）
+                foreach (var bad in tr.BadTermMarks)
+                    Warning($"terms.tsv 第三欄只能是「觸發」或空白，略過這個標記（換詞照用）：{bad.Replace("\t", "<Tab>")}");
             }
             catch (Exception e)
             {
@@ -350,6 +353,9 @@ namespace ProbablyStolenZhHant
             Msg($"簡中字串表 {tables.Count} 張、{conv.EntryCount} 條 → 整句 {conv.ExactCount}、樣板 {conv.TemplateCount}、短詞 {conv.PhraseCount}、" +
                 $"簡體專用字 {conv.TriggerCount}＋詞 {conv.TriggerPhraseCount}、同句異譯 {conv.Conflicts}、寫死英文規則 {conv.HardcodedCount} 條；逐條修正套用 {Tr.OverridesApplied} 條、缺翻補譯文 {Tr.Fills.Count} 條、補佔位符 {Tr.WithArgs.Count}/{Tr.ArgCount} 條（{sw.ElapsedMilliseconds} ms，" +
                 $"遊戲啟動後 {Time.realtimeSinceStartup:F1} 秒）");
+            // 術語表標了「觸發」卻沒收進詞觸發的詞（例如遊戲更新後譯文裡出現了這個詞）：別的 mod 一行只有這個詞時不會轉，要看得出來
+            if (conv.SkippedTriggerTerms.Count > 0)
+                Warning($"術語表標了觸發、被篩掉的詞 {conv.SkippedTriggerTerms.Count} 條：{string.Join("、", conv.SkippedTriggerTerms)}");
             if (Tr.StaleOverrides.Count > 0)
                 Warning($"原文已變動、暫停套用的逐條修正 {Tr.StaleOverrides.Count} 條：{string.Join("、", Tr.StaleOverrides.GetRange(0, Math.Min(10, Tr.StaleOverrides.Count)))}");
             // 導師筆記的段落縮排：使用者發版前從 log 確認篇數（正式版 100-Rev12 是套用 17 篇、英文沒縮排 1 篇）。

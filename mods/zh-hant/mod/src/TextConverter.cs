@@ -23,11 +23,18 @@ namespace ProbablyStolenZhHant
         readonly List<Template> _plainTemplates = new List<Template>(); // 字面沒有簡體專用字的樣板，見 ConvertCore
         // 單位改成英文時，字面沒有簡體專用字、只因為單位才和譯文不同的樣板（「耗水率：{0}毫升/天」）：佔位符要是數字才套，見 TryUnits
         readonly List<Template> _unitTemplates = new List<Template>();
-        // 沒有簡體專用字、譯文卻不同的短詞（例如聲望特性的狀態標籤、某些職稱）：不用轉的文字裡也要換掉，見 ReplacePlainPhrases
+        // 沒有簡體專用字、譯文卻不同的短詞（例如聲望特性的狀態標籤、某些職稱）：不用轉的文字裡也要換掉，見 ReplacePlainPhrases。
+        // 這裡的文字多半是玩家打的繁體、別的 mod 的繁中，所以換的時候要看詞的邊界（2026-11-14）：任何位置都換的話，
+        // 「這表示例如」會變成「這表範例如」、「技巧手冊」變成「技心靈手巧冊」（短詞跨兩個詞對到）
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _plainPhrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
+        // 上面的短詞裡，3 個字以上的物品名稱與顧客名稱：不看詞的邊界、任何位置都換。交易所預覽的繁中句子會代入遊戲的簡中物品名稱
+        // （「多放的速食拉面會被清掉」），名稱前後都是漢字，看邊界就換不到；3 個字以上的名稱碰巧出現在別的句子裡的機會很小。
+        // 2 個字的（「撬棍」「彩票」）照樣看邊界，見 ReplacePlainPhrases
+        readonly HashSet<string> _freePlainPhrases = new HashSet<string>(StringComparer.Ordinal);
         readonly Dictionary<char, List<KeyValuePair<string, string>>> _phrases = new Dictionary<char, List<KeyValuePair<string, string>>>();
         readonly bool[] _trigger = new bool[char.MaxValue + 1];
-        // 沒有簡體專用字、OpenCC 的詞組卻會轉的詞（「桶里」→「桶裡」、「一只」→「一隻」），依開頭兩個字分組；_phraseStart 標開頭的字，見 Build
+        // 沒有簡體專用字、轉換後卻會變的詞，依開頭兩個字分組；_phraseStart 標開頭的字，見 Build。來源有兩個：OpenCC 的詞組
+        // （「桶里」→「桶裡」、「一只」→「一隻」）與術語表標了「觸發」的詞（「信息」→「資訊」，Translator.TriggerTerms）
         readonly Dictionary<int, List<string>> _triggerPhrases = new Dictionary<int, List<string>>();
         readonly bool[] _phraseStart = new bool[char.MaxValue + 1];
         // 繁體的字：OpenCC 會轉出來、簡中原文裡從沒出現過的漢字（「這」「們」「裡」）。有這種字的文字已經是繁體，不看上面的詞，見 Build
@@ -53,8 +60,12 @@ namespace ProbablyStolenZhHant
         public int TemplateCount => _templates.Count;
         public int TriggerCount { get; private set; }
         public int TriggerPhraseCount { get; private set; }
+        /// <summary>術語表標了「觸發」、卻被篩掉的詞（「詞（原因）」），預期是空的；字串表還沒載入的暫用轉換器不建詞觸發，也是空的。</summary>
+        public readonly List<string> SkippedTriggerTerms = new List<string>();
         public int PhraseCount { get; private set; }
         public int PlainPhraseCount { get; private set; }
+        /// <summary>無簡體字的短詞裡，不看詞的邊界、任何位置都換的名稱數（3 個字以上的物品名稱與顧客名稱）。</summary>
+        public int FreePlainPhraseCount => _freePlainPhrases.Count;
         /// <summary>建立時翻譯的字串表條目數；同一句原文有兩種譯文、只能留一種的次數。</summary>
         public int EntryCount { get; private set; }
         public int Conflicts { get; private set; }
@@ -90,6 +101,8 @@ namespace ProbablyStolenZhHant
             bool split = !tr.Units.AllChinese;
             var zhExact = split ? new Dictionary<string, string>(StringComparer.Ordinal) : c._exact;
             var zhText = split ? new StringBuilder() : outText;
+            // 物品名稱（Item 表的 *_name）與顧客名稱（ClientName 表）的原文：短詞表裡 3 個字以上的名稱不看詞的邊界，見 _freePlainPhrases
+            var names = new HashSet<string>(StringComparer.Ordinal);
             void Add(string s, string d)
             {
                 if (s == d && s.Length > 0 && s.Length <= MaxSpeaker) c._unchanged.Add(s);
@@ -104,6 +117,11 @@ namespace ProbablyStolenZhHant
             {
                 if (string.IsNullOrEmpty(src)) continue;
                 var dst = tr.Translate(table, key, src, out var zhDst);
+                if ((table == "Item" && key.EndsWith("_name", StringComparison.Ordinal)) || table == "ClientName")
+                {
+                    names.Add(src);
+                    names.Add(StripAnimTags(src));
+                }
                 byKey[table + "/" + key] = dst;
                 c.EntryCount++;
                 foreach (var ch in dst) outChars.Add(ch);
@@ -149,9 +167,28 @@ namespace ProbablyStolenZhHant
                 for (int ch = 0x3400; ch <= char.MaxValue; ch++)
                     if (tr.CC.IsOutput((char)ch) && !srcChars.Contains((char)ch)) c._traditional[ch] = true;
                 var candidates = new Dictionary<int, List<string>>();
+                var added = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var kv in tr.CC.Phrases)
-                    if (kv.Key.Length >= 2 && kv.Key != kv.Value && !c.HasTriggerChar(kv.Key) && tr.ConvertPlain(kv.Key) != kv.Key)
+                    if (kv.Key.Length >= 2 && kv.Key != kv.Value && !c.HasTriggerChar(kv.Key) && tr.ConvertPlain(kv.Key) != kv.Key && added.Add(kv.Key))
                         AddByPair(candidates, kv.Key);
+                // 術語表標了「觸發」的詞也算（2026-11-13）：台灣用語的換詞（「信息→資訊」「打印→列印」）只在術語表、OpenCC 第一層的詞組沒有，
+                // 別的 mod 的「InfoBox＝信息框的第一行」沒有簡體專用字，以前整行不轉。術語表混著遊戲情境的修正（「天后→天後」）與
+                // 台灣也常寫的詞（「智能」「禁用」），全收會誤轉繁體，所以只收人工挑過、標了觸發的。篩選和上面的詞組一樣，
+                // 另外篩掉詞裡有繁體的字的；被篩掉的記在 SkippedTriggerTerms，log 與離線驗證列出來（標了卻沒生效要看得出來）
+                var termCandidates = new List<string>();
+                foreach (var k in tr.TriggerTerms)
+                {
+                    // 術語表的詞是 OpenCC 轉換後的寫法：標在轉了會變寫法的詞上（「網絡」，簡中是「网络」），詞裡有繁體的字，
+                    // NeedsConversion 遇到繁體的字就不看詞觸發，收了也永遠不會生效，所以篩掉、列出來
+                    string why = k.Length < 2 ? "不到 2 個字"
+                        : c.HasTriggerChar(k) ? "詞裡有簡體專用字（本來就會轉）"
+                        : c.HasTraditionalChar(k) ? "詞裡有繁體的字（不會生效）"
+                        : tr.ConvertPlain(k) == k ? "轉換後不變"
+                        : null;
+                    if (why != null) { c.SkippedTriggerTerms.Add($"{k}（{why}）"); continue; }
+                    termCandidates.Add(k);
+                    if (added.Add(k)) AddByPair(candidates, k); // OpenCC 詞組已經收過的不重複算
+                }
                 var seen = new HashSet<string>(StringComparer.Ordinal);
                 var outAll = outText.ToString();
                 for (int i = 0; i + 1 < outAll.Length; i++)
@@ -166,6 +203,8 @@ namespace ProbablyStolenZhHant
                             c._phraseStart[k[0]] = true;
                             c.TriggerPhraseCount++;
                         }
+                foreach (var k in termCandidates)
+                    if (seen.Contains(k)) c.SkippedTriggerTerms.Add($"{k}（出現在譯文裡）");
             }
 
             foreach (var kv in c._exact)
@@ -205,6 +244,7 @@ namespace ProbablyStolenZhHant
                     {
                         AddByFirstChar(c._plainPhrases, kv.Key, kv.Value);
                         c.PlainPhraseCount++;
+                        if (names.Contains(kv.Key) && kv.Key.Trim().Length >= 3) c._freePlainPhrases.Add(kv.Key);
                     }
                 }
             }
@@ -324,8 +364,8 @@ namespace ProbablyStolenZhHant
         }
 
         /// <summary>
-        /// 含有簡體專用字（繁體譯文裡出現過的字都不算）才需要轉；沒有的話，含有 OpenCC 的詞組會轉的詞（「桶里」，見 Build）、
-        /// 而且沒有繁體的字（「這」「們」）時也要轉。
+        /// 含有簡體專用字（繁體譯文裡出現過的字都不算）才需要轉；沒有的話，含有詞觸發（OpenCC 的詞組會轉的詞「桶里」、
+        /// 術語表標了「觸發」的詞「信息」，見 Build）、而且沒有繁體的字（「這」「們」）時也要轉。
         /// </summary>
         public bool NeedsConversion(string s)
         {
@@ -347,6 +387,13 @@ namespace ProbablyStolenZhHant
         {
             foreach (var ch in s)
                 if (_trigger[ch]) return true;
+            return false;
+        }
+
+        bool HasTraditionalChar(string s)
+        {
+            foreach (var ch in s)
+                if (_traditional[ch]) return true;
             return false;
         }
 
@@ -604,6 +651,12 @@ namespace ProbablyStolenZhHant
         /// <summary>
         /// 沒有簡體專用字的文字裡，換掉「沒有簡體專用字、譯文卻不同」的短詞（例如狀態標籤、某些職稱）；一個都沒有時傳回 null。
         /// 這些詞在繁中譯文裡不會出現（出現了就是還沒轉），所以已轉好的文字不受影響（離線驗證的「譯文不會被重複轉換」把關）。
+        /// 但這裡的文字多半是玩家打的繁體、別的 mod 的繁中，短詞會跨兩個詞對到（「顯示例子」的「示例」→「顯範例子」、
+        /// 「上游客戶」的「游客」→「上遊客戶」），所以要符合詞的邊界才換（2026-11-14）：詞的頭尾是漢字時，那一側的鄰字不能是漢字，
+        /// 見 OnWordBoundary。長的不符合就試短的，都不符合就往下一個字。
+        /// 例外是 3 個字以上的物品名稱與顧客名稱（_freePlainPhrases）任何位置都換：交易所預覽的繁中句子代入遊戲的簡中物品名稱
+        /// （「多放的速食拉面會被清掉」），名稱夾在漢字中間。代價是 2 個字的名稱（「撬棍」「彩票」）在那種句子裡照原樣；
+        /// 交易所預覽之後會在名稱碰到漢字的那一側加零寬空格（U+200B），算邊界，就照轉
         /// </summary>
         string ReplacePlainPhrases(string s)
         {
@@ -612,7 +665,15 @@ namespace ProbablyStolenZhHant
             int gap = 0, i = 0;
             while (i < s.Length)
             {
-                var hit = LongestMatch(_plainPhrases, s, i);
+                var hit = default(KeyValuePair<string, string>);
+                if (_plainPhrases.TryGetValue(s[i], out var list))
+                    foreach (var kv in list) // 已經依長度排好，長的在前
+                        if (kv.Key.Length <= s.Length - i && string.CompareOrdinal(s, i, kv.Key, 0, kv.Key.Length) == 0
+                            && (_freePlainPhrases.Contains(kv.Key) || OnWordBoundary(s, i, kv.Key.Length)))
+                        {
+                            hit = kv;
+                            break;
+                        }
                 if (hit.Key == null) { i++; continue; }
                 if (sb == null) sb = new StringBuilder(s.Length);
                 sb.Append(s, gap, i - gap).Append(hit.Value);
@@ -621,6 +682,27 @@ namespace ProbablyStolenZhHant
             }
             return sb?.Append(s, gap, s.Length - gap).ToString();
         }
+
+        /// <summary>
+        /// s 從 i 開始、長 n 個字的詞是否符合詞的邊界：詞的第一個字是漢字時，前一個字不能是漢字（或在開頭）；
+        /// 最後一個字是漢字時，後一個字不能是漢字（或在結尾）。詞本身用括號、空白開頭結尾的（「[未激活]」「 激活 」）那一側不用看。
+        /// 中文不用空白分詞，這只是近似：前後都是漢字就當成可能跨詞、寧可不換。
+        /// </summary>
+        static bool OnWordBoundary(string s, int i, int n)
+        {
+            int end = i + n;
+            if (IsHan(s[i]) && i > 0 && IsHan(s[i - 1])) return false;
+            if (IsHan(s[end - 1]) && end < s.Length && IsHan(s[end])) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// 詞邊界用的漢字判斷：中日韓統一表意文字（含擴充 A 與相容表意文字）與「〇」。代理字元（擴充 B 以後的漢字，
+        /// 也可能是表情符號）保守地當成漢字，寧可不換。空白、標點、數字、英文、標籤的 &lt;&gt;、換行、零寬空格都不是。
+        /// </summary>
+        static bool IsHan(char ch) =>
+            ch >= 0x3400 && ch <= 0x4DBF || ch >= 0x4E00 && ch <= 0x9FFF || ch >= 0xF900 && ch <= 0xFAFF
+            || ch == 0x3007 || ch >= 0xD800 && ch <= 0xDFFF;
 
         /// <summary>
         /// 後備轉換：標記原樣保留；其餘用短詞分詞，詞以外的部分用 OpenCC 轉換再套術語表。

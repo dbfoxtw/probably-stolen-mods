@@ -59,6 +59,12 @@ namespace ProbablyStolenZhHant
         public IEnumerable<string> OverrideNames => _overrides.Keys;
         public OpenCC CC => _cc;
         public int TermCount { get; private set; }
+
+        readonly List<string> _triggerTerms = new List<string>();
+        /// <summary>術語表第三欄標了「觸發」的詞（簡繁寫法一樣、台灣不會這樣寫的詞，例如「信息」）；TextConverter 建詞觸發時用。</summary>
+        public IReadOnlyList<string> TriggerTerms => _triggerTerms;
+        /// <summary>terms.tsv 第三欄不是空白也不是「觸發」的行（標記略過，換詞照用）。</summary>
+        public readonly List<string> BadTermMarks = new List<string>();
         public int OpenCCEntries => _cc.EntryCount;
 
         Translator(OpenCC cc, Units units) { _cc = cc; _units = units ?? Units.Chinese; }
@@ -71,12 +77,24 @@ namespace ProbablyStolenZhHant
             string Required(string name) => read(name) ?? throw new InvalidDataException($"找不到翻譯資料 {name}");
             var t = new Translator(OpenCC.Load(read, "opencc"), units);
             var terms = new Dictionary<string, string>(StringComparer.Ordinal); // 同一個詞列了兩次時，後面的優先（同 Python）
+            var triggers = new HashSet<string>(StringComparer.Ordinal);
             foreach (var line in OpenCC.Lines(Required("terms.tsv")))
             {
                 if (line.Trim().Length == 0 || line.TrimStart().StartsWith("#")) continue;
                 var p = line.Split('\t');
-                if (p.Length >= 2 && p[0].Length > 0) terms[p[0]] = p[1];
+                if (p.Length < 2 || p[0].Length == 0) continue;
+                terms[p[0]] = p[1];
+                // 第三欄「觸發」：台灣用語的換詞（「信息→資訊」）只在術語表，OpenCC 第一層的詞組沒有，
+                // 一行只有這種詞、沒有簡體專用字時，顯示層要靠這個標記才知道要轉（TextConverter.Build 的詞觸發）。
+                // 第三欄只認空白與「觸發」。寫錯字（「触发」）只略過那個標記、記進 BadTermMarks（ZhHantMod 印警告、離線驗證列提醒），
+                // 換詞照用、不丟例外：標記只影響別的 mod 一行只有這種詞時轉不轉，不能因此讓 Load 失敗、整場不翻譯。
+                // 產生譯文的 tools/psmod/convert.py 會直接報錯，正常建置的資料不會走到這裡
+                var mark = p.Length >= 3 ? p[2].Trim() : "";
+                if (mark == "觸發") triggers.Add(p[0]);
+                else if (mark.Length == 0) triggers.Remove(p[0]); // 同一個詞列兩次時照後面那行（同上面的換詞）
+                else t.BadTermMarks.Add(line);
             }
+            t._triggerTerms.AddRange(triggers);
             foreach (var kv in terms)
             {
                 if (!t._terms.TryGetValue(kv.Key[0], out var list)) t._terms[kv.Key[0]] = list = new List<KeyValuePair<string, string>>();
