@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.4.0（2026-11-14）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 提示、群組清單和設定的文字多了俄文、德文、日文、法文、西班牙文、波蘭文，跟著遊戲的語言切換。
+- 按鍵欄的 Ctrl 也可以寫成 Strg（德文鍵盤上的寫法，例如 Strg+1）。
+- 對應遊戲版本改成 VERSION 100-REV13，也支援 beta 分支的 100-REV14。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- Messages, the group list and the settings are now also in Russian, German, Japanese, French, Spanish and Polish, following the game's language.
+- In the key fields, Ctrl can also be written Strg (as on German keyboards, e.g. Strg+1).
+- Supported game version is now VERSION 100-REV13 (also the 100-REV14 beta).
+
 ## v2.3.0（2026-11-08）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV12）

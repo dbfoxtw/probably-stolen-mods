@@ -1,0 +1,34 @@
+# 視窗群組 mod 自己介面的文字（手寫的繁中：遊戲是中文、繁中 mod 有跑時由 mod 的 Loc 用，其他時候用 zh.csv）。
+# 格式：key,值（一行一筆；第一個逗號分開 key 和值；值裡的 \n 是換行；# 開頭是註解）。{0}、{1}、{2} 由 mod 代入。
+# 字串的用途、空間大小、說明的寫法看 en.csv 的註解。中文只有 .other 一種字形；群組名字後面不留空白由 mod 自己處理。
+group_ref,視窗群組 {0}
+group_ref_named,視窗群組 {0}「{1}」
+saved.other,{0} 已儲存（{1} 個視窗）
+cleared,{0} 已清空
+empty,{0} 是空的
+skipped_missing,{0}：{1} 個找不到
+skipped_locked,{0}：{2} 個打不開
+skipped_both,{0}：{1} 個找不到、{2} 個打不開
+label_recall,視窗群組 {0}：叫出
+label_save,視窗群組 {0}：儲存
+tip_recall,叫出視窗群組 {0} 的按鍵：先關掉其他箱子、機器視窗，再把這組的視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用
+tip_save,把開著的箱子、機器視窗存成視窗群組 {0} 的按鍵；沒開視窗時按＝清空這組。\n例如 Ctrl+Shift+3、Shift+F5；留空＝不使用
+repeat_label,再按一次
+repeat_tip,再按一次同一組的叫出鍵時：\nRearrange＝重新排好：每次都擺回原位，補開關掉的、關掉多開的\nClose if all open＝全開就關：這組找得到、打得開的視窗都開著，就關掉這組的視窗，其他視窗留著；少了任何一個就照常叫出\nClose if unmoved＝沒動才關：都開著、而且上次叫出後都沒移動過才關；動過就先擺回原位，再按一次才關
+close_locked_label,也關鎖住的
+close_locked_tip,有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。
+tabs_label,也記儲物分頁
+tabs_tip,儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對打開這個設定後儲存的群組有作用。
+list_label,群組清單
+list_tip,打開群組清單的按鍵：列出存過的群組，點名字叫出那組，也能改名、刪除。\n例如 Ctrl+0；留空＝不使用
+list_again_label,清單再按一次
+list_again_tip,清單開著時再按一次群組清單的鍵：\nClose＝關掉清單\nMove to mouse＝不關，把清單移到滑鼠旁邊
+list_title,視窗群組
+list_empty,還沒有存過的群組
+group_fallback,群組 {0}
+window_count.other,{0} 個
+rename,改名
+rename_ok,確定
+delete,刪除
+delete_sure,確定？
+tip_head.other,{0}：{1} 個視窗

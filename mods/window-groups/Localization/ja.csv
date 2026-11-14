@@ -1,0 +1,46 @@
+# Japanese (ja) text of Window Groups' own UI: toasts, settings window and group list (read by the game's ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
+# Format: key,value. \n is a line break; keep every {0}/{1}/{2} of the English text. Japanese has one plural form: only .other.
+# When the group has a name, the mod removes the space after {0} in the toasts (the closing bracket is enough); without a name the space stays.
+
+group_ref,ウィンドウグループ {0}
+group_ref_named,ウィンドウグループ {0}「{1}」
+
+saved.other,{0} を保存しました（ウィンドウ{1}個）
+cleared,{0} をクリアしました
+empty,{0} は空です
+
+skipped_missing,{0}：{1}個が見つかりません
+skipped_locked,{0}：{2}個を開けません
+skipped_both,{0}：{1}個が見つからず、{2}個を開けません
+
+label_recall,グループ {0}：呼び出し
+label_save,グループ {0}：保存
+tip_recall,グループ {0} を呼び出すキー：ほかの容器・機械のウィンドウを閉じてから、このグループのウィンドウを保存した位置に開く。\n例：Ctrl+3、F5。空欄＝使わない
+tip_save,開いている容器・機械のウィンドウをグループ {0} として保存するキー。何も開いていないときはグループをクリアする。\n例：Ctrl+Shift+3、Shift+F5。空欄＝使わない
+
+repeat_label,もう一度押すと
+repeat_tip,グループの呼び出しキーをもう一度押したときの動作：\nRearrange＝毎回ウィンドウを元に戻す：閉じたものを開き直し、グループにないものを閉じる\nClose if all open＝グループのウィンドウのうち、見つかって開けるものがすべて開いていれば、それらを閉じる（ほかのウィンドウは開いたまま）。1つでも欠けていれば通常どおり呼び出す\nClose if unmoved＝すべて開いていて、前回の呼び出しからどれも動かしていないときだけ閉じる。動かしたものがあれば、まず元に戻し、次に押したときに閉じる
+
+close_locked_label,ロック中も閉じる
+close_locked_tip,Close All Windows MODを導入しているときだけ有効。\n呼び出しキーをもう一度押してグループを閉じるとき、ロックしたウィンドウも閉じる。「もう一度押すと」がClose if all openかClose if unmovedのときだけ。
+
+tabs_label,保管タブも記憶
+tabs_tip,グループを保存するとき、各ウィンドウで表示中のタブも記憶し、呼び出したときにそのタブに戻す（保管タブと、一部の機械のウィンドウにあるタブ）。\nこれがオンのときに保存したグループだけが対象。
+
+list_label,グループ一覧
+list_tip,グループ一覧を開くキー：保存したグループを表示する。名前をクリックするとそのグループを呼び出せるほか、名前の変更や削除もできる。\n例：Ctrl+0。空欄＝使わない
+list_again_label,一覧：もう一度押すと
+list_again_tip,グループ一覧が開いているときに、そのキーをもう一度押すと：\nClose＝一覧を閉じる\nMove to mouse＝開いたまま、マウスの横に移動する
+
+list_title,ウィンドウグループ
+list_empty,保存したグループはまだありません
+group_fallback,グループ {0}
+
+window_count.other,{0}個
+
+rename,名前変更
+rename_ok,OK
+delete,削除
+delete_sure,本当に？
+
+tip_head.other,{0}：ウィンドウ{1}個

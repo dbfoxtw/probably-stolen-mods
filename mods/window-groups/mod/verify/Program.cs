@@ -9,7 +9,9 @@ namespace ProbablyStolenWindowGroups.Verify
     /// <summary>
     /// 離線測試（不用開遊戲）：按鍵的寫法與比對、遊戲也用的鍵與操作提示讓開、
     /// 群組的資料檔、一鍵關窗的鎖檔、叫出時關哪些、多選與拖物品時能不能動作、提示與設定的文字；
-    /// 2.3.0 起群組清單：清單的鍵、名字的整理與存檔、提示帶名字、清單的列與位置。任何一項失敗就回傳非 0。
+    /// 2.3.0 起群組清單：清單的鍵、名字的整理與存檔、提示帶名字、清單的列與位置。
+    /// 2.4.0 起字在 public/Localization/*.csv：提示與設定的文字經過假的 Loc（FakeLoc.cs，照遊戲的解析規則讀 csv）跑 Strings，
+    /// 另測 LocPick（最長字串模式、手寫繁中、單複數的字形、名字後面的空白）與按鍵的 Strg。任何一項失敗就回傳非 0。
     /// 執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -46,6 +48,8 @@ namespace ProbablyStolenWindowGroups.Verify
             ListPlacement();
             ListEscape();
             ListAgainAndTips();
+            LocPickTest();
+            LocFiles();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -81,6 +85,14 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(P("Shift+Ctrl+3", out _).ToString(), P("Ctrl+Shift+3", out _).ToString(), "修飾鍵的順序不拘，正式寫法相同");
             h = P("control + alt + z", out err);
             Check(h != null && h.Ctrl && h.Alt && !h.Shift && h.Key == "Z", "control 也算 Ctrl、可以有空白");
+            // Strg（德文鍵盤上的 Ctrl；照視窗分頁）：不分大小寫，給玩家看與比對重複照舊是 Ctrl
+            h = P("Strg+1", out err);
+            Check(h != null && err == null && h.Ctrl && !h.Shift && !h.Alt && h.Key == "Alpha1", "Strg+1：Strg 也算 Ctrl");
+            Eq(h.Display(), "Ctrl+1", "Strg 寫的給玩家看照舊是 Ctrl");
+            Eq(P("strg+shift+3", out _)?.ToString(), P("Ctrl+Shift+3", out _).ToString(), "strg+shift+3：小寫也認得，和 Ctrl+Shift+3 的正式寫法相同（比對重複時算同一個鍵）");
+            h = P("STRG + Alt + F2", out err);
+            Check(h != null && err == null && h.Ctrl && h.Alt && !h.Shift && h.Key == "F2", "STRG + Alt + F2：大寫、有空白也認得");
+            Check(P("Strgx+3", out err) == null && err != null, "Strgx 不是修飾鍵：警告");
             h = P("F5", out err);
             Check(h != null && !h.Ctrl && !h.Shift && !h.Alt && h.Key == "F5", "沒有修飾鍵的 F5");
             h = P("3", out err);
@@ -151,6 +163,13 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(map.Bindings.Any(b => b.Entry == "Group12Recall" && b.Key.Key == "F12"), "群組 12 可以填 F12");
             Check(!map.Bindings.Any(b => b.Entry == "Group12Save") && map.Warnings.Any(w => w.Contains("Group12Save")), "寫錯的不使用並警告");
             Eq(map.Warnings.Count, 2, "只有兩句警告（重複、寫錯）");
+
+            // Strg 寫的和 Ctrl 寫的算同一個鍵（撞鍵檢查照正式寫法）
+            var strg = Defaults().ToList();
+            strg[4] = ("Group3Recall", 3, false, "Strg+1"); // 和 Group1Recall 的 Ctrl+1 一樣
+            map = Keymap.Build(strg, Resolve, GameDefaults());
+            Check(!map.Bindings.Any(b => b.Entry == "Group3Recall") && map.Warnings.Any(w => w.Contains("Group3Recall") && w.Contains("Group1Recall")),
+                "Strg+1 和 Ctrl+1 算同一個鍵：後面的不使用並警告");
 
             // 遊戲自己不看修飾鍵就讀的鍵：照用，但警告（工具箱的數字、操作提示的 O 由 mod 擋，不警告）
             var game = Defaults().ToList();
@@ -382,7 +401,7 @@ namespace ProbablyStolenWindowGroups.Verify
 
         static void Texts()
         {
-            var en = Strings.For(Lang.En);
+            var en = LangTexts.For(Lang.En);
             Eq(en.Saved(3, 5), "Window group 3 saved (5 windows)", "英文：已儲存");
             Eq(en.Saved(3, 1), "Window group 3 saved (1 window)", "英文：1 個視窗用單數");
             Eq(en.Cleared(10), "Window group 10 cleared", "英文：已清空（群組 10 顯示 10）");
@@ -390,8 +409,8 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(en.Skipped(3, 2, 0), "Window group 3: 2 not found", "英文：找不到");
             Eq(en.Skipped(3, 0, 1), "Window group 3: 1 can't be opened", "英文：打不開");
             Eq(en.Skipped(3, 2, 1), "Window group 3: 2 not found, 1 can't be opened", "英文：找不到又打不開");
-            var zht = Strings.For(Lang.ZhHant);
-            var zhs = Strings.For(Lang.ZhHans);
+            var zht = LangTexts.For(Lang.ZhHant);
+            var zhs = LangTexts.For(Lang.ZhHans);
             Eq(zht.Saved(3, 5), "視窗群組 3 已儲存（5 個視窗）", "繁中：已儲存（和示意圖的字一樣）");
             Eq(zht.Cleared(3), "視窗群組 3 已清空", "繁中：已清空");
             Eq(zht.Empty(3), "視窗群組 3 是空的", "繁中：是空的");
@@ -409,7 +428,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(zhs.ConfigLabel(3, true), "窗口组 3：保存", "簡中：儲存的標籤");
             foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
             {
-                var st = Strings.For(lang);
+                var st = LangTexts.For(lang);
                 foreach (var save in new[] { false, true })
                 {
                     var tip = st.ConfigTip(7, save);
@@ -432,7 +451,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(en.TabsLabel, "Remember storage tabs", "英文：Remember storage tabs（遊戲的叫法）");
             foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
             {
-                var st = Strings.For(lang);
+                var st = LangTexts.For(lang);
                 foreach (var choice in Rules.RepeatChoices)
                     Check(st.RepeatTip.Contains(choice), $"{lang}「再按一次」的說明寫出選項 {choice}");
                 Check(st.CloseLockedTip.Contains("Close if all open") && st.CloseLockedTip.Contains("Close if unmoved"), $"{lang}「也關鎖住的」說明寫出有作用的兩個選項");
@@ -716,9 +735,9 @@ namespace ProbablyStolenWindowGroups.Verify
         /// <summary>提示帶名字（三語系）、清單的字、設定的標籤與說明。</summary>
         static void ListTexts()
         {
-            var en = Strings.For(Lang.En);
-            var zht = Strings.For(Lang.ZhHant);
-            var zhs = Strings.For(Lang.ZhHans);
+            var en = LangTexts.For(Lang.En);
+            var zht = LangTexts.For(Lang.ZhHant);
+            var zhs = LangTexts.For(Lang.ZhHans);
             // 沒名字照舊（null 與不給一樣）
             Eq(zht.Saved(2, 5, null), "視窗群組 2 已儲存（5 個視窗）", "繁中：沒名字照舊");
             Eq(en.Cleared(2, null), "Window group 2 cleared", "英文：沒名字照舊");
@@ -865,9 +884,9 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(Rules.ListAgainChoices.Contains(Rules.ListAgainDefault), "預設值在選項裡（不然遊戲會一直換回預設）");
             Eq(Rules.ListAgainEntryName, "ListAgain", "設定的名稱");
 
-            var en = Strings.For(Lang.En);
-            var zht = Strings.For(Lang.ZhHant);
-            var zhs = Strings.For(Lang.ZhHans);
+            var en = LangTexts.For(Lang.En);
+            var zht = LangTexts.For(Lang.ZhHant);
+            var zhs = LangTexts.For(Lang.ZhHans);
             Eq(zht.ListAgainLabel, "清單再按一次", "繁中：清單再按一次");
             Eq(zhs.ListAgainLabel, "列表再按一次", "簡中：列表再按一次");
             Eq(en.ListAgainLabel, "List: press again", "英文：List: press again");
@@ -883,7 +902,7 @@ namespace ProbablyStolenWindowGroups.Verify
 
             foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
             {
-                var st = Strings.For(lang);
+                var st = LangTexts.For(lang);
                 int Lines(string t) => t.Split('\n').Length;
                 Eq(Lines(st.RepeatTip), 4, $"{lang}「再按一次」：開頭一行＋三個選項各一行");
                 Eq(Lines(st.ListAgainTip), 3, $"{lang}「清單再按一次」：開頭一行＋兩個選項各一行");
@@ -906,6 +925,129 @@ namespace ProbablyStolenWindowGroups.Verify
             }
             foreach (var txt in new[] { zht.ListAgainLabel, zht.ListAgainTip })
                 Check(!txt.Contains("窗口") && !txt.Contains("关") && !txt.Contains("开") && !txt.Contains("鼠标"), $"繁中清單再按一次的字沒有簡體字：{txt}");
+        }
+
+        // ── 多語系（2.4.0） ──
+
+        /// <summary>
+        /// Loc 的挑法（LocPick，照視窗分頁的測試）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；Format 照遊戲的 GetLocalized；
+        /// 另加單複數的字形（PluralCategory、PluralKey）與名字後面留不留空白（TightAfterName）。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Rename", ["de"] = "Umbenennen", ["fr"] = "Renommer" }, len),
+                "de", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
+
+            // 單複數的字形（CLDR 的整數規則）
+            void Cat(string lang, int n, string expected) => Eq(LocPick.PluralCategory(lang, n), expected, $"{lang ?? "null"} 的 {n}");
+            Cat("en", 0, "other"); Cat("en", 1, "one"); Cat("en", 2, "other");
+            Cat("fr", 0, "one"); Cat("fr", 1, "one"); Cat("fr", 2, "other");
+            Cat("ru", 1, "one"); Cat("ru", 2, "few"); Cat("ru", 4, "few"); Cat("ru", 5, "many"); Cat("ru", 11, "many"); Cat("ru", 12, "many");
+            Cat("ru", 14, "many"); Cat("ru", 21, "one"); Cat("ru", 22, "few"); Cat("ru", 25, "many"); Cat("ru", 101, "one"); Cat("ru", 111, "many");
+            Cat("ru", 112, "many");
+            Cat("pl", 1, "one"); Cat("pl", 2, "few"); Cat("pl", 4, "few"); Cat("pl", 5, "many"); Cat("pl", 12, "many"); Cat("pl", 22, "few");
+            Cat("pl", 25, "many"); Cat("pl", 112, "many");
+            Cat("ja", 1, "other"); Cat("zh", 1, "other"); Cat("zh-Hant", 1, "other"); Cat(null, 1, "other"); Cat("", 1, "other");
+            Eq(LocPick.PluralKey("saved", "few"), "saved.few", "單複數組的 key");
+
+            // 群組名字後面留不留空白：中文（含繁中）、日文不留，其他留
+            Check(LocPick.TightAfterName("zh"), "中文：名字後面不留空白");
+            Check(LocPick.TightAfterName("zh-Hans"), "zh 開頭的 code 都算中文");
+            Check(LocPick.TightAfterName("ja"), "日文：名字後面不留空白");
+            foreach (var code in new[] { "en", "de", "fr", "es", "ru", "pl" })
+                Check(!LocPick.TightAfterName(code), $"{code}：名字後面留空白");
+            Check(!LocPick.TightAfterName(null), "還沒有語言：留空白（英文的寫法）");
+            Check(!LocPick.TightAfterName(""), "語言是空字串：留空白");
+        }
+
+        /// <summary>
+        /// csv 本身（假 Loc 讀到的）：讀的時候沒有問題、前面的測試取過的 key 都找得到；en、zh、zh-Hant 都在；
+        /// 單複數組照語言只有該有的字形，字形裡不寫死數字（{1}／{0} 佔位）；簡中、繁中不分單複數，1 個和 5 個用同一個字形。
+        /// 名字後面留不留空白：日文要 ja 的表真的有 group_ref_named 才不留（沒有時退回英文，照留）。
+        /// key 與佔位符的完整比對交給根目錄的 tools/locale_check.py。
+        /// </summary>
+        static void LocFiles()
+        {
+            Loc.Use(Lang.En);
+            Check(Loc.Tables.ContainsKey("en") && Loc.Tables.ContainsKey("zh") && Loc.Tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
+            if (!Loc.Tables.TryGetValue("en", out var en) || !Loc.Tables.TryGetValue("zh", out var zh) || !Loc.Tables.TryGetValue("zh-Hant", out var hant)) return;
+            foreach (var b in new[] { "saved", "window_count", "tip_head" })
+            {
+                Check(en.ContainsKey(b + ".one") && en.ContainsKey(b + ".other") && !en.ContainsKey(b), $"en 的 {b} 是 one、other 兩個字形");
+                Check(zh.ContainsKey(b + ".other") && !zh.ContainsKey(b + ".one") && hant.ContainsKey(b + ".other") && !hant.ContainsKey(b + ".one"),
+                    $"中文的 {b} 只有 other");
+                if (en.TryGetValue(b + ".one", out var one)) Check(!one.Replace("{0}", "").Replace("{1}", "").Any(char.IsDigit), $"en 的 {b}.one 不寫死數字：{one}");
+            }
+            // 英文的單數照舊（字形裡是佔位符，代入後和 2.3.0 一樣）
+            var e = LangTexts.For(Lang.En);
+            Eq(e.Saved(4, 1, "Storage"), "Window group 4 \"Storage\" saved (1 window)", "英文單數：代入的 1");
+            Eq(e.WindowCount(0), "0 windows", "英文：0 用複數");
+            Eq(e.TooltipHead("Group 4", 21), "Group 4: 21 windows", "英文：21 用複數（只有 1 是單數）");
+            Eq(LangTexts.For(Lang.ZhHant).WindowCount(1), "1 個", "繁中：1 個（只有 other）");
+            Eq(LangTexts.For(Lang.ZhHans).TooltipHead("仓库", 1), "仓库：1 个窗口", "簡中：1 個也是 other");
+            // 繁中 mod 沒跑的中文（zh.csv）和有跑的（zh-Hant.csv）分得開
+            Eq(LangTexts.For(Lang.ZhHans).ListTitle, "窗口组", "繁中 mod 沒跑：用 zh.csv");
+            Eq(LangTexts.For(Lang.ZhHant).ListTitle, "視窗群組", "繁中 mod 有跑：用 zh-Hant.csv");
+            // 名字後面的空白：中文不留（zh-Hant 也是 zh），英文留
+            Check(LangTexts.For(Lang.ZhHant).Cleared(2, "倉庫").Contains("」已清空"), "繁中：名字後面不留空白");
+            Check(LangTexts.For(Lang.En).Cleared(2, "Storage").Contains("\" cleared"), "英文：名字後面留空白");
+            // 日文要 ja 的表真的有 group_ref_named 才不留空白：沒有 ja.csv、或表裡缺這條時字退回英文，照留空白（不然黏成 "Storage"cleared）。
+            // 用自己組的表測，不看真的 ja.csv 寫了什麼；測完放回原本的
+            Loc.Tables.TryGetValue("ja", out var realJa);
+            try
+            {
+                string enCleared = LangTexts.For(Lang.En).Cleared(2, "Storage");
+                Loc.Tables.Remove("ja");
+                Eq(LangTexts.For("ja").Cleared(2, "Storage"), enCleared, "日文沒有 ja.csv：退回英文、名字後面留空白");
+                Loc.Tables["ja"] = new Dictionary<string, string>(StringComparer.Ordinal);
+                Eq(LangTexts.For("ja").Cleared(2, "Storage"), enCleared, "ja 的表沒有 group_ref_named：退回英文、名字後面留空白");
+                Loc.Tables["ja"] = new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["group_ref"] = "ウィンドウグループ {0}",
+                    ["group_ref_named"] = "ウィンドウグループ {0}「{1}」",
+                    ["cleared"] = "{0} をクリアしました",
+                };
+                Eq(LangTexts.For("ja").Cleared(2, "倉庫"), "ウィンドウグループ 2「倉庫」をクリアしました", "ja 的表有 group_ref_named：名字後面不留空白");
+                Eq(LangTexts.For("ja").Cleared(2), "ウィンドウグループ 2 をクリアしました", "日文沒有名字：照 csv 原樣留空白");
+            }
+            finally
+            {
+                if (realJa != null) Loc.Tables["ja"] = realJa; else Loc.Tables.Remove("ja");
+            }
+            // 讀 csv 的問題與程式用到、csv 卻找不到的 key（前面所有取字的測試累積下來的；LocFiles 排在最後）
+            foreach (var p in Loc.Problems) Check(false, p);
         }
 
         /// <summary>2.0.0 的 GroupRecord／WindowEntry（沒有 tabs），模擬舊版讀新檔。</summary>

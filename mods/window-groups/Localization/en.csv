@@ -1,0 +1,87 @@
+# Window Groups: texts of the mod's own UI (read by the game's ModHelper.GetLocalized). Format: key,value (one entry per line;
+# the first comma splits key and value; \n in a value is a line break; lines starting with # are comments).
+# {0}, {1}, {2} are filled in by the mod: keep every one that the English entry has, in any order your language needs.
+# Keys ending in .one/.few/.many/.other are a plural group: the mod picks the form by the number (see the comments below).
+# Other languages are about 30-60% longer than English: wherever a comment says the space is small, choose short words.
+
+# Toast: one line shown for about 2 seconds at the top of the screen after saving or recalling a group.
+# The box grows with the text (one line, no wrapping), so space is not tight, but keep it short: it is read at a glance.
+# group_ref / group_ref_named: how a group is written inside the toasts below. {0} = group number (1-20), {1} = the name
+# the player gave the group. Use your language's own quotation marks around {1} (English "...", Chinese “...”, Japanese 「...」, German „...“, French « ... »).
+# In the toasts, {0} is the whole result of group_ref / group_ref_named (Window group 2, or Window group 2 "Storage").
+# For Chinese and Japanese the mod removes the space after {0} when the group has a name (the closing quote is enough);
+# every other language keeps the text exactly as written.
+group_ref,Window group {0}
+group_ref_named,Window group {0} "{1}"
+
+# saved: plural group, n = number of windows saved. {0} = the group, {1} = number of windows.
+# Write the forms your language needs: en/de/es/fr .one and .other; ru/pl .one, .few and .many; ja/zh .other only.
+# Never write the number itself in a form: always {1} (Russian "one" also covers 21, 31...; French "one" covers 0).
+saved.one,{0} saved ({1} window)
+saved.other,{0} saved ({1} windows)
+
+# cleared: saving with no windows open clears the group. empty: recalling a group that has no windows. {0} = the group.
+cleared,{0} cleared
+empty,{0} is empty
+
+# Shown after a recall when some windows were skipped. {0} = the group, {1} = how many could not be found (the item is gone),
+# {2} = how many could not be opened (a locked container, or a box held in a machine slot). skipped_locked has no {1}.
+# The numbers come after the colon, so these are not plural groups; keep the "label: number + words" shape if your grammar needs it.
+skipped_missing,{0}: {1} not found
+skipped_locked,{0}: {2} can't be opened
+skipped_both,{0}: {1} not found, {2} can't be opened
+
+# Mod settings window (main menu > Mods > this mod's settings). Labels sit to the left of the field: keep them short.
+# Tooltips (*_tip) appear when hovering a setting; they wrap by themselves. How tooltips are written:
+# - first a sentence saying what the setting does; long tooltips are split into lines with \n;
+# - dropdown choices one per line as "Choice = meaning"; the choice names (Rearrange, Close if all open, Close if unmoved, Close,
+#   Move to mouse) stay in English exactly as written, because the game shows the stored English value in the dropdown;
+# - key examples go on their own last line and stay as they are (Ctrl+3, F5, Ctrl+Shift+3, Shift+F5, Ctrl+0; write Ctrl, not Strg);
+# - never say which option is the default (the window has a reset button); name other mods as mods ("the Close All Windows mod").
+# label_recall / label_save / tip_recall / tip_save: {0} = group number (1-20). The examples do not follow the group number on purpose.
+label_recall,Group {0}: recall
+label_save,Group {0}: save
+tip_recall,Key that recalls group {0}: closes the other container/machine windows, then opens this group's windows where they were saved.\nE.g. Ctrl+3, F5; empty = not used
+tip_save,Key that saves the open container/machine windows as group {0}; with none open, it clears the group.\nE.g. Ctrl+Shift+3, Shift+F5; empty = not used
+
+# "Press again" dropdown: what pressing a group's recall key again does. One line per choice, choice names in English.
+repeat_label,Press again
+repeat_tip,What a group's recall key does when you press it again:\nRearrange = put the windows back every time: reopen the closed ones, close the others\nClose if all open = if every window of the group that can be found and opened is open, close them (other windows stay open); if any is missing, recall as usual\nClose if unmoved = close only if they are all open and none has moved since the group was last recalled; if one moved, put them back first and close on the next press
+
+# "Close locked too" switch. The tooltip starts by saying it needs the Close All Windows mod; "Press again" is the label above (repeat_label).
+close_locked_label,Close locked too
+close_locked_tip,Only works with the Close All Windows mod installed.\nWhen pressing the recall key again closes the group, also close its locked windows; only when "Press again" is Close if all open or Close if unmoved.
+
+# "Remember storage tabs" switch. "Storage tabs" is the game's own name (the storage expansion kit's description): use the game's term in your language.
+tabs_label,Remember storage tabs
+tabs_tip,When saving a group, also remember which tab each window shows, and switch back to it when recalling (storage tabs, and the tabs in some machine windows).\nOnly for groups saved while this is on.
+
+# "Group list" key and the "List: press again" dropdown (choices Close / Move to mouse stay in English).
+list_label,Group list
+list_tip,Key that opens the group list: shows the saved groups; click a name to recall that group, or rename or delete it.\nE.g. Ctrl+0; empty = not used
+list_again_label,List: press again
+list_again_tip,When the group list is open, pressing its key again:\nClose = close the list\nMove to mouse = keep it open and move it next to the mouse
+
+# Group list window (opened in the shop with Ctrl+0). Each row: name button, recall key, window count, Rename, Delete.
+# The columns grow to fit the text, but the list should stay small: keep these short, especially the small buttons.
+# list_title: the window's title (the mod's name). list_empty: the only line when no group has been saved yet.
+# group_fallback: the name shown for a group without a name; {0} = group number.
+list_title,Window Groups
+list_empty,No saved groups yet
+group_fallback,Group {0}
+
+# window_count: the count column of a row, plural group (n = number of windows). {0} = the number. Very little space.
+window_count.one,{0} window
+window_count.other,{0} windows
+
+# Small buttons in each row: as short as possible (one short word). rename_ok replaces Rename while typing a new name;
+# delete_sure replaces Delete after the first click (click again to really delete).
+rename,Rename
+rename_ok,OK
+delete,Delete
+delete_sure,Sure?
+
+# tip_head: first line of the tooltip on a group's name button (the window titles follow, one per line).
+# Plural group, n = number of windows. {0} = the group's name as shown in the list, {1} = number of windows.
+tip_head.one,{0}: {1} window
+tip_head.other,{0}: {1} windows

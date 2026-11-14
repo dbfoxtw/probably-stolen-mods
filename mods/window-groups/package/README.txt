@@ -2,15 +2,15 @@ Probably Stolen 視窗群組 mod（Window Groups） v{version}
 ==========================================================
 
 把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位；
-也可以打開群組清單，點名字叫出。最多 20 組。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+也可以打開群組清單，點名字叫出。最多 20 組。
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
  或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
-不需要 MelonLoader，也不需要任何權限（啟用時不會跳出權限確認）。
+不需要任何權限（啟用時不會跳出權限確認）。
 - Steam 工作坊：訂閱 https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864 ，
   開遊戲後在主選單的「Mods」（模組）畫面啟用「Window Groups」、照提示重開遊戲。更新由 Steam 自動處理。
 - 手動安裝（這個壓縮檔）：
@@ -116,7 +116,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   每個存檔各一套，不會跟著 Steam 雲端同步。Demo 版在 UserData\WindowGroups\ 的群組不會搬過來。
   不過遊戲本身會記住每個箱子視窗最後的位置（存在存檔裡）：群組叫出來的視窗被關掉時，
   遊戲照原本的方式記下那時的位置，之後一般雙擊打開也會開在那裡。
-- 提示、群組清單與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文。
+- 提示、群組清單與設定視窗的文字跟著遊戲語言：英文、簡中（有裝繁中 mod 時是繁中）、俄、德、日、法、
+  西班牙、波蘭文，其他語言是英文。
 - 已知限制：只記位置，不記視窗大小；視窗裡的分頁預設不記（開在那個箱子上次關掉時的分頁，設定「也記儲物分頁」打開時才記）；
   「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
   遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉；
@@ -143,9 +144,8 @@ Probably Stolen Window Groups mod v{version}
 --------------------------------------------
 
 Save the container and machine windows you have open, and where they are, as a group; press one key
-to bring them all back in place, or open the group list and click a name. Up to 20 groups. Unofficial, in the game's official mod format
-(no MelonLoader needed).
-Supported game version: full release 1.0 (VERSION 100-REV12)
+to bring them all back in place, or open the group list and click a name. Up to 20 groups.
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -153,7 +153,7 @@ Bug reports are welcome
  or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
-MelonLoader is not needed, and no permissions are needed (no permission prompt when you enable it).
+No permissions are needed (no permission prompt when you enable it).
 - Steam Workshop: subscribe at https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864 ,
   start the game, enable "Window Groups" on the Mods screen of the main menu, and restart as prompted.
   Steam keeps it updated.
@@ -285,8 +285,8 @@ Notes
   by Steam Cloud. Groups from the Demo's UserData\WindowGroups\ aren't carried over.
   The game itself remembers where each container's window was last (in your save): when a window opened by
   a group is closed, the game records its position as usual, so a normal double-click opens it there next time.
-- Messages, the group list and the settings window follow the game language: Simplified Chinese for Chinese (Traditional Chinese
-  with the Traditional Chinese mod), English for every other language.
+- Messages, the group list and the settings window follow the game language: English, Simplified Chinese (Traditional
+  Chinese with the Traditional Chinese mod), Russian, German, Japanese, French, Spanish or Polish, English otherwise.
 - Known limitations: only positions are saved, not window sizes; tabs inside a window aren't saved by default
   (a recalled window opens on the tab it was last closed on, unless "Remember storage tabs" is on);
   the positions Close if unmoved compares with are only kept in memory, so after restarting or loading,

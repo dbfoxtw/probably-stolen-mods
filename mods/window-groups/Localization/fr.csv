@@ -1,0 +1,37 @@
+# Window Groups : textes de l'interface du mod (lus par ModHelper.GetLocalized du jeu). Format : key,value (une entrée par ligne ; \n = retour à la ligne).
+# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, ce que sont {0}, {1}, {2}).
+# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes restent en anglais.
+group_ref,Groupe de fenêtres {0}
+group_ref_named,Groupe de fenêtres {0} « {1} »
+saved.one,{0} enregistré ({1} fenêtre)
+saved.other,{0} enregistré ({1} fenêtres)
+cleared,{0} vidé
+empty,{0} est vide
+skipped_missing,{0} : {1} introuvable(s)
+skipped_locked,{0} : {2} impossible(s) à ouvrir
+skipped_both,{0} : {1} introuvable(s), {2} impossible(s) à ouvrir
+label_recall,Groupe {0} : rappeler
+label_save,Groupe {0} : enregistrer
+tip_recall,Touche qui rappelle le groupe {0} : ferme les autres fenêtres de conteneurs et de machines, puis ouvre les fenêtres de ce groupe là où elles ont été enregistrées.\nEx. : Ctrl+3, F5 ; vide = désactivé
+tip_save,Touche qui enregistre dans le groupe {0} les fenêtres de conteneurs et de machines ouvertes ; si aucune n'est ouverte, elle vide le groupe.\nEx. : Ctrl+Shift+3, Shift+F5 ; vide = désactivé
+repeat_label,Nouvel appui
+repeat_tip,Ce que fait la touche de rappel d'un groupe quand vous appuyez dessus à nouveau :\nRearrange = remettre les fenêtres en place à chaque fois : rouvrir celles qui sont fermées, fermer les autres\nClose if all open = si toutes les fenêtres du groupe qui peuvent être trouvées et ouvertes sont ouvertes, les fermer (les autres fenêtres restent ouvertes) ; s'il en manque une, rappeler comme d'habitude\nClose if unmoved = fermer seulement si elles sont toutes ouvertes et qu'aucune n'a été déplacée depuis le dernier rappel du groupe ; si l'une a bougé, les remettre d'abord en place et fermer à l'appui suivant
+close_locked_label,Fermer aussi les verrouillées
+close_locked_tip,Ne fonctionne qu'avec le mod Close All Windows installé.\nQuand un nouvel appui sur la touche de rappel ferme le groupe, ferme aussi ses fenêtres verrouillées ; seulement si « Nouvel appui » est sur Close if all open ou Close if unmoved.
+tabs_label,Mémoriser les onglets de rangement
+tabs_tip,En enregistrant un groupe, mémorise aussi l'onglet affiché par chaque fenêtre, et y revient lors du rappel (onglets de rangement, et onglets de certaines fenêtres de machines).\nSeulement pour les groupes enregistrés pendant que ce réglage est activé.
+list_label,Liste des groupes
+list_tip,Touche qui ouvre la liste des groupes : affiche les groupes enregistrés ; cliquez sur un nom pour rappeler ce groupe, ou renommez-le ou supprimez-le.\nEx. : Ctrl+0 ; vide = désactivé
+list_again_label,Liste : nouvel appui
+list_again_tip,Quand la liste des groupes est ouverte, un nouvel appui sur sa touche :\nClose = ferme la liste\nMove to mouse = la garde ouverte et la déplace à côté de la souris
+list_title,Groupes de fenêtres
+list_empty,Aucun groupe enregistré pour l'instant
+group_fallback,Groupe {0}
+window_count.one,{0} fenêtre
+window_count.other,{0} fenêtres
+rename,Renommer
+rename_ok,OK
+delete,Supprimer
+delete_sure,Sûr ?
+tip_head.one,{0} : {1} fenêtre
+tip_head.other,{0} : {1} fenêtres

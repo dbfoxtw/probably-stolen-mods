@@ -1,0 +1,49 @@
+# Window Groups: texts of the mod's own UI, German. Translated from en.csv with AI help. Format: key,value
+# Dropdown choices (Rearrange, Close if all open, Close if unmoved, Close, Move to mouse) stay English; key examples stay as written (Ctrl, not Strg).
+
+group_ref,Fenster-Gruppe {0}
+group_ref_named,Fenster-Gruppe {0} „{1}“
+
+saved.one,{0} gespeichert ({1} Fenster)
+saved.other,{0} gespeichert ({1} Fenster)
+
+cleared,{0} geleert
+empty,{0} ist leer
+
+skipped_missing,{0}: {1} nicht gefunden
+skipped_locked,{0}: {2} nicht zu öffnen
+skipped_both,{0}: {1} nicht gefunden, {2} nicht zu öffnen
+
+label_recall,Gruppe {0}: abrufen
+label_save,Gruppe {0}: speichern
+tip_recall,Taste, die Gruppe {0} abruft: schließt die übrigen Behälter- und Gerätefenster und öffnet dann die Fenster dieser Gruppe dort, wo sie gespeichert wurden.\nZ. B. Ctrl+3, F5; leer = nicht belegt
+tip_save,Taste, die die offenen Behälter- und Gerätefenster als Gruppe {0} speichert; ist keines offen, wird die Gruppe geleert.\nZ. B. Ctrl+Shift+3, Shift+F5; leer = nicht belegt
+
+repeat_label,Erneut drücken
+repeat_tip,Was die Abruftaste einer Gruppe beim erneuten Drücken tut:\nRearrange = die Fenster jedes Mal zurücksetzen: geschlossene wieder öffnen, alle anderen schließen\nClose if all open = sind alle Fenster der Gruppe offen, die sich finden und öffnen lassen, werden sie geschlossen (andere Fenster bleiben offen); fehlt eines, wird wie gewohnt abgerufen\nClose if unmoved = nur schließen, wenn alle offen sind und keines seit dem letzten Abrufen der Gruppe verschoben wurde; wurde eines verschoben, werden sie zuerst zurückgesetzt und beim nächsten Drücken geschlossen
+
+close_locked_label,Auch gesperrte schließen
+close_locked_tip,Funktioniert nur, wenn die Mod Close All Windows installiert ist.\nWenn erneutes Drücken der Abruftaste die Gruppe schließt, werden auch ihre gesperrten Fenster geschlossen; nur wenn „Erneut drücken“ auf Close if all open oder Close if unmoved steht.
+
+tabs_label,Lagerreiter merken
+tabs_tip,Merkt sich beim Speichern einer Gruppe auch, welchen Reiter jedes Fenster zeigt, und wechselt beim Abrufen wieder dorthin (Lagerreiter und die Reiter mancher Gerätefenster).\nNur für Gruppen, die gespeichert wurden, während dies eingeschaltet war.
+
+list_label,Gruppenliste
+list_tip,Taste, die die Gruppenliste öffnet: zeigt die gespeicherten Gruppen; klick auf einen Namen, um diese Gruppe abzurufen, oder benenne sie um oder lösche sie.\nZ. B. Ctrl+0; leer = nicht belegt
+list_again_label,Liste: erneut drücken
+list_again_tip,Ist die Gruppenliste offen, bewirkt erneutes Drücken ihrer Taste:\nClose = die Liste schließen\nMove to mouse = offen lassen und neben die Maus verschieben
+
+list_title,Fenster-Gruppen
+list_empty,Noch keine gespeicherten Gruppen
+group_fallback,Gruppe {0}
+
+window_count.one,{0} Fenster
+window_count.other,{0} Fenster
+
+rename,Umbenennen
+rename_ok,OK
+delete,Löschen
+delete_sure,Sicher?
+
+tip_head.one,{0}: {1} Fenster
+tip_head.other,{0}: {1} Fenster

@@ -220,7 +220,7 @@ namespace ProbablyStolenWindowGroups
             r.Set(group, entries); // 名字保留
             Persist(r);
             int count = r.Get(group).Count;
-            Toast.Show(GameState.S.Saved(group, count, r.GetName(group)));
+            Toast.Show(Strings.Saved(group, count, r.GetName(group)));
             WindowGroupsMod.DebugLog($"儲存群組 {group}（{count} 個，下面的先）：{string.Join("、", entries.Select(e => $"「{e.Title}」#{e.Id} ({e.X:0},{e.Y:0}){(e.Tabs != null ? $" 分頁 {e.Tabs}" : "")}"))}{skippedNote}");
             GroupList.OnGroupsChanged(); // 清單開著的話重畫（位置不變）
         }
@@ -236,7 +236,7 @@ namespace ProbablyStolenWindowGroups
             Persist(r);
             _recalled.Remove(group);
             if (_pendingGroup == group) { _pendingGroup = 0; _pendingWindows.Clear(); }
-            Toast.Show(GameState.S.Cleared(group, name));
+            Toast.Show(Strings.Cleared(group, name));
             WindowGroupsMod.DebugLog($"{debug}{(name != null ? $"（名字「{name}」一起清掉）" : "")}");
             GroupList.OnGroupsChanged();
         }
@@ -318,7 +318,7 @@ namespace ProbablyStolenWindowGroups
             var entries = r.Get(group);
             if (entries.Count == 0)
             {
-                Toast.Show(GameState.S.Empty(group, r.GetName(group)));
+                Toast.Show(Strings.Empty(group, r.GetName(group)));
                 WindowGroupsMod.DebugLog($"叫出群組 {group}：是空的，不動作");
                 return;
             }
@@ -346,7 +346,7 @@ namespace ProbablyStolenWindowGroups
                     WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
                     return;
                 }
-                Toast.Show(GameState.S.Skipped(group, missing, lockedOut, r.GetName(group)));
+                Toast.Show(Strings.Skipped(group, missing, lockedOut, r.GetName(group)));
                 log?.Add("一個都開不了，不關別的視窗");
                 WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log ?? new List<string>())}");
                 return;
@@ -460,7 +460,7 @@ namespace ProbablyStolenWindowGroups
                 }
                 catch (Exception ex) { WindowGroupsMod.DebugLog($"播開啟音效失敗：{ex.Message}"); }
             }
-            if (missing > 0 || lockedOut > 0) Toast.Show(GameState.S.Skipped(group, missing, lockedOut, r.GetName(group)));
+            if (missing > 0 || lockedOut > 0) Toast.Show(Strings.Skipped(group, missing, lockedOut, r.GetName(group)));
             if (log != null) WindowGroupsMod.DebugLog($"叫出群組 {group}：{string.Join("；", log)}");
             // 拖著單一物品時：關掉、打開、移動過視窗，滑鼠底下可能換了東西，讓遊戲重算放下的目標
             if (closedOthers > 0 || placed.Count > 0) RefreshDragAfterWindowsChanged();

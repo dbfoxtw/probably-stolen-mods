@@ -1,14 +1,14 @@
 # Probably Stolen 視窗群組 mod（Window Groups）
 
-*Probably Stolen* 的 mod：把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位；也可以打開群組清單，點名字叫出。最多 20 組。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位；也可以打開群組清單，點名字叫出。最多 20 組。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV12）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Groups 的最新版，標記 `window-groups-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/804?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place. Up to 20 groups. See [English](#english) below.
+> A mod for *Probably Stolen*: save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place. Up to 20 groups. See [English](#english) below.
 
 ## 功能
 
@@ -110,11 +110,11 @@
 
 ## 語言
 
-提示、群組清單與設定視窗的文字跟著遊戲語言：中文介面是簡中（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時是繁中），其他語言是英文。設定視窗裡段落的標題固定是英文的「Window Groups」。
+提示、群組清單與設定視窗的文字跟著遊戲語言：英文、簡中（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時是繁中）、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言是英文。設定視窗裡段落的標題固定是英文的「Window Groups」。
 
 ## 安裝
 
-這是遊戲官方格式的 mod，不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Window Groups」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -185,7 +185,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place, or open the group list and click a name. Up to 20 groups. Unofficial, in the game's official mod format (no MelonLoader needed). Supported game version: full release 1.0 (VERSION 100-REV12). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Groups, tagged `window-groups-v…`).
+A mod for *Probably Stolen*: save the container and machine windows you have open, and where they are, as a group; press one key to bring them all back in place, or open the group list and click a name. Up to 20 groups. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/804) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Groups, tagged `window-groups-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/804?tab=bugs).
 
@@ -285,11 +285,11 @@ The messages come from this mod, not the base game (they all start with "Window 
 - If the file is broken (a missing comma or quote, say), all the defaults are used and the file is overwritten with them when the game starts. You may want to copy it somewhere first.
 - To go back to the defaults, press Reset to Defaults in the settings window.
 
-**Languages:** messages, the group list and the settings window follow the game language: Simplified Chinese for Chinese (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280)), English for every other language. The section title in the settings window is always "Window Groups".
+**Languages:** messages, the group list and the settings window follow the game language: English, Simplified Chinese (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280)), Russian, German, Japanese, French, Spanish or Polish, English for any other language. The section title in the settings window is always "Window Groups".
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. No permissions are needed, so there is no permission prompt when you enable it.
+No permissions are needed, so there is no permission prompt when you enable it.
 
 **From the Steam Workshop**: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3829576864), start the game, enable "Window Groups" on the Mods screen of the main menu, and restart as prompted. Steam keeps it updated.
 

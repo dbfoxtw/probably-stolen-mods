@@ -1,0 +1,40 @@
+# Window Groups: texts of the mod's own UI, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
+# What each text is for and how much space it has: see the comments in en.csv. Plural groups use .one, .few and .many.
+# {0} in the toasts always starts with "Grupa okien" (feminine), so the toasts agree with it.
+group_ref,Grupa okien {0}
+group_ref_named,Grupa okien {0} „{1}”
+saved.one,{0} zapisana ({1} okno)
+saved.few,{0} zapisana ({1} okna)
+saved.many,{0} zapisana ({1} okien)
+cleared,{0} wyczyszczona
+empty,{0} jest pusta
+skipped_missing,{0}: nie znaleziono ({1})
+skipped_locked,{0}: nie można otworzyć ({2})
+skipped_both,{0}: nie znaleziono ({1}), nie można otworzyć ({2})
+label_recall,Grupa {0}: przywołaj
+label_save,Grupa {0}: zapisz
+tip_recall,Klawisz, który przywołuje grupę {0}: zamyka pozostałe okna pojemników i maszyn, a potem otwiera okna tej grupy tam, gdzie zostały zapisane.\nNp. Ctrl+3, F5; puste = nieużywane
+tip_save,Klawisz, który zapisuje otwarte okna pojemników i maszyn jako grupę {0}; gdy żadne nie jest otwarte, czyści grupę.\nNp. Ctrl+Shift+3, Shift+F5; puste = nieużywane
+repeat_label,Ponowne naciśnięcie
+repeat_tip,Co robi klawisz przywołania grupy, gdy naciśniesz go ponownie:\nRearrange = za każdym razem ustawia okna z powrotem: otwiera zamknięte, zamyka pozostałe\nClose if all open = jeśli wszystkie okna grupy, które da się znaleźć i otworzyć, są otwarte, zamyka je (inne okna zostają otwarte); jeśli brakuje któregoś, przywołuje grupę jak zwykle\nClose if unmoved = zamyka tylko wtedy, gdy wszystkie są otwarte i żadne nie zostało przesunięte od ostatniego przywołania grupy; jeśli któreś przesunięto, najpierw ustawia okna z powrotem, a zamyka przy następnym naciśnięciu
+close_locked_label,Zamykaj też zablokowane
+close_locked_tip,Działa tylko z zainstalowaną modyfikacją Close All Windows.\nGdy ponowne naciśnięcie klawisza przywołania zamyka grupę, zamyka też jej zablokowane okna; tylko gdy „Ponowne naciśnięcie” ma wartość Close if all open lub Close if unmoved.
+tabs_label,Zapamiętuj zakładki składziku
+tabs_tip,Przy zapisywaniu grupy zapamiętuje też, którą zakładkę pokazuje każde okno, i przełącza na nią z powrotem przy przywołaniu (zakładki składziku oraz zakładki w oknach niektórych maszyn).\nDotyczy tylko grup zapisanych, gdy ta opcja była włączona.
+list_label,Lista grup
+list_tip,Klawisz, który otwiera listę grup: pokazuje zapisane grupy; kliknij nazwę, aby przywołać grupę, albo zmień jej nazwę lub ją usuń.\nNp. Ctrl+0; puste = nieużywane
+list_again_label,Lista: ponowne naciśnięcie
+list_again_tip,Gdy lista grup jest otwarta, ponowne naciśnięcie jej klawisza:\nClose = zamyka listę\nMove to mouse = zostawia ją otwartą i przenosi obok kursora myszy
+list_title,Grupy okien
+list_empty,Brak zapisanych grup
+group_fallback,Grupa {0}
+window_count.one,{0} okno
+window_count.few,{0} okna
+window_count.many,{0} okien
+rename,Zmień nazwę
+rename_ok,OK
+delete,Usuń
+delete_sure,Na pewno?
+tip_head.one,{0}: {1} okno
+tip_head.few,{0}: {1} okna
+tip_head.many,{0}: {1} okien

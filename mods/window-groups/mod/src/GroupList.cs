@@ -63,8 +63,6 @@ namespace ProbablyStolenWindowGroups
         static readonly List<Row> _rows = new List<Row>();
         static CustomUIElement _emptyLabel;
         static bool _scroll;
-        /// <summary>打開時的語言（清單開著時換語言不會發生：選項打開時清單就關掉了，Rules.ListCloseReason）。</summary>
-        static Strings _s;
         /// <summary>為什麼關（給除錯 log；框架自己關的，例如 × 或一鍵關窗，是 null）。</summary>
         static string _closeReason;
 
@@ -137,12 +135,12 @@ namespace ProbablyStolenWindowGroups
             }
             var rec = Groups.Current();
             if (rec == null) { WindowGroupsMod.DebugLog("群組清單：遊戲還沒載入，不開"); return; }
-            _s = GameState.S;
+            // 字在用到時才從 Loc 取（Strings）：清單開著時換語言不會發生（選項打開時清單就關掉了，Rules.ListCloseReason），每次取都是同一個語言
             // paper 層：畫在箱子視窗與紙張面板上面、點了不會穿到底下的物品（類別說明）。沒有這一層時框架自己會退回 overlay 並警告，這裡先看
             string layer = CustomUIManager.HasLayer(CustomUIManager.LAYER_PAPER) ? CustomUIManager.LAYER_PAPER : CustomUIManager.LAYER_OVERLAY;
             _layer = layer;
             _hitFrame = -1;
-            var b = cm.CreateWindow(WindowId, _s.ListTitle, layer, null, CustomUIManager.Style.Machinery);
+            var b = cm.CreateWindow(WindowId, Strings.ListTitle, layer, null, CustomUIManager.Style.Machinery);
             if (b == null) return;
             var handle = b.Handle;
             // 框架自己的拖動（根物件的 UIDragHandler）關掉：它會把清單停靠到畫面兩側的黑邊（搬到 LetterboxManager.DockRoot，離開紙張面板的 Canvas），
@@ -352,7 +350,7 @@ namespace ProbablyStolenWindowGroups
             if (data.Count == 0)
             {
                 _scroll = false;
-                b.AddLabel(_s.ListEmpty);
+                b.AddLabel(Strings.ListEmpty);
                 _emptyLabel = b.Last;
                 Plain(_emptyLabel, HorizontalAlignmentOptions.Left);
                 return;
@@ -365,14 +363,14 @@ namespace ProbablyStolenWindowGroups
                 var row = new Row { Data = d };
                 b.BeginRow(Spacing, TextAnchor.MiddleLeft);
 
-                b.AddButton(_s.DisplayName(g, d.Name), () => NameClicked(g));
+                b.AddButton(Strings.DisplayName(g, d.Name), () => NameClicked(g));
                 row.Name = b.Last;
                 Plain(row.Name, HorizontalAlignmentOptions.Left);
                 LeftAlignButton(row.Name);
                 row.Name.SetTooltip(TooltipText(d));
 
                 // 改名用的輸入框，平常藏著，改名時和名字按鈕互換（同一格、同寬，那列不會跳）。placeholder 是「群組 N」：清空再存＝變回它
-                b.AddInput(_s.DisplayName(g, null), "");
+                b.AddInput(Strings.DisplayName(g, null), "");
                 row.Input = b.Last;
                 SetupInput(row, g);
 
@@ -380,15 +378,15 @@ namespace ProbablyStolenWindowGroups
                 row.Key = b.Last;
                 Plain(row.Key, HorizontalAlignmentOptions.Left);
 
-                b.AddLabel(_s.WindowCount(d.Count));
+                b.AddLabel(Strings.WindowCount(d.Count));
                 row.Count = b.Last;
                 Plain(row.Count, HorizontalAlignmentOptions.Right);
 
-                b.AddButton(_s.Rename, () => RenameClicked(g));
+                b.AddButton(Strings.Rename, () => RenameClicked(g));
                 row.RenameButton = b.Last;
                 if (row.Input.input == null) row.RenameButton.SetInteractable(false);
 
-                b.AddButton(_s.Delete, () => DeleteClicked(g));
+                b.AddButton(Strings.Delete, () => DeleteClicked(g));
                 row.DeleteButton = b.Last;
 
                 b.End();
@@ -440,7 +438,7 @@ namespace ProbablyStolenWindowGroups
         /// <summary>名字按鈕的提示框：第一行「名字：N 個視窗」，下面每行一個視窗標題。照字面顯示（遊戲共用的提示框開著 rich text）。</summary>
         static string TooltipText(Rules.ListRow d)
         {
-            var lines = new List<string> { Rules.EscapeRichText(_s.TooltipHead(_s.DisplayName(d.Group, d.Name), d.Count)) };
+            var lines = new List<string> { Rules.EscapeRichText(Strings.TooltipHead(Strings.DisplayName(d.Group, d.Name), d.Count)) };
             foreach (var t in d.Titles) lines.Add(Rules.EscapeRichText(t));
             return string.Join("\n", lines);
         }
@@ -470,8 +468,8 @@ namespace ProbablyStolenWindowGroups
                     count = Mathf.Max(count, TextWidth(r.Count) + 2f);
                 }
                 var first = _rows[0];
-                rename = Mathf.Max(rename, Mathf.Max(TextWidth(first.RenameButton, _s.Rename), TextWidth(first.RenameButton, _s.RenameOk)) + ButtonPadding);
-                del = Mathf.Max(del, Mathf.Max(TextWidth(first.DeleteButton, _s.Delete), TextWidth(first.DeleteButton, _s.DeleteSure)) + ButtonPadding);
+                rename = Mathf.Max(rename, Mathf.Max(TextWidth(first.RenameButton, Strings.Rename), TextWidth(first.RenameButton, Strings.RenameOk)) + ButtonPadding);
+                del = Mathf.Max(del, Mathf.Max(TextWidth(first.DeleteButton, Strings.Delete), TextWidth(first.DeleteButton, Strings.DeleteSure)) + ButtonPadding);
                 name = Mathf.Ceil(name); key = Mathf.Ceil(key); count = Mathf.Ceil(count); rename = Mathf.Ceil(rename); del = Mathf.Ceil(del);
                 foreach (var r in _rows)
                 {
@@ -683,7 +681,7 @@ namespace ProbablyStolenWindowGroups
             row.Input.SetString(row.Data.Name ?? "");
             row.Name.SetVisible(false);
             row.Input.SetVisible(true);
-            row.RenameButton.SetText(_s.RenameOk);
+            row.RenameButton.SetText(Strings.RenameOk);
             _editing = row;
             _editSawFocus = false;
             // 自動取得焦點、全選原名（onFocusSelectAll）。有焦點時遊戲的 IsTyping() 成立，工具箱數字鍵、丟垃圾、協調器、本 mod 的鍵都停
@@ -725,7 +723,7 @@ namespace ProbablyStolenWindowGroups
             {
                 var now = Groups.Rename(row.Data.Group, InputText(row));
                 row.Data.Name = now;
-                row.Name.SetText(_s.DisplayName(row.Data.Group, now));
+                row.Name.SetText(Strings.DisplayName(row.Data.Group, now));
                 row.Name.SetTooltip(TooltipText(row.Data));
                 WindowGroupsMod.DebugLog($"改名群組 {row.Data.Group} 結束（{why}）：{(now == null ? "沒有名字" : $"「{now}」")}");
                 // 滑鼠正按在（或這一幀剛放開在）這列的「確定」上：那個點擊不能再開始改名。含剛放開：每幀的 PollEdit 可能在放開那一幀、
@@ -739,7 +737,7 @@ namespace ProbablyStolenWindowGroups
             else WindowGroupsMod.DebugLog($"取消改名群組 {row.Data.Group}（{why}）");
             row.Input.SetVisible(false);
             row.Name.SetVisible(true);
-            row.RenameButton.SetText(_s.Rename);
+            row.RenameButton.SetText(Strings.Rename);
             _relayoutPending = true;
         }
 
@@ -778,7 +776,7 @@ namespace ProbablyStolenWindowGroups
             row.Armed = armed;
             var e = row.DeleteButton;
             if (e == null) return;
-            e.SetText(armed ? _s.DeleteSure : _s.Delete);
+            e.SetText(armed ? Strings.DeleteSure : Strings.Delete);
             if (e.image != null) e.image.color = armed ? MachineryStyle.PROGRESS_FILL_DANGER : Color.white;
             if (e.text != null) e.text.color = armed ? MachineryStyle.VALUE_TEXT : MachineryStyle.BUTTON_TEXT;
         }

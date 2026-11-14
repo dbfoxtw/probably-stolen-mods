@@ -67,22 +67,22 @@ namespace ProbablyStolenWindowGroups
         {
             var cfg = ModConfig.For(WindowGroupsMod.ModId);
             // 2.1.0 新增的三個排在 40 個按鍵前面：按鍵在後面拉很長，放後面不好找。設定視窗照定義的順序排，存的值只看 key，換順序不影響
-            _repeat = cfg.Define("RecallAgain", Rules.RepeatDefault, Section, () => GameState.S.RepeatLabel,
-                Rules.RepeatChoices, () => GameState.S.RepeatTip);
-            _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => GameState.S.CloseLockedLabel, () => GameState.S.CloseLockedTip);
-            _rememberTabs = cfg.Define("RememberTabs", false, Section, () => GameState.S.TabsLabel, () => GameState.S.TabsTip);
+            _repeat = cfg.Define("RecallAgain", Rules.RepeatDefault, Section, () => Strings.RepeatLabel,
+                Rules.RepeatChoices, () => Strings.RepeatTip);
+            _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => Strings.CloseLockedLabel, () => Strings.CloseLockedTip);
+            _rememberTabs = cfg.Define("RememberTabs", false, Section, () => Strings.TabsLabel, () => Strings.TabsTip);
             // 2.3.0 的群組清單：排在 2.1.0 的三個設定後面、40 個按鍵前面。寫法和群組的鍵一樣（Hotkey.Parse）
-            _listKey = cfg.Define(Rules.ListEntryName, Rules.DefaultListKey, Section, () => GameState.S.ListLabel,
-                choices: null, tooltip: () => GameState.S.ListTip);
+            _listKey = cfg.Define(Rules.ListEntryName, Rules.DefaultListKey, Section, () => Strings.ListLabel,
+                choices: null, tooltip: () => Strings.ListTip);
             // 清單再按一次排在群組清單的按鍵欄正下方
-            _listAgain = cfg.Define(Rules.ListAgainEntryName, Rules.ListAgainDefault, Section, () => GameState.S.ListAgainLabel,
-                Rules.ListAgainChoices, () => GameState.S.ListAgainTip);
+            _listAgain = cfg.Define(Rules.ListAgainEntryName, Rules.ListAgainDefault, Section, () => Strings.ListAgainLabel,
+                Rules.ListAgainChoices, () => Strings.ListAgainTip);
             foreach (var (name, group, save) in Rules.AllEntries())
             {
                 int g = group;
                 bool s = save;
                 var entry = cfg.Define(name, Rules.DefaultKey(group, save), Section,
-                    () => GameState.S.ConfigLabel(g, s), choices: null, tooltip: () => GameState.S.ConfigTip(g, s));
+                    () => Strings.ConfigLabel(g, s), choices: null, tooltip: () => Strings.ConfigTip(g, s));
                 _entries.Add(new Entry { Name = name, Group = group, Save = save, Config = entry });
             }
             // 說明附一段設定檔（F1～F11），讓想用 F 鍵的玩家關著遊戲貼上。遊戲平常要等玩家在設定視窗按了套用才寫這個檔，

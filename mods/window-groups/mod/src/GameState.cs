@@ -4,13 +4,14 @@ using UnityEngine.Localization.Settings;
 
 namespace ProbablyStolenWindowGroups
 {
-    /// <summary>從遊戲記憶體讀狀態（存檔槽、這場遊戲的識別值、語言、字型、其他 mod 有沒有在跑），不碰存檔檔案。寫法照一鍵關窗、交易所預覽 mod。</summary>
+    /// <summary>
+    /// 從遊戲記憶體讀狀態（存檔槽、這場遊戲的識別值、字型、其他 mod 有沒有在跑），不碰存檔檔案。寫法照一鍵關窗、交易所預覽 mod。
+    /// 介面字串挑語言 2.4.0 起在 Loc（原本這裡的 DetectLanguage 只分英文、簡中、繁中）。
+    /// </summary>
     static class GameState
     {
         /// <summary>店鋪畫面的場景（主選單是 EmporiumMenu）。</summary>
         internal const string StoreScene = "InventoryScene";
-        /// <summary>繁中 mod 的 manifest ID。</summary>
-        const string ZhHantModId = "dbfoxtw.zh-hant";
         /// <summary>一鍵關窗 mod 的 manifest ID（讀它的鎖，CloseAllWindowsLocks）。</summary>
         internal const string CloseAllWindowsModId = "dbfoxtw.close-all-windows";
 
@@ -69,30 +70,10 @@ namespace ProbablyStolenWindowGroups
             catch { return true; }
         }
 
-        static string LocaleCode()
-        {
-            try
-            {
-                var loc = LocalizationSettings.SelectedLocale;
-                return loc == null ? null : loc.Identifier.Code;
-            }
-            catch { return null; } // Localization 還沒初始化
-        }
-
-        /// <summary>遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的：中文時看繁中 mod 有沒有在跑。其他語系用英文。</summary>
-        internal static Lang DetectLanguage()
-        {
-            var code = LocaleCode();
-            if (code != null && code.StartsWith("zh", StringComparison.Ordinal))
-                return ModRunning(ZhHantModId) ? Lang.ZhHant : Lang.ZhHans;
-            return Lang.En;
-        }
-
-        internal static Strings S => Strings.For(DetectLanguage());
-
         /// <summary>
         /// 遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色；中文是 NotoSansSC 動態字型），寫法照交易所預覽 mod。
-        /// 自己建的 TMP 用它，中文才不會缺字。
+        /// 自己建的 TMP 用它，中文才不會缺字。2.4.0 起的 8 種語言都照這條：英、法、德、西、俄、波蘭文是 notoSans（西文字集含西里爾字母），
+        /// 日文是 japaneseFont（動態字型），中文是 simplifiedChineseFont（FontLoader.GetFontByRole）；每次顯示提示時重挑，換了語言也跟著換。
         /// </summary>
         internal static TMP_FontAsset FindFont()
         {

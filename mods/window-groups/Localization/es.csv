@@ -1,0 +1,50 @@
+# Window Groups: Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value
+# See en.csv for where each text appears and how much space it has. Plural groups for es: .one and .other.
+# The dropdown choices (Rearrange, Close if all open, Close if unmoved, Close, Move to mouse) stay in English: the game shows the stored English value.
+
+# Toasts
+group_ref,Grupo de ventanas {0}
+group_ref_named,Grupo de ventanas {0} «{1}»
+saved.one,{0} guardado ({1} ventana)
+saved.other,{0} guardado ({1} ventanas)
+cleared,{0} vaciado
+empty,{0} está vacío
+skipped_missing,{0}: {1} sin encontrar
+skipped_locked,{0}: {2} sin poder abrirse
+skipped_both,{0}: {1} sin encontrar, {2} sin poder abrirse
+
+# Mod settings window
+label_recall,Grupo {0}: recuperar
+label_save,Grupo {0}: guardar
+tip_recall,Tecla que recupera el grupo {0}: cierra las demás ventanas de contenedores y máquinas y luego abre las ventanas de este grupo donde se guardaron.\nEj.: Ctrl+3, F5; vacío = sin usar
+tip_save,Tecla que guarda como grupo {0} las ventanas de contenedores y máquinas abiertas; si no hay ninguna abierta, vacía el grupo.\nEj.: Ctrl+Shift+3, Shift+F5; vacío = sin usar
+
+repeat_label,Volver a pulsar
+repeat_tip,Qué hace la tecla de recuperar de un grupo al volver a pulsarla:\nRearrange = recoloca las ventanas cada vez: reabre las cerradas y cierra las demás\nClose if all open = si están abiertas todas las ventanas del grupo que se pueden encontrar y abrir, las cierra (las demás ventanas siguen abiertas); si falta alguna, recupera el grupo como siempre\nClose if unmoved = las cierra solo si están todas abiertas y ninguna se ha movido desde la última vez que se recuperó el grupo; si alguna se movió, primero las recoloca y las cierra al pulsar otra vez
+
+close_locked_label,Cerrar también las bloqueadas
+close_locked_tip,Solo funciona si está instalado el mod Close All Windows.\nCuando volver a pulsar la tecla de recuperar cierra el grupo, cierra también sus ventanas bloqueadas; solo si «Volver a pulsar» es Close if all open o Close if unmoved.
+
+tabs_label,Recordar pestañas de almacenaje
+tabs_tip,Al guardar un grupo, recuerda también qué pestaña muestra cada ventana y vuelve a ella al recuperarlo (pestañas de almacenaje y las pestañas de algunas ventanas de máquinas).\nSolo para los grupos guardados con esta opción activada.
+
+list_label,Lista de grupos
+list_tip,Tecla que abre la lista de grupos: muestra los grupos guardados; haz clic en un nombre para recuperar ese grupo, o renómbralo o bórralo.\nEj.: Ctrl+0; vacío = sin usar
+list_again_label,Lista: volver a pulsar
+list_again_tip,Con la lista de grupos abierta, volver a pulsar su tecla:\nClose = cierra la lista\nMove to mouse = la deja abierta y la mueve junto al ratón
+
+# Group list window
+list_title,Grupos de ventanas
+list_empty,Todavía no hay grupos guardados
+group_fallback,Grupo {0}
+
+window_count.one,{0} ventana
+window_count.other,{0} ventanas
+
+rename,Renombrar
+rename_ok,OK
+delete,Borrar
+delete_sure,¿Seguro?
+
+tip_head.one,{0}: {1} ventana
+tip_head.other,{0}: {1} ventanas

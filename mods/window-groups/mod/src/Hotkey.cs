@@ -6,6 +6,7 @@ namespace ProbablyStolenWindowGroups
     /// <summary>
     /// 一個快捷鍵：修飾鍵（Ctrl、Shift、Alt）加主要的鍵，用「+」連起來，
     /// 例如 Ctrl+3、F1、Ctrl+Shift+F1，大小寫不拘、修飾鍵順序不拘。格式照待辦清單 mod 的 Hotkey。
+    /// 2.4.0 起 Ctrl 也可以寫成 Strg（德文鍵盤的 Ctrl，照視窗分頁的 Hotkey）；log 與正式寫法照舊是 Ctrl。
     /// 主要的鍵是 Unity KeyCode 的名稱；單一個數字當成上排的數字（3 → Alpha3），Num3 當成小鍵盤（Keypad3）。
     /// 不碰 Unity：KeyCode 名稱對不對由呼叫的人給的 resolve 判斷，離線測試 mod/verify 直接測。
     /// </summary>
@@ -29,7 +30,8 @@ namespace ProbablyStolenWindowGroups
             {
                 switch (parts[i].Trim().ToLowerInvariant())
                 {
-                    case "ctrl": case "control": h.Ctrl = true; break;
+                    // Strg：德文鍵盤上 Ctrl 印成 Strg，遊戲的德文教學也寫「Strg + Klick」，德國玩家可能照著打（2.4.0 起，照視窗分頁 2.5.0，//）；給玩家看的正式寫法照舊是 Ctrl（遊戲的按鍵綁定畫面每種語言都顯示英文的 Ctrl），說明也照舊寫 Ctrl
+                    case "ctrl": case "control": case "strg": h.Ctrl = true; break;
                     case "shift": h.Shift = true; break;
                     case "alt": h.Alt = true; break;
                     default:
