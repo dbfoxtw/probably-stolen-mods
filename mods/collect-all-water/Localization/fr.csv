@@ -1,0 +1,32 @@
+# Collect All Water : texte des boutons, libellés et infobulles de la fenêtre de réglages de ce mod (Loc.Get, puis ModHelper.GetLocalized). Format : key,value
+# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, {0} = nom de l'eau, {1} = ml). Les choix des listes déroulantes et les noms de sections restent en anglais.
+button,Collecter : {0} ({1} ml)
+button_no_source,Collecter : {0} (aucune source d'eau)
+cfg_collect,Collecter : {0}
+cfg_collect_tip,Affiche « Collecter : {0} » quand vous faites un clic droit sur un récipient d'eau : y verse cette eau depuis vos sources d'eau jusqu'à ce qu'il soit plein, d'après la qualité réelle de l'eau de chaque récipient.
+cfg_src_farm,Collecter dans les récupérateurs hydriques
+cfg_src_farm_tip,Tous les récupérateurs hydriques de votre boutique, y compris ceux rangés dans des conteneurs. Ceux qui sont cassés ne comptent pas.
+cfg_src_purifier,Collecter dans les purificateurs d'eau
+cfg_src_purifier_tip,D'après la qualité actuelle de l'eau : l'eau encore en cours de purification est donc prise aussi.
+cfg_src_hydroponic,Collecter dans les systèmes hydroponiques
+cfg_src_hydroponic_tip,Le récipient de l'emplacement Eau des systèmes hydroponiques. Choisissez lesquels :\nOff = aucun\nHydroreed = ceux où pousse de l'hydroseau (y compris les vivaces)\nHydroreed (incl. harvested) = aussi ceux qui viennent d'être récoltés : emplacement Graine vide, mais graines d'hydroseau dans Récolte\nPinned = ceux dont le récipient de l'emplacement Eau est épinglé (clic droit > Épingler ; n'importe quelle culture, ou vide)\nAll = tous les systèmes hydroponiques (n'importe quelle culture, ou vide)
+cfg_src_hydroponic_quality,Hydroponie : qualité minimale
+cfg_src_hydroponic_quality_tip,On ne collecte dans les systèmes hydroponiques choisis ci-dessus qu'une fois que leur eau atteint cette qualité (l'eau spectrale en cours de purification n'est jamais prise).\nActivez aussi l'eau correspondante dans Right-click menu.\nBasewater or better = eau basique ou mieux\nHigh-Quality Water or better = eau raffinée ou mieux\nPure Water = eau pure
+cfg_src_evaporator,Collecter dans les évaporateurs
+cfg_src_evaporator_tip,Le récipient de l'emplacement Distillat d'un évaporateur ; celui de l'emplacement Récipient n'est jamais pris.\nD'après la qualité réelle de l'eau ; activez aussi l'eau correspondante dans Right-click menu.
+cfg_src_fountain,Collecter dans la machine à eau
+cfg_src_fountain_tip,Les trois réservoirs, y compris les récupérateurs hydriques et les purificateurs d'eau qui y sont placés. L'eau que vous avez mise de côté pour la vente sera prise.
+cfg_src_fridge,Collecter dans les réfrigérateurs
+cfg_src_fridge_tip,La partie réfrigérée et la partie congélateur.
+cfg_src_inventory,Collecter dans les récipients de l'inventaire
+cfg_src_inventory_tip,Les récipients d'eau de l'inventaire, des conteneurs, etc., qui ne sont pas dans une machine.
+cfg_src_showcase,Collecter dans les récipients de la vitrine
+cfg_src_showcase_tip,Les récipients d'eau de la vitrine qui ne sont pas dans une machine.
+cfg_src_trash,Collecter dans les récipients de la poubelle
+cfg_src_trash_tip,Les récipients d'eau de la poubelle qui ne sont pas dans une machine.
+cfg_src_watertower,Collecter dans Water Tower
+cfg_src_watertower_missing,{0} (mod non détecté)
+cfg_src_watertower_tip,Les réservoirs du mod Water Tower, y compris WaterTowerPlus de la même série. L'eau en cours de purification est aussi collectée.
+cfg_src_purifytower,Collecter dans Water Tower: Purification Automation
+cfg_src_purifytower_missing,{0} (mod non détecté)
+cfg_src_purifytower_tip,Le Tower Clean Jug de la tour ; le Tower Raw Jug et les purificateurs de la zone de travail ne sont pas pris.\nActivez aussi l'eau correspondante dans Right-click menu.

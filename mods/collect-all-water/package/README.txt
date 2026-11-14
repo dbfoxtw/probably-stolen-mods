@@ -11,7 +11,7 @@ Probably Stolen 一鍵收水 mod（Collect All Water） v{version}
  或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
-這是遊戲官方格式的 mod，不需要 MelonLoader，也不需要任何權限（啟用時不會跳出權限確認）。
+不需要任何權限（啟用時不會跳出權限確認）。
 也可以從 Steam 工作坊訂閱（https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057），訂閱後照第 2 步啟用。
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
 
@@ -40,8 +40,8 @@ ModConfigs\dbfoxtw.collect-all-water.json。
   那種水，平常結果和以前一樣。括號的水量會透露每個容器裡實際是什麼水。
 - 水分收集器（設定，預設開）：店裡所有自己的水分收集器，包括放在箱子裡的。損壞的不算；你右鍵的容器所在的那台不算。
 - 其他水源（設定，預設關）：淨水器（照目前的水質收，還在淨化的水也會被收走）、自動售水機（三個水箱，
-  含放在裡面的水分收集器、淨水器；留著要賣的水會被收走）、冰箱（冷藏區、冷凍區），以及物品欄、展示櫃
-  （裡面的商品決定隔天來什麼客人，收走水可能會影響）、垃圾桶裡不在機器內的容器。
+  含放在裡面的水分收集器、淨水器；留著要賣的水會被收走）、冰箱（冷藏區、冷凍區），以及物品欄、展示櫃、
+  垃圾桶裡不在機器內的容器。
   櫃檯上的容器（交易時你這一側放的是要給客人的東西）、其他機器裡的容器（設定要收的水培系統、
   蒸發器的餾出液格除外）、化學品成品不收。
 - 水培系統（2.3.0 起，設定的兩個下拉，預設不收）：水培系統水格裡的容器。「收水培系統的水」選要收哪些：
@@ -85,8 +85,8 @@ Demo 版在 MelonPreferences.cfg 的設定不會搬過來，Demo 時打開過其
 
 【說明】
 - 不讀寫遊戲的存檔檔案。倒過來的水和手動倒的一樣裝在容器裡，睡覺時由遊戲存下來。
-- 按鈕上的字跟著遊戲語言（中文介面是「收集」，其他語言是「Collect」），水的名稱用遊戲自己的翻譯。
-  遊戲的中文只有簡體，這個 mod 的中文也是簡體字；裝了繁體中文化 mod 會跟著轉成繁體。
+- 按鈕與設定的文字跟著遊戲語言：英文、簡中、俄、德、日、法、西班牙、波蘭文，其他語言是英文；
+  水的名稱用遊戲自己的翻譯。遊戲的中文只有簡體，這個 mod 的中文也是簡體字；裝了繁體中文化 mod 會跟著轉成繁體。
 - 已知限制：化學溶液裡的水夠多（96% 以上）時也會被當成水收走。櫃檯上的水容器不收，要先移回物品欄。
   遊戲之後如果改了水分收集器、淨水器、冰箱、水容器或右鍵選單的做法，要等 mod 更新。
   水塔的支援照 Water Tower、WaterTowerPlus 1.0.3 與「水塔：淨水自動化」v0.5.4 的做法；
@@ -116,7 +116,7 @@ Bug reports are welcome
  or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
-This mod uses the game's official mod format; MelonLoader is not needed, and it needs no capabilities
+This mod needs no capabilities
 (no permission prompt when you activate it). Also available on the Steam Workshop (https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057);
 after subscribing, activate it as in step 2.
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -158,8 +158,8 @@ Features
 - Other water sources (settings, off by default): Water Purifiers (by the water's current quality, so water
   still being purified is taken too), the Vending Fountain (its three tanks, including Moisture Farms and
   Water Purifiers placed there; water you set aside to sell will be taken), Fridges (Chill Zone and Freeze
-  Zone), and containers in the inventory, the Display Case (what's in it decides which customers come the next
-  day, so taking the water out can change that) and the Trash Can that aren't inside a machine. Containers on
+  Zone), and containers in the inventory, the Display Case and the Trash Can that aren't inside a machine.
+  Containers on
   the counter (during a deal, your side holds what you're offering the customer), containers in other machines
   (except the Hydroponic Systems you choose to collect from and an Evaporator's Distillate slot) and chemical
   products are never taken.
@@ -225,7 +225,8 @@ in the Demo, turn them on again in the settings window.
 Notes
 - Your save files are never read or written. The water it pours sits in your containers just like water
   you pour by hand, and the game saves it when you sleep.
-- The button says "Collect" in every game language except Chinese; water names use the game's own translations.
+- The buttons and the settings follow the game language: English, Simplified Chinese, Russian, German,
+  Japanese, French, Spanish or Polish, English otherwise; water names use the game's own translations.
 - Known limitations: a chemical solution that is mostly water (96% or more) counts as water and can be taken.
   Water containers on the counter are never taken; move them back to the inventory first.
   If a game update changes how Moisture Farms, Water Purifiers, Fridges, water containers or the right-click

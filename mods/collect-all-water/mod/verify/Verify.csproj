@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：四種水的設定與水質門檻、水源開關、水容器歸哪一層與水源總數、按鈕文字、能不能收、收的順序、Localization 的 CSV（不用開遊戲、不參考遊戲的組件）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：四種水的設定與水質門檻、水源開關、水容器歸哪一層與水源總數、按鈕文字、能不能收、收的順序、Localization 的 CSV、介面字串挑語言（LocPick，2.6.0 起）（不用開遊戲、不參考遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Include="..\src\Rules.cs" Link="Rules.cs" />
+    <Compile Include="..\src\LocPick.cs" Link="LocPick.cs" />
   </ItemGroup>
 
 </Project>

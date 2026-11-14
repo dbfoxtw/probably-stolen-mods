@@ -1,0 +1,32 @@
+# Collect All Water: button text and the labels and tooltips of the settings window, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
+# {0} in button, button_no_source, cfg_collect and cfg_collect_tip is the game's own water name: written as "action: {0}" so the noun needs no declension. Dropdown choices and section names stay in English (fixed in the code).
+button,Zbierz: {0} ({1} ml)
+button_no_source,Zbierz: {0} (brak źródeł wody)
+cfg_collect,Zbierz: {0}
+cfg_collect_tip,Po kliknięciu pojemnika na wodę prawym przyciskiem myszy pokazuje „Zbierz: {0}”: przelewa tę wodę ({0}) ze źródeł wody, aż pojemnik będzie pełny. Liczy się rzeczywista jakość wody w każdym pojemniku.
+cfg_src_farm,Zbieraj z farm wilgoci
+cfg_src_farm_tip,Każda farma wilgoci w sklepie, także te w skrzynkach. Zepsute się nie liczą.
+cfg_src_purifier,Zbieraj z uzdatniaczy wody
+cfg_src_purifier_tip,Liczy się bieżąca jakość wody, więc zabierana jest też woda, która wciąż jest uzdatniana.
+cfg_src_hydroponic,Zbieraj z systemów hydroponicznych
+cfg_src_hydroponic_tip,Pojemnik w miejscu „Woda” systemów hydroponicznych. Wybierz, z których zbierać:\nOff = z żadnego\nHydroreed = z tych, w których rośnie hydrotrzcina (także wieloletnia)\nHydroreed (incl. harvested) = także z tych tuż po zbiorze: z pustym miejscem „Wejściowe nasiona”, ale z nasionami hydrotrzciny w miejscu „Wyjściowe plony”\nPinned = z tych, w których pojemnik w miejscu „Woda” jest przypięty (prawy przycisk myszy > Przypnij), z dowolną rośliną lub bez\nAll = ze wszystkich systemów hydroponicznych, z dowolną rośliną lub bez
+cfg_src_hydroponic_quality,Hydroponika: minimalna jakość
+cfg_src_hydroponic_quality_tip,Z wybranych wyżej systemów hydroponicznych woda jest zbierana dopiero, gdy osiągnie tę jakość (widmowoda w trakcie oczyszczania nigdy nie jest zabierana).\nWłącz też odpowiednią wodę w sekcji Right-click menu.\nBasewater or better = podstawoda lub lepsza\nHigh-Quality Water or better = woda wysokiej jakości lub lepsza\nPure Water = czysta woda
+cfg_src_evaporator,Zbieraj z parowników
+cfg_src_evaporator_tip,Pojemnik w miejscu „Destylat” parownika; pojemnik w miejscu „Pojemnik” nigdy nie jest zabierany.\nLiczy się rzeczywista jakość wody; włącz też odpowiednią wodę w sekcji Right-click menu.
+cfg_src_fountain,Zbieraj z fontanny do sprzedaży
+cfg_src_fountain_tip,Wszystkie trzy zbiorniki, a także umieszczone w fontannie farmy wilgoci i uzdatniacze wody. Woda odłożona na sprzedaż też zostanie zabrana.
+cfg_src_fridge,Zbieraj z lodówek
+cfg_src_fridge_tip,Zarówno strefa chłodząca, jak i strefa mrożąca.
+cfg_src_inventory,Zbieraj z pojemników w wyposażeniu
+cfg_src_inventory_tip,Pojemniki na wodę w wyposażeniu, skrzynkach itp., które nie są w żadnej maszynie.
+cfg_src_showcase,Zbieraj z pojemników na wystawie
+cfg_src_showcase_tip,Pojemniki na wodę na wystawie, które nie są w żadnej maszynie.
+cfg_src_trash,Zbieraj z pojemników w koszu na śmieci
+cfg_src_trash_tip,Pojemniki na wodę w koszu na śmieci, które nie są w żadnej maszynie.
+cfg_src_watertower,Zbieraj z Water Tower
+cfg_src_watertower_missing,{0} (nie wykryto modyfikacji)
+cfg_src_watertower_tip,Zbiorniki modyfikacji Water Tower, także WaterTowerPlus z tej samej serii. Woda, która wciąż jest uzdatniana, też jest zbierana.
+cfg_src_purifytower,Zbieraj z Water Tower: Purification Automation
+cfg_src_purifytower_missing,{0} (nie wykryto modyfikacji)
+cfg_src_purifytower_tip,Tower Clean Jug w wieży; Tower Raw Jug i uzdatniacze wody w obszarze roboczym nie są zabierane.\nWłącz też odpowiednią wodę w sekcji Right-click menu.

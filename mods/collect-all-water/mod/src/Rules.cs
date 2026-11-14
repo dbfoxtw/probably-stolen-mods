@@ -524,8 +524,8 @@ namespace ProbablyStolenCollectAllWater
         /// <summary>
         /// 按鈕文字：「收集幽靈水 (12400ml)」（括號是開著的水源裡這種水加起來還有多少，單位毫升），
         /// 一個水源都沒找到時是「收集幽靈水 (沒有水源)」。
-        /// template 是 mod 的 Localization\*.csv 裡 KeyOf(kind) 的值（{0} 水名、{1} 毫升），中文用 zh.csv、其他語言用 en.csv。
-        /// 查不到時 ModHelper.GetLocalized 回傳 key 本身，樣板空的或格式寫壞了也一樣退回英文，按鈕不會變成怪字。
+        /// template 是 mod 的 Localization\*.csv 裡 KeyOf(kind) 的值（{0} 水名、{1} 毫升；Loc.Get 取：目前語言的 csv，沒有就 en.csv，2.6.0 起 8 種語言）。
+        /// 查不到時 Loc.Get（最後是 ModHelper.GetLocalized）回傳 key 本身，樣板空的或格式寫壞了也一樣退回英文，按鈕不會變成怪字。
         /// 水名用遊戲自己的翻譯，查不到時退回識別值（英文）。
         /// </summary>
         internal static string Label(LabelKind kind, string template, string waterName, int ml)

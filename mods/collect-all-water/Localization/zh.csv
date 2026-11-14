@@ -1,4 +1,4 @@
-# 按钮文字与这个 mod 设置窗口的标签和说明（ModHelper.GetLocalized；游戏的中文语系代码是 zh，只有简体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 与 Mod water sources 的各项没有占位符，只有 cfg_src_watertower_missing 与 cfg_src_purifytower_missing 的 {0} 是选项名称；cfg_src_hydroponic 与 cfg_src_hydroponic_quality 是下拉，选项是程序里固定的英文）
+# 按钮文字与这个 mod 设置窗口的标签和说明（Loc.Get，见 mod/src/Loc.cs；最后由 ModHelper.GetLocalized 取：游戏目前语言的档，没有就用 en.csv；游戏的中文语系代码是 zh，只有简体，繁中 mod 会转成繁体）。格式：key,值（{0} 水名，{1} 毫升；button_no_source 只有 {0}；Water sources 与 Mod water sources 的各项没有占位符，只有 cfg_src_watertower_missing 与 cfg_src_purifytower_missing 的 {0} 是选项名称；cfg_src_hydroponic 与 cfg_src_hydroponic_quality 是下拉，选项是程序里固定的英文（存在玩家的设置档里，各语言都不翻，说明里用「选项＝意思」解释）；段落名 Right-click menu、Water sources、Mod water sources 也是程序里固定的英文）
 button,收集{0} ({1}ml)
 button_no_source,收集{0} (没有水源)
 cfg_collect,收集{0}
@@ -20,7 +20,7 @@ cfg_src_fridge_tip,冷藏区、冷冻区都收。
 cfg_src_inventory,收物品栏里的容器
 cfg_src_inventory_tip,物品栏、箱子里等不在机器内的水容器。
 cfg_src_showcase,收展示柜里的容器
-cfg_src_showcase_tip,展示柜里不在机器内的水容器。会影响第二天来的客人。
+cfg_src_showcase_tip,展示柜里不在机器内的水容器。
 cfg_src_trash,收垃圾桶里的容器
 cfg_src_trash_tip,垃圾桶里不在机器内的水容器。
 cfg_src_watertower,收 Water Tower

@@ -1,0 +1,32 @@
+# Collect All Water: button text and the labels and tooltips of this mod's settings window, German. Translated from en.csv with AI help. Format: key,value
+# Dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better ...) and the section names (Right-click menu, Water sources, Mod water sources) stay English: they are fixed in the code.
+button,{0} sammeln ({1} ml)
+button_no_source,{0} sammeln (keine Wasserquellen)
+cfg_collect,{0} sammeln
+cfg_collect_tip,Zeigt „{0} sammeln“ beim Rechtsklick auf einen Wasserbehälter: füllt {0} aus deinen Wasserquellen ein, bis der Behälter voll ist; maßgeblich ist die tatsächliche Wasserqualität in jedem Behälter.
+cfg_src_farm,Aus Feuchtigkeitsfarmen sammeln
+cfg_src_farm_tip,Alle Feuchtigkeitsfarmen in deinem Laden, auch die in Kisten. Kaputte zählen nicht.
+cfg_src_purifier,Aus Wasserreinigern sammeln
+cfg_src_purifier_tip,Richtet sich nach der aktuellen Qualität des Wassers, deshalb wird auch Wasser genommen, das noch gereinigt wird.
+cfg_src_hydroponic,Aus Hydrokultursystemen sammeln
+cfg_src_hydroponic_tip,Der Behälter im Fach „Wasser“ von Hydrokultursystemen. Wähle, welche:\nOff = keine\nHydroreed = solche, in denen Hydroschilf wächst (auch mehrjähriges)\nHydroreed (incl. harvested) = auch gerade abgeerntete, mit leerer Saatguteingabe, aber Hydroschilf-Saatgut in der Erzeugnisausgabe\nPinned = solche, deren Behälter im Fach „Wasser“ angepinnt ist (Rechtsklick > Anpinnen; beliebige Pflanze oder leer)\nAll = alle Hydrokultursysteme (beliebige Pflanze oder leer)
+cfg_src_hydroponic_quality,Hydrokultur-Mindestqualität
+cfg_src_hydroponic_quality_tip,Aus den oben gewählten Hydrokultursystemen wird erst gesammelt, wenn ihr Wasser diese Qualität erreicht hat (Geisterwasser, das noch gereinigt wird, wird nie genommen).\nSchalte auch das passende Wasser unter Right-click menu ein.\nBasewater or better = Basiswasser oder besser\nHigh-Quality Water or better = Qualitätswasser oder besser\nPure Water = Premiumwasser
+cfg_src_evaporator,Aus Verdampfern sammeln
+cfg_src_evaporator_tip,Der Behälter im Fach „Destillat“ eines Verdampfers; der im Fach „Behälter“ wird nie genommen.\nRichtet sich nach der tatsächlichen Wasserqualität; schalte auch das passende Wasser unter Right-click menu ein.
+cfg_src_fountain,Aus dem Wasserautomaten sammeln
+cfg_src_fountain_tip,Alle drei Tanks, auch dort eingesetzte Feuchtigkeitsfarmen und Wasserreiniger. Auch Wasser, das du zum Verkauf vorgesehen hast, wird genommen.
+cfg_src_fridge,Aus Kühlschränken sammeln
+cfg_src_fridge_tip,Sowohl das Kühlfach als auch das Gefrierfach.
+cfg_src_inventory,Aus Behältern im Inventar sammeln
+cfg_src_inventory_tip,Wasserbehälter im Inventar, in Kisten usw., die nicht in einem Gerät stecken.
+cfg_src_showcase,Aus Behältern im Schaufenster sammeln
+cfg_src_showcase_tip,Wasserbehälter im Schaufenster, die nicht in einem Gerät stecken.
+cfg_src_trash,Aus Behältern im Mülleimer sammeln
+cfg_src_trash_tip,Wasserbehälter im Mülleimer, die nicht in einem Gerät stecken.
+cfg_src_watertower,Aus Water Tower sammeln
+cfg_src_watertower_missing,{0} (Mod nicht erkannt)
+cfg_src_watertower_tip,Die Tanks der Mod Water Tower, auch von WaterTowerPlus aus derselben Reihe. Wasser, das noch gereinigt wird, wird ebenfalls gesammelt.
+cfg_src_purifytower,Aus Water Tower: Purification Automation sammeln
+cfg_src_purifytower_missing,{0} (Mod nicht erkannt)
+cfg_src_purifytower_tip,Der Tower Clean Jug im Turm; der Tower Raw Jug und die Wasserreiniger im Arbeitsbereich werden nicht genommen.\nSchalte auch das passende Wasser unter Right-click menu ein.

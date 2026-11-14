@@ -1,6 +1,6 @@
 # Probably Stolen 一鍵收水 mod（Collect All Water）
 
-*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus、水塔：淨水自動化）時，也會收水塔裡的水。遊戲官方格式的 mod（不需要 MelonLoader）。
+*Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus、水塔：淨水自動化）時，也會收水塔裡的水。
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
@@ -8,7 +8,7 @@
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, Hydroponic Systems, Evaporators, the Vending Fountain, Fridges and more, as well as the water tower mods. See [English](#english) below.
+> A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers, which fills the container from all the Moisture Farms in your shop, and optionally from Water Purifiers, Hydroponic Systems, Evaporators, the Vending Fountain, Fridges and more, as well as the water tower mods. See [English](#english) below.
 
 ## 功能
 
@@ -26,7 +26,7 @@
     - **自動售水機**：三個水箱裡直接放的水容器，以及放在裡面的水分收集器、淨水器。留著要賣的水會被收走。
     - **冰箱**：冷藏區和冷凍區裡的水容器。
     - **物品欄裡的容器**：物品欄、箱子裡等不在機器內的水容器。**櫃檯上的不收**：交易時櫃檯上你這一側放的是要給客人的東西，倒空會改到交易。
-    - **展示櫃裡的容器**：展示櫃裡不在機器內的水容器。展示櫃裡的商品決定隔天來什麼客人，收走裡面的水可能會影響。
+    - **展示櫃裡的容器**：展示櫃裡不在機器內的水容器。
     - **垃圾桶裡的容器**：垃圾桶裡不在機器內的水容器。
   - 放在展示櫃、垃圾桶、櫃檯上的機器照機器本身算（看水分收集器、淨水器、水培系統、蒸發器、冰箱各自的設定）。
   - 其他機器（加熱板、水培系統、循環水養殖系統…）裡的容器、化學品成品一律不收；例外是蒸發器的餾出液格（見上面），和設定要收的水培系統（見下一條）。
@@ -104,12 +104,12 @@
 
 ## 語言
 
-- 按鈕與設定的文字跟著遊戲語言：中文介面是「收集」，其他語言是「Collect」。水的名稱用遊戲自己的翻譯，和水分收集器滑鼠提示上的一樣。
+- 按鈕與設定的文字跟著遊戲語言：英文、簡中、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言是英文。水的名稱用遊戲自己的翻譯，和水分收集器滑鼠提示上的一樣。
 - 遊戲的中文只有簡體，所以這個 mod 的中文也是簡體字。裝了玩家自製的 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)，按鈕和設定的字會跟著轉成繁體。
 
 ## 安裝
 
-這是遊戲官方格式的 mod（裝在遊戲資料夾的 `Mods` 裡），不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在 [工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057) 訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Collect All Water」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -154,7 +154,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 一般玩家請看上面的「安裝」，不需要建置。
 
-需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。不需要 MelonLoader。
+需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。
 
 原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/collect-all-water` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\collect-all-water` 資料夾裡執行。
 
@@ -172,7 +172,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers. Uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
+A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs).
 
@@ -192,7 +192,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
     - **Vending Fountain**: water containers in its three tanks, and the Moisture Farms and Water Purifiers placed there. Water you set aside to sell will be taken.
     - **Fridges**: water containers in the Chill Zone and the Freeze Zone.
     - **Containers in the inventory**: water containers in the inventory, boxes and so on that aren't inside a machine. **Containers on the counter are never taken**: during a deal, your side of the counter holds what you're offering the customer, and emptying it would change the deal.
-    - **Containers in the Display Case**: water containers in the Display Case that aren't inside a machine. What's in the Display Case decides which customers come the next day, so taking the water out can change that.
+    - **Containers in the Display Case**: water containers in the Display Case that aren't inside a machine.
     - **Containers in the Trash Can**: water containers in the Trash Can that aren't inside a machine.
   - Machines placed in the Display Case, the Trash Can or on the counter go by their own settings (Moisture Farms, Water Purifiers, Hydroponic Systems, Evaporators, Fridges).
   - Containers in other machines (Heating Plates, Hydroponic Systems, the Recirculating Aquaculture System…) and chemical products are never taken; the exceptions are an Evaporator's Distillate slot (above) and the Hydroponic Systems you choose to collect from (next item).
@@ -266,11 +266,11 @@ With every source switched off (and "Collect from Hydroponic Systems" set to Off
 
 The settings are kept in `ModConfigs\dbfoxtw.collect-all-water.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`). **Settings from the Demo's `MelonPreferences.cfg` are not carried over**: the full release starts from the defaults (Ghostwater only), so if you turned on other water types in the Demo, turn them on again in the settings window.
 
-**Languages:** the buttons and settings say "Collect" in every game language except Chinese, where they say 收集. Water names use the game's own translations, the same as in the Moisture Farm's tooltip. The game's Chinese is Simplified only, so this mod's Chinese is Simplified too; the fan-made [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) converts it to Traditional Chinese.
+**Languages:** the buttons and settings follow the game language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish, English for any other language. Water names use the game's own translations, the same as in the Moisture Farm's tooltip. The game's Chinese is Simplified only, so this mod's Chinese is Simplified too; the fan-made [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) converts it to Traditional Chinese.
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. It needs no capabilities, so there is no permission prompt when you activate it.
+It needs no capabilities, so there is no permission prompt when you activate it.
 
 From the Steam Workshop: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), start the game, activate "Collect All Water" on the Mods screen of the main menu and restart as prompted. Steam keeps it updated.
 
@@ -307,6 +307,6 @@ The Demo version (v1.0.1 and earlier, MelonLoader) does not work on the full rel
 - **Water tower mods** (Water Tower, WaterTowerPlus, Water Tower: Purification Automation): supported; their tanks and clean jugs are a water source (see Features).
 - Other mods that also change the right-click menu may interfere with this one; not tested.
 
-**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\collect-all-water` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time; MelonLoader is not needed). It installs into `Mods\dbfoxtw.collect-all-water\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many sources of each kind were found and how much of each water there is every time you right-click a water container, and what each collection poured. `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\collect-all-water` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time). It installs into `Mods\dbfoxtw.collect-all-water\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many sources of each kind were found and how much of each water there is every time you right-click a water container, and what each collection poured. `python tools/install.py package` builds the player zip; `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this folder (`mods/collect-all-water`). The game's text, names, and assets belong to Questing Goose Studio. Harmony (MIT) comes with the game and is not distributed with this mod.

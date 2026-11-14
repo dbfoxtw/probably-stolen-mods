@@ -11,7 +11,7 @@
     <AssemblyName>ProbablyStolenCollectAllWater</AssemblyName>
     <RootNamespace>ProbablyStolenCollectAllWater</RootNamespace>
     <!-- 版本號只放這裡：組件版本、manifest.xml 的 ModVersion、打包檔名都從這裡來（tools/modkit.py 的 csproj_version） -->
-    <Version>2.5.0</Version>
+    <Version>2.6.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -28,6 +28,9 @@
     <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.InputLegacyModule.dll" Private="false" />
+    <!-- 2.6.0：Loc 的最長字串模式用西文字型（TMP_FontAsset）量字寬，要 TextMeshPro 與字形資料（Glyph）所在的組件 -->
+    <Reference Include="$(ManagedDir)\UnityEngine.TextCoreFontEngineModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\Unity.TextMeshPro.dll" Private="false" />
   </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ namespace ProbablyStolenCollectAllWater.Verify
     /// <summary>
     /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod、淨水塔 mod 的、蒸發器的）、水培系統的兩個下拉（種類與最低水質）、水容器歸哪一層與水源總數、按鈕文字、能不能收、
     /// 收的順序，
-    /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）。
+    /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）、介面字串挑語言（LocPick，2.6.0 起）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -38,8 +38,56 @@ namespace ProbablyStolenCollectAllWater.Verify
             Collecting();
             Order();
             Localization();
+            LocPickTest();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
+        }
+
+        /// <summary>
+        /// Loc 的挑法（LocPick）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；Format 照遊戲的 GetLocalized。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Next tab", ["de"] = "Nächster Tab", ["fr"] = "Onglet suivant" }, len),
+                "fr", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string>
+                {
+                    ["en"] = new string('a', 500) + "\n" + new string('a', 100),
+                    ["de"] = new string('a', 480) + "\n" + new string('a', 450),
+                }, len), "de", "說明框折行後 de 比較高：en 500＋100、de 480＋450 挑 de");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            // 寬度照寬度函式量，不是字數
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
         }
 
         /// <summary>四種水：順序是品質從差到好，只有幽靈水預設開，識別值與設定的鍵不重複。</summary>
@@ -714,7 +762,8 @@ namespace ProbablyStolenCollectAllWater.Verify
         }
 
         /// <summary>
-        /// mod 的 Localization\*.csv：兩份的 key 一樣、要的 key 都在、佔位符齊全、string.Format 代入不出錯；
+        /// mod 的 Localization\*.csv：每份（en、zh 和 6 種翻譯）的 key 和 en 一樣、要的 key 都在、佔位符齊全、string.Format 代入不出錯、
+        /// 沒偵測到 mod 的名稱代入後以名稱開頭、淨水塔說明兩行、下拉說明一個選項一行、沒有 BOM 的 LF；寫死英文或中文字的規則只對 en、zh 跑；
         /// zh.csv 是簡體（遊戲的中文只有簡中，繁中玩家由繁中 mod 轉）。
         /// </summary>
         static void Localization()
@@ -723,9 +772,15 @@ namespace ProbablyStolenCollectAllWater.Verify
             Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
             if (dir == null) return;
             var en = ReadCsv(Path.Combine(dir, "en.csv"));
-            var zh = ReadCsv(Path.Combine(dir, "zh.csv"));
-            Eq(string.Join(",", zh.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", en.Keys.OrderBy(k => k, StringComparer.Ordinal)),
-                "en.csv 和 zh.csv 的 key 一樣");
+            Check(File.Exists(Path.Combine(dir, "zh.csv")), "有 zh.csv");
+            var zh = File.Exists(Path.Combine(dir, "zh.csv")) ? ReadCsv(Path.Combine(dir, "zh.csv")) : new Dictionary<string, string>();
+            // 資料夾裡的每份 csv（en、zh 和 6 種翻譯）：沒有寫死某個語言的字的規則都對每份各自檢查
+            var tables = Directory.GetFiles(dir, "*.csv").OrderBy(p => p, StringComparer.Ordinal)
+                .Select(p => (name: Path.GetFileName(p), table: ReadCsv(p))).ToArray();
+            foreach (var (name, table) in tables)
+                if (name != "en.csv")
+                    Eq(string.Join(",", table.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", en.Keys.OrderBy(k => k, StringComparer.Ordinal)),
+                        $"en.csv 和 {name} 的 key 一樣");
             // 每個 key 要的佔位符：{0} 水名、{1} 毫升；水源開關的名稱與說明沒有佔位符（GetLocalized 不帶參數，不代入）；
             // mod 水源開關沒偵測到 mod 時的樣板（_missing）只有 {0}（原本的名稱）
             var withName = new[] { "button", "button_no_source", "cfg_collect", "cfg_collect_tip" };
@@ -734,7 +789,7 @@ namespace ProbablyStolenCollectAllWater.Verify
             var missing = Rules.AllSwitches.Where(s => s.ModIds != null).Select(s => s.MissingKey).ToArray();
             Check(missing.Contains("cfg_src_watertower_missing"), "水塔有沒偵測到時的 key");
             Check(missing.Contains("cfg_src_purifytower_missing"), "淨水塔有沒偵測到時的 key");
-            foreach (var (name, table) in new[] { ("en.csv", en), ("zh.csv", zh) })
+            foreach (var (name, table) in tables)
             {
                 foreach (var key in withName)
                 {
@@ -791,8 +846,8 @@ namespace ProbablyStolenCollectAllWater.Verify
                 Eq(en.TryGetValue(key, out var e) ? e : null, enText, $"en.csv 的 {key}");
                 Eq(zh.TryGetValue(key, out var z) ? z : null, zhText, $"zh.csv 的 {key}");
             }
-            // 淨水塔的說明分兩行（CSV 的 \n 解析成換行）
-            foreach (var (table, name) in new[] { (en, "en.csv"), (zh, "zh.csv") })
+            // 淨水塔的說明分兩行（CSV 的 \n 解析成換行）；翻譯也照兩行
+            foreach (var (name, table) in tables)
                 if (table.TryGetValue("cfg_src_purifytower_tip", out var pt))
                     Check(pt.Split('\n').Length == 2 && !pt.Contains("\\n"), $"{name} 的 cfg_src_purifytower_tip 解析後是兩行");
             if (zh.TryGetValue("cfg_src_watertower", out var zhTower) && zh.TryGetValue("cfg_src_watertower_missing", out var zhMissing))
@@ -825,6 +880,13 @@ namespace ProbablyStolenCollectAllWater.Verify
                 // Pinned 那行要寫遊戲右鍵選單按鈕的名稱（英文 handler_btn_pin＝Pin）
                 Check(enKindTip.Contains("right-click > Pin"), "en.csv 水培系統種類的說明有「right-click > Pin」");
             }
+            // 翻譯（en、zh 以外）的兩個下拉說明也是一個選項一行：下拉照字面顯示英文的選項名，所以每行開頭是英文選項名，
+            // 後面接「 =」或「＝」（西文照 en、日文照 zh 的寫法）。en 的水質說明沒有對照（選項本身就是英文），不在這裡比
+            foreach (var (name, table) in tables.Where(t => t.name != "en.csv" && t.name != "zh.csv"))
+                foreach (var (key, options) in new[] { (Rules.HydroponicKindTipKey, Rules.HydroponicKinds), (Rules.HydroponicQualityTipKey, Rules.HydroponicQualities) })
+                    if (table.TryGetValue(key, out var optTip))
+                        foreach (var c in options)
+                            Check(optTip.Contains("\n" + c + " =") || optTip.Contains("\n" + c + "＝"), $"{name} 的 {key} 裡選項「{c}」自己一行");
             if (zh.TryGetValue(Rules.HydroponicQualityTipKey, out var zhQualityTip))
             {
                 foreach (var c in Rules.HydroponicQualities)
@@ -861,7 +923,7 @@ namespace ProbablyStolenCollectAllWater.Verify
             var found = string.Concat(raw.Where(c => traditional.IndexOf(c) >= 0).Distinct());
             Eq(found, "", "zh.csv 是簡體（沒有常見的繁體字）");
             Check(zh.Values.Any(v => v.Contains("收集")), "zh.csv 是中文");
-            foreach (var name in new[] { "en.csv", "zh.csv" })
+            foreach (var (name, _) in tables)
             {
                 var bytes = File.ReadAllBytes(Path.Combine(dir, name));
                 Check(!(bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF), $"{name} 是沒有 BOM 的 UTF-8（照繁中 mod 的格式）");

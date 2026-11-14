@@ -1,0 +1,32 @@
+# Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value ({0} = the game's own water name, {1} = ml; see en.csv for the details).
+# The dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better...) and the section names (Right-click menu, Water sources, Mod water sources) are fixed English in the code, so they stay English here.
+button,Recoger {0} ({1} ml)
+button_no_source,Recoger {0} (sin fuentes de agua)
+cfg_collect,Recoger {0}
+cfg_collect_tip,Muestra «Recoger {0}» al hacer clic derecho en un recipiente de agua: vierte {0} desde tus fuentes de agua hasta llenar el recipiente, según la calidad real del agua de cada recipiente.
+cfg_src_farm,Recoger de los extractores de humedad
+cfg_src_farm_tip,Todos los extractores de humedad de tu tienda, también los que están en cajas. Los rotos no cuentan.
+cfg_src_purifier,Recoger de los purificadores de agua
+cfg_src_purifier_tip,Se guía por la calidad actual del agua, así que también se recoge el agua que aún se está purificando.
+cfg_src_hydroponic,Recoger de los sistemas de hidroponía
+cfg_src_hydroponic_tip,El recipiente del espacio «Agua» de los sistemas de hidroponía. Elige cuáles:\nOff = ninguno\nHydroreed = los que cultivan hidrojuncos (incluidos los hidrojuncos perennes)\nHydroreed (incl. harvested) = también los recién cosechados, con el espacio de la semilla vacío pero con semillas de hidrojunco en «Resultado»\nPinned = aquellos cuyo recipiente del espacio «Agua» está fijado (clic derecho > Fijar; con cualquier cultivo o vacíos)\nAll = todos los sistemas de hidroponía (con cualquier cultivo o vacíos)
+cfg_src_hydroponic_quality,Calidad mínima en hidroponía
+cfg_src_hydroponic_quality_tip,Solo se recoge de los sistemas de hidroponía elegidos arriba cuando su agua alcanza esta calidad (nunca se recoge el aguaspectral que aún se está purificando).\nActiva también el agua correspondiente en Right-click menu.\nBasewater or better = aguabase o mejor\nHigh-Quality Water or better = aguaclara o mejor\nPure Water = aguapura
+cfg_src_evaporator,Recoger de los vaporizadores
+cfg_src_evaporator_tip,El recipiente del espacio «Destilar» de un vaporizador; el del espacio «Recipiente» nunca se recoge.\nSe guía por la calidad real del agua; activa también el agua correspondiente en Right-click menu.
+cfg_src_fountain,Recoger de la fuente expendedora
+cfg_src_fountain_tip,Los tres tanques, incluidos los extractores de humedad y los purificadores de agua colocados en ella. También se recoge el agua que hayas apartado para vender.
+cfg_src_fridge,Recoger de las neveras
+cfg_src_fridge_tip,Tanto la zona de enfriamiento como la zona de congelación.
+cfg_src_inventory,Recoger de recipientes del inventario
+cfg_src_inventory_tip,Los recipientes de agua del inventario, de las cajas, etc. que no estén dentro de una máquina.
+cfg_src_showcase,Recoger de recipientes del expositor
+cfg_src_showcase_tip,Los recipientes de agua del expositor que no estén dentro de una máquina.
+cfg_src_trash,Recoger de recipientes del cubo de basura
+cfg_src_trash_tip,Los recipientes de agua del cubo de basura que no estén dentro de una máquina.
+cfg_src_watertower,Recoger de Water Tower
+cfg_src_watertower_missing,{0} (mod no detectado)
+cfg_src_watertower_tip,Los tanques del mod Water Tower, incluido WaterTowerPlus de la misma serie. También se recoge el agua que aún se está purificando.
+cfg_src_purifytower,Recoger de Water Tower: Purification Automation
+cfg_src_purifytower_missing,{0} (mod no detectado)
+cfg_src_purifytower_tip,La jarra Tower Clean Jug de la torre; la Tower Raw Jug y los purificadores de la zona de trabajo no se recogen.\nActiva también el agua correspondiente en Right-click menu.

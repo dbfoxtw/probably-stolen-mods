@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.6.0（2026-11-14）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 按鈕和設定的文字多了俄文、德文、日文、法文、西班牙文、波蘭文，跟著遊戲的語言切換。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- The buttons and the settings are now also in Russian, German, Japanese, French, Spanish and Polish, following the game's language.
+
 ## v2.5.0（2026-11-12）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

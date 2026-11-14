@@ -1,0 +1,32 @@
+# Japanese (ja) text for Collect All Water: the right-click button and the settings window's labels and tooltips (Loc.Get in mod/src/Loc.cs). Translated from en.csv with AI help; not checked by a native speaker.
+# {0} = the game's own water name (already Japanese), {1} = ml. The dropdown choices and the section names (Right-click menu, Water sources, Mod water sources) stay in English, as in the code.
+button,{0}を回収（{1}ml）
+button_no_source,{0}を回収（水源なし）
+cfg_collect,{0}を回収
+cfg_collect_tip,水入れを右クリックしたときに「{0}を回収」を表示する：水入れがいっぱいになるまで、水源から{0}を注ぐ。各容器の実際の水質で判断する。
+cfg_src_farm,モイスチャーファームから回収
+cfg_src_farm_tip,店内のすべてのモイスチャーファーム（箱の中のものも含む）。壊れたものは除く。
+cfg_src_purifier,浄水器から回収
+cfg_src_purifier_tip,水の現在の水質で判断するので、浄化中の水も回収する。
+cfg_src_hydroponic,水耕システムから回収
+cfg_src_hydroponic_tip,水耕システムの「水」スロットにある容器。どの水耕システムから回収するかを選ぶ：\nOff＝回収しない\nHydroreed＝ハイドロリードを育てているもの（多年生のものも含む）\nHydroreed (incl. harvested)＝さらに、収穫したばかりで「種の入力」が空だが、「生産物の出力」にハイドロリードの種があるもの\nPinned＝「水」スロットの容器を固定したもの（右クリック > 固定。作物は問わず、空でもよい）\nAll＝すべての水耕システム（作物は問わず、空でもよい）
+cfg_src_hydroponic_quality,水耕の最低水質
+cfg_src_hydroponic_quality_tip,上で選んだ水耕システムからは、水がこの水質に達してから回収する（浄化中のゴーストウォーターは回収しない）。\nRight-click menuで対応する水もオンにすること。\nBasewater or better＝ベースウォーター以上\nHigh-Quality Water or better＝高品質な水以上\nPure Water＝純水
+cfg_src_evaporator,エバポレーターから回収
+cfg_src_evaporator_tip,エバポレーターの「蒸留液」スロットにある容器。「容器」スロットのものは回収しない。\n実際の水質で判断する。Right-click menuで対応する水もオンにすること。
+cfg_src_fountain,水自動販売機から回収
+cfg_src_fountain_tip,3つのタンクすべて（そこに置いたモイスチャーファームと浄水器も含む）。販売用に取っておいた水も回収される。
+cfg_src_fridge,冷蔵庫から回収
+cfg_src_fridge_tip,冷蔵エリアと冷凍エリアの両方。
+cfg_src_inventory,インベントリ内の容器から回収
+cfg_src_inventory_tip,インベントリや箱などにある、機械に入っていない水入れ。
+cfg_src_showcase,ショーケース内の容器から回収
+cfg_src_showcase_tip,ショーケースにある、機械に入っていない水入れ。
+cfg_src_trash,ゴミ箱内の容器から回収
+cfg_src_trash_tip,ゴミ箱にある、機械に入っていない水入れ。
+cfg_src_watertower,Water Towerから回収
+cfg_src_watertower_missing,{0}（MOD未検出）
+cfg_src_watertower_tip,Water Tower MODのタンク（同じシリーズのWaterTowerPlusも含む）。浄化中の水も回収する。
+cfg_src_purifytower,「Water Tower: Purification Automation」から回収
+cfg_src_purifytower_missing,{0}（MOD未検出）
+cfg_src_purifytower_tip,塔の中のTower Clean Jug。Tower Raw Jugと作業エリアの浄水器は回収しない。\nRight-click menuで対応する水もオンにすること。

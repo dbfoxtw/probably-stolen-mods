@@ -13,8 +13,8 @@ namespace ProbablyStolenCollectAllWater
     /// 值隨設定視窗即時改變，每次按右鍵都重新讀，所以不用重開遊戲。
     /// 設定視窗照定義的順序排（段落照第一次出現的順序、段落裡照定義的順序：ModConfig.Sections 是 Distinct、ModConfigWindow 照 Entries 列），
     /// 所以先定四種水、再定水源、最後定 mod 的水源。
-    /// 標籤與說明在 mod 的 Localization\en.csv、zh.csv（ModHelper.GetLocalized；遊戲在 Init 之後才讀這些檔，所以傳函式，
-    /// 打開設定視窗時才查）。Demo 時 MelonPreferences.cfg 的 [CollectAllWater] 不搬過來（讀它要宣告檔案權限）。
+    /// 標籤與說明在 mod 的 Localization\&lt;語言&gt;.csv（2.6.0 起經過 Loc.Get，見 Loc；遊戲在 Init 之後才讀這些檔，所以傳函式，
+    /// 打開設定視窗時才查）。段落標題與水培的兩個下拉的選項不翻（見下面 Section 與 _hydroponicKind 的註解）。Demo 時 MelonPreferences.cfg 的 [CollectAllWater] 不搬過來（讀它要宣告檔案權限）。
     /// </summary>
     static class Settings
     {
@@ -30,7 +30,8 @@ namespace ProbablyStolenCollectAllWater
         static readonly Dictionary<Rules.Source, ConfigEntry<bool>> _sources = new Dictionary<Rules.Source, ConfigEntry<bool>>();
         /// <summary>
         /// 收水培系統的水與水培的最低水質：兩個下拉，值是 Rules.HydroponicKinds／HydroponicQualities 的英文字串
-        /// （遊戲照字面顯示、存的也是這個字串，照視窗群組的 RecallAgain；中文的說明欄寫對照）。
+        /// （遊戲照字面顯示、存的也是這個字串，照視窗群組的 RecallAgain；英文以外的說明欄寫「選項＝意思」的對照）。
+        /// 2.6.0 做多語系時也不翻選項：值存在玩家的設定檔裡，換成各語言的字，已存的設定就認不得了。
         /// </summary>
         static ConfigEntry<string> _hydroponicKind, _hydroponicQuality;
 
@@ -54,27 +55,27 @@ namespace ProbablyStolenCollectAllWater
             {
                 var grade = g; // 給 lambda 用
                 _entries[g] = cfg.Define(g.ConfigKey, g.DefaultOn, Section,
-                    () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, "cfg_collect", WaterSources.WaterName(grade)),
-                    () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, "cfg_collect_tip", WaterSources.WaterName(grade)));
+                    () => Loc.Get("cfg_collect", WaterSources.WaterName(grade)),
+                    () => Loc.Get("cfg_collect_tip", WaterSources.WaterName(grade)));
             }
             foreach (var s in Rules.Switches)
             {
                 var sw = s;
                 _sources[s.Source] = cfg.Define(s.ConfigKey, s.DefaultOn, SourcesSection,
-                    () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.LabelKey),
-                    () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.TipKey));
+                    () => Loc.Get(sw.LabelKey),
+                    () => Loc.Get(sw.TipKey));
                 // 水培系統的兩個下拉放在「收淨水器」後面，產水的放一起：先種類、再最低水質；
                 // Switches 裡淨水器的下一筆是蒸發器，所以「收蒸發器」接在兩個下拉下面
                 if (s.Source == Rules.HydroponicSettingAfter)
                 {
                     _hydroponicKind = cfg.Define(Rules.HydroponicKindConfigKey, Rules.HydroponicKindDefault, SourcesSection,
-                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicKindLabelKey),
+                        () => Loc.Get(Rules.HydroponicKindLabelKey),
                         Rules.HydroponicKinds,
-                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicKindTipKey));
+                        () => Loc.Get(Rules.HydroponicKindTipKey));
                     _hydroponicQuality = cfg.Define(Rules.HydroponicQualityConfigKey, Rules.HydroponicQualityDefault, SourcesSection,
-                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicQualityLabelKey),
+                        () => Loc.Get(Rules.HydroponicQualityLabelKey),
                         Rules.HydroponicQualities,
-                        () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, Rules.HydroponicQualityTipKey));
+                        () => Loc.Get(Rules.HydroponicQualityTipKey));
                 }
             }
             // 不管有沒有裝那個 mod 都列出：「偵測到才顯示」要等全部 mod 載完（水塔、淨水塔可能比本 mod 晚載入），
@@ -84,7 +85,7 @@ namespace ProbablyStolenCollectAllWater
                 var sw = s;
                 _sources[s.Source] = cfg.Define(s.ConfigKey, s.DefaultOn, ModSourcesSection,
                     () => ModSwitchLabel(sw),
-                    () => ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.TipKey));
+                    () => Loc.Get(sw.TipKey));
             }
         }
 
@@ -94,9 +95,9 @@ namespace ProbablyStolenCollectAllWater
         /// </summary>
         static string ModSwitchLabel(Rules.SourceSwitch sw)
         {
-            var name = ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.LabelKey);
+            var name = Loc.Get(sw.LabelKey);
             if (sw.ModIds == null || AnyModRunning(sw.ModIds)) return name;
-            return Rules.MissingLabel(ModHelper.GetLocalized(CollectAllWaterMod.ModId, sw.MissingKey), sw.MissingKey, name);
+            return Rules.MissingLabel(Loc.Get(sw.MissingKey), sw.MissingKey, name);
         }
 
         static bool _detectWarned;

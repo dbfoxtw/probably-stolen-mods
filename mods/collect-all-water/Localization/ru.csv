@@ -1,0 +1,32 @@
+# Russian (ru): button text and the labels and tooltips of this mod's settings window. Translated from en.csv with AI help, not checked by a native speaker. Same keys and order as en.csv (see its comments for where each text appears and what {0}/{1} are).
+# {0} is the game's own water name, so the buttons are written as "action: {0}" and the noun is never declined. Dropdown choices and the section names Right-click menu, Water sources, Mod water sources stay in English (fixed in the code).
+button,Собрать: {0} ({1} мл)
+button_no_source,Собрать: {0} (нет источников воды)
+cfg_collect,Собрать: {0}
+cfg_collect_tip,Показывать «Собрать: {0}» при щелчке правой кнопкой по контейнеру для воды: кнопка переливает эту воду из источников воды, пока контейнер не наполнится; учитывается фактическое качество воды в каждом контейнере.
+cfg_src_farm,Собирать из конденсаторов влаги
+cfg_src_farm_tip,Все конденсаторы влаги в магазине, включая те, что лежат в ящиках. Сломанные не считаются.
+cfg_src_purifier,Собирать из очистителей воды
+cfg_src_purifier_tip,Учитывается текущее качество воды, поэтому вода, которая ещё очищается, тоже забирается.
+cfg_src_hydroponic,Собирать из гидропонных систем
+cfg_src_hydroponic_tip,Контейнер в ячейке «Вода» гидропонных систем. Выберите, из каких:\nOff = ни из каких\nHydroreed = те, где растёт гидротростник (в том числе многоразовый)\nHydroreed (incl. harvested) = ещё и те, где урожай только что собран: «Отсек для семян» пуст, но в ячейке «Выход продукции» есть семена гидротростника\nPinned = те, где контейнер в ячейке «Вода» закреплён (правый щелчок > «Закрепить»; любая культура или пусто)\nAll = все гидропонные системы (любая культура или пусто)
+cfg_src_hydroponic_quality,Гидропоника: мин. качество
+cfg_src_hydroponic_quality_tip,Из гидропонных систем, выбранных выше, вода забирается, только когда достигнет этого качества (призрачная вода, которая ещё очищается, не берётся никогда).\nТакже включите соответствующую воду в разделе Right-click menu.\nBasewater or better = стандартная вода и лучше\nHigh-Quality Water or better = качественная вода и лучше\nPure Water = чистая вода
+cfg_src_evaporator,Собирать из испарителей
+cfg_src_evaporator_tip,Контейнер в ячейке «Дистиллят» испарителя; контейнер в ячейке «Контейнер» не берётся никогда.\nУчитывается фактическое качество воды; также включите соответствующую воду в разделе Right-click menu.
+cfg_src_fountain,Собирать из автомата по продаже воды
+cfg_src_fountain_tip,Все три бака, включая поставленные туда конденсаторы влаги и очистители воды. Вода, отложенная на продажу, тоже будет забрана.
+cfg_src_fridge,Собирать из холодильников
+cfg_src_fridge_tip,И «Холодильная камера», и «Морозильник».
+cfg_src_inventory,Собирать из контейнеров в инвентаре
+cfg_src_inventory_tip,Контейнеры для воды в инвентаре, ящиках и т. п., которые не стоят внутри устройства.
+cfg_src_showcase,Собирать из контейнеров на витрине
+cfg_src_showcase_tip,Контейнеры для воды на витрине, которые не стоят внутри устройства.
+cfg_src_trash,Собирать из контейнеров в мусорке
+cfg_src_trash_tip,Контейнеры для воды в мусорке, которые не стоят внутри устройства.
+cfg_src_watertower,Собирать из Water Tower
+cfg_src_watertower_missing,{0} (мод не обнаружен)
+cfg_src_watertower_tip,Резервуары мода Water Tower, включая WaterTowerPlus из той же серии. Вода, которая ещё очищается, тоже забирается.
+cfg_src_purifytower,Собирать из Water Tower: Purification Automation
+cfg_src_purifytower_missing,{0} (мод не обнаружен)
+cfg_src_purifytower_tip,Tower Clean Jug в башне; Tower Raw Jug и очистители воды в рабочей зоне не берутся.\nТакже включите соответствующую воду в разделе Right-click menu.
