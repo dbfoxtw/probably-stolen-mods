@@ -39,7 +39,11 @@ namespace ProbablyStolenZhHant
         readonly bool[] _phraseStart = new bool[char.MaxValue + 1];
         // 繁體的字：OpenCC 會轉出來、簡中原文裡從沒出現過的漢字（「這」「們」「裡」）。有這種字的文字已經是繁體，不看上面的詞，見 Build
         readonly bool[] _traditional = new bool[char.MaxValue + 1];
-        readonly Dictionary<string, string> _cache = new Dictionary<string, string>(StringComparer.Ordinal);
+        // 轉換結果的快取，中文模式與其他語言各一份：樣板的佔位符、錄音機的台詞會再轉一次（Convert），那時中文模式才套寫死英文的規則，
+        // 結果和語言有關。共用一份的話，換語言後照用另一個語言的結果（2026-11-14 審查時發現）
+        readonly Dictionary<string, string> _cacheZh = new Dictionary<string, string>(StringComparer.Ordinal);
+        readonly Dictionary<string, string> _cacheOther = new Dictionary<string, string>(StringComparer.Ordinal);
+        Dictionary<string, string> Cache => ChineseActive ? _cacheZh : _cacheOther;
         readonly HashSet<string> _unchanged = new HashSet<string>(StringComparer.Ordinal); // 轉換前後相同的短字串（例如沒有簡體專用字的人名），認說話者用
 
         TextConverter(Translator tr) { _tr = tr; }
@@ -341,7 +345,7 @@ namespace ProbablyStolenZhHant
                 Skipped++;
                 return s;
             }
-            if (_cache.TryGetValue(s, out r)) { CacheHits++; return r; }
+            if (Cache.TryGetValue(s, out r)) { CacheHits++; return r; }
             r = LookupFlexible(s, templates: false);
             if (r != null) ExactHits++;
             else if ((r = TryTemplates(s)) != null || (r = TryInner(s)) != null) TemplateHits++;
@@ -350,7 +354,7 @@ namespace ProbablyStolenZhHant
                 r = ConvertComposite(s);
                 FallbackHits++;
             }
-            _cache[s] = r;
+            Cache[s] = r;
             return r;
         }
 
@@ -361,6 +365,30 @@ namespace ProbablyStolenZhHant
             foreach (var (trigger, re, repl) in _hardcoded)
                 if (r.IndexOf(trigger, StringComparison.Ordinal) >= 0) r = re.Replace(r, repl);
             return ReferenceEquals(r, s) || r == s ? null : r;
+        }
+
+        /// <summary>
+        /// 換語言（ChineseActive 改了）以後，畫面上的字要不要照新的語言重轉（ZhHantMod.RefreshForLocale）：
+        /// 畫面上正是換語言前轉出來的結果、換語言後又會轉得不一樣，才要重設（設回 original，由攔截重轉並記下原文）。
+        /// 會因為語言不一樣的只有寫死英文的規則（中文模式才套）。shown 是畫面上的字，original 是讀回的原文
+        /// （ShownText 換回的；沒記就是畫面上的字），wasChinese 是換語言前的 ChineseActive。
+        /// 遊戲換語言時已經重設的字（畫面上是新語言轉出來的）、mod 自己排好的字（導師筆記、每日新聞，和直接轉出來的不同）都不動。
+        /// 中文換成別的語言時，原文有漢字的也不動：那是遊戲之後會重設的中文，重轉只會拿掉規則換的部分，
+        /// 變成中英夾雜（模組詳細資料的「權限：Move and resize…」）或改回簡中的錯字（檔尾的係數 0.5、委託卡片的「一」）。
+        /// 第二次轉換（假裝舊語言）也算進統計（Calls、HardcodedHits、Ticks），換語言那一段的數字會偏高。
+        /// </summary>
+        public bool StaleAfterLocaleChange(string shown, string original, bool wasChinese)
+        {
+            if (string.IsNullOrEmpty(shown) || string.IsNullOrEmpty(original) || wasChinese == ChineseActive) return false;
+            if (wasChinese)
+                foreach (var ch in original)
+                    if (IsHan(ch)) return false;
+            if (Convert(original) == shown) return false;
+            // 暫時換回舊的語言算一次（只在遊戲的主執行緒上呼叫，算完馬上換回來）
+            var now = ChineseActive;
+            ChineseActive = wasChinese;
+            try { return Convert(original) == shown; }
+            finally { ChineseActive = now; }
         }
 
         /// <summary>

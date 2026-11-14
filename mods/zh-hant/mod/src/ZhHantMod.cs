@@ -259,6 +259,9 @@ namespace ProbablyStolenZhHant
                 changed++;
             }
             Msg($"場景 {sceneName}：轉換 {changed} 個既有文字物件{(_tables == TableState.Done ? "" : "（字串表還沒載入，用暫用轉換器）")}");
+            // 畫面上的字照目前的 ChineseActive 轉過了，之後語言換了才要重轉（UpdateLocale）。設在這裡而不是讀語言的地方：
+            // 第一次讀語言失敗時也已經照「非中文」轉過，之後讀到中文要重轉
+            _localeKnown = true;
         }
 
         enum TableState { Waiting, Loading, Done, Failed }
@@ -492,9 +495,12 @@ namespace ProbablyStolenZhHant
         }
 
         float _nextLocaleCheck;
-        bool _sceneReady, _localeError, _selfTested;
+        bool _sceneReady, _localeError, _selfTested, _localeKnown;
 
-        /// <summary>每秒確認一次遊戲語言；寫死英文的翻譯只在中文模式套用。</summary>
+        /// <summary>
+        /// 每秒確認一次遊戲語言；寫死英文的翻譯只在中文模式套用。語言變了就照新的語言重轉畫面上的字（RefreshForLocale）；
+        /// 第一次判斷不用（場景初始化接著就會轉畫面上的字）。
+        /// </summary>
         void UpdateLocale()
         {
             try
@@ -502,8 +508,10 @@ namespace ProbablyStolenZhHant
                 var loc = LocalizationSettings.SelectedLocale;
                 var code = loc == null ? null : loc.Identifier.Code;
                 bool zh = code != null && code.StartsWith("zh", StringComparison.Ordinal);
-                if (zh != Conv.ChineseActive) Msg($"目前語言：{code}（{(zh ? "翻譯" : "不翻譯")}寫死的英文）");
+                bool was = Conv.ChineseActive;
+                if (zh != was) Msg($"目前語言：{code}（{(zh ? "翻譯" : "不翻譯")}寫死的英文）");
                 Conv.ChineseActive = zh;
+                if (zh != was && _localeKnown) RefreshForLocale(was);
                 if (_debug && zh && !_selfTested && _tables >= TableState.Done) // 參照型的缺翻補譯要等字串表載入
                 {
                     _selfTested = true;
@@ -520,6 +528,32 @@ namespace ProbablyStolenZhHant
                 if (!_localeError) Warning($"讀取目前語言失敗：{e.Message}");
                 _localeError = true;
             }
+        }
+
+        /// <summary>
+        /// 換語言以後，畫面上照舊語言轉出來、新語言又會轉得不一樣的字（寫死英文的規則換的）設回原文，由攔截照新的語言重轉。
+        /// 遊戲換語言時會重設字串表的字，場景與預製物件裡寫死的英文（模組面板的標題「Modding」）卻不會，不重轉就一直是換語言前的樣子。
+        /// Unity 啟動時挑的語言和存檔不同時，遊戲啟動時就會換一次：主選單要等 Localization 初始化完才把存檔的語言設上去（MainMenuUIController.Start → HandleLocaleDropdown），
+        /// 第一個場景初始化在那之前，看到的是 Unity 啟動時挑的語言（不一定是存檔的語言；2026-11-14 實機是 zh），
+        /// 存檔的語言是日文、英文時標題被換成「模組」後就一直留著。
+        /// </summary>
+        void RefreshForLocale(bool wasChinese)
+        {
+            try
+            {
+                int changed = 0;
+                foreach (var t in Resources.FindObjectsOfTypeAll<TMP_Text>())
+                {
+                    var shown = RawText(t);
+                    if (string.IsNullOrEmpty(shown)) continue;
+                    var original = t.text; // 換回原文（沒記就是畫面上的字）
+                    if (!Conv.StaleAfterLocaleChange(shown, original, wasChinese)) continue;
+                    t.text = original; // 由攔截照新的語言轉換並記下原文
+                    changed++;
+                }
+                Msg($"換語言後畫面上重新轉換 {changed} 個文字物件");
+            }
+            catch (Exception e) { Error($"換語言後重新轉換畫面上的字失敗：{e.Message}"); }
         }
 
         /// <summary>每幀（ZhHantRunner.Update）。</summary>
