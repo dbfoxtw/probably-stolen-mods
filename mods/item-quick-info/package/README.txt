@@ -10,7 +10,7 @@ Probably Stolen 物品速覽 mod（Item Quick Info） v{version}
  或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
-這是遊戲官方格式的 mod，不需要 MelonLoader，也不需要任何權限（啟用時不會跳出權限確認）。
+不需要任何權限（啟用時不會跳出權限確認）。
 也可以從 Steam 工作坊訂閱（https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383），訂閱後照第 2 步啟用。
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
 
@@ -84,8 +84,7 @@ Bug reports are welcome
  or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
-This mod uses the game's official mod format; MelonLoader is not needed, and it needs no capabilities
-(no permission prompt when you activate it). Also available on the Steam Workshop
+This mod needs no capabilities (no permission prompt when you activate it). Also available on the Steam Workshop
 (https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383); after subscribing, activate it as in step 2.
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
 (it contains Probably Stolen.exe).

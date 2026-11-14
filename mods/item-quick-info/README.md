@@ -1,6 +1,6 @@
 # Probably Stolen 物品速覽 mod（Item Quick Info）
 
-*Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。遊戲官方格式的 mod（不需要 MelonLoader）。
+*Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
@@ -8,7 +8,7 @@
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)的留言）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): hold a key (Tab by default) to show key info right on the items on screen, such as water volume and purity, battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left, stolen heat and the names you gave things. Release to hide. See [English](#english) below.
+> A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen, such as water volume and purity, battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left, stolen heat and the names you gave things. Release to hide. See [English](#english) below.
 
 ## 功能
 
@@ -59,7 +59,7 @@
 
 ## 安裝
 
-這是遊戲官方格式的 mod（裝在遊戲資料夾的 `Mods` 裡），不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Item Quick Info」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -101,7 +101,7 @@
 
 一般玩家請看上面的「安裝」，不需要建置。
 
-需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。不需要 MelonLoader。
+需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。
 
 原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/item-quick-info` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\item-quick-info` 資料夾裡執行。
 
@@ -119,7 +119,7 @@
 
 ## English
 
-A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. It uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
+A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or a comment on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383).
 
@@ -168,7 +168,7 @@ Always show names starts off; all the other switches start on. The settings are 
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. It needs no capabilities, so there is no permission prompt when you activate it.
+This mod needs no capabilities, so there is no permission prompt when you activate it.
 
 From the Steam Workshop: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), start the game, activate "Item Quick Info" on the Mods screen of the main menu and restart as prompted. Steam keeps it updated.
 
@@ -202,6 +202,6 @@ If the mod is both in your `Mods` folder and subscribed on the Workshop, the gam
 - "Container & Tab Switch" on the Steam Workshop also uses Tab: if you use both, change one of them to another key (in Options → Key Binds).
 - Other mods that also draw markers on items (e.g. ones that always show water levels or battery charge) may put theirs on the same item as this mod's.
 
-**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\item-quick-info` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time; MelonLoader is not needed). It installs into `Mods\dbfoxtw.item-quick-info\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many info boxes were drawn and what the first 20 items show each time the info boxes appear. `uninstall.bat` removes it (settings and key are kept). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.item-quick-info` folder, the same content as on the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\item-quick-info` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time). It installs into `Mods\dbfoxtw.item-quick-info\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many info boxes were drawn and what the first 20 items show each time the info boxes appear. `uninstall.bat` removes it (settings and key are kept). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.item-quick-info` folder, the same content as on the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this folder (`mods/item-quick-info`). The game's text, names, and assets belong to Questing Goose Studio.
