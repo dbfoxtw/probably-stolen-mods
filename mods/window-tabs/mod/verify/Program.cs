@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
@@ -9,7 +10,8 @@ namespace ProbablyStolenWindowTabs.Verify
     /// <summary>
     /// 離線測試（不用開遊戲）：合併、拆開、重排、分頁名稱的編號跟著箱子與預告分頁的名稱、
     /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、
-    /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字、讀檔後失效的編號、
+    /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字（2.5.0 起在 Localization\*.csv）、
+    /// 介面字串挑語言（LocPick：最長字串模式、中文時用不用 zh-Hant）、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
@@ -44,6 +46,7 @@ namespace ProbablyStolenWindowTabs.Verify
             HotkeyTest();
             SwitchOrderTest();
             StringsTest();
+            LocPickTest();
             StaleTest();
             StoreTest();
             DemoFileTest();
@@ -672,6 +675,10 @@ namespace ProbablyStolenWindowTabs.Verify
             Eq(P("Shift+Ctrl+Tab", out _).ToString(), P("Ctrl+Shift+Tab", out _).ToString(), "修飾鍵的順序不拘，正式寫法相同");
             h = P("control + alt + pagedown", out err);
             Check(h != null && h.Ctrl && h.Alt && !h.Shift && h.Key == "PageDown", "control 也算 Ctrl、可以有空白、KeyCode 名稱照正式寫法");
+            h = P("Strg+Tab", out err);
+            Check(h != null && err == null && h.Ctrl && !h.Shift && !h.Alt && h.Key == "Tab", "Strg（德文鍵盤的 Ctrl）也算 Ctrl");
+            Eq(h.Display(), "Ctrl+Tab", "Strg 寫的給玩家看照舊是 Ctrl");
+            Eq(P("strg+shift+tab", out _).ToString(), P("Ctrl+Shift+Tab", out _).ToString(), "Strg 和 Ctrl 的正式寫法相同（比對重複時算同一個鍵）");
             h = P("Ctrl+Shift+F1", out err);
             Check(h != null && h.Ctrl && h.Shift && h.Key == "F1", "Ctrl+Shift+F1（視窗群組說明附的寫法）");
             h = P("F5", out err);
@@ -810,30 +817,129 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(!Rules.StillFrozen(0, 5, true), "凍住時不在分頁上、滑鼠移到分頁上：解開");
         }
 
-        /// <summary>設定欄的三語文字（的稿）：說明欄有兩行，第二行是例子與「留空」。</summary>
+        /// <summary>
+        /// 設定欄的文字（的稿；2.5.0 起放 public/Localization/*.csv，用和遊戲一樣的解析規則讀）：
+        /// 每一份都剛好四個 key、說明欄有兩行，第二行是例子與「留空」；英文、簡中、繁中的定稿一字不差。
+        /// 之後加的語言也跑同樣的檢查：按鍵名稱與 Mouse4、Mouse5 不翻。
+        /// </summary>
         static void StringsTest()
         {
-            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
+            var dir = FindLocalizationDir();
+            Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
+            if (dir == null) return;
+            var keys = new[] { "cfg_next", "cfg_next_tip", "cfg_prev", "cfg_prev_tip" };
+            var tables = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var path in Directory.GetFiles(dir, "*.csv").OrderBy(p => p, StringComparer.Ordinal))
+                tables[Path.GetFileNameWithoutExtension(path)] = ReadCsv(path);
+            Check(tables.ContainsKey("en") && tables.ContainsKey("zh") && tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
+            foreach (var (lang, t) in tables)
             {
-                var s = Strings.For(lang);
-                Check(!string.IsNullOrEmpty(s.NextLabel) && !string.IsNullOrEmpty(s.PrevLabel), $"{lang}：兩欄都有標籤");
-                Eq(s.NextTip.Split('\n').Length, 2, $"{lang}：下一頁的說明是兩行");
-                Eq(s.PrevTip.Split('\n').Length, 2, $"{lang}：上一頁的說明是兩行");
-                Check(s.NextTip.Contains("Ctrl+Tab") && !s.NextTip.Contains("Shift"), $"{lang}：下一頁的例子是 Ctrl+Tab");
-                Check(s.PrevTip.Contains("Ctrl+Shift+Tab"), $"{lang}：上一頁的例子是 Ctrl+Shift+Tab");
+                Eq(string.Join(",", t.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", keys.OrderBy(k => k, StringComparer.Ordinal)), $"{lang}：剛好這四個 key");
+                if (!keys.All(t.ContainsKey)) continue;
+                Check(t["cfg_next"].Length > 0 && t["cfg_prev"].Length > 0, $"{lang}：兩欄都有標籤");
+                Eq(t["cfg_next_tip"].Split('\n').Length, 2, $"{lang}：下一頁的說明是兩行");
+                Eq(t["cfg_prev_tip"].Split('\n').Length, 2, $"{lang}：上一頁的說明是兩行");
+                Check(t["cfg_next_tip"].Contains("Ctrl+Tab") && !t["cfg_next_tip"].Contains("Shift"), $"{lang}：下一頁的例子是 Ctrl+Tab");
+                Check(t["cfg_prev_tip"].Contains("Ctrl+Shift+Tab"), $"{lang}：上一頁的例子是 Ctrl+Shift+Tab");
                 // 2.4.0（的稿）：第二行的例子加滑鼠側鍵，下一頁 Mouse5、上一頁 Mouse4（照瀏覽器的前進、後退）
-                Check(s.NextTip.Split('\n')[1].Contains("Mouse5") && !s.NextTip.Contains("Mouse4"), $"{lang}：下一頁的例子有側鍵 Mouse5");
-                Check(s.PrevTip.Split('\n')[1].Contains("Mouse4") && !s.PrevTip.Contains("Mouse5"), $"{lang}：上一頁的例子有側鍵 Mouse4");
+                Check(t["cfg_next_tip"].Split('\n')[1].Contains("Mouse5") && !t["cfg_next_tip"].Contains("Mouse4"), $"{lang}：下一頁的例子有側鍵 Mouse5");
+                Check(t["cfg_prev_tip"].Split('\n')[1].Contains("Mouse4") && !t["cfg_prev_tip"].Contains("Mouse5"), $"{lang}：上一頁的例子有側鍵 Mouse4");
             }
-            Eq(Strings.For(Lang.En).NextTip.Split('\n')[1], "E.g. Ctrl+Tab, or the mouse side button Mouse5; empty = not used", "英文下一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.En).PrevTip.Split('\n')[1], "E.g. Ctrl+Shift+Tab, or the mouse side button Mouse4; empty = not used", "英文上一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.ZhHans).NextTip.Split('\n')[1], "例如 Ctrl+Tab，或鼠标侧键 Mouse5；留空＝不使用", "簡中下一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.ZhHans).PrevTip.Split('\n')[1], "例如 Ctrl+Shift+Tab，或鼠标侧键 Mouse4；留空＝不使用", "簡中上一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.ZhHant).NextTip.Split('\n')[1], "例如 Ctrl+Tab，或滑鼠側鍵 Mouse5；留空＝不使用", "繁中下一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.ZhHant).PrevTip.Split('\n')[1], "例如 Ctrl+Shift+Tab，或滑鼠側鍵 Mouse4；留空＝不使用", "繁中上一頁的第二行（定稿）");
-            Eq(Strings.For(Lang.ZhHant).NextLabel, "下一個分頁", "繁中的標籤");
-            Eq(Strings.For(Lang.ZhHans).PrevLabel, "上一个标签页", "簡中的標籤");
-            Eq(Strings.For(Lang.En).NextLabel, "Next tab", "英文的標籤");
+            if (!tables.TryGetValue("en", out var en) || !tables.TryGetValue("zh", out var zh) || !tables.TryGetValue("zh-Hant", out var hant)) return;
+            string Line2(Dictionary<string, string> t, string key) => t.TryGetValue(key, out var v) && v.Contains('\n') ? v.Split('\n')[1] : null;
+            Eq(Line2(en, "cfg_next_tip"), "E.g. Ctrl+Tab, or the mouse side button Mouse5; empty = not used", "英文下一頁的第二行（定稿）");
+            Eq(Line2(en, "cfg_prev_tip"), "E.g. Ctrl+Shift+Tab, or the mouse side button Mouse4; empty = not used", "英文上一頁的第二行（定稿）");
+            Eq(Line2(zh, "cfg_next_tip"), "例如 Ctrl+Tab，或鼠标侧键 Mouse5；留空＝不使用", "簡中下一頁的第二行（定稿）");
+            Eq(Line2(zh, "cfg_prev_tip"), "例如 Ctrl+Shift+Tab，或鼠标侧键 Mouse4；留空＝不使用", "簡中上一頁的第二行（定稿）");
+            Eq(Line2(hant, "cfg_next_tip"), "例如 Ctrl+Tab，或滑鼠側鍵 Mouse5；留空＝不使用", "繁中下一頁的第二行（定稿）");
+            Eq(Line2(hant, "cfg_prev_tip"), "例如 Ctrl+Shift+Tab，或滑鼠側鍵 Mouse4；留空＝不使用", "繁中上一頁的第二行（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_next"), "下一個分頁", "繁中的標籤");
+            Eq(zh.GetValueOrDefault("cfg_prev"), "上一个标签页", "簡中的標籤");
+            Eq(en.GetValueOrDefault("cfg_next"), "Next tab", "英文的標籤");
+            Eq(en.GetValueOrDefault("cfg_prev"), "Previous tab", "英文上一頁的標籤");
+        }
+
+        /// <summary>
+        /// Loc 的挑法（LocPick）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；Format 照遊戲的 GetLocalized。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Next tab", ["de"] = "Nächster Tab", ["fr"] = "Onglet suivant" }, len),
+                "fr", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string>
+                {
+                    ["en"] = new string('a', 500) + "\n" + new string('a', 100),
+                    ["de"] = new string('a', 480) + "\n" + new string('a', 450),
+                }, len), "de", "說明框折行後 de 比較高：en 500＋100、de 480＋450 挑 de");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            // 寬度照寬度函式量，不是字數
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
+        }
+
+        static string FindLocalizationDir()
+        {
+            foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+                for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
+                {
+                    if (!Directory.Exists(Path.Combine(d.FullName, "mod", "verify"))) continue;
+                    foreach (var p in new[] { Path.Combine(d.FullName, "public", "Localization"), Path.Combine(d.FullName, "Localization") })
+                        if (File.Exists(Path.Combine(p, "en.csv"))) return p;
+                }
+            return null;
+        }
+
+        /// <summary>
+        /// 照遊戲的 ModLoader 讀 Localization\*.csv（照一鍵收水的 verify）：空白行與 # 開頭的行略過；key 是第一個逗號之前（去空白）；
+        /// 值（ParseCsvValue）去頭尾空白、頭尾都是 " 就拿掉並把 "" 換成 "，字面的 \n 換成換行。重複的 key、沒有逗號、空 key 算失敗。
+        /// </summary>
+        static Dictionary<string, string> ReadCsv(string path)
+        {
+            var d = new Dictionary<string, string>(StringComparer.Ordinal);
+            int lineNo = 0;
+            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            {
+                lineNo++;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                int comma = line.IndexOf(',');
+                if (comma < 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行沒有逗號"); continue; }
+                var key = line.Substring(0, comma).Trim();
+                if (key.Length == 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行的 key 是空的"); continue; }
+                Check(!d.ContainsKey(key), $"{Path.GetFileName(path)} 的 {key} 沒有重複");
+                var v = line.Substring(comma + 1).Trim();
+                if (v.Length >= 2 && v.StartsWith("\"") && v.EndsWith("\"")) v = v.Substring(1, v.Length - 2).Replace("\"\"", "\"");
+                d[key] = v.Replace("\\n", "\n");
+            }
+            return d;
         }
 
         static void StaleTest()

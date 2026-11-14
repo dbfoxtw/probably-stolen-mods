@@ -1,0 +1,5 @@
+# Labels and tooltips of this mod's settings (ModHelper.GetLocalized). Format: key,value
+cfg_next,次のタブ
+cfg_next_tip,マウスの下にあるタブ付きウィンドウを次のタブに切り替えるキー（最後のタブの次は最初のタブ）。アイテムをドラッグ中も使える。\n例：Ctrl+Tab、またはマウスのサイドボタンMouse5。空欄＝使わない
+cfg_prev,前のタブ
+cfg_prev_tip,マウスの下にあるタブ付きウィンドウを前のタブに切り替えるキー（最初のタブの前は最後のタブ）。アイテムをドラッグ中も使える。\n例：Ctrl+Shift+Tab、またはマウスのサイドボタンMouse4。空欄＝使わない

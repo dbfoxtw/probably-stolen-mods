@@ -52,7 +52,7 @@
 
 ## 語言
 
-分頁上寫的是遊戲裡的物品名稱，跟著遊戲語言（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時和視窗標題一樣是繁中）。設定視窗的文字也跟著遊戲語言：中文介面是簡中（有裝繁中 mod 時是繁中），其他語言是英文；段落的標題固定是英文的「Window Tabs」。
+分頁上寫的是遊戲裡的物品名稱，跟著遊戲語言（有裝[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280) 時和視窗標題一樣是繁中）。設定視窗的文字也跟著遊戲語言：英文、簡中（有裝繁中 mod 時是繁中）、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言是英文；段落的標題固定是英文的「Window Tabs」。
 
 ## 安裝
 
@@ -166,7 +166,7 @@ The tab strips come from this mod, not the base game; please report problems to 
 - If the main key (the Tab in `Ctrl+Tab`) is also used in the game's Key Binds, that game action happens too; pick another key. The same goes for another mod using the same key: both happen.
 - If a key does nothing, another program may be taking it (the Steam overlay uses Shift+Tab by default); pick another one.
 
-**Languages:** tabs show the game's item names in the game language (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280), like the window titles). The settings window follows the game language too: Simplified Chinese when the game is in Chinese (Traditional Chinese with the Traditional Chinese mod), English otherwise; the section title is always "Window Tabs".
+**Languages:** tabs show the game's item names in the game language (Traditional Chinese with the [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280), like the window titles). The settings window follows the game language too: English, Simplified Chinese (Traditional Chinese with the Traditional Chinese mod), Russian, German, Japanese, French, Spanish or Polish, English for any other language; the section title is always "Window Tabs".
 
 **Install**
 

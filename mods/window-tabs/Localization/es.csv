@@ -1,0 +1,5 @@
+# Labels and tooltips of this mod's settings (ModHelper.GetLocalized). Format: key,value
+cfg_next,Pestaña siguiente
+cfg_next_tip,Tecla que cambia a la pestaña siguiente del conjunto de pestañas bajo el puntero (tras la última viene la primera); también funciona mientras arrastras objetos.\nEj.: Ctrl+Tab o el botón lateral del ratón Mouse5; vacío = sin usar
+cfg_prev,Pestaña anterior
+cfg_prev_tip,Tecla que cambia a la pestaña anterior del conjunto de pestañas bajo el puntero (antes de la primera viene la última); también funciona mientras arrastras objetos.\nEj.: Ctrl+Shift+Tab o el botón lateral del ratón Mouse4; vacío = sin usar

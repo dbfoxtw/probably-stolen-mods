@@ -1,0 +1,5 @@
+# Labels and tooltips of this mod's settings (ModHelper.GetLocalized), Polish. Format: key,value
+cfg_next,Następna zakładka
+cfg_next_tip,Klawisz, który przełącza okno z zakładkami pod kursorem na następną zakładkę (po ostatniej jest pierwsza); działa też podczas przeciągania przedmiotów.\nNp. Ctrl+Tab albo boczny przycisk myszy Mouse5; puste = nieużywane
+cfg_prev,Poprzednia zakładka
+cfg_prev_tip,Klawisz, który przełącza okno z zakładkami pod kursorem na poprzednią zakładkę (przed pierwszą jest ostatnia); działa też podczas przeciągania przedmiotów.\nNp. Ctrl+Shift+Tab albo boczny przycisk myszy Mouse4; puste = nieużywane

@@ -14,7 +14,8 @@ namespace ProbablyStolenWindowTabs
     {
         /// <summary>
         /// 設定視窗裡的段落標題。遊戲直接顯示這個字串（不經過翻譯），段落又只能在 Init 時定，所以用 mod 的英文名稱（照一鍵關窗、視窗群組）。
-        /// 每一欄的標籤與說明是函式，打開設定視窗時才取，照遊戲語言給（Strings）。
+        /// 每一欄的標籤與說明是函式，打開設定視窗時才取，照遊戲語言給（Loc：mod 的 Localization\*.csv；那時 csv 已經讀好了）。
+        /// 英文、簡中、繁中是給使用者看過的稿，改字要先給使用者看。
         /// </summary>
         const string Section = "Window Tabs";
         /// <summary>設定檔裡的 key（存的值只看 key；設定視窗照定義的順序排，下一頁在前）。</summary>
@@ -30,8 +31,8 @@ namespace ProbablyStolenWindowTabs
         internal static void Init()
         {
             var cfg = ModConfig.For(WindowTabsMod.ModId);
-            _next = cfg.Define(NextEntry, "", Section, () => GameState.S.NextLabel, choices: null, tooltip: () => GameState.S.NextTip);
-            _prev = cfg.Define(PrevEntry, "", Section, () => GameState.S.PrevLabel, choices: null, tooltip: () => GameState.S.PrevTip);
+            _next = cfg.Define(NextEntry, "", Section, () => Loc.Get("cfg_next"), choices: null, tooltip: () => Loc.Get("cfg_next_tip"));
+            _prev = cfg.Define(PrevEntry, "", Section, () => Loc.Get("cfg_prev"), choices: null, tooltip: () => Loc.Get("cfg_prev_tip"));
         }
 
         /// <summary>

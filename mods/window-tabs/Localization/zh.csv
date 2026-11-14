@@ -1,0 +1,5 @@
+# 本模组设置的标签和说明（ModHelper.GetLocalized）。格式：key,值
+cfg_next,下一个标签页
+cfg_next_tip,把鼠标下方那组标签页切到下一页的按键（最后一页之后回到第一页）；拖着物品时也能用。\n例如 Ctrl+Tab，或鼠标侧键 Mouse5；留空＝不使用
+cfg_prev,上一个标签页
+cfg_prev_tip,把鼠标下方那组标签页切到上一页的按键（第一页之前是最后一页）；拖着物品时也能用。\n例如 Ctrl+Shift+Tab，或鼠标侧键 Mouse4；留空＝不使用

@@ -62,7 +62,8 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
   每個存檔各一套，不會跟著 Steam 雲端同步。
   不過遊戲本身會記住每個箱子視窗最後的位置（存在存檔裡）：切分頁時遊戲照原本的方式記下位置，
   所以組裡的箱子記的位置會是這組的位置。
-- 分頁上的名稱與設定視窗的文字跟著遊戲語言（有裝繁中 mod 時是繁中）。
+- 分頁上的名稱與設定視窗的文字跟著遊戲語言（有裝繁中 mod 時是繁中）；設定視窗另有俄、德、日、法、
+  西班牙、波蘭文。
 - 已知限制：快速轉移（Ctrl＋點擊）只會放進目前那頁。
   儲物協調器的一個預設集裡有同一個分頁組的兩個以上的箱子時，按那個預設集的鍵只會開、不會關（要用 ESC 或 × 關）；
   打開時留下最後開的那頁，擺在分頁組的位置。
@@ -164,7 +165,8 @@ Notes
   by Steam Cloud.
   The game itself remembers where each container's window was last (in your save): switching tabs lets the game
   record positions as usual, so the containers in a set remember the set's position.
-- Tab names and the settings window follow the game language (Traditional Chinese with the Traditional Chinese mod).
+- Tab names and the settings window follow the game language (Traditional Chinese with the Traditional Chinese mod);
+  the settings window is also in Russian, German, Japanese, French, Spanish and Polish.
 - Known limitations: Quick Transfer (Ctrl + Click) only goes into the current tab.
   If one of the Storage Coordinator's presets has two or more containers from the same tab set, its key only
   opens, never closes (close with Esc or ×); the tab opened last stays, at the tab set's position.

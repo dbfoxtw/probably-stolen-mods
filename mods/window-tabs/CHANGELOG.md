@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.5.0（2026-11-14）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 設定的文字多了俄文、德文、日文、法文、西班牙文、波蘭文，跟著遊戲的語言切換。
+- 「下一個分頁」「上一個分頁」的 Ctrl 也可以寫成 Strg（德文鍵盤上的寫法，例如 Strg+Tab）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- The settings are now also in Russian, German, Japanese, French, Spanish and Polish, following the game's language.
+- In the Next tab and Previous tab keys, Ctrl can also be written Strg (as on German keyboards, e.g. Strg+Tab).
+
 ## v2.4.0（2026-11-13）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

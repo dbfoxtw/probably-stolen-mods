@@ -1,0 +1,5 @@
+# 這個 mod 設定的標籤與說明（手寫的繁中：遊戲是中文、繁中 mod 有跑時由 mod 的 Loc.Get 用，其他時候用 zh.csv）。格式：key,值
+cfg_next,下一個分頁
+cfg_next_tip,把滑鼠底下那組分頁切到下一頁的按鍵（最後一頁之後回到第一頁）；拖著物品時也能用。\n例如 Ctrl+Tab，或滑鼠側鍵 Mouse5；留空＝不使用
+cfg_prev,上一個分頁
+cfg_prev_tip,把滑鼠底下那組分頁切到上一頁的按鍵（第一頁之前是最後一頁）；拖著物品時也能用。\n例如 Ctrl+Shift+Tab，或滑鼠側鍵 Mouse4；留空＝不使用

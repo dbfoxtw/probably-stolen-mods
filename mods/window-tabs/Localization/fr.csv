@@ -1,0 +1,5 @@
+# Libellés et infobulles des réglages de ce mod (ModHelper.GetLocalized). Format : key,value
+cfg_next,Onglet suivant
+cfg_next_tip,Touche pour passer à l'onglet suivant dans la fenêtre à onglets sous la souris (après le dernier vient le premier) ; fonctionne aussi pendant que vous faites glisser des objets.\nEx. : Ctrl+Tab, ou le bouton latéral de la souris Mouse5 ; vide = désactivé
+cfg_prev,Onglet précédent
+cfg_prev_tip,Touche pour passer à l'onglet précédent dans la fenêtre à onglets sous la souris (avant le premier vient le dernier) ; fonctionne aussi pendant que vous faites glisser des objets.\nEx. : Ctrl+Shift+Tab, ou le bouton latéral de la souris Mouse4 ; vide = désactivé

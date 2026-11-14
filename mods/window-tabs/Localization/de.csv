@@ -1,0 +1,5 @@
+# Labels and tooltips of this mod's settings (ModHelper.GetLocalized), German. Format: key,value
+cfg_next,Nächster Reiter
+cfg_next_tip,Taste, die im Fenster unter der Maus zum nächsten Reiter wechselt (nach dem letzten kommt der erste); funktioniert auch beim Ziehen von Gegenständen.\nZ. B. Ctrl+Tab oder die Maus-Seitentaste Mouse5; leer = nicht belegt
+cfg_prev,Vorheriger Reiter
+cfg_prev_tip,Taste, die im Fenster unter der Maus zum vorherigen Reiter wechselt (vor dem ersten kommt der letzte); funktioniert auch beim Ziehen von Gegenständen.\nZ. B. Ctrl+Shift+Tab oder die Maus-Seitentaste Mouse4; leer = nicht belegt
