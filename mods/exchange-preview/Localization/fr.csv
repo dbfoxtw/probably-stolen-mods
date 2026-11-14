@@ -1,0 +1,76 @@
+# Exchange Preview, French (fr): texts of the mod's own interface (read by ModHelper.GetLocalized). Translated from en.csv with AI help, not checked by a native speaker.
+# Same keys and order as en.csv (see its comments for where each text appears and what {0}, {1} are). Plural groups use .one (0 and 1) and .other.
+
+tip.header,Échange clandestin · cette nuit
+tip.header_plain,Échange clandestin
+tip.no_janitorial,Pas de service d'entretien cette nuit : aucun échange
+tip.no_janitorial_service,Pas encore de service d'entretien : aucun échange
+tip.nothing,Rien à échanger
+tip.others_cleared.one,{0} autre objet sera jeté
+tip.others_cleared.other,{0} autres objets seront jetés
+tip.all_cleared.one,{0} objet dans la poubelle sera jeté
+tip.all_cleared.other,Les {0} objets dans la poubelle seront jetés
+tip.partial_included,", objets d'échanges incomplets compris : {0}"
+tip.purity_fail,pureté totale {0} inférieure à {1} ; tout est pris, rien n'est donné
+tip.purity_sum_next,pureté totale {0}, palier supérieur dès {1}
+tip.purity_sum_max,pureté totale {0}, palier maximal
+tip.purity_avg_next,pureté moyenne {0}, palier supérieur dès {1}
+tip.purity_avg_max,pureté moyenne {0}, palier maximal
+tip.missing,encore {0}
+tip.surplus,Le surplus sera jeté (un échange par nuit) : {0}
+tip.promo_header,Offres de la semaine
+
+banned.short,L'échange clandestin refuse de traiter avec vous
+banned.rep_line,Réputation (marché noir) : {0} (il faut plus de {1})
+
+fmt.arrow," contre "
+fmt.list_sep,", "
+fmt.colon," : "
+fmt.times," x{0}"
+fmt.paren," ({0})"
+fmt.adjective,{1} ({0})
+fmt.sentences,{0} {1}
+
+cat.random_module,Module aléatoire
+cat.random_medical,Fournitures médicales aléatoires
+cat.random_food,Nourriture aléatoire
+cat.random_keycard,Carte d'accès aléatoire
+cat.unknown,?
+cat.tag_ammo,Munitions
+cat.tag_module,Module
+cat.tag_poison,Poison
+cat.tag_seed,Graine
+
+report.left,L'échange clandestin a laissé dans la poubelle : {0}.
+report.rep_only,L'échange clandestin : {0}.
+report.nothing,L'échange clandestin n'a rien laissé, la pureté étant trop faible. Objets pris : {0}.
+report.nothing_plain,L'échange clandestin n'a rien laissé. Objets pris : {0}.
+report.destroyed,La poubelle était pleine. Objets détruits : {0}.
+
+tag.tooltip,Exchange Preview (mod)
+tag.report," (mod Exchange Preview)"
+
+note.none,Rien
+note.ready,Prêt
+note.surplus,En trop
+note.pickup,À prendre
+note.banned,Banni
+
+remind.items,Les objets de l'échange clandestin restés dans la poubelle seront jetés cette nuit : {0}
+remind.surplus,Le surplus sera jeté cette nuit (un échange par nuit) : {0}
+remind.surplus_also,Le surplus sera aussi jeté cette nuit (un échange par nuit) : {0}
+
+cfg.tooltip,Infobulle de la poubelle
+cfg.tooltip_tip,Survolez la poubelle pour voir ce que l'échange clandestin prendra et laissera cette nuit
+cfg.promos,Offres hebdo dans l'infobulle
+cfg.promos_tip,Affiche dans l'infobulle de la poubelle les trois offres hebdo de la semaine (ce qu'il faut déposer et ce que vous obtenez) ; l'infobulle s'élargit
+cfg.list_warning,Avertissement sur le catalogue
+cfg.list_warning_tip,Texte en rouge sur le catalogue d'échange clandestin quand vous êtes banni pour une réputation trop basse auprès du marché noir
+cfg.night_report,Bilan nocturne
+cfg.night_report_tip,Ajoute au bilan nocturne une ligne indiquant ce que l'échange clandestin a laissé dans la poubelle (jamais écrite dans votre sauvegarde)
+cfg.reminder,Rappel de fin de journée
+cfg.reminder_tip,Sur l'écran Fin de la journée, prévient quand le service d'entretien va jeter des objets de l'échange clandestin restés dans la poubelle, ou des objets en trop au-delà d'un échange par nuit
+cfg.note,Note sur la poubelle
+cfg.note_tip,Une note autocollante sur la poubelle de la boutique indique l'état de l'échange ; peut être activée en même temps que le voyant du couvercle
+cfg.led,Voyant de la poubelle
+cfg.led_tip,Le voyant du couvercle de la poubelle indique l'état de l'échange par sa couleur et clignote quand des objets de l'échange clandestin attendent d'être récupérés ; peut être activé en même temps que la note

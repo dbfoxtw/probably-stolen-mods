@@ -64,16 +64,50 @@ namespace ProbablyStolenExchangePreview
             catch { return null; } // Localization 還沒初始化
         }
 
-        /// <summary>遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的：中文時看有沒有啟用繁中 mod。其他語系用英文。</summary>
-        internal static Lang DetectLanguage()
+        /// <summary>
+        /// mod 介面用的語言代碼：遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 轉出來的，所以中文時看繁中 mod 有沒有跑，
+        /// 有跑是 "zh-Hant"（Loc 用手寫的 zh-Hant.csv）、沒有是 "zh"。其他照遊戲的 locale code（en、ru、de、ja、fr、es、pl），
+        /// 讀不到（Localization 還沒初始化）當成 "en"。Strings 的快取、紙條的粗體、清單紅字的字級都看這個。
+        /// </summary>
+        internal static string LangCode()
         {
             var code = LocaleCode();
-            if (code != null && code.StartsWith("zh", StringComparison.Ordinal))
-                return ZhHantModLoaded() ? Lang.ZhHant : Lang.ZhHans;
-            return Lang.En;
+            if (string.IsNullOrEmpty(code)) return "en";
+            if (code.StartsWith("zh", StringComparison.Ordinal)) return ZhHantModLoaded() ? "zh-Hant" : "zh";
+            return code;
         }
 
-        internal static Strings S => Strings.For(DetectLanguage());
+        /// <summary>中文（簡中、繁中）：清單紅字維持 16／12、不加段落間距。</summary>
+        internal static bool IsChinese(string code) => code == "zh" || code == "zh-Hant";
+
+        /// <summary>
+        /// 這個語言的內文是不是西文字型（NotoSans-Medium SDF；英、德、法、西、俄、波蘭文共用）：中文、日文各有自己的字型。
+        /// 紙條上的字西文用粗體才讀得清楚。
+        /// </summary>
+        internal static bool UsesWesternFont(string code) => !IsChinese(code) && code != "ja";
+
+        static Strings _s;
+        static string _sCode;
+
+        /// <summary>
+        /// 目前語言的字串：依語言代碼快取一份，代碼變了（玩家換語言、繁中 mod 這次有沒有跑）才重建。
+        /// mod 的 Localization 還沒讀到時（Loc.Ready 是 false）建出來的全是 key，照樣回傳這次用，但不快取，下次再建。
+        /// </summary>
+        internal static Strings S
+        {
+            get
+            {
+                var code = LangCode();
+                if (_s != null && _sCode == code) return _s;
+                var s = Strings.Build(code == "zh-Hant");
+                if (Loc.Ready)
+                {
+                    _s = s;
+                    _sCode = code;
+                }
+                return s;
+            }
+        }
 
         /// <summary>
         /// 遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色；中文是 NotoSansSC 動態字型），寫法照待辦清單 mod。

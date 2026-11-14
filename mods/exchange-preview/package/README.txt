@@ -1,15 +1,15 @@
 Probably Stolen 交易所預覽 mod（Exchange Preview） v{version}
 ==========================================================
 
-滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉。非官方製作。
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+滑鼠移到店裡的垃圾桶，就看得到今晚地下交易所會換成什麼、哪些東西會被清掉。
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/509?tab=bugs
  或 https://github.com/dbfoxtw/probably-stolen-mods/issues）。
 
 【安裝】
-這是遊戲官方格式的 mod，不需要 MelonLoader。也可以從 Steam 工作坊訂閱（https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450），訂閱後照第 2 步啟用。
+也可以從 Steam 工作坊訂閱（https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450），訂閱後照第 2 步啟用。
 找遊戲資料夾：Steam 遊戲庫 → 在遊戲上按右鍵 → 管理 → 瀏覽本機檔案（裡面有 Probably Stolen.exe）。
 
 1. 關閉遊戲，把這個壓縮檔裡的 dbfoxtw.exchange-preview 資料夾，解壓縮到遊戲資料夾的 Mods 資料夾裡
@@ -49,9 +49,9 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
   mod 自己的小紀錄存在存檔資料夾的 ModData\dbfoxtw_exchange-preview\slot_<N>.json
   （讀檔重看報告時補回那一行、記下交易所換來的東西），不會跟著 Steam 雲端同步。
 - 不需要任何權限，啟用時不會跳出權限確認。
-- 介面跟著遊戲的語言：英文、簡中，其他語言顯示英文。繁體中文介面要另外裝玩家自製的
-  「Probably Stolen 繁體中文化 mod（非官方）」（https://www.nexusmods.com/probablystolen/mods/280），
-  裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
+- 介面跟著遊戲的語言：英文、簡中、俄文、德文、日文、法文、西班牙文、波蘭文，其他語言顯示英文。
+  繁體中文介面要另外裝玩家自製的「Probably Stolen 繁體中文化 mod」
+  （https://www.nexusmods.com/probablystolen/mods/280），裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
 - 已知限制：遊戲之後如果改了交換清單，新的交換會顯示「？」，要等 mod 更新；
   隨機的產出只寫類別（隨機食物、隨機模組…），實際拿到哪一件由遊戲當晚決定。
 
@@ -64,8 +64,8 @@ Probably Stolen Exchange Preview mod v{version}
 -----------------------------------------------
 
 Hover over the trash can in your shop to see what the Underground Exchange will take and leave tonight,
-and what the Janitorial Service will clear. Unofficial.
-Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported)
+and what the Janitorial Service will clear.
+Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -73,7 +73,7 @@ Bug reports are welcome
  or https://github.com/dbfoxtw/probably-stolen-mods/issues).
 
 Install
-This mod uses the game's official mod format; MelonLoader is not needed. You can also subscribe on the
+You can also subscribe on the
 Steam Workshop (https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)
 and enable it as in step 2.
 Find the game folder: Steam library → right-click the game → Manage → Browse local files
@@ -125,9 +125,10 @@ Notes
   in the save folder (to show that line again when you reload, and to know which items came from the Exchange);
   it is not synced by Steam Cloud.
 - No permissions are needed, so the game shows no permission prompt when you enable it.
-- The UI follows the game's language: English or Simplified Chinese; other languages get the English UI.
-  For a Traditional Chinese UI, install the unofficial Traditional Chinese Translation mod
-  (https://www.nexusmods.com/probablystolen/mods/280) and choose Simplified Chinese in the game.
+- The UI follows the game's language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish
+  or Polish; other languages get the English UI. For a Traditional Chinese UI, install the
+  Traditional Chinese Translation mod (https://www.nexusmods.com/probablystolen/mods/280) and choose
+  Simplified Chinese in the game.
 - Known limitations: if a later game update changes the exchange list, new trades show "?"
   until the mod is updated. Random rewards are named by category only (random food, random module…);
   the actual item is decided by the game that night.

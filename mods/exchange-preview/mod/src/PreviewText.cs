@@ -75,7 +75,7 @@ namespace ProbablyStolenExchangePreview
                 lines.Add(new Line(string.Format(s.RepLine, p.Rep, p.Threshold), Tone.Bad));
                 // 被禁用時不交換，但清潔服務照樣清垃圾桶
                 if (p.JanitorialOn && r != null && r.Cleared.Count > 0)
-                    lines.Add(new Line(string.Format(s.AllCleared, r.Cleared.Count), Tone.Warn));
+                    lines.Add(new Line(s.AllCleared(r.Cleared.Count), Tone.Warn));
                 return lines;
             }
 
@@ -104,16 +104,16 @@ namespace ProbablyStolenExchangePreview
             // 清潔服務沒勾時照樣列（灰色），標示亮「多放了」時提示裡才找得到原因
             var surplus = r.Surplus();
             if (surplus.Count > 0)
-                lines.Add(new Line(Fill(s.SurplusLine, Group(s, surplus.Select(x => x.Name))), warn));
+                lines.Add(new Line(Fill(s, s.SurplusLine, Group(s, surplus.Select(x => x.Name))), warn));
 
             int others = r.Cleared.Count - surplus.Count;
             if (p.JanitorialOn && others > 0)
             {
-                var text = string.Format(r.Accepted.Count > 0 ? s.OthersCleared : s.AllCleared, others);
+                var text = (r.Accepted.Count > 0 ? s.OthersCleared : s.AllCleared)(others);
                 // 差一點的東西也會被清掉，點明它算在裡面，免得以為件數算錯（2026-10-09 實機時使用者看不懂）
                 var cleared = new HashSet<SimItem>(r.Cleared);
                 var partialNames = r.Partial.SelectMany(pp => pp.Taken).Where(cleared.Contains).Select(x => x.Name).ToList();
-                if (partialNames.Count > 0) text += Fill(s.PartialIncluded, Group(s, partialNames));
+                if (partialNames.Count > 0) text += Fill(s, s.PartialIncluded, Group(s, partialNames));
                 lines.Add(new Line(text, Tone.Warn));
             }
             return lines;
@@ -183,21 +183,81 @@ namespace ProbablyStolenExchangePreview
             return "";
         }
 
+        /// <summary>零寬空白（U+200B）：看不見、不佔寬度，繁中 mod 把它當成詞邊界。</summary>
+        const char ZeroWidthSpace = (char)0x200B;
+
+        /// <summary>把遊戲名稱或名稱清單代進句子（{0}、{1}…），照這份字串要不要標名稱的邊界（Strings.MarkNameEdges，手寫繁中才有）。</summary>
+        public static string Fill(Strings s, string format, params string[] names) => Fill(s != null && s.MarkNameEdges, format, names);
+
         /// <summary>
-        /// 把清單填進句子：清單以英數字結尾（例如「×2」）、後面直接接中文時補一個空白，
-        /// 免得變成「彈藥 ×2會被清掉」（中英混排的習慣）。
+        /// 把名稱填進句子，名稱和前後的字之間：
+        /// - 名稱以 ASCII 英數字結尾（例如「×2」）、後面直接接非 ASCII 的字母時補一個空白，
+        ///   免得變成「彈藥 ×2會被清掉」（中英混排的習慣；每個語言都做）。
+        /// - markNameEdges（手寫繁中）：名稱的第一個字是漢字而前一個字也是漢字時前面加零寬空白，最後一個字是漢字而後一個字也是漢字時
+        ///   後面加零寬空白。繁中 mod 的短詞表看詞邊界（詞的頭尾是漢字時，前後不能緊貼漢字），「多放的撬棍會被清掉」裡的 2 字名稱
+        ///   不隔開就不會被轉成繁中（2026-11-14 使用者定的做法）。格式的開頭、結尾、標點旁本來就是邊界，不加。
+        /// 只認 {數字} 這種佔位符（mod 的格式都是這種）；格式有別的寫法（{{、{0:N0}）時照 string.Format，不補空白與零寬空白。
         /// </summary>
-        public static string Fill(string format, string list)
+        public static string Fill(bool markNameEdges, string format, params string[] names)
         {
-            int at = format.IndexOf("{0}", StringComparison.Ordinal);
-            if (at >= 0 && list.Length > 0 && at + 3 < format.Length)
+            if (format == null) return null;
+            if (names == null) names = new string[0];
+            // 切成字面與名稱，名稱的前後要看相鄰的字（相鄰的可能是另一個名稱，例如「全新」接「濾水器」）
+            var parts = new List<string>();
+            var isName = new List<bool>();
+            int lit = 0;
+            for (int i = 0; i < format.Length; i++)
             {
-                char last = list[list.Length - 1], next = format[at + 3];
-                if (last < 128 && char.IsLetterOrDigit(last) && next >= 128 && char.IsLetter(next))
-                    list += " ";
+                char c = format[i];
+                if (c != '{' && c != '}') continue;
+                int j = i + 1;
+                while (c == '{' && j < format.Length && format[j] >= '0' && format[j] <= '9') j++;
+                if (c == '{' && j > i + 1 && j < format.Length && format[j] == '}'
+                    && int.TryParse(format.Substring(i + 1, j - i - 1), out int idx) && idx < names.Length)
+                {
+                    parts.Add(format.Substring(lit, i - lit));
+                    isName.Add(false);
+                    parts.Add(names[idx] ?? "");
+                    isName.Add(true);
+                    i = j;
+                    lit = j + 1;
+                    continue;
+                }
+                return string.Format(format, names);
             }
-            return string.Format(format, list);
+            parts.Add(format.Substring(lit));
+            isName.Add(false);
+
+            var sb = new StringBuilder();
+            for (int k = 0; k < parts.Count; k++)
+            {
+                var p = parts[k];
+                if (!isName[k] || p.Length == 0)
+                {
+                    sb.Append(p);
+                    continue;
+                }
+                if (markNameEdges && sb.Length > 0 && IsHan(sb[sb.Length - 1]) && IsHan(p[0])) sb.Append(ZeroWidthSpace);
+                sb.Append(p);
+                // 後一個字：後面第一個不是空的部分（字面或下一個名稱）的開頭；名稱在格式最後就沒有
+                int after = k + 1;
+                while (after < parts.Count && parts[after].Length == 0) after++;
+                if (after >= parts.Count) continue;
+                char next = parts[after][0];
+                char last = p[p.Length - 1];
+                if (last < 128 && char.IsLetterOrDigit(last) && next >= 128 && char.IsLetter(next)) sb.Append(' ');
+                else if (markNameEdges && IsHan(last) && IsHan(next)) sb.Append(ZeroWidthSpace);
+            }
+            return sb.ToString();
         }
+
+        /// <summary>
+        /// 漢字（照繁中 mod 的 TextConverter.IsHan）：CJK 擴充 A、基本區、相容區、〇，代理字元（擴充 B 以後的字）也算。
+        /// 範圍要和它一樣：它認的邊界才是我們要補的地方。
+        /// </summary>
+        static bool IsHan(char c) =>
+            (c >= 0x3400 && c <= 0x4DBF) || (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) || c == 0x3007
+            || (c >= 0xD800 && c <= 0xDFFF);
 
         /// <summary>「濾水器 2/3（還差 1 個 → 全新濾水器）」；條件有好幾種時依名稱分組。</summary>
         public static string PartialText(Strings s, SimPartial pp)
@@ -232,15 +292,16 @@ namespace ProbablyStolenExchangePreview
 
             var parts = new List<string>();
             if (outputs.Count > 0)
-                parts.Add(string.Format(s.ReportLeft, Group(s, outputs) + (repText == null ? "" : string.Format(s.Paren, repText))));
+                parts.Add(Fill(s, s.ReportLeft, Group(s, outputs) + (repText == null ? "" : string.Format(s.Paren, repText))));
             else if (repText != null)
-                parts.Add(string.Format(s.ReportRepOnly, repText));
+                parts.Add(Fill(s, s.ReportRepOnly, repText));
             // 純度那句只用在夢塵；其他（例如黑市聲望已經到頂、拾荒者信物換不到聲望）寫一般的
             foreach (var d in deals.Where(d => d.NoOutput))
-                parts.Add(string.Format(d.BarterId == ExchangeSim.DreamDustBarterId ? s.ReportNothing : s.ReportNothingPlain, Group(s, d.Taken)));
+                parts.Add(Fill(s, d.BarterId == ExchangeSim.DreamDustBarterId ? s.ReportNothing : s.ReportNothingPlain, Group(s, d.Taken)));
             if (destroyed.Count > 0)
-                parts.Add(string.Format(s.ReportDestroyed, Group(s, destroyed)));
-            return parts.Count == 0 ? null : string.Join(s.SentenceSep, parts);
+                parts.Add(Fill(s, s.ReportDestroyed, Group(s, destroyed)));
+            // 兩兩照 fmt.sentences 接起來（英文中間空一格、中文直接接）
+            return parts.Count == 0 ? null : parts.Aggregate((a, b) => string.Format(s.Sentences, a, b));
         }
 
         /// <summary>
@@ -250,9 +311,9 @@ namespace ProbablyStolenExchangePreview
         public static string Reminder(Strings s, IList<string> outputs, IList<string> surplus)
         {
             var parts = new List<string>();
-            if (outputs != null && outputs.Count > 0) parts.Add(Fill(s.Reminder, Group(s, outputs)));
+            if (outputs != null && outputs.Count > 0) parts.Add(Fill(s, s.Reminder, Group(s, outputs)));
             if (surplus != null && surplus.Count > 0)
-                parts.Add(Fill(parts.Count > 0 ? s.ReminderSurplusAlso : s.ReminderSurplus, Group(s, surplus)));
+                parts.Add(Fill(s, parts.Count > 0 ? s.ReminderSurplusAlso : s.ReminderSurplus, Group(s, surplus)));
             return parts.Count == 0 ? null : string.Join("\n", parts);
         }
 
@@ -266,12 +327,14 @@ namespace ProbablyStolenExchangePreview
         /// <summary>
         /// 清單右下的紅字：兩行，第二行小一號。用 TMP 的 rich text。
         /// 第一行一律用 mod 的短句（遊戲的說明有三句，太長；見 Strings.BannedShort）。
+        /// 聲望與門檻用 &lt;nobr&gt; 包起來：放不下時 TMP 自動換行會把減號當成可以斷的地方，「-200」被拆成「-」和「200」兩行
+        /// （2.2.0 實機測試第 9 步，最長字串模式挑到西文那句時）。
         /// </summary>
         public static string BannedBlock(Strings s, int rep, int threshold, int bigSize, int smallSize)
         {
             var sb = new StringBuilder();
             sb.Append($"<size={bigSize}>").Append(s.BannedShort).Append("</size>\n");
-            sb.Append($"<size={smallSize}>").Append(string.Format(s.RepLine, rep, threshold)).Append("</size>");
+            sb.Append($"<size={smallSize}>").Append(string.Format(s.RepLine, $"<nobr>{rep}</nobr>", $"<nobr>{threshold}</nobr>")).Append("</size>");
             return sb.ToString();
         }
     }

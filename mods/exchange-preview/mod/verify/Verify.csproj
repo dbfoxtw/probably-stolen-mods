@@ -15,6 +15,8 @@
     <Compile Include="..\src\ExchangeSim.cs" Link="ExchangeSim.cs" />
     <Compile Include="..\src\PreviewText.cs" Link="PreviewText.cs" />
     <Compile Include="..\src\Strings.cs" Link="Strings.cs" />
+    <!-- 真的 Loc.cs 用到遊戲型別，不編進來；Strings.Build 改用同一個 namespace 的 LocStub.cs（從 public/Localization 的 csv 取字） -->
+    <Compile Include="..\src\LocPick.cs" Link="LocPick.cs" />
     <Compile Include="..\src\SlotStore.cs" Link="SlotStore.cs" />
     <Compile Include="..\src\IndicatorLogic.cs" Link="IndicatorLogic.cs" />
   </ItemGroup>

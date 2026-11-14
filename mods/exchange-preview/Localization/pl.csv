@@ -1,0 +1,91 @@
+# Exchange Preview: texts of the mod's own interface, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
+# Keys and order are the same as en.csv; where each text appears, how much space it has and what {0}, {1} are: see the comments in en.csv.
+# Plural groups use .one, .few and .many. Game names put into {0} are in their base form, so sentences with names put them after a colon.
+
+# ── Trash can tooltip ──
+tip.header,Podziemna Giełda · dziś w nocy
+tip.header_plain,Podziemna Giełda
+tip.no_janitorial,Tej nocy bez usług dozorców: brak wymiany
+tip.no_janitorial_service,Usługi dozorców jeszcze niedostępne: brak wymiany
+tip.nothing,Nic do wymiany
+tip.others_cleared.one,{0} pozostały przedmiot zostanie usunięty
+tip.others_cleared.few,{0} pozostałe przedmioty zostaną usunięte
+tip.others_cleared.many,{0} pozostałych przedmiotów zostanie usuniętych
+tip.all_cleared.one,{0} przedmiot w koszu na śmieci zostanie usunięty
+tip.all_cleared.few,{0} przedmioty w koszu na śmieci zostaną usunięte
+tip.all_cleared.many,{0} przedmiotów w koszu na śmieci zostanie usuniętych
+tip.partial_included,", w tym z niepełnych wymian: {0}"
+tip.purity_fail,łączna czystość {0} poniżej {1}: zostaną zabrane bez niczego w zamian
+tip.purity_sum_next,łączna czystość {0}, przy {1}+ wyższy poziom
+tip.purity_sum_max,łączna czystość {0}, najwyższy poziom
+tip.purity_avg_next,średnia czystość {0}, przy {1}+ wyższy poziom
+tip.purity_avg_max,średnia czystość {0}, najwyższy poziom
+tip.missing,brakuje {0}
+tip.surplus,Nadmiar zostanie usunięty (wymiana raz na noc): {0}
+tip.promo_header,Promocyjne wymiany w tym tygodniu
+
+# ── Banned from the Exchange ──
+banned.short,Podziemna Giełda nie chce z tobą handlować
+banned.rep_line,Reputacja na Czarnym Rynku: {0} (musi być powyżej {1})
+
+# ── Punctuation and formats ──
+# The font has no arrow; "za" would need the noun declined, so a dash is used instead.
+fmt.arrow," – "
+fmt.list_sep,", "
+fmt.colon,": "
+fmt.times," x{0}"
+fmt.paren," ({0})"
+# The game's "Nowe" (neuter) does not agree with "Filtr do wody" (masculine), so the label goes in brackets.
+fmt.adjective,{1} ({0})
+fmt.sentences,{0} {1}
+
+# ── What the exchanges give and need ──
+cat.random_module,losowy moduł
+cat.random_medical,losowe wyroby medyczne
+cat.random_food,losowa żywność
+cat.random_keycard,losowa karta dostępu
+cat.unknown,?
+# The game's item type names (Amunicja, Moduły, Trucizny, Nasiona)
+cat.tag_ammo,Amunicja
+cat.tag_module,Moduły
+cat.tag_poison,Trucizny
+cat.tag_seed,Nasiona
+
+# ── Night report ──
+report.left,Podziemna Giełda zostawiła w koszu na śmieci: {0}.
+report.rep_only,Podziemna Giełda: {0}.
+report.nothing,Podziemna Giełda zabrała: {0}. Przez zbyt niską czystość nic nie zostawiła.
+report.nothing_plain,Podziemna Giełda zabrała: {0}. Nic nie zostawiła.
+report.destroyed,Kosz na śmieci był pełny. Zniszczono: {0}.
+
+# ── Mod tag ──
+tag.tooltip,Exchange Preview (mod)
+tag.report," (mod Exchange Preview)"
+
+# ── Note on the trash can ──
+note.none,Brak
+note.ready,Gotowe
+note.surplus,Za dużo
+note.pickup,Odbierz
+note.banned,Zakaz
+
+# ── End of Day reminder ──
+remind.items,Przedmioty z Giełdy w koszu na śmieci zostaną dziś w nocy usunięte: {0}
+remind.surplus,Nadmiar zostanie dziś w nocy usunięty (wymiana raz na noc): {0}
+remind.surplus_also,Nadmiar też zostanie dziś w nocy usunięty (wymiana raz na noc): {0}
+
+# ── Settings window ──
+cfg.tooltip,Podpowiedź kosza na śmieci
+cfg.tooltip_tip,Najedź kursorem na kosz na śmieci, aby zobaczyć, co Podziemna Giełda zabierze i zostawi dziś w nocy
+cfg.promos,Promocje tygodnia w podpowiedzi
+cfg.promos_tip,Pokazuje w podpowiedzi kosza na śmieci trzy promocyjne wymiany z tego tygodnia (co włożyć i co dostaniesz); podpowiedź robi się szersza
+cfg.list_warning,Ostrzeżenie na Dyrektywie
+cfg.list_warning_tip,Czerwony tekst na Dyrektywie Podziemnej Giełdy, gdy masz zakaz handlu z powodu niskiej reputacji na Czarnym Rynku
+cfg.night_report,Raport nocny
+cfg.night_report_tip,Dodaje do raportu nocnego wiersz z tym, co Giełda zostawiła w koszu na śmieci (nigdy nie trafia do zapisu gry)
+cfg.reminder,Przypomnienie na koniec dnia
+cfg.reminder_tip,Na ekranie „Koniec dnia” ostrzega, gdy usługi dozorców usuną przedmioty z Giełdy, które wciąż leżą w koszu na śmieci, albo nadmiar ponad jedną wymianę na noc
+cfg.note,Karteczka na koszu na śmieci
+cfg.note_tip,Karteczka samoprzylepna na koszu na śmieci w sklepie, pokazująca stan wymiany; może działać razem z lampką na pokrywie
+cfg.led,Lampka kosza na śmieci
+cfg.led_tip,Lampka na pokrywie kosza na śmieci pokazuje kolorem stan wymiany i miga, gdy przedmioty z Giełdy czekają na odebranie; może działać razem z karteczką

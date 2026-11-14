@@ -1,5 +1,25 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-14）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 垃圾桶提示、紙條、夜間報告、結束一天的提醒、清單紅字和設定的文字多了俄文、德文、日文、法文、西班牙文、波蘭文，跟著遊戲的語言切換。
+- 英文的件數照單複數寫：1 other item、3 other items（原本是 item(s)）。
+- 繁中：搭配繁中 mod 2.12.0 起，句子裡兩個字的物品名稱（例如鐵撬）照樣換成繁中的用詞。
+- 修正：交易所清單的紅字，聲望的數字不會再被拆成兩行（「-」和「200」）。
+- 對應 VERSION 100-REV13（也支援 beta 分支的 100-REV14）。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported)
+
+- The trash can tooltip, the note, the night report line, the end of day reminder, the Exchange Directive warning and the settings are now also in Russian, German, Japanese, French, Spanish and Polish, following the game's language.
+- English counts now use singular and plural: 1 other item, 3 other items (was item(s)).
+- Traditional Chinese: with the Traditional Chinese mod 2.12.0 or later, two-character item names inside sentences are converted again.
+- Fixed: in the red text on the Exchange Directive, the reputation numbers are no longer split across two lines ("-" and "200").
+- Supports VERSION 100-REV13 (also the 100-REV14 beta).
+
 ## v2.1.1（2026-11-04）
 
 對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）

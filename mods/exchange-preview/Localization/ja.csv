@@ -1,0 +1,75 @@
+# Japanese (ja) text of Exchange Preview's own interface (read by ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
+# Format: key,value. Keys and their order are the same as en.csv (see its comments for where each text appears). Keep every {0}/{1} of the English text.
+# Japanese has one plural form: only .other. Game words follow the game's Japanese string table (アングラ取引, 清掃サービス, 闇市場からの評判, ゴミ箱, 夜間レポート, 1日の終わり, 新品, 適用).
+
+tip.header,アングラ取引・今夜
+tip.header_plain,アングラ取引
+tip.no_janitorial,今夜は清掃サービスなし：取引は行われない
+tip.no_janitorial_service,清掃サービスがまだ使えない：取引は行われない
+tip.nothing,取引できるものはない
+tip.others_cleared.other,ほかの{0}個のアイテムは回収される
+tip.all_cleared.other,ゴミ箱の{0}個のアイテムは回収される
+tip.partial_included,（未成立の取引の{0}を含む）
+tip.purity_fail,純度の合計{0}が{1}未満のため、引き取られるが見返りはない
+tip.purity_sum_next,純度の合計{0}、{1}以上ならさらに良い
+tip.purity_sum_max,純度の合計{0}、最高ランク
+tip.purity_avg_next,純度の平均{0}、{1}以上ならさらに良い
+tip.purity_avg_max,純度の平均{0}、最高ランク
+tip.missing,あと{0}個
+tip.surplus,余分な{0}は回収される（取引は1晩に1回）
+tip.promo_header,今週のプロモーション取引
+
+banned.short,アングラ取引を利用できない
+banned.rep_line,闇市場からの評判 {0}（{1}より上が必要）
+
+fmt.arrow," → "
+fmt.list_sep,、
+fmt.colon,：
+fmt.times," ×{0}"
+fmt.paren,（{0}）
+fmt.adjective,{0}の{1}
+fmt.sentences,{0}{1}
+
+cat.random_module,ランダムなモジュール
+cat.random_medical,ランダムな医療用品
+cat.random_food,ランダムな食品
+cat.random_keycard,ランダムなカードキー
+cat.unknown,？
+cat.tag_ammo,弾薬
+cat.tag_module,モジュール
+cat.tag_poison,毒
+cat.tag_seed,種
+
+report.left,アングラ取引がゴミ箱に{0}を残していった。
+report.rep_only,アングラ取引：{0}。
+report.nothing,アングラ取引は{0}を引き取ったが、純度が低すぎて何も残さなかった。
+report.nothing_plain,アングラ取引は{0}を引き取ったが、何も残さなかった。
+report.destroyed,ゴミ箱がいっぱいで、{0}は破棄された。
+
+tag.tooltip,Exchange Preview（MOD）
+tag.report,（Exchange Preview MOD）
+
+note.none,取引なし
+note.ready,取引可
+note.surplus,入れすぎ
+note.pickup,受取待ち
+note.banned,取引禁止
+
+remind.items,アングラ取引で得た{0}がまだゴミ箱にあり、今夜回収される
+remind.surplus,余分な{0}は今夜回収される（取引は1晩に1回）
+remind.surplus_also,余分な{0}も今夜回収される（取引は1晩に1回）
+
+cfg.tooltip,ゴミ箱のツールチップ
+cfg.tooltip_tip,ゴミ箱にカーソルを合わせると、今夜アングラ取引が何を引き取り、何を残していくかを表示する。
+cfg.promos,ツールチップにプロモーション取引を表示
+cfg.promos_tip,今週の3つのプロモーション取引（何を入れると何がもらえるか）をゴミ箱のツールチップに表示する。ツールチップの幅が広くなる。
+cfg.list_warning,取引情報の警告
+cfg.list_warning_tip,闇市場からの評判が低くてアングラ取引を利用できないとき、「アングラ取引の情報」に赤字で表示する。
+cfg.night_report,夜間レポート
+cfg.night_report_tip,アングラ取引がゴミ箱に残したものを、夜間レポートに1行追加して表示する（セーブデータには書き込まない）。
+cfg.reminder,1日の終わりのリマインダー
+cfg.reminder_tip,「1日の終わり」の画面で、アングラ取引で得たアイテムがまだゴミ箱にあって清掃サービスに回収されるとき、または1晩に1回の取引を超える余分なアイテムが回収されるときに警告する。
+cfg.note,ゴミ箱の付箋
+cfg.note_tip,店のゴミ箱に付箋を貼り、取引の状態を表示する。ふたのライトと同時にオンにできる。
+cfg.led,ゴミ箱のライト
+cfg.led_tip,ゴミ箱のふたのライトが取引の状態を色で示し、アングラ取引のアイテムが受け取り待ちのときは点滅する。付箋と同時にオンにできる。

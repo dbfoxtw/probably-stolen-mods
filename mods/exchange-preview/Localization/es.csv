@@ -1,0 +1,86 @@
+# Exchange Preview: Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value
+# See en.csv for where each text appears and how much space it has. Keys and order are the same as en.csv. Plural groups for es: .one and .other.
+# Game names put into a sentence come after a colon ("lo siguiente: {0}"), so they stay in their base form without an article.
+
+# Trash can tooltip
+tip.header,Mercado clandestino · esta noche
+tip.header_plain,Mercado clandestino
+tip.no_janitorial,Esta noche no hay servicio de limpieza: no habrá intercambio
+tip.no_janitorial_service,Aún no hay servicio de limpieza: no habrá intercambio
+tip.nothing,Nada que intercambiar
+tip.others_cleared.one,Se retirará {0} objeto más
+tip.others_cleared.other,Se retirarán {0} objetos más
+tip.all_cleared.one,Se retirará {0} objeto del cubo de basura
+tip.all_cleared.other,Se retirarán los {0} objetos del cubo de basura
+tip.partial_included,", incluido lo de los intercambios incompletos: {0}"
+tip.purity_fail,pureza total {0}, menos de {1}: se lo llevan sin dar nada
+tip.purity_sum_next,pureza total {0}, mejor con {1} o más
+tip.purity_sum_max,pureza total {0}, nivel máximo
+tip.purity_avg_next,pureza media {0}, mejor con {1} o más
+tip.purity_avg_max,pureza media {0}, nivel máximo
+tip.missing,{0} más
+tip.surplus,Se retirará lo que sobra: {0} (un intercambio por noche)
+tip.promo_header,Promociones de esta semana
+
+# Banned from the Exchange
+banned.short,El mercado clandestino no quiere tratos contigo
+banned.rep_line,Reputación en el mercado negro {0} (necesitas más de {1})
+
+# Punctuation and formats
+fmt.arrow," por "
+fmt.list_sep,", "
+fmt.colon,": "
+fmt.times," x{0}"
+fmt.paren," ({0})"
+fmt.adjective,{1} ({0})
+fmt.sentences,{0} {1}
+
+# What the exchanges give and need
+cat.random_module,módulo al azar
+cat.random_medical,suministros médicos al azar
+cat.random_food,comida al azar
+cat.random_keycard,tarjeta magnética al azar
+cat.unknown,?
+cat.tag_ammo,Munición
+cat.tag_module,Módulo
+cat.tag_poison,Veneno
+cat.tag_seed,Semilla
+
+# Night report
+report.left,El mercado clandestino dejó lo siguiente en el cubo de basura: {0}.
+report.rep_only,El mercado clandestino: {0}.
+report.nothing,El mercado clandestino no dejó nada porque la pureza era demasiado baja, pero se llevó lo siguiente: {0}.
+report.nothing_plain,El mercado clandestino no dejó nada, pero se llevó lo siguiente: {0}.
+report.destroyed,El cubo de basura estaba lleno. Se destruyó lo siguiente: {0}.
+
+# Mod tag
+tag.tooltip,Exchange Preview (mod)
+tag.report," (mod Exchange Preview)"
+
+# Note on the trash can
+note.none,Sin trato
+note.ready,Listo
+note.surplus,Sobran
+note.pickup,Recoger
+note.banned,Vetado
+
+# End of Day reminder
+remind.items,Esta noche se retirará lo que dejó el mercado clandestino y sigue en el cubo de basura: {0}
+remind.surplus,Esta noche se retirará lo que sobra: {0} (un intercambio por noche)
+remind.surplus_also,Esta noche también se retirará lo que sobra: {0} (un intercambio por noche)
+
+# Settings window of the mod
+cfg.tooltip,Descripción del cubo de basura
+cfg.tooltip_tip,Al pasar el puntero sobre el cubo de basura, muestra qué se llevará y qué dejará esta noche el mercado clandestino
+cfg.promos,Promociones semanales en la descripción
+cfg.promos_tip,Muestra en la descripción del cubo de basura los tres intercambios promocionales de esta semana (qué hay que tirar y qué recibes a cambio); la descripción se hace más ancha
+cfg.list_warning,Aviso en la directiva
+cfg.list_warning_tip,Texto en rojo en la Directiva del mercado clandestino cuando te vetan por tener poca reputación en el mercado negro
+cfg.night_report,Informe nocturno
+cfg.night_report_tip,Añade al informe nocturno una línea con lo que el mercado clandestino dejó en el cubo de basura (nunca se escribe en tu partida guardada)
+cfg.reminder,Recordatorio de fin del día
+cfg.reminder_tip,En la pantalla «Fin del día», avisa cuando el servicio de limpieza vaya a retirar objetos del mercado clandestino que siguen en el cubo de basura, o lo que sobra más allá de un intercambio por noche
+cfg.note,Nota en el cubo de basura
+cfg.note_tip,Una nota adhesiva en el cubo de basura de la tienda que muestra el estado del intercambio; puede estar activada a la vez que la luz de la tapa
+cfg.led,Luz del cubo de basura
+cfg.led_tip,La luz de la tapa del cubo de basura muestra con colores el estado del intercambio y parpadea cuando hay objetos del mercado clandestino esperando a que los recojas; puede estar activada a la vez que la nota

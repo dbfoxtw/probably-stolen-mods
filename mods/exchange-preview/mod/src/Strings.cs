@@ -1,9 +1,12 @@
+using System;
+
 namespace ProbablyStolenExchangePreview
 {
-    enum Lang { En, ZhHans, ZhHant }
-
     /// <summary>
-    /// mod 自己的字串（照待辦清單 mod：英文、簡中、有裝繁中 mod 時繁中，由 GameState.DetectLanguage 自動選）。
+    /// mod 自己的字串（2.2.0 起放 public/Localization/&lt;語言&gt;.csv，手寫的繁中放 zh-Hant.csv）。
+    /// 欄位照舊，PreviewText、IndicatorLogic、ExchangeReader 都吃一份 Strings；這份由 <see cref="Build"/> 用 Loc 從 csv 取字建起來，
+    /// GameState.S 依語言代碼快取一份（語言變了才重建）。取的是原字（不帶參數），之後照舊由呼叫的人 string.Format，
+    /// 所以 csv 裡的 {0}、{1} 和以前寫在程式裡的一樣。
     /// 物品名稱、「全新」「黑市聲望」、被禁用的說明這類遊戲本來就有的詞，直接用遊戲的字串表（LocHelper），不放這裡。
     /// 繁中字串本身沒有簡體字，繁中 mod 的轉換會直接跳過。
     /// </summary>
@@ -15,8 +18,11 @@ namespace ProbablyStolenExchangePreview
         public string NoJanitorial, Nothing;
         /// <summary>清潔服務還沒開放（正式版 Fence 開局的第 1～9 天）：和「今晚沒用」分開，免得玩家去平板找勾選。</summary>
         public string NoJanitorialService;
-        /// <summary>{0}＝件數。</summary>
-        public string OthersCleared, AllCleared;
+        /// <summary>
+        /// 會被清掉的件數：傳件數、回傳整句（照各語言的文法挑單複數）。
+        /// 其他欄位是格式字串，這兩條要先知道數字才挑得了字形，所以是函式。
+        /// </summary>
+        public Func<int, string> OthersCleared, AllCleared;
         /// <summary>接在上面那句後面：{0}＝差一點的那幾筆配到的東西（它們也會被清掉）。</summary>
         public string PartialIncluded;
         /// <summary>夢塵純度不夠：{0}＝純度合計、{1}＝門檻。</summary>
@@ -26,7 +32,7 @@ namespace ProbablyStolenExchangePreview
         /// 常駐的兩瓶看合計（Sum）、促銷的四瓶看平均（Avg）。Next：{0}＝純度、{1}＝下一級的門檻；Max：{0}＝純度（已經是最高級）。
         /// </summary>
         public string PuritySumNext, PuritySumMax, PurityAvgNext, PurityAvgMax;
-        /// <summary>差一點：{0}＝還差幾個。</summary>
+        /// <summary>差一點：{0}＝還差幾個（各語言寫成不用跟著數字變的說法）。</summary>
         public string Missing;
         /// <summary>
         /// 「地下交易所不跟你交易」：清單紅字用。遊戲的說明 rep_perk_BM_DISTRUSTED_desc 有三句
@@ -41,16 +47,19 @@ namespace ProbablyStolenExchangePreview
         /// <summary>本週促銷那段的標題：不寫還剩幾晚（牆上的日曆有星期幾，遊戲的清單也寫週一重置）。</summary>
         public string PromoHeader;
 
-        // ── 共用的標點與格式 ──
+        // ── 共用的標點與格式（各語言一份） ──
         public string Arrow, ListSep, Colon;
         /// <summary>數量：{0}＝件數（兩件以上才加）。</summary>
         public string Times;
         /// <summary>括號：{0}＝內容。</summary>
         public string Paren;
-        /// <summary>形容詞＋物品名稱：{0}＝遊戲的「全新」、{1}＝物品名稱。</summary>
+        /// <summary>形容詞＋物品名稱：{0}＝遊戲的「全新」、{1}＝物品名稱（順序照各語言自然的排）。</summary>
         public string Adjective;
-        /// <summary>同一行裡兩句之間（中文不用空白）。</summary>
-        public string SentenceSep;
+        /// <summary>
+        /// 同一行的兩句接在一起：{0}、{1}＝前後兩句（英文中間空一格、中文直接接）。
+        /// 以前是兩句之間的分隔字串，中文是空字串；csv 的值不能是空的（遊戲有 key 就用它的值，空的不會退回英文），所以改成格式。
+        /// </summary>
+        public string Sentences;
 
         // ── 隨機產出與條件的分類（遊戲的交易所清單多半是圖示，沒有對應的字串；有字串的「隨機合法商品」直接用遊戲的） ──
         public string RandomModule, RandomMedical, RandomFood, RandomKeycard, Unknown;
@@ -85,217 +94,85 @@ namespace ProbablyStolenExchangePreview
         public string CfgTooltip, CfgTooltipTip, CfgPromos, CfgPromosTip, CfgListWarning, CfgListWarningTip, CfgNightReport, CfgNightReportTip,
             CfgReminder, CfgReminderTip, CfgNote, CfgNoteTip, CfgLed, CfgLedTip;
 
-        static readonly Strings En = new Strings
-        {
-            Header = "Underground Exchange · tonight",
-            HeaderPlain = "Underground Exchange",
-            NoJanitorial = "Janitorial Service is off tonight: no exchange",
-            NoJanitorialService = "No Janitorial Service yet: no exchange",
-            Nothing = "Nothing to exchange",
-            OthersCleared = "{0} other item(s) will be cleared",
-            AllCleared = "The {0} item(s) in the trash can will be cleared",
-            PartialIncluded = ", including {0} from incomplete trades",
-            PurityFail = "total purity {0} is below {1}: taken, nothing given",
-            PuritySumNext = "total purity {0}, {1}+ is better",
-            PuritySumMax = "total purity {0}, top tier",
-            PurityAvgNext = "average purity {0}, {1}+ is better",
-            PurityAvgMax = "average purity {0}, top tier",
-            Missing = "{0} more",
-            BannedShort = "The Underground Exchange won't trade with you",
-            RepLine = "Blackmarket Reputation {0} (needs above {1})",
-            SurplusLine = "Extra {0} will be cleared (one trade per night)",
-            PromoHeader = "This week's promotions",
-            // 不用「→」：正式版的英文字型（NotoSans-Medium SDF）沒有這個字，會被換成空白（2026-10-31 實機）
-            Arrow = " for ",
-            ListSep = ", ",
-            Colon = ": ",
-            Times = " x{0}",
-            Paren = " ({0})",
-            Adjective = "{0} {1}",
-            SentenceSep = " ",
-            RandomModule = "random module",
-            RandomMedical = "random medical supplies",
-            RandomFood = "random food",
-            RandomKeycard = "random keycard",
-            Unknown = "?",
-            TagAmmo = "Ammunition",
-            TagModule = "Module",
-            TagPoison = "Poison",
-            TagSeed = "Seed",
-            ReportLeft = "The Underground Exchange left in the trash can: {0}.",
-            ReportRepOnly = "The Underground Exchange: {0}.",
-            ReportNothing = "The Underground Exchange took {0}, but the purity was too low and left nothing.",
-            ReportNothingPlain = "The Underground Exchange took {0} and left nothing.",
-            // 清單可能是好幾件，英文避開單複數（is／are）
-            ReportDestroyed = "The trash can was full. Destroyed: {0}.",
-            TooltipTag = "Exchange Preview (mod)",
-            ReportTag = " (Exchange Preview mod)",
-            IndNone = "No deal",
-            IndReady = "Ready",
-            IndSurplus = "Too many",
-            IndPickup = "Pick up",
-            IndBanned = "Banned",
-            Reminder = "Exchange items left in the trash can will be cleared tonight: {0}",
-            ReminderSurplus = "Extra {0} will be cleared tonight (one trade per night)",
-            ReminderSurplusAlso = "Extra {0} will also be cleared tonight (one trade per night)",
-            CfgTooltip = "Trash can tooltip",
-            CfgTooltipTip = "Hover over the trash can to see what the Underground Exchange will take and leave tonight",
-            CfgPromos = "Weekly promotions in tooltip",
-            CfgPromosTip = "List this week's three promotional exchanges (what to put in and what you get) in the trash can tooltip; the tooltip gets wider",
-            CfgListWarning = "Exchange list warning",
-            CfgListWarningTip = "Red text on the Exchange Directive when you are banned for low Blackmarket Reputation",
-            CfgNightReport = "Night report",
-            CfgNightReportTip = "Add a line to the night report saying what the Exchange left in the trash can (never written into your save)",
-            CfgReminder = "End of day reminder",
-            CfgReminderTip = "On the End of Day screen, warn when the Janitorial Service will clear items from the Exchange still in the trash can, or extra items beyond one trade per night",
-            CfgNote = "Trash can note",
-            CfgNoteTip = "A sticky note on the trash can in the store showing the exchange status; can be on together with the lid light",
-            CfgLed = "Trash can light",
-            CfgLedTip = "The light on the trash can lid shows the exchange status by color and blinks when items from the Exchange are waiting to be picked up; can be on together with the note",
-        };
+        /// <summary>
+        /// 手寫繁中（zh-Hant.csv）的這份：把遊戲名稱代進句子時，名稱碰到漢字的那一側加零寬空白（PreviewText.Fill）。
+        /// 繁中 mod 的短詞表看詞邊界，「多放的撬棍會被清掉」裡的 2 字名稱前後都是漢字，不加就不會被轉成繁中。
+        /// 其他語言不加（簡中由繁中 mod 整句轉，用不到；也不寫進 csv，翻譯的人看不到）。
+        /// </summary>
+        public bool MarkNameEdges;
 
-        static readonly Strings ZhHans = new Strings
+        /// <summary>
+        /// 照目前的語言從 csv 建一份（Loc 挑語言：最長字串模式、手寫繁中、遊戲目前的語言，沒有就英文）。
+        /// key 一律寫字面字串：根目錄的 tools/locale_check.py 掃得到程式用了哪些 key，en.csv 少了就擋下來。
+        /// markNameEdges：這份是手寫繁中（GameState.S 在語言代碼是 zh-Hant 時傳 true）。
+        /// </summary>
+        internal static Strings Build(bool markNameEdges) => new Strings
         {
-            Header = "地下交易所・今晚",
-            HeaderPlain = "地下交易所",
-            NoJanitorial = "今晚没有使用清洁服务，不会交换",
-            NoJanitorialService = "还没有清洁服务，不会交换",
-            Nothing = "没有可换的",
-            OthersCleared = "其余 {0} 件会被清掉",
-            AllCleared = "垃圾桶里的 {0} 件会被清掉",
-            PartialIncluded = "（含差一点的{0}）",
-            PurityFail = "纯度合计 {0}，不到 {1}，会被收走但换不到东西",
-            PuritySumNext = "纯度合计 {0}，{1} 以上更好",
-            PuritySumMax = "纯度合计 {0}，最高级",
-            PurityAvgNext = "平均纯度 {0}，{1} 以上更好",
-            PurityAvgMax = "平均纯度 {0}，最高级",
-            Missing = "还差 {0} 个",
-            BannedShort = "地下交易所不跟你交易",
-            RepLine = "黑市声望 {0}（需要高于 {1}）",
-            SurplusLine = "多放的{0}会被清掉（每晚只换一次）",
-            PromoHeader = "本周促销",
-            Arrow = " → ",
-            ListSep = "、",
-            Colon = "：",
-            Times = " ×{0}",
-            Paren = "（{0}）",
-            Adjective = "{0}{1}",
-            SentenceSep = "",
-            RandomModule = "随机模组",
-            RandomMedical = "随机医疗用品",
-            RandomFood = "随机食物",
-            RandomKeycard = "随机钥匙卡",
-            Unknown = "？",
-            TagAmmo = "弹药",
-            TagModule = "模组",
-            TagPoison = "毒药",
-            TagSeed = "种子",
-            ReportLeft = "地下交易所在垃圾桶里留下了：{0}。",
-            ReportRepOnly = "地下交易所：{0}。",
-            ReportNothing = "地下交易所收走了{0}，但纯度不够，什么也没留下。",
-            ReportNothingPlain = "地下交易所收走了{0}，什么也没留下。",
-            ReportDestroyed = "垃圾桶放不下，{0}被销毁了。",
-            TooltipTag = "交易所预览（mod）",
-            ReportTag = "（交易所预览 mod）",
-            IndNone = "无交易",
-            IndReady = "可交易",
-            IndSurplus = "多放了",
-            IndPickup = "待收货",
-            IndBanned = "禁止交易",
-            Reminder = "交易所换来的{0}还在垃圾桶里，今晚会被清掉",
-            ReminderSurplus = "多放的{0}今晚会被清掉（每晚只换一次）",
-            ReminderSurplusAlso = "多放的{0}今晚也会被清掉（每晚只换一次）",
-            CfgTooltip = "垃圾桶提示",
-            CfgTooltipTip = "鼠标移到垃圾桶时，显示今晚地下交易所会收走什么、换成什么",
-            CfgPromos = "垃圾桶提示列出本周促销",
-            CfgPromosTip = "在垃圾桶提示里列出本周地下交易所的三笔促销交易（要丢什么、换到什么），提示框会变宽",
-            CfgListWarning = "清单红字",
-            CfgListWarningTip = "黑市声望太低被禁止使用时，在地下交易所清单右下角用红字显示",
-            CfgNightReport = "夜间报告",
-            CfgNightReportTip = "夜间报告加一行，写出交易所在垃圾桶里留下了什么（不会写进存档）",
-            CfgReminder = "结束一天的提醒",
-            CfgReminderTip = "结束一天的画面，清洁服务会清掉还在垃圾桶里的交易所换来的东西、或多放的东西（每晚只换一次）时提醒",
-            CfgNote = "垃圾桶纸条",
-            CfgNoteTip = "在店里的垃圾桶上贴纸条，显示交易状态；可以和盖子上的灯同时开",
-            CfgLed = "垃圾桶的灯",
-            CfgLedTip = "垃圾桶盖子上的灯按交易状态变色，交易所换来的东西待收货时会闪；可以和纸条同时开",
+            MarkNameEdges = markNameEdges,
+            Header = Loc.Get("tip.header"),
+            HeaderPlain = Loc.Get("tip.header_plain"),
+            NoJanitorial = Loc.Get("tip.no_janitorial"),
+            NoJanitorialService = Loc.Get("tip.no_janitorial_service"),
+            Nothing = Loc.Get("tip.nothing"),
+            // 每次呼叫才挑字形：件數每次不一樣；n 同時是 {0}
+            OthersCleared = n => Loc.Plural("tip.others_cleared", n, n),
+            AllCleared = n => Loc.Plural("tip.all_cleared", n, n),
+            PartialIncluded = Loc.Get("tip.partial_included"),
+            PurityFail = Loc.Get("tip.purity_fail"),
+            PuritySumNext = Loc.Get("tip.purity_sum_next"),
+            PuritySumMax = Loc.Get("tip.purity_sum_max"),
+            PurityAvgNext = Loc.Get("tip.purity_avg_next"),
+            PurityAvgMax = Loc.Get("tip.purity_avg_max"),
+            Missing = Loc.Get("tip.missing"),
+            SurplusLine = Loc.Get("tip.surplus"),
+            PromoHeader = Loc.Get("tip.promo_header"),
+            BannedShort = Loc.Get("banned.short"),
+            RepLine = Loc.Get("banned.rep_line"),
+            Arrow = Loc.Get("fmt.arrow"),
+            ListSep = Loc.Get("fmt.list_sep"),
+            Colon = Loc.Get("fmt.colon"),
+            Times = Loc.Get("fmt.times"),
+            Paren = Loc.Get("fmt.paren"),
+            Adjective = Loc.Get("fmt.adjective"),
+            Sentences = Loc.Get("fmt.sentences"),
+            RandomModule = Loc.Get("cat.random_module"),
+            RandomMedical = Loc.Get("cat.random_medical"),
+            RandomFood = Loc.Get("cat.random_food"),
+            RandomKeycard = Loc.Get("cat.random_keycard"),
+            Unknown = Loc.Get("cat.unknown"),
+            TagAmmo = Loc.Get("cat.tag_ammo"),
+            TagModule = Loc.Get("cat.tag_module"),
+            TagPoison = Loc.Get("cat.tag_poison"),
+            TagSeed = Loc.Get("cat.tag_seed"),
+            ReportLeft = Loc.Get("report.left"),
+            ReportRepOnly = Loc.Get("report.rep_only"),
+            ReportNothing = Loc.Get("report.nothing"),
+            ReportNothingPlain = Loc.Get("report.nothing_plain"),
+            ReportDestroyed = Loc.Get("report.destroyed"),
+            TooltipTag = Loc.Get("tag.tooltip"),
+            ReportTag = Loc.Get("tag.report"),
+            IndNone = Loc.Get("note.none"),
+            IndReady = Loc.Get("note.ready"),
+            IndSurplus = Loc.Get("note.surplus"),
+            IndPickup = Loc.Get("note.pickup"),
+            IndBanned = Loc.Get("note.banned"),
+            Reminder = Loc.Get("remind.items"),
+            ReminderSurplus = Loc.Get("remind.surplus"),
+            ReminderSurplusAlso = Loc.Get("remind.surplus_also"),
+            CfgTooltip = Loc.Get("cfg.tooltip"),
+            CfgTooltipTip = Loc.Get("cfg.tooltip_tip"),
+            CfgPromos = Loc.Get("cfg.promos"),
+            CfgPromosTip = Loc.Get("cfg.promos_tip"),
+            CfgListWarning = Loc.Get("cfg.list_warning"),
+            CfgListWarningTip = Loc.Get("cfg.list_warning_tip"),
+            CfgNightReport = Loc.Get("cfg.night_report"),
+            CfgNightReportTip = Loc.Get("cfg.night_report_tip"),
+            CfgReminder = Loc.Get("cfg.reminder"),
+            CfgReminderTip = Loc.Get("cfg.reminder_tip"),
+            CfgNote = Loc.Get("cfg.note"),
+            CfgNoteTip = Loc.Get("cfg.note_tip"),
+            CfgLed = Loc.Get("cfg.led"),
+            CfgLedTip = Loc.Get("cfg.led_tip"),
         };
-
-        static readonly Strings ZhHant = new Strings
-        {
-            Header = "地下交易所・今晚",
-            HeaderPlain = "地下交易所",
-            NoJanitorial = "今晚沒有使用清潔服務，不會交換",
-            NoJanitorialService = "還沒有清潔服務，不會交換",
-            Nothing = "沒有可換的",
-            OthersCleared = "其餘 {0} 件會被清掉",
-            AllCleared = "垃圾桶裡的 {0} 件會被清掉",
-            PartialIncluded = "（含差一點的{0}）",
-            PurityFail = "純度合計 {0}，不到 {1}，會被收走但換不到東西",
-            PuritySumNext = "純度合計 {0}，{1} 以上更好",
-            PuritySumMax = "純度合計 {0}，最高級",
-            PurityAvgNext = "平均純度 {0}，{1} 以上更好",
-            PurityAvgMax = "平均純度 {0}，最高級",
-            Missing = "還差 {0} 個",
-            BannedShort = "地下交易所不跟你交易",
-            RepLine = "黑市聲望 {0}（需要高於 {1}）",
-            SurplusLine = "多放的{0}會被清掉（每晚只換一次）",
-            PromoHeader = "本週促銷",
-            Arrow = " → ",
-            ListSep = "、",
-            Colon = "：",
-            Times = " ×{0}",
-            Paren = "（{0}）",
-            Adjective = "{0}{1}",
-            SentenceSep = "",
-            RandomModule = "隨機模組",
-            RandomMedical = "隨機醫療用品",
-            RandomFood = "隨機食物",
-            RandomKeycard = "隨機鑰匙卡",
-            Unknown = "？",
-            TagAmmo = "彈藥",
-            TagModule = "模組",
-            TagPoison = "毒藥",
-            TagSeed = "種子",
-            ReportLeft = "地下交易所在垃圾桶裡留下了：{0}。",
-            ReportRepOnly = "地下交易所：{0}。",
-            ReportNothing = "地下交易所收走了{0}，但純度不夠，什麼也沒留下。",
-            ReportNothingPlain = "地下交易所收走了{0}，什麼也沒留下。",
-            ReportDestroyed = "垃圾桶放不下，{0}被銷毀了。",
-            TooltipTag = "交易所預覽（mod）",
-            ReportTag = "（交易所預覽 mod）",
-            IndNone = "無交易",
-            IndReady = "可交易",
-            IndSurplus = "多放了",
-            IndPickup = "待收貨",
-            IndBanned = "禁止交易",
-            Reminder = "交易所換來的{0}還在垃圾桶裡，今晚會被清掉",
-            ReminderSurplus = "多放的{0}今晚會被清掉（每晚只換一次）",
-            ReminderSurplusAlso = "多放的{0}今晚也會被清掉（每晚只換一次）",
-            CfgTooltip = "垃圾桶提示",
-            CfgTooltipTip = "滑鼠移到垃圾桶時，顯示今晚地下交易所會收走什麼、換成什麼",
-            CfgPromos = "垃圾桶提示列出本週促銷",
-            CfgPromosTip = "在垃圾桶提示裡列出本週地下交易所的三筆促銷交易（要丟什麼、換到什麼），提示框會變寬",
-            CfgListWarning = "清單紅字",
-            CfgListWarningTip = "黑市聲望太低被禁止使用時，在地下交易所清單右下角用紅字顯示",
-            CfgNightReport = "夜間報告",
-            CfgNightReportTip = "夜間報告加一行，寫出交易所在垃圾桶裡留下了什麼（不會寫進存檔）",
-            CfgReminder = "結束一天的提醒",
-            CfgReminderTip = "結束一天的畫面，清潔服務會清掉還在垃圾桶裡的交易所換來的東西、或多放的東西（每晚只換一次）時提醒",
-            CfgNote = "垃圾桶紙條",
-            CfgNoteTip = "在店裡的垃圾桶上貼紙條，顯示交易狀態；可以和蓋子上的燈同時開",
-            CfgLed = "垃圾桶的燈",
-            CfgLedTip = "垃圾桶蓋子上的燈依交易狀態變色，交易所換來的東西待收貨時會閃；可以和紙條同時開",
-        };
-
-        internal static Strings For(Lang lang) => lang switch
-        {
-            Lang.ZhHant => ZhHant,
-            Lang.ZhHans => ZhHans,
-            _ => En,
-        };
-
-        /// <summary>給離線測試逐一檢查三種語言。</summary>
-        internal static Strings[] All => new[] { En, ZhHans, ZhHant };
     }
 }

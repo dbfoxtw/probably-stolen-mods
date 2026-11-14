@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -8,7 +9,7 @@ namespace ProbablyStolenExchangePreview.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：模擬交換的規則、夢塵的純度提示、提示與夜間報告的文字、
-    /// 三種語言的字串、資料檔。任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
+    /// 語系檔（public/Localization 的每份 csv）與 Loc 的挑法、資料檔。任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
     {
@@ -23,6 +24,45 @@ namespace ProbablyStolenExchangePreview.Verify
         static void Eq<T>(T actual, T expected, string what) =>
             Check(EqualityComparer<T>.Default.Equals(actual, expected), $"{what}：預期「{expected}」，實際「{actual}」");
 
+        /// <summary>零寬空白（U+200B）：手寫繁中的句子裡，名稱碰到漢字的那一側由 PreviewText.Fill 加。</summary>
+        static readonly string Z = ((char)0x200B).ToString();
+
+        static Dictionary<string, Dictionary<string, string>> _tables;
+        /// <summary>public/Localization 的每份 csv（照遊戲的規則讀；第一次用到時讀）。</summary>
+        static Dictionary<string, Dictionary<string, string>> Tables => _tables ??= LocTables();
+
+        /// <summary>
+        /// 照某份 csv 建 Strings（和遊戲裡 GameState.S 一樣：zh-Hant 標名稱的邊界）。假的 Loc 一次只看一份 csv，
+        /// 單複數的函式又是呼叫時才取字，所以每個函式包一層：呼叫時換成這份 csv、用完換回去。
+        /// </summary>
+        static Strings L(string lang)
+        {
+            Tables.TryGetValue(lang, out var table);
+            var old = Loc.Use(lang, table);
+            try
+            {
+                var s = Strings.Build(lang == "zh-Hant");
+                foreach (var f in PluralFields)
+                {
+                    var inner = (Func<int, string>)f.GetValue(s);
+                    f.SetValue(s, (Func<int, string>)(n =>
+                    {
+                        var prev = Loc.Use(lang, table);
+                        try { return inner(n); }
+                        finally { Loc.Use(prev.lang, prev.table); }
+                    }));
+                }
+                return s;
+            }
+            finally { Loc.Use(old.lang, old.table); }
+        }
+
+        static IEnumerable<FieldInfo> StringFields =>
+            typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(string));
+
+        static IEnumerable<FieldInfo> PluralFields =>
+            typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(Func<int, string>));
+
         static int Main()
         {
             Console.OutputEncoding = Encoding.UTF8;
@@ -30,6 +70,8 @@ namespace ProbablyStolenExchangePreview.Verify
             Text();
             Promos();
             StringsComplete();
+            Localization();
+            LocPickTest();
             Indicator();
             Purity();
             Store();
@@ -343,24 +385,24 @@ namespace ProbablyStolenExchangePreview.Verify
 
         static void Text()
         {
-            var s = Strings.For(Lang.ZhHant);
+            var s = L("zh-Hant");
             Eq(PreviewText.Group(s, new[] { "A", "B", "A" }), "A ×2、B", "合併同名");
-            Eq(PreviewText.Group(Strings.For(Lang.En), new[] { "A", "A" }), "A x2", "英文的數量");
+            Eq(PreviewText.Group(L("en"), new[] { "A", "A" }), "A x2", "英文的數量");
 
             // 會成交＋差一點＋會被清掉
             var r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("water_filter", "濾水器"), I("water_filter", "濾水器"), I("bottle", "空瓶") },
                 new[] { Bullet(), Filter() });
             var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 2/3（還差 1 個 → 全新濾水器）|其餘 3 件會被清掉（含差一點的濾水器 ×2）", "提示：會成交（其餘點明差一點的）");
+                $"地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 2/3（還差 1 個 → 全新濾水器）|其餘 3 件會被清掉（含差一點的{Z}濾水器 ×2）", "提示：會成交（其餘點明差一點的）");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Partial,Warn", "提示：會成交的顏色");
 
             // 只有差一點的：垃圾桶裡的 1 件（含差一點的…）；英文
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(lines.Last().Text, "垃圾桶裡的 1 件會被清掉（含差一點的10毫米彈藥）", "提示：只有差一點的");
-            lines = PreviewText.Tooltip(Strings.For(Lang.En), new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(lines.Last().Text, "The 1 item(s) in the trash can will be cleared, including 10毫米彈藥 from incomplete trades", "提示：只有差一點的（英文）");
+            lines = PreviewText.Tooltip(L("en"), new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(lines.Last().Text, "The 1 item in the trash can will be cleared, including 10毫米彈藥 from incomplete trades", "提示：只有差一點的（英文）");
 
             // 沒有可換的
             r = ExchangeSim.Run(new[] { I("newspaper", "報紙") }, new[] { Bullet() });
@@ -425,58 +467,58 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(PreviewText.Report(s, deals, "黑市聲望"), "地下交易所在垃圾桶裡留下了：「泥炭」合成肉、治安部物資箱（黑市聲望 +25）。", "報告：東西加聲望");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", RepDelta = 24.6 } }, "黑市聲望"), "地下交易所：黑市聲望 +25。", "報告：只換到聲望");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "夢塵", "夢塵" }, NoOutput = true } }, "黑市聲望"),
-                "地下交易所收走了夢塵 ×2，但純度不夠，什麼也沒留下。", "報告：純度不夠");
+                $"地下交易所收走了{Z}夢塵 ×2，但純度不夠，什麼也沒留下。", "報告：純度不夠");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", Taken = { "拾荒者信物" }, NoOutput = true } }, "黑市聲望"),
-                "地下交易所收走了拾荒者信物，什麼也沒留下。", "報告：聲望到頂（不是純度的句子）");
+                $"地下交易所收走了{Z}拾荒者信物，什麼也沒留下。", "報告：聲望到頂（不是純度的句子）");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "x", Outputs = { "甲" }, Destroyed = { "乙" } } }, "黑市聲望"),
-                "地下交易所在垃圾桶裡留下了：甲。垃圾桶放不下，乙被銷毀了。", "報告：放不下被銷毀");
+                $"地下交易所在垃圾桶裡留下了：甲。垃圾桶放不下，乙{Z}被銷毀了。", "報告：放不下被銷毀（兩句直接接）");
             Check(PreviewText.Report(s, new List<NightDeal>(), "黑市聲望") == null, "報告：沒成交就不加行");
-            Eq(PreviewText.Report(Strings.For(Lang.En), new[] { new NightDeal { Outputs = { "Peat", "Peat" } } }, "Blackmarket Reputation"),
+            Eq(PreviewText.Report(L("en"), new[] { new NightDeal { Outputs = { "Peat", "Peat" } } }, "Blackmarket Reputation"),
                 "The Underground Exchange left in the trash can: Peat x2.", "報告：英文");
             Eq(PreviewText.ReportLine(s, "地下交易所：黑市聲望 +25。", "6E3F78", "88948A"),
                 "<color=#6E3F78>地下交易所：黑市聲望 +25。</color><size=80%><color=#88948A>（交易所預覽 mod）</color></size>", "報告：句尾加 mod 標示");
-            Check(PreviewText.ReportLine(Strings.For(Lang.En), "x", "a", "b").EndsWith("<color=#b> (Exchange Preview mod)</color></size>"), "報告：英文的標示前面空一格");
+            Check(PreviewText.ReportLine(L("en"), "x", "a", "b").EndsWith("<color=#b> (Exchange Preview mod)</color></size>"), "報告：英文的標示前面空一格");
 
             // 多放的：放在差一點後面、「其餘」前面，「其餘」不再算多放的
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("ammo_c", "10毫米彈藥"), I("ammo_d", "10毫米彈藥"),
                 I("water_filter", "濾水器"), I("newspaper", "報紙") }, new[] { Bullet(), Filter() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 1/3（還差 2 個 → 全新濾水器）|多放的10毫米彈藥 ×2 會被清掉（每晚只換一次）|其餘 2 件會被清掉（含差一點的濾水器）", "提示：多放的");
+                $"地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 1/3（還差 2 個 → 全新濾水器）|多放的10毫米彈藥 ×2 會被清掉（每晚只換一次）|其餘 2 件會被清掉（含差一點的{Z}濾水器）", "提示：多放的");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Partial,Warn,Warn", "提示：多放的是警告色");
             // 只有多放的：沒有「其餘」那行
             r = ExchangeSim.Run(new[] { I("ammo_a", "甲彈"), I("ammo_b", "甲彈"), I("ammo_c", "乙彈") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|甲彈 ×2 → 隨機食物|多放的乙彈會被清掉（每晚只換一次）", "提示：只有多放的、名稱結尾是中文不補空白");
+            Eq(string.Join("|", lines.Select(l => l.Text)), $"地下交易所・今晚|甲彈 ×2 → 隨機食物|多放的{Z}乙彈{Z}會被清掉（每晚只換一次）", "提示：只有多放的、名稱結尾是中文不補空白（前後加零寬空白）");
             // 今晚沒用清潔服務：照樣列、灰色
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, Result = r });
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim,Dim", "提示：沒用清潔服務時多放的也變灰");
-            Eq(string.Join("|", PreviewText.Tooltip(Strings.For(Lang.En), new PreviewInput { JanitorialOn = true, Result = r }).Skip(2).Select(l => l.Text)),
+            Eq(string.Join("|", PreviewText.Tooltip(L("en"), new PreviewInput { JanitorialOn = true, Result = r }).Skip(2).Select(l => l.Text)),
                 "Extra 乙彈 will be cleared (one trade per night)", "提示：英文的多放");
 
             // 英文不用「→」（正式版的英文字型沒有這個字）：會成交與差一點都寫「for」
             // （差一點那行的名稱是條件的標籤，測試用的 Filter() 標成「濾水器」；產出也是測試用的中文）
             r = ExchangeSim.Run(new[] { I("ammo_a", "10mm Ammunition"), I("ammo_b", "10mm Ammunition"), I("water_filter", "Water Filter") }, new[] { Bullet(), Filter() });
-            var enLines = PreviewText.Tooltip(Strings.For(Lang.En), new PreviewInput { JanitorialOn = true, Result = r }).Select(l => l.Text).ToList();
+            var enLines = PreviewText.Tooltip(L("en"), new PreviewInput { JanitorialOn = true, Result = r }).Select(l => l.Text).ToList();
             Eq(enLines[1], "10mm Ammunition x2 for 隨機食物", "提示：英文會成交的那行用 for");
             Eq(enLines[2], "濾水器 1/3 (2 more for 全新濾水器)", "提示：英文差一點的那行用 for");
             Check(enLines.All(t => !t.Contains('→')), "提示：英文沒有「→」");
 
             // 中英混排：清單以英數字結尾、後面直接接中文才補空白
-            Eq(PreviewText.Fill("多放的{0}會被清掉", "彈藥 ×2"), "多放的彈藥 ×2 會被清掉", "補空白：×2 後面接中文");
-            Eq(PreviewText.Fill("多放的{0}會被清掉", "彈藥"), "多放的彈藥會被清掉", "補空白：中文結尾不補");
-            Eq(PreviewText.Fill("Extra {0} will", "Ammo x2"), "Extra Ammo x2 will", "補空白：英文本來就有空白");
-            Eq(PreviewText.Fill("{0}。", "A x2"), "A x2。", "補空白：後面是標點不補");
+            Eq(PreviewText.Fill(false, "多放的{0}會被清掉", "彈藥 ×2"), "多放的彈藥 ×2 會被清掉", "補空白：×2 後面接中文");
+            Eq(PreviewText.Fill(false, "多放的{0}會被清掉", "彈藥"), "多放的彈藥會被清掉", "補空白：中文結尾不補");
+            Eq(PreviewText.Fill(false, "Extra {0} will", "Ammo x2"), "Extra Ammo x2 will", "補空白：英文本來就有空白");
+            Eq(PreviewText.Fill(false, "{0}。", "A x2"), "A x2。", "補空白：後面是標點不補");
 
             // 結束一天的提醒
-            Eq(PreviewText.Reminder(s, new[] { "治安部物資箱", "「泥炭」合成肉" }, null), "交易所換來的治安部物資箱、「泥炭」合成肉還在垃圾桶裡，今晚會被清掉", "提醒");
+            Eq(PreviewText.Reminder(s, new[] { "治安部物資箱", "「泥炭」合成肉" }, null), $"交易所換來的{Z}治安部物資箱、「泥炭」合成肉{Z}還在垃圾桶裡，今晚會被清掉", "提醒");
             Eq(PreviewText.Reminder(s, new[] { "治安部物資箱" }, new[] { "彈藥", "彈藥" }),
-                "交易所換來的治安部物資箱還在垃圾桶裡，今晚會被清掉\n多放的彈藥 ×2 今晚也會被清掉（每晚只換一次）", "提醒：兩種都有，第二行說「也會」");
-            Eq(PreviewText.Reminder(s, new string[0], new[] { "彈藥", "彈藥" }), "多放的彈藥 ×2 今晚會被清掉（每晚只換一次）", "提醒：只有多放的");
+                $"交易所換來的{Z}治安部物資箱{Z}還在垃圾桶裡，今晚會被清掉\n多放的{Z}彈藥 ×2 今晚也會被清掉（每晚只換一次）", "提醒：兩種都有，第二行說「也會」");
+            Eq(PreviewText.Reminder(s, new string[0], new[] { "彈藥", "彈藥" }), $"多放的{Z}彈藥 ×2 今晚會被清掉（每晚只換一次）", "提醒：只有多放的");
             Check(PreviewText.Reminder(s, new string[0], new string[0]) == null, "提醒：都沒有就是 null");
             Eq(PreviewText.BannedBlock(s, -97, -40, 16, 12),
-                "<size=16>地下交易所不跟你交易</size>\n<size=12>黑市聲望 -97（需要高於 -40）</size>", "清單紅字：只用短句");
-            Check(PreviewText.BannedBlock(Strings.For(Lang.En), -97, -40, 16, 12).StartsWith("<size=16>The Underground Exchange won't trade with you</size>"),
+                "<size=16>地下交易所不跟你交易</size>\n<size=12>黑市聲望 <nobr>-97</nobr>（需要高於 <nobr>-40</nobr>）</size>", "清單紅字：只用短句，數字不從減號斷行");
+            Check(PreviewText.BannedBlock(L("en"), -97, -40, 16, 12).StartsWith("<size=16>The Underground Exchange won't trade with you</size>"),
                 "清單紅字：英文用 mod 自己的話");
         }
 
@@ -487,8 +529,8 @@ namespace ProbablyStolenExchangePreview.Verify
         /// </summary>
         static void Promos()
         {
-            var s = Strings.For(Lang.ZhHant);
-            var en = Strings.For(Lang.En);
+            var s = L("zh-Hant");
+            var en = L("en");
             // 遊戲 promotionalBarter 的順序：加強版夢塵、治安部物資箱、……、黑市聲望
             List<SimBarter> Week(bool english) => new List<SimBarter>
             {
@@ -586,7 +628,7 @@ namespace ProbablyStolenExchangePreview.Verify
                 "Underground Exchange · tonight|10mm Ammunition x2 for random food||This week's promotions|Vial of \"Dream Dust\" x4 for random medical supplies|"
                 + "Disposable Keycard (Security) x3 for Security Department Supply Crate|Scavenger's Token for Blackmarket Reputation +25|Exchange Preview (mod)",
                 "提示（英文）：今晚 → 空一行 → 促銷 → mod 標示");
-            var hans = Strings.For(Lang.ZhHans);
+            var hans = L("zh");
             Eq(hans.PromoHeader, "本周促销", "促銷：簡中標題");
             lines = PreviewText.TooltipFull(hans, new PreviewInput { JanitorialOn = true, Result = r }, week);
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Blank,Header,Normal,Normal,Normal,Dim", "提示（簡中）：促銷那段的顏色與空行");
@@ -594,27 +636,44 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(lines.Last().Text, hans.TooltipTag, "提示（簡中）：mod 標示在最後");
         }
 
-        /// <summary>三種語言的字串都填了，而且格式化不會丟例外（漏了 {0} 之類的）。</summary>
+        /// <summary>
+        /// public/Localization 的每份 csv（之後加的語言也自動算進來）建出來的字串都填了：Strings.Build 用到的 key 那份都有、
+        /// 不是空的、格式化不會丟例外（漏了 {0} 之類的）；單複數的兩條對各種數字都回傳含那個數字的整句。
+        /// 手寫繁中沒有簡體字（繁中 mod 才不會再轉）、簡中沒有繁體字。
+        /// </summary>
         static void StringsComplete()
         {
-            var names = new[] { "En", "ZhHans", "ZhHant" };
-            var all = Strings.All;
-            for (int i = 0; i < all.Length; i++)
-                foreach (var f in typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(string)))
+            Check(Tables.ContainsKey("en") && Tables.ContainsKey("zh") && Tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份 csv");
+            int[] counts = { 0, 1, 2, 5, 11, 21, 22, 25 };
+            foreach (var lang in Tables.Keys.OrderBy(k => k, StringComparer.Ordinal))
+            {
+                Loc.Missing.Clear();
+                var s = L(lang);
+                foreach (var f in StringFields)
                 {
-                    var v = (string)f.GetValue(all[i]);
-                    // SentenceSep 中文刻意是空字串
-                    Check(v != null && (v.Length > 0 || f.Name == nameof(Strings.SentenceSep)), $"{names[i]}.{f.Name} 沒填");
+                    var v = (string)f.GetValue(s);
+                    Check(!string.IsNullOrEmpty(v), $"{lang}.{f.Name} 沒填");
                     try { string.Format(v ?? "", "a", "b"); }
-                    catch (FormatException) { Check(false, $"{names[i]}.{f.Name} 的格式不對：{v}"); }
+                    catch (FormatException) { Check(false, $"{lang}.{f.Name} 的格式不對：{v}"); }
                 }
-            Check(!Strings.For(Lang.ZhHant).Header.Any(c => "们这时会过还说个里么为后对没换获见"
-                .Contains(c)), "繁中字串沒有簡體字（繁中 mod 才不會再轉）");
+                foreach (var f in PluralFields)
+                {
+                    var fn = (Func<int, string>)f.GetValue(s);
+                    foreach (var n in counts)
+                    {
+                        var v = fn(n);
+                        Check(!string.IsNullOrEmpty(v) && v.Contains(n.ToString()), $"{lang}.{f.Name}({n}) 要是含 {n} 的整句：{v}");
+                    }
+                }
+                Check(Loc.Missing.Count == 0, $"{lang}.csv 有 Strings.Build 用到的每個 key（少了：{string.Join("、", Loc.Missing)}）");
+            }
+            Check(PluralFields.Count() == 2, $"單複數的欄位只有 OthersCleared、AllCleared 兩條（實際 {PluralFields.Count()}）");
+
+            var hant = L("zh-Hant");
+            var hans = L("zh");
+            Check(!hant.Header.Any(c => "们这时会过还说个里么为后对没换获见".Contains(c)), "繁中字串沒有簡體字（繁中 mod 才不會再轉）");
             // 2.0.0 起新加的句子（純度、設定視窗、本週促銷）：繁中沒有簡體字、簡中沒有繁體字
-            var hant = Strings.For(Lang.ZhHant);
-            var hans = Strings.For(Lang.ZhHans);
-            var newFields = typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .Where(f => f.FieldType == typeof(string) && (f.Name.StartsWith("Purity") || f.Name.StartsWith("Cfg") || f.Name.StartsWith("Promo"))).ToList();
+            var newFields = StringFields.Where(f => f.Name.StartsWith("Purity") || f.Name.StartsWith("Cfg") || f.Name.StartsWith("Promo")).ToList();
             // 純度 5 個、設定 7 組 14 個、本週促銷的標題 1 個
             Check(newFields.Count == 20, $"純度、設定與促銷的字串有 20 個（實際 {newFields.Count}）");
             const string simplifiedOnly = "们这会过还说个里么为后对没换获见纯级标显红声间报写进结画洁东贴纸条灯盖状闪开单笔销丢变宽";
@@ -623,11 +682,217 @@ namespace ProbablyStolenExchangePreview.Verify
             {
                 var t = (string)f.GetValue(hant);
                 var c = t.FirstOrDefault(simplifiedOnly.Contains);
-                Check(c == default(char), $"ZhHant.{f.Name} 有簡體字「{c}」：{t}");
+                Check(c == default(char), $"zh-Hant.{f.Name} 有簡體字「{c}」：{t}");
                 var h = (string)f.GetValue(hans);
                 c = h.FirstOrDefault(traditionalOnly.Contains);
-                Check(c == default(char), $"ZhHans.{f.Name} 有繁體字「{c}」：{h}");
+                Check(c == default(char), $"zh.{f.Name} 有繁體字「{c}」：{h}");
             }
+        }
+
+        /// <summary>
+        /// 2.2.0 的多語系：csv 的 key 與佔位符各語言一樣、單複數的字形照各語言、英文單複數的定稿、
+        /// 手寫繁中句子裡名稱旁的零寬空白（簡中、英文不加）、同一行兩句的接法、西文的字串沒有箭頭。
+        /// 8 種語言齊不齊、缺字由根目錄的 tools/locale_check.py 查。
+        /// </summary>
+        static void Localization()
+        {
+            if (!Tables.TryGetValue("en", out var en)) return;
+            // 單複數組的字形換成 base 再比 key；四個字形都要拿掉，ru、pl 的 few、many 才對得到 base
+            string[] suffixes = { "one", "few", "many", "other" };
+            string Base(string k)
+            {
+                foreach (var sfx in suffixes)
+                    if (k.Length > sfx.Length + 1 && k.EndsWith("." + sfx, StringComparison.Ordinal)) return k.Substring(0, k.Length - sfx.Length - 1);
+                return k;
+            }
+            string Keys(Dictionary<string, string> tb) => string.Join(",", tb.Keys.Select(Base).Distinct().OrderBy(k => k, StringComparer.Ordinal));
+            foreach (var (lang, tb) in Tables)
+                if (lang != "en") Eq(Keys(tb), Keys(en), $"{lang} 的 key 和英文一樣");
+            // 每個語言該有的字形照 LocPick.PluralCategory 實際會查的（0～200 涵蓋各規則的全部字形）
+            string Forms(string lang) => string.Join("、", suffixes.Where(x => Enumerable.Range(0, 201).Any(n => LocPick.PluralCategory(lang, n) == x)));
+            foreach (var pl in new[] { "tip.others_cleared", "tip.all_cleared" })
+            {
+                Check(en.ContainsKey(pl + ".one") && en.ContainsKey(pl + ".other") && !en.ContainsKey(pl), $"英文的 {pl} 有 one、other");
+                foreach (var (lang, tb) in Tables)
+                    Eq(string.Join("、", suffixes.Where(x => tb.ContainsKey(pl + "." + x))) + (tb.ContainsKey(pl) ? "＋沒有字形的 base" : ""), Forms(lang),
+                        $"{lang} 的 {pl} 的字形");
+            }
+            // 佔位符：單複數組的每個字形和 en 的 .other 比，其他照同一個 key
+            static string Holes(string v) => string.Join(",", System.Text.RegularExpressions.Regex.Matches(v, @"\{\d+\}").Select(m => m.Value).OrderBy(x => x));
+            foreach (var (lang, tb) in Tables)
+                foreach (var (k, v) in tb)
+                {
+                    var enKey = Base(k) != k ? Base(k) + ".other" : k;
+                    if (en.TryGetValue(enKey, out var ev)) Eq(Holes(v), Holes(ev), $"{lang} 的 {k} 佔位符和英文的 {enKey} 一樣");
+                }
+            // 西文字型（英、德、法、西、俄、波蘭文共用）沒有箭頭：有的語言才查（之後加的翻譯也算）
+            foreach (var lang in LocPick.Western)
+                if (Tables.TryGetValue(lang, out var tb))
+                    foreach (var (k, v) in tb)
+                        Check(!v.Contains('→') && !v.Contains('←'), $"{lang} 的 {k} 沒有箭頭（西文字型沒有這個字）：{v}");
+
+            var enS = L("en");
+            var hans = L("zh");
+            var hant = L("zh-Hant");
+            // 英文的單複數定稿；中文只有一種字形，句子不變
+            Eq(enS.OthersCleared(1), "1 other item will be cleared", "英文：其餘 1 件");
+            Eq(enS.OthersCleared(3), "3 other items will be cleared", "英文：其餘 3 件");
+            Eq(enS.OthersCleared(0), "0 other items will be cleared", "英文：0 用複數");
+            Eq(enS.AllCleared(1), "The 1 item in the trash can will be cleared", "英文：垃圾桶裡的 1 件");
+            Eq(enS.AllCleared(3), "The 3 items in the trash can will be cleared", "英文：垃圾桶裡的 3 件");
+            Eq(hans.OthersCleared(1), "其余 1 件会被清掉", "簡中：其餘");
+            Eq(hans.AllCleared(3), "垃圾桶里的 3 件会被清掉", "簡中：垃圾桶裡的");
+            Eq(hant.OthersCleared(3), "其餘 3 件會被清掉", "繁中：其餘");
+            Eq(hant.AllCleared(1), "垃圾桶裡的 1 件會被清掉", "繁中：垃圾桶裡的");
+            var r = ExchangeSim.Run(new[] { I("ammo_a", "Ammo"), I("ammo_b", "Ammo"), I("paper", "Paper"), I("paper", "Paper"), I("paper", "Paper") }, new[] { Bullet() });
+            Eq(PreviewText.Tooltip(enS, new PreviewInput { JanitorialOn = true, Result = r }).Last().Text, "3 other items will be cleared", "提示（英文）：其餘 3 件");
+            r = ExchangeSim.Run(new[] { I("ammo_a", "Ammo"), I("ammo_b", "Ammo"), I("paper", "Paper") }, new[] { Bullet() });
+            Eq(PreviewText.Tooltip(enS, new PreviewInput { JanitorialOn = true, Result = r }).Last().Text, "1 other item will be cleared", "提示（英文）：其餘 1 件");
+            r = ExchangeSim.Run(new[] { I("ammo_a"), I("toxic", hazard: true) }, new List<SimBarter>());
+            Eq(PreviewText.Tooltip(enS, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, JanitorialOn = true, Result = r }).Last().Text,
+                "The 1 item in the trash can will be cleared", "提示（英文）：被禁用時垃圾桶裡的 1 件");
+
+            // 零寬空白：只在手寫繁中、名稱的頭尾是漢字而且緊貼漢字的那一側
+            Check(hant.MarkNameEdges && !hans.MarkNameEdges && !enS.MarkNameEdges, "只有 zh-Hant 標名稱的邊界");
+            Eq(PreviewText.Fill(hant, hant.SurplusLine, "撬棍"), $"多放的{Z}撬棍{Z}會被清掉（每晚只換一次）", "零寬空白：名稱前後都是漢字");
+            Eq(PreviewText.Fill(hant, hant.SurplusLine, "撬棍 ×2"), $"多放的{Z}撬棍 ×2 會被清掉（每晚只換一次）", "零寬空白：×2 結尾照舊補空白、後面不加零寬空白");
+            Eq(PreviewText.Report(hant, new[] { new NightDeal { Outputs = { "撬棍" } } }, "黑市聲望"), "地下交易所在垃圾桶裡留下了：撬棍。", "零寬空白：冒號與句號旁不加");
+            Eq(PreviewText.Report(hant, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "撬棍" }, NoOutput = true } }, "黑市聲望"),
+                $"地下交易所收走了{Z}撬棍，但純度不夠，什麼也沒留下。", "零寬空白：收走了＋名稱");
+            Eq(PreviewText.Report(hant, new[] { new NightDeal { Destroyed = { "撬棍" } } }, "黑市聲望"), $"垃圾桶放不下，撬棍{Z}被銷毀了。", "零寬空白：名稱＋被銷毀了");
+            Eq(PreviewText.Fill(hant, hant.Adjective, "全新", "濾水器"), $"全新{Z}濾水器", "零寬空白：兩個遊戲名詞緊貼在一起（全新＋濾水器）");
+            Eq(PreviewText.Fill(hant, hant.ReportRepOnly, "黑市聲望 +25"), "地下交易所：黑市聲望 +25。", "零寬空白：全形冒號後不加");
+            Eq(PreviewText.Fill(hant, hant.PartialIncluded, "濾水器"), $"（含差一點的{Z}濾水器）", "零寬空白：差一點的");
+            Eq(PreviewText.Fill(hant, hant.ReminderSurplusAlso, "撬棍"), $"多放的{Z}撬棍{Z}今晚也會被清掉（每晚只換一次）", "零寬空白：提醒的也會");
+            Eq(PreviewText.Fill(true, "{0}會", "撬棍"), $"撬棍{Z}會", "零寬空白：格式開頭不加");
+            Eq(PreviewText.Fill(true, "會{0}", "撬棍"), $"會{Z}撬棍", "零寬空白：格式結尾不加");
+            Eq(PreviewText.Fill(true, "的{0}會", "「泥炭」合成肉"), $"的「泥炭」合成肉{Z}會", "零寬空白：名稱開頭是標點不加");
+            Eq(PreviewText.Fill(true, "の{0}", "撬棍"), "の撬棍", "零寬空白：假名不是漢字");
+            Eq(PreviewText.Fill(true, "的{0}會", "10毫米彈藥"), $"的10毫米彈藥{Z}會", "零寬空白：數字開頭不加");
+            var ext = char.ConvertFromUtf32(0x20000);
+            Eq(PreviewText.Fill(true, "的{0}", ext), $"的{Z}{ext}", "零寬空白：擴充 B 的字（代理字元）也算漢字");
+            Eq(PreviewText.Fill(true, "{0}{1}", "", "撬棍"), "撬棍", "零寬空白：空的名稱跳過");
+            // 格式有 {{ 或 {0:N0} 這種寫法時照 string.Format（不補空白、不加零寬空白）；佔位符比參數多時和 string.Format 一樣丟例外
+            // （2.2.0 審查時提的：退回的路徑沒測，之後改切割的迴圈才擋得住）
+            Eq(PreviewText.Fill(true, "的{{x}}{0}會", "撬棍"), "的{x}撬棍會", "Fill：{{ 照 string.Format、不加零寬空白");
+            Eq(PreviewText.Fill(true, "{0:N0}件", "5"), "5件", "Fill：{0:N0} 照 string.Format");
+            bool fillThrew = false;
+            try { PreviewText.Fill(false, "{1}", "a"); }
+            catch (FormatException) { fillThrew = true; }
+            Check(fillThrew, "Fill：佔位符比參數多時丟 FormatException");
+            // 簡中與英文的同樣句子不加
+            Eq(PreviewText.Fill(hans, hans.SurplusLine, "撬棍"), "多放的撬棍会被清掉（每晚只换一次）", "簡中：不加零寬空白");
+            Eq(PreviewText.Fill(hans, hans.Adjective, "全新", "滤水器"), "全新滤水器", "簡中：全新＋濾水器不加");
+            Eq(PreviewText.Fill(enS, enS.Adjective, "New", "Water Filter"), "New Water Filter", "英文：形容詞＋名稱");
+            var hansReport = PreviewText.Report(hans, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "撬棍" }, NoOutput = true, Destroyed = { "撬棍" } } }, "黑市声望");
+            Check(!hansReport.Contains(Z), $"簡中的報告不含零寬空白：{hansReport}");
+            Eq(hansReport, "地下交易所收走了撬棍，但纯度不够，什么也没留下。垃圾桶放不下，撬棍被销毁了。", "簡中的報告");
+            var enText = string.Join("|", PreviewText.Reminder(enS, new[] { "Crowbar" }, new[] { "Crowbar" }),
+                PreviewText.Report(enS, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "Crowbar" }, NoOutput = true } }, "x"));
+            Check(!enText.Contains(Z), $"英文的提醒與報告不含零寬空白：{enText}");
+
+            // 同一行的兩句（fmt.sentences）：英文中間一個空白、中文直接接
+            Eq(PreviewText.Report(enS, new[] { new NightDeal { BarterId = "x", Outputs = { "Peat" }, Destroyed = { "Rock" } } }, "Blackmarket Reputation"),
+                "The Underground Exchange left in the trash can: Peat. The trash can was full. Destroyed: Rock.", "報告（英文）：兩句中間一個空白");
+            Eq(PreviewText.Report(enS, new[]
+                {
+                    new NightDeal { BarterId = "x", Outputs = { "Peat" } },
+                    new NightDeal { BarterId = "bm_rep_barter", Taken = { "Token" }, NoOutput = true, Destroyed = { "Rock" } },
+                }, "Blackmarket Reputation"),
+                "The Underground Exchange left in the trash can: Peat. The Underground Exchange took Token and left nothing. The trash can was full. Destroyed: Rock.",
+                "報告（英文）：三句兩兩接");
+            Eq(PreviewText.Report(hant, new[] { new NightDeal { BarterId = "x", Outputs = { "甲" }, Destroyed = { "乙" } } }, "黑市聲望"),
+                $"地下交易所在垃圾桶裡留下了：甲。垃圾桶放不下，乙{Z}被銷毀了。", "報告（繁中）：兩句直接接");
+        }
+
+        /// <summary>
+        /// Loc 的挑法（LocPick，照簡易待辦）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；單複數的字形（CLDR 的整數規則）；
+        /// Format 照遊戲的 GetLocalized。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Next tab", ["de"] = "Nächster Tab", ["fr"] = "Onglet suivant" }, len),
+                "fr", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string>
+                {
+                    ["en"] = new string('a', 500) + "\n" + new string('a', 100),
+                    ["de"] = new string('a', 480) + "\n" + new string('a', 450),
+                }, len), "de", "說明框折行後 de 比較高：en 500＋100、de 480＋450 挑 de");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            // 寬度照寬度函式量，不是字數
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            // 單複數的字形
+            void Cat(string lang, int n, string want) => Eq(LocPick.PluralCategory(lang, n), want, $"{lang ?? "null"} 的 {n}");
+            Cat("en", 0, "other");
+            Cat("en", 1, "one");
+            Cat("en", 2, "other");
+            Cat("de", 1, "one");
+            Cat("de", 2, "other");
+            Cat("es", 1, "one");
+            Cat("es", 0, "other");
+            Cat("fr", 0, "one");
+            Cat("fr", 1, "one");
+            Cat("fr", 2, "other");
+            Cat("ru", 1, "one");
+            Cat("ru", 2, "few");
+            Cat("ru", 4, "few");
+            Cat("ru", 5, "many");
+            Cat("ru", 11, "many");
+            Cat("ru", 12, "many");
+            Cat("ru", 14, "many");
+            Cat("ru", 21, "one");
+            Cat("ru", 22, "few");
+            Cat("ru", 25, "many");
+            Cat("ru", 101, "one");
+            Cat("ru", 111, "many");
+            Cat("ru", 112, "many");
+            Cat("pl", 1, "one");
+            Cat("pl", 2, "few");
+            Cat("pl", 4, "few");
+            Cat("pl", 5, "many");
+            Cat("pl", 12, "many");
+            Cat("pl", 21, "many");
+            Cat("pl", 22, "few");
+            Cat("pl", 25, "many");
+            Cat("pl", 112, "many");
+            Cat("ja", 1, "other");
+            Cat("zh", 1, "other");
+            Cat("zh-Hant", 1, "other");
+            Cat(null, 1, "other");
+            Cat("", 1, "other");
+            Eq(LocPick.PluralKey("tip.others_cleared", "few"), "tip.others_cleared.few", "單複數組的 key");
+            Eq(LocPick.PluralKey("tip.all_cleared", LocPick.PluralCategory("en", 1)), "tip.all_cleared.one", "英文 1 件查 tip.all_cleared.one");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
         }
 
         /// <summary>垃圾桶標示：狀態優先順序、可交易的定義、設定值、文字、位置換算。</summary>
@@ -660,11 +925,11 @@ namespace ProbablyStolenExchangePreview.Verify
             var glow = IndicatorLogic.Glow;
             Check(glow.Y1 <= note.Y0 || note.Y1 <= glow.Y0 || glow.X1 <= note.X0 || note.X1 <= glow.X0, "紙條和 LED 不重疊");
 
-            Eq(IndicatorLogic.Label(Strings.For(Lang.ZhHant), IndicatorState.Banned), "禁止交易", "繁中：禁止交易");
-            Eq(IndicatorLogic.Label(Strings.For(Lang.En), IndicatorState.Ready), "Ready", "英文：Ready（英文 2）");
-            Eq(IndicatorLogic.Label(Strings.For(Lang.ZhHans), IndicatorState.Pickup), "待收货", "簡中：待收货");
-            Eq(IndicatorLogic.Label(Strings.For(Lang.ZhHant), IndicatorState.Surplus), "多放了", "繁中：多放了");
-            Eq(IndicatorLogic.Label(Strings.For(Lang.En), IndicatorState.Surplus), "Too many", "英文：Too many");
+            Eq(IndicatorLogic.Label(L("zh-Hant"), IndicatorState.Banned), "禁止交易", "繁中：禁止交易");
+            Eq(IndicatorLogic.Label(L("en"), IndicatorState.Ready), "Ready", "英文：Ready（英文 2）");
+            Eq(IndicatorLogic.Label(L("zh"), IndicatorState.Pickup), "待收货", "簡中：待收货");
+            Eq(IndicatorLogic.Label(L("zh-Hant"), IndicatorState.Surplus), "多放了", "繁中：多放了");
+            Eq(IndicatorLogic.Label(L("en"), IndicatorState.Surplus), "Too many", "英文：Too many");
 
             // 位置：紙張 x 18～68、y 63～84（圖 96×144，y 往下）→ 錨點（y 往上）
             var a = IndicatorLogic.Anchors(IndicatorLogic.Paper, 96, 144);
@@ -689,9 +954,9 @@ namespace ProbablyStolenExchangePreview.Verify
         /// </summary>
         static void Purity()
         {
-            var s = Strings.For(Lang.ZhHant);
-            var en = Strings.For(Lang.En);
-            var hans = Strings.For(Lang.ZhHans);
+            var s = L("zh-Hant");
+            var en = L("en");
+            var hans = L("zh");
 
             // 下一級的門檻：判斷用原始的 double
             var cases = new (double avg, int? next)[]
@@ -745,7 +1010,7 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("dream_dust", "一小瓶「夢塵」", purity: 72)).ToList(), new[] { DreamDust(), ImprovedDreamDust() });
             var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                "地下交易所・今晚|一小瓶「夢塵」 ×4 → 隨機醫療用品（平均純度 72，80 以上更好）|dream_dust 1/2（還差 1 個 → 隨機合法商品）|其餘 1 件會被清掉（含差一點的一小瓶「夢塵」）",
+                $"地下交易所・今晚|一小瓶「夢塵」 ×4 → 隨機醫療用品（平均純度 72，80 以上更好）|dream_dust 1/2（還差 1 個 → 隨機合法商品）|其餘 1 件會被清掉（含差一點的{Z}一小瓶「夢塵」）",
                 "提示：加強版夢塵的整行，差一點的常駐不加");
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = Regular(42.7, 42.9) });
             Eq(lines[1].Text, "一小瓶「夢塵」 ×2 → 隨機合法商品（純度合計 84，120 以上更好）", "提示：常駐夢塵的整行");
@@ -814,6 +1079,55 @@ namespace ProbablyStolenExchangePreview.Verify
             // 讀檔本身失敗：重來、警告，不丟例外
             var broken = new SlotStore(_ => throw new InvalidOperationException("讀不到"), (_, _) => { }, warns.Add);
             Check(broken.Load(1, "r").Tracked.Count == 0 && warns.Count == 2, "讀檔失敗：重來、警告");
+        }
+
+        /// <summary>讀 Localization\*.csv（照檔名，不分大小寫，和遊戲的 LoadedMod.Localization 一樣）；找不到資料夾時記一項失敗、回傳空的。</summary>
+        static Dictionary<string, Dictionary<string, string>> LocTables()
+        {
+            var tables = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            var dir = FindLocalizationDir();
+            Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
+            if (dir == null) return tables;
+            foreach (var path in Directory.GetFiles(dir, "*.csv").OrderBy(x => x, StringComparer.Ordinal))
+                tables[Path.GetFileNameWithoutExtension(path)] = ReadCsv(path);
+            return tables;
+        }
+
+        /// <summary>往上找 mod 的資料夾（有 mod/verify 的那層）：私人 repo 的 csv 在 public/Localization，公開 repo 在 Localization。</summary>
+        static string FindLocalizationDir()
+        {
+            foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+                for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
+                {
+                    if (!Directory.Exists(Path.Combine(d.FullName, "mod", "verify"))) continue;
+                    foreach (var p in new[] { Path.Combine(d.FullName, "public", "Localization"), Path.Combine(d.FullName, "Localization") })
+                        if (File.Exists(Path.Combine(p, "en.csv"))) return p;
+                }
+            return null;
+        }
+
+        /// <summary>
+        /// 照遊戲的 ModLoader 讀 Localization\*.csv（照簡易待辦的 verify）：空白行與 # 開頭的行略過；key 是第一個逗號之前（去空白）；
+        /// 值（ParseCsvValue）去頭尾空白、頭尾都是 " 就拿掉並把 "" 換成 "，字面的 \n 換成換行。重複的 key、沒有逗號、空 key 算失敗。
+        /// </summary>
+        static Dictionary<string, string> ReadCsv(string path)
+        {
+            var d = new Dictionary<string, string>(StringComparer.Ordinal);
+            int lineNo = 0;
+            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            {
+                lineNo++;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                int comma = line.IndexOf(',');
+                if (comma < 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行沒有逗號"); continue; }
+                var key = line.Substring(0, comma).Trim();
+                if (key.Length == 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行的 key 是空的"); continue; }
+                Check(!d.ContainsKey(key), $"{Path.GetFileName(path)} 的 {key} 沒有重複");
+                var v = line.Substring(comma + 1).Trim();
+                if (v.Length >= 2 && v.StartsWith("\"") && v.EndsWith("\"")) v = v.Substring(1, v.Length - 2).Replace("\"\"", "\"");
+                d[key] = v.Replace("\\n", "\n");
+            }
+            return d;
         }
     }
 }

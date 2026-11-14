@@ -1,0 +1,77 @@
+# 交易所預覽的介面字串（手寫的繁中：遊戲是中文、繁中 mod 有跑時由 mod 的 Loc.Get 用，其他時候用 zh.csv）。格式：key,值
+# 每條在哪裡、空間多大、{0}、{1} 是什麼看 en.csv 的註解。{0}、{1} 由 mod 代入，要和 en.csv 一樣。
+# 值的前後空白讀的時候會去掉，需要空白的值用英文雙引號括起來（" → "）。
+# 有數量的字串拆成單複數的字形（key.one／key.other…），中文只寫 .other。
+# 遊戲名稱代進句子時，名稱碰到漢字的那一側由 mod 加零寬空白（繁中 mod 才認得出名稱的詞邊界），這裡不用寫。
+
+tip.header,地下交易所・今晚
+tip.header_plain,地下交易所
+tip.no_janitorial,今晚沒有使用清潔服務，不會交換
+tip.no_janitorial_service,還沒有清潔服務，不會交換
+tip.nothing,沒有可換的
+tip.others_cleared.other,其餘 {0} 件會被清掉
+tip.all_cleared.other,垃圾桶裡的 {0} 件會被清掉
+tip.partial_included,（含差一點的{0}）
+tip.purity_fail,純度合計 {0}，不到 {1}，會被收走但換不到東西
+tip.purity_sum_next,純度合計 {0}，{1} 以上更好
+tip.purity_sum_max,純度合計 {0}，最高級
+tip.purity_avg_next,平均純度 {0}，{1} 以上更好
+tip.purity_avg_max,平均純度 {0}，最高級
+tip.missing,還差 {0} 個
+tip.surplus,多放的{0}會被清掉（每晚只換一次）
+tip.promo_header,本週促銷
+
+banned.short,地下交易所不跟你交易
+banned.rep_line,黑市聲望 {0}（需要高於 {1}）
+
+fmt.arrow," → "
+fmt.list_sep,、
+fmt.colon,：
+fmt.times," ×{0}"
+fmt.paren,（{0}）
+fmt.adjective,{0}{1}
+fmt.sentences,{0}{1}
+
+cat.random_module,隨機模組
+cat.random_medical,隨機醫療用品
+cat.random_food,隨機食物
+cat.random_keycard,隨機鑰匙卡
+cat.unknown,？
+cat.tag_ammo,彈藥
+cat.tag_module,模組
+cat.tag_poison,毒藥
+cat.tag_seed,種子
+
+report.left,地下交易所在垃圾桶裡留下了：{0}。
+report.rep_only,地下交易所：{0}。
+report.nothing,地下交易所收走了{0}，但純度不夠，什麼也沒留下。
+report.nothing_plain,地下交易所收走了{0}，什麼也沒留下。
+report.destroyed,垃圾桶放不下，{0}被銷毀了。
+
+tag.tooltip,交易所預覽（mod）
+tag.report,（交易所預覽 mod）
+
+note.none,無交易
+note.ready,可交易
+note.surplus,多放了
+note.pickup,待收貨
+note.banned,禁止交易
+
+remind.items,交易所換來的{0}還在垃圾桶裡，今晚會被清掉
+remind.surplus,多放的{0}今晚會被清掉（每晚只換一次）
+remind.surplus_also,多放的{0}今晚也會被清掉（每晚只換一次）
+
+cfg.tooltip,垃圾桶提示
+cfg.tooltip_tip,滑鼠移到垃圾桶時，顯示今晚地下交易所會收走什麼、換成什麼
+cfg.promos,垃圾桶提示列出本週促銷
+cfg.promos_tip,在垃圾桶提示裡列出本週地下交易所的三筆促銷交易（要丟什麼、換到什麼），提示框會變寬
+cfg.list_warning,清單紅字
+cfg.list_warning_tip,黑市聲望太低被禁止使用時，在地下交易所清單右下角用紅字顯示
+cfg.night_report,夜間報告
+cfg.night_report_tip,夜間報告加一行，寫出交易所在垃圾桶裡留下了什麼（不會寫進存檔）
+cfg.reminder,結束一天的提醒
+cfg.reminder_tip,結束一天的畫面，清潔服務會清掉還在垃圾桶裡的交易所換來的東西、或多放的東西（每晚只換一次）時提醒
+cfg.note,垃圾桶紙條
+cfg.note_tip,在店裡的垃圾桶上貼紙條，顯示交易狀態；可以和蓋子上的燈同時開
+cfg.led,垃圾桶的燈
+cfg.led_tip,垃圾桶蓋子上的燈依交易狀態變色，交易所換來的東西待收貨時會閃；可以和紙條同時開

@@ -1,14 +1,14 @@
 # Probably Stolen 交易所預覽 mod（Exchange Preview）
 
-*Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。遊戲官方格式的 mod（不需要 MelonLoader），非官方製作。
+*Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。
 
-對應遊戲版本：正式版 1.0（主選單左下角顯示 VERSION 100-REV6，也支援 beta 分支的 100-REV7）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear. See [English](#english) below.
+> A mod for *Probably Stolen*: hover over the trash can to see what the Underground Exchange will take and leave tonight, and what the Janitorial Service will clear. See [English](#english) below.
 
 ## 功能
 
@@ -46,12 +46,12 @@ Demo 版在 `MelonPreferences.cfg` 的設定不會搬過來，正式版第一次
 
 ## 語言
 
-- 介面跟著遊戲的語言：英文、簡中。遊戲的其他語言顯示英文介面。
-- **繁體中文介面**：遊戲本身沒有繁中，要另外裝玩家自製的 [Probably Stolen 繁體中文化 mod（非官方）](https://www.nexusmods.com/probablystolen/mods/280)。裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
+- 介面跟著遊戲的語言：英文、簡中、俄文、德文、日文、法文、西班牙文、波蘭文，遊戲的其他語言顯示英文介面。設定視窗裡段落的標題固定是英文的「Exchange Preview」。
+- **繁體中文介面**：遊戲本身沒有繁中，要另外裝玩家自製的 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)。裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
 
 ## 安裝
 
-這是遊戲官方格式的 mod，不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Exchange Preview」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -113,7 +113,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Unofficial; uses the game's official mod format, so MelonLoader is not needed. Supported game version: full release 1.0 (the main menu shows VERSION 100-REV6; the 100-REV7 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
+A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
 
@@ -147,11 +147,11 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 | Trash can note (`TrashNote`) | on | Sticky note on the trash can |
 | Trash can light (`TrashLed`) | off | The light on the trash can lid (blinks for Pick up; can be on together with the note) |
 
-**Languages:** the UI follows the game's language: English or Simplified Chinese; the game's other languages get the English UI. For a Traditional Chinese UI, install the unofficial [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
+**Languages:** the UI follows the game's language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish; the game's other languages get the English UI. The section title in the settings window is always "Exchange Preview". For a Traditional Chinese UI, install the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
 
 **Install**
 
-This mod uses the game's official mod format; MelonLoader is not needed. No permissions are needed, so there is no permission prompt when you enable it.
+No permissions are needed, so there is no permission prompt when you enable it.
 
 From the Steam Workshop: subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), start the game, enable "Exchange Preview" on the Mods screen of the main menu, and restart as prompted. Steam keeps it updated.
 

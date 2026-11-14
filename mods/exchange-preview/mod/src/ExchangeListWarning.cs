@@ -23,6 +23,7 @@ namespace ProbablyStolenExchangePreview
         /// <summary>
         /// 英文字比較寬、簽名「Underground Exchange Authority」也長，16／12 會換成 5 行；縮一號（14／11）斷句才自然（4 行），
         /// 兩句之間再多空一點（面板單位）分成兩段（看示意圖選的）。中文維持 16／12、不加間隔：兩行剛好對齊簽名的兩行。
+        /// 2.2.0 起中文以外的 7 種語言都用英文這組（西文和英文一樣寬，日文句子比中文長、會換行）。
         /// </summary>
         const int EnBigSize = 14, EnSmallSize = 11;
         const float EnSentenceGap = 4f;
@@ -60,12 +61,6 @@ namespace ProbablyStolenExchangePreview
                 go.transform.SetParent(panel.transform, false);
                 go.AddComponent<RectTransform>();
                 tmp = go.AddComponent<TextMeshProUGUI>();
-                var like = FontSource(panel);
-                if (like != null)
-                {
-                    tmp.font = like.font;
-                    tmp.fontSharedMaterial = like.fontSharedMaterial;
-                }
                 tmp.richText = true;
                 tmp.enableWordWrapping = false;
                 tmp.alignment = TextAlignmentOptions.MidlineLeft; // 行首對齊；整塊靠右由 pivot 決定
@@ -73,8 +68,17 @@ namespace ProbablyStolenExchangePreview
                 tmp.color = Red;
             }
             if (tmp == null) return;
+            // 字型每次打開都向簽名借：物件只在第一次建立，玩家在店裡換語言時遊戲自己的字（TMPLocalizer）會換字型，
+            // 只在建立時借的話，從英文換成日文或中文後紅字還是西文字型、字會缺（2.2.0 審查時提的）
+            var like = FontSource(panel);
+            if (like != null && (tmp.font != like.font || tmp.fontSharedMaterial != like.fontSharedMaterial))
+            {
+                tmp.font = like.font;
+                tmp.fontSharedMaterial = like.fontSharedMaterial;
+            }
 
-            bool en = GameState.DetectLanguage() == Lang.En;
+            // 只有中文維持 16／12；其他 7 種語言（含日文：句子比中文長、會換行）照英文縮一號、兩句之間多空一點
+            bool en = !GameState.IsChinese(GameState.LangCode());
             int big = en ? EnBigSize : BigSize, small = en ? EnSmallSize : SmallSize;
             tmp.fontSize = big; // 行高照大的那行算；兩句各自的字級用 <size>
             // 段落間距只加在兩句之間的換行（自動換行不算）；TMP 的單位是字級的 1%，所以換算成面板單位要除以 big×0.01

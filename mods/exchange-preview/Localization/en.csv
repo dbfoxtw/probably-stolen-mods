@@ -1,0 +1,142 @@
+# Exchange Preview: texts of the mod's own interface (read by ModHelper.GetLocalized). Format: key,value
+# One entry per line; everything after the first comma is the value (commas inside the value are fine).
+# Spaces at the start or end of a value are removed when the game reads it: values that need them are written in double quotes (" for ").
+# {0}, {1} are filled in by the mod: keep every placeholder of the English text.
+#
+# Game terms (Underground Exchange, Janitorial Service, Blackmarket Reputation, Underground Exchange Directive, trash can, End of Day...)
+# must use the official wording of the game in your language.
+# Names put into {0} / {1} (items, conditions, what the exchange gives) come from the game in their base form
+# (nominative, singular, no article). If your language would have to change the name (case, gender, article) to fit the sentence,
+# put the name after a colon instead ("Will be cleared: {0}") so the base form is correct.
+# {0} is often a list of names joined by fmt.list_sep, with a count after repeated ones (fmt.times), e.g. "Peat x2, Water Filter".
+# The Latin/Cyrillic interface font (English, German, French, Spanish, Russian, Polish) has no arrows (-> <-) and no full-width
+# punctuation; it has · × – — … « » and the usual quotes. The Japanese font has → × ・ and full-width punctuation.
+# The mod name "Exchange Preview" stays in English (it is the name on the game's Mods screen); only translate the word "mod".
+#
+# Plural groups (texts with a number): one key per plural form, "<key>.<form>". Write exactly the forms of your language:
+#   en, de, es, fr: .one and .other (fr: one is used for 0 and 1)
+#   ru, pl: .one, .few and .many (ru one also covers 21, 31...; pl 21, 31... are many)
+#   ja, zh: .other only
+# Every form must keep the same placeholders as .other: never write the number itself (no "1 item"), always {0}.
+
+# ── Trash can tooltip (shown when hovering over the trash can in the store) ──
+# The tooltip is about 40 characters wide and wraps long lines by itself; about 60 when the weekly promotions are listed.
+# Title of the tooltip while the Exchange is open (the dot is a separator: keep it or use your language's equivalent)
+tip.header,Underground Exchange · tonight
+# Title while you are banned from the Exchange
+tip.header_plain,Underground Exchange
+# Warnings: the Janitorial Service is not paid tonight / not available yet (no exchange happens without it)
+tip.no_janitorial,Janitorial Service is off tonight: no exchange
+tip.no_janitorial_service,No Janitorial Service yet: no exchange
+# Nothing in the trash can matches an exchange
+tip.nothing,Nothing to exchange
+# How many items the Janitorial Service will clear tonight. {0} = number of items.
+# others_cleared: after the lines of the trades that will happen (the items left over); all_cleared: no trade happens.
+tip.others_cleared.one,{0} other item will be cleared
+tip.others_cleared.other,{0} other items will be cleared
+tip.all_cleared.one,The {0} item in the trash can will be cleared
+tip.all_cleared.other,The {0} items in the trash can will be cleared
+# Added right after the sentence above: {0} = items of trades that are not complete yet (they are counted in the number above);
+# the value starts with a comma, so it is written in double quotes to be easy to read
+tip.partial_included,", including {0} from incomplete trades"
+# "Dream Dust" trade: the total purity of the vials is too low; they are taken and nothing is given. {0} = total purity, {1} = minimum.
+tip.purity_fail,total purity {0} is below {1}: taken, nothing given
+# "Dream Dust" trades that will happen, written in brackets after what you get. {0} = purity (total or average), {1} = purity needed for a better tier.
+# sum: the regular trade (adds up the vials); avg: the weekly promotion (average of the vials). max: already the best tier.
+tip.purity_sum_next,total purity {0}, {1}+ is better
+tip.purity_sum_max,total purity {0}, top tier
+tip.purity_avg_next,average purity {0}, {1}+ is better
+tip.purity_avg_max,average purity {0}, top tier
+# Incomplete trade, in brackets after the counts ("Water Filter 1/3 (2 more for New Water Filter)"). {0} = how many are still missing.
+# Write it so the words do not change with the number (no plural forms here).
+tip.missing,{0} more
+# More of the same item than one trade takes (the Exchange trades each deal once per night): the rest is cleared. {0} = the extra items.
+tip.surplus,Extra {0} will be cleared (one trade per night)
+# Title of the part listing this week's three promotional exchanges
+tip.promo_header,This week's promotions
+
+# ── Banned from the Exchange (low Blackmarket Reputation) ──
+# Short sentence used in red at the bottom right of the Underground Exchange Directive (right of the signature; wraps if there is no room)
+# and in the tooltip when the game's own text cannot be read
+banned.short,The Underground Exchange won't trade with you
+# Second line under it. {0} = current Blackmarket Reputation, {1} = the value it has to be above
+banned.rep_line,Blackmarket Reputation {0} (needs above {1})
+
+# ── Punctuation and formats used to build the lines ──
+# Between what you put in and what you get ("Peat x2 for random food"). English has no arrow in its font, so it uses a word.
+fmt.arrow," for "
+# Between the names of a list
+fmt.list_sep,", "
+# Between the items and a note about them ("Dream Dust x2: total purity 45 is below 60...")
+fmt.colon,": "
+# Count after a repeated name (only from 2 on). {0} = count.
+fmt.times," x{0}"
+# Brackets added after a text. {0} = the text.
+fmt.paren," ({0})"
+# An adjective and an item name: {0} = the game's "New" label of the Exchange (for example French "État neuf"), {1} = the item name.
+# Put them in the order and form that is natural in your language (for example "{1} ({0})").
+fmt.adjective,{0} {1}
+# Two sentences on the same line of the night report: {0} = the first, {1} = the second (with three, {0} is the first two already joined)
+fmt.sentences,{0} {1}
+
+# ── What the exchanges give and need, where the game has no text for it ──
+cat.random_module,random module
+cat.random_medical,random medical supplies
+cat.random_food,random food
+cat.random_keycard,random keycard
+# Shown when the mod does not know what an exchange gives (a new exchange added by a game update)
+cat.unknown,?
+# Kinds of item a trade asks for (any ammunition, any module...)
+cat.tag_ammo,Ammunition
+cat.tag_module,Module
+cat.tag_poison,Poison
+cat.tag_seed,Seed
+
+# ── Night report (one line added to the game's report in the morning; all sentences of one night are on that line) ──
+# {0} = what the Exchange left in the trash can (a list, maybe with the Blackmarket Reputation gained in brackets)
+report.left,The Underground Exchange left in the trash can: {0}.
+# Only Blackmarket Reputation was gained. {0} = "Blackmarket Reputation +25"
+report.rep_only,The Underground Exchange: {0}.
+# Items were taken but nothing was left. {0} = what was taken. nothing: "Dream Dust" purity too low; nothing_plain: other reasons.
+report.nothing,The Underground Exchange took {0}, but the purity was too low and left nothing.
+report.nothing_plain,The Underground Exchange took {0} and left nothing.
+# The trash can had no room, the game destroyed what the Exchange gave. {0} = those items (can be several: avoid singular/plural verbs).
+report.destroyed,The trash can was full. Destroyed: {0}.
+
+# ── Mod tag (shows that these texts come from a mod) ──
+# Last line of the tooltip (grey)
+tag.tooltip,Exchange Preview (mod)
+# End of the night report line (small grey text, follows the sentence directly: keep the space in front if your language needs one)
+tag.report," (Exchange Preview mod)"
+
+# ── Note on the trash can (a sticky note in the store showing the exchange status) ──
+# The note is tiny and the text shrinks to fit: use one short word, about as long as the English one.
+# none: nothing to trade; ready: a trade will happen; surplus: more items than the trade takes; pickup: items from the Exchange are waiting; banned: banned from the Exchange
+note.none,No deal
+note.ready,Ready
+note.surplus,Too many
+note.pickup,Pick up
+note.banned,Banned
+
+# ── End of Day reminder (on the End of Day screen, before the night) ──
+# {0} = items the Exchange gave that are still in the trash can (the Janitorial Service would clear them)
+remind.items,Exchange items left in the trash can will be cleared tonight: {0}
+# {0} = extra items (see tip.surplus). surplus_also is used on the second line, after remind.items.
+remind.surplus,Extra {0} will be cleared tonight (one trade per night)
+remind.surplus_also,Extra {0} will also be cleared tonight (one trade per night)
+
+# ── Settings window of the mod (game's Mods screen): name of each switch, and its description shown when hovering over the i icon ──
+cfg.tooltip,Trash can tooltip
+cfg.tooltip_tip,Hover over the trash can to see what the Underground Exchange will take and leave tonight
+cfg.promos,Weekly promotions in tooltip
+cfg.promos_tip,List this week's three promotional exchanges (what to put in and what you get) in the trash can tooltip; the tooltip gets wider
+cfg.list_warning,Exchange list warning
+cfg.list_warning_tip,Red text on the Exchange Directive when you are banned for low Blackmarket Reputation
+cfg.night_report,Night report
+cfg.night_report_tip,Add a line to the night report saying what the Exchange left in the trash can (never written into your save)
+cfg.reminder,End of day reminder
+cfg.reminder_tip,On the End of Day screen, warn when the Janitorial Service will clear items from the Exchange still in the trash can, or extra items beyond one trade per night
+cfg.note,Trash can note
+cfg.note_tip,A sticky note on the trash can in the store showing the exchange status; can be on together with the lid light
+cfg.led,Trash can light
+cfg.led_tip,The light on the trash can lid shows the exchange status by color and blinks when items from the Exchange are waiting to be picked up; can be on together with the note

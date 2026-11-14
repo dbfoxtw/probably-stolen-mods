@@ -65,7 +65,7 @@ namespace ProbablyStolenExchangePreview
             var trash = ExchangeReader.TrashItems();
             if (trash == null) return null;
 
-            var lang = GameState.DetectLanguage();
+            var lang = GameState.LangCode();
             bool promosOn = Settings.TrashPromos;
             var key = Key(st, trash, lang, promosOn);
             if (key == _cacheKey && Time.unscaledTime < _cacheUntil)
@@ -74,7 +74,7 @@ namespace ProbablyStolenExchangePreview
                 return _cache;
             }
 
-            var s = Strings.For(lang);
+            var s = GameState.S;
             var items = ExchangeReader.ToSims(trash, true);
             var result = ExchangeReader.Run(st, items, s);
             var input = new PreviewInput
@@ -103,7 +103,7 @@ namespace ProbablyStolenExchangePreview
         /// 垃圾桶內容（每件東西的編號與物件本身）＋影響結果的狀態；內容或狀態一變就重算。
         /// 本週促銷的設定與 id 也算在裡面：改設定、週一重抽、換存檔時不會拿到舊的那份。
         /// </summary>
-        static string Key(ExchangeState st, List<GameItem> trash, Lang lang, bool promosOn)
+        static string Key(ExchangeState st, List<GameItem> trash, string lang, bool promosOn)
         {
             var sb = new StringBuilder();
             sb.Append(lang).Append(st.Distrusted).Append(st.JanitorialOn).Append(st.Rep).Append('|');

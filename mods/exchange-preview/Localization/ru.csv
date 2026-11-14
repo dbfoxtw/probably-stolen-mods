@@ -1,0 +1,89 @@
+# Exchange Preview, Russian (ru): texts of the mod's own interface. Translated from en.csv with AI help, not checked by a native speaker.
+# Same keys and order as en.csv (see its comments for where each text appears, how much room there is and what {0}/{1} are). Plural groups use .one, .few and .many.
+# {0} is a game name in its base form (often a list), so the sentences that hold names are written as "...: {0}" and the names are never declined.
+# fmt.arrow is a dash: the font has no arrow, and a preposition would need the next name in another case.
+
+# ── Trash can tooltip ──
+tip.header,Подземный обменник · этой ночью
+tip.header_plain,Подземный обменник
+tip.no_janitorial,Услуги уборщиков этой ночью не оплачены: обмена не будет
+tip.no_janitorial_service,Услуги уборщиков пока недоступны: обмена не будет
+tip.nothing,Обменять нечего
+tip.others_cleared.one,Уборщики уберут ещё {0} предмет
+tip.others_cleared.few,Уборщики уберут ещё {0} предмета
+tip.others_cleared.many,Уборщики уберут ещё {0} предметов
+tip.all_cleared.one,Уборщики уберут из мусорки {0} предмет
+tip.all_cleared.few,Уборщики уберут из мусорки {0} предмета
+tip.all_cleared.many,Уборщики уберут из мусорки {0} предметов
+tip.partial_included,", в том числе из незавершённых обменов: {0}"
+tip.purity_fail,общая чистота {0} ниже {1} — заберут и ничего не дадут
+tip.purity_sum_next,общая чистота {0}, от {1} будет лучше
+tip.purity_sum_max,общая чистота {0}, высший уровень
+tip.purity_avg_next,средняя чистота {0}, от {1} будет лучше
+tip.purity_avg_max,средняя чистота {0}, высший уровень
+tip.missing,ещё {0}
+tip.surplus,Будет убрано лишнее: {0} (один обмен за ночь)
+tip.promo_header,Предложения по акции этой недели
+
+# ── Banned from the Exchange ──
+banned.short,Подземный обменник не торгует с вами
+banned.rep_line,Репутация на чёрном рынке: {0} (нужно больше {1})
+
+# ── Punctuation and formats ──
+fmt.arrow," — "
+fmt.list_sep,", "
+fmt.colon,": "
+fmt.times," x{0}"
+fmt.paren," ({0})"
+fmt.adjective,{1} ({0})
+fmt.sentences,{0} {1}
+
+# ── What the exchanges give and need ──
+cat.random_module,случайный модуль
+cat.random_medical,случайные медицинские припасы
+cat.random_food,случайная еда
+cat.random_keycard,случайная ключ-карта
+cat.unknown,?
+cat.tag_ammo,Боеприпасы
+cat.tag_module,Модуль
+cat.tag_poison,Яд
+cat.tag_seed,Семена
+
+# ── Night report ──
+report.left,Подземный обменник оставил в мусорке: {0}.
+report.rep_only,Подземный обменник: {0}.
+report.nothing,Подземный обменник забрал: {0}. Чистота была слишком низкой, взамен ничего не оставлено.
+report.nothing_plain,Подземный обменник забрал: {0}. Взамен ничего не оставлено.
+report.destroyed,Мусорка была переполнена. Уничтожено: {0}.
+
+# ── Mod tag ──
+tag.tooltip,Exchange Preview (мод)
+tag.report," (мод Exchange Preview)"
+
+# ── Note on the trash can ──
+note.none,Нет обмена
+note.ready,Готово
+note.surplus,Лишнее
+note.pickup,Забрать
+note.banned,Запрет
+
+# ── End of Day reminder ──
+remind.items,Предметы от обменника, оставшиеся в мусорке, уберут этой ночью: {0}
+remind.surplus,Этой ночью уберут лишнее: {0} (один обмен за ночь)
+remind.surplus_also,Также этой ночью уберут лишнее: {0} (один обмен за ночь)
+
+# ── Settings window of the mod ──
+cfg.tooltip,Подсказка мусорки
+cfg.tooltip_tip,Показывать при наведении курсора на мусорку, что Подземный обменник заберёт и оставит этой ночью
+cfg.promos,Предложения по акции в подсказке
+cfg.promos_tip,Показывать в подсказке мусорки три предложения по акции этой недели (что положить и что получите); подсказка станет шире
+cfg.list_warning,Предупреждение в Директиве
+cfg.list_warning_tip,Показывать красный текст на Директиве Подземного обменника, если из-за низкой репутации на чёрном рынке обменник для вас закрыт
+cfg.night_report,Отчёт за ночь
+cfg.night_report_tip,Добавлять в отчёт за ночь строку о том, что обменник оставил в мусорке (в сохранение не записывается)
+cfg.reminder,Напоминание в конце дня
+cfg.reminder_tip,На экране «Конец дня» предупреждать, если уборщики уберут предметы от обменника, оставшиеся в мусорке, или лишние предметы сверх одного обмена за ночь
+cfg.note,Стикер на мусорке
+cfg.note_tip,Показывать на мусорке в магазине стикер с состоянием обмена; можно включить вместе с лампочкой на крышке
+cfg.led,Лампочка на мусорке
+cfg.led_tip,Лампочка на крышке мусорки показывает цветом состояние обмена и мигает, когда предметы от обменника ждут, пока их заберут; можно включить вместе со стикером

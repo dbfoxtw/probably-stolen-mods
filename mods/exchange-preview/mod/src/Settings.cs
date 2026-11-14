@@ -4,7 +4,7 @@ namespace ProbablyStolenExchangePreview
     /// 玩家決定開哪些功能：遊戲官方的 ModConfig（存在存檔資料夾的 ModConfigs\dbfoxtw.exchange-preview.json，
     /// 遊戲的 mod 管理畫面裡有這個 mod 的設定視窗）。除了垃圾桶的 LED 都預設開（紙條和 LED 各自一個開關、可以同時開，預設只開紙條）。
     /// 每次用到時才讀值，玩家在設定視窗按套用就生效，不用重開遊戲（不標 requiresRestart）。
-    /// 標籤與說明照目前的語言從 Strings 取（傳函式，打開設定視窗時才查）。Demo 時 MelonPreferences.cfg 的 [ExchangePreview] 不搬過來。
+    /// 標籤與說明照目前的語言從 Strings（csv 的 cfg.*）取（傳函式，打開設定視窗時才查：Init 時 mod 的 csv 還沒讀）。Demo 時 MelonPreferences.cfg 的 [ExchangePreview] 不搬過來。
     /// </summary>
     static class Settings
     {

@@ -1,0 +1,76 @@
+# Exchange Preview: texts of the mod's own interface, German. Translated from en.csv with AI help, not checked by a native speaker. Format: key,value
+# Keys and their order are the same as in en.csv. Plural groups: German uses .one and .other. Names from the game come after a colon (base form).
+
+tip.header,Unterweltbörse · heute Nacht
+tip.header_plain,Unterweltbörse
+tip.no_janitorial,Heute Nacht kein Hausmeisterservice: kein Tausch
+tip.no_janitorial_service,Hausmeisterservice noch nicht verfügbar: kein Tausch
+tip.nothing,Nichts zu tauschen
+tip.others_cleared.one,{0} weiterer Gegenstand wird entfernt
+tip.others_cleared.other,{0} weitere Gegenstände werden entfernt
+tip.all_cleared.one,{0} Gegenstand im Mülleimer wird entfernt
+tip.all_cleared.other,Die {0} Gegenstände im Mülleimer werden entfernt
+tip.partial_included,", davon aus unvollständigen Tauschgeschäften: {0}"
+tip.purity_fail,Gesamtreinheit {0} unter {1}; genommen, ohne Gegenleistung
+tip.purity_sum_next,Gesamtreinheit {0}, ab {1} besser
+tip.purity_sum_max,Gesamtreinheit {0}, höchste Stufe
+tip.purity_avg_next,durchschnittliche Reinheit {0}, ab {1} besser
+tip.purity_avg_max,durchschnittliche Reinheit {0}, höchste Stufe
+tip.missing,noch {0}
+tip.surplus,Überzähliges wird entfernt (jeder Tausch nur einmal pro Nacht): {0}
+tip.promo_header,Promo-Trades dieser Woche
+
+banned.short,Die Unterweltbörse handelt nicht mit dir
+banned.rep_line,Schwarzmarkt-Ansehen {0} (nötig: über {1})
+
+fmt.arrow," – "
+fmt.list_sep,", "
+fmt.colon,": "
+fmt.times," x{0}"
+fmt.paren," ({0})"
+fmt.adjective,{1} ({0})
+fmt.sentences,{0} {1}
+
+cat.random_module,Zufälliges Modul
+cat.random_medical,Zufälliges Medizinzubehör
+cat.random_food,Zufälliges Essen
+cat.random_keycard,Zufällige Keycard
+cat.unknown,?
+cat.tag_ammo,Munition
+cat.tag_module,Modul
+cat.tag_poison,Gift
+cat.tag_seed,Saatgut
+
+report.left,Die Unterweltbörse hat im Mülleimer hinterlassen: {0}.
+report.rep_only,Die Unterweltbörse: {0}.
+report.nothing,Die Unterweltbörse hat wegen zu niedriger Reinheit nichts hinterlassen. Genommen: {0}.
+report.nothing_plain,Die Unterweltbörse hat nichts hinterlassen. Genommen: {0}.
+report.destroyed,Der Mülleimer war voll. Vernichtet: {0}.
+
+tag.tooltip,Exchange Preview (Mod)
+tag.report," (Mod Exchange Preview)"
+
+note.none,Kein Deal
+note.ready,Bereit
+note.surplus,Zu viele
+note.pickup,Abholen
+note.banned,Gesperrt
+
+remind.items,Gegenstände von der Börse liegen noch im Mülleimer und werden heute Nacht entfernt: {0}
+remind.surplus,Überzähliges wird heute Nacht entfernt (jeder Tausch nur einmal pro Nacht): {0}
+remind.surplus_also,Überzähliges wird heute Nacht ebenfalls entfernt (jeder Tausch nur einmal pro Nacht): {0}
+
+cfg.tooltip,Mülleimer-Tooltip
+cfg.tooltip_tip,Fahre mit der Maus über den Mülleimer, um zu sehen, was die Unterweltbörse heute Nacht nimmt und hinterlässt
+cfg.promos,Promo-Trades im Tooltip
+cfg.promos_tip,Listet die drei Promo-Trades dieser Woche (was du hineinlegst und was du bekommst) im Mülleimer-Tooltip auf; der Tooltip wird breiter
+cfg.list_warning,Warnung auf den Richtlinien
+cfg.list_warning_tip,Roter Text auf den Richtlinien der Unterweltbörse, wenn du wegen zu niedrigen Schwarzmarkt-Ansehens ausgeschlossen bist
+cfg.night_report,Nächtlicher Bericht
+cfg.night_report_tip,Fügt dem nächtlichen Bericht eine Zeile hinzu, die zeigt, was die Börse im Mülleimer hinterlassen hat (wird nie in deinen Spielstand geschrieben)
+cfg.reminder,Erinnerung am Ende des Tages
+cfg.reminder_tip,Warnt im Bildschirm „Ende des Tages“, wenn der Hausmeisterservice Gegenstände von der Börse entfernen wird, die noch im Mülleimer liegen, oder überzählige Gegenstände (jeder Tausch nur einmal pro Nacht)
+cfg.note,Zettel am Mülleimer
+cfg.note_tip,Ein Klebezettel am Mülleimer im Laden, der den Tauschstatus zeigt; kann zusammen mit dem Licht am Deckel an sein
+cfg.led,Licht am Mülleimer
+cfg.led_tip,Das Licht am Mülleimerdeckel zeigt den Tauschstatus mit seiner Farbe und blinkt, wenn Gegenstände von der Börse darauf warten, abgeholt zu werden; kann zusammen mit dem Zettel an sein

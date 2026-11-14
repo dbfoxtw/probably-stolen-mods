@@ -216,7 +216,8 @@ namespace ProbablyStolenExchangePreview
         /// </summary>
         internal static string OutputOf(string id, Strings s) => id switch
         {
-            "filter_barter" => string.Format(s.Adjective, UI("ui_exchange_new", "New"), Item("water_filter")),
+            // 「全新」和「濾水器」都是遊戲名詞、中文緊貼在一起：手寫繁中時中間要隔開，繁中 mod 才分得出兩個詞（PreviewText.Fill）
+            "filter_barter" => PreviewText.Fill(s, s.Adjective, UI("ui_exchange_new", "New"), Item("water_filter")),
             "module_barter" => s.RandomModule,
             "dream_dust_barter" => UI("ui_exchange_random_legal_goods", "Random Legal Goods"),
             // 產出照四瓶的平均純度分級，提示另外在後面寫平均純度與下一級的門檻（PreviewText.PurityNote）

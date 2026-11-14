@@ -56,7 +56,8 @@ namespace ProbablyStolenExchangePreview
         static Image _paper, _led, _glow;
         static TextMeshProUGUI _text;
         static bool _builtNote, _builtLed;
-        static Lang _builtLang;
+        /// <summary>紙條是用哪個語言代碼建的：換語言時重建（字型與粗體跟著語言）。</summary>
+        static string _builtLang;
         static IndicatorState _state = IndicatorState.Hidden;
         static string _key;
         static float _nextCompute, _forceAt;
@@ -129,7 +130,7 @@ namespace ProbablyStolenExchangePreview
             var trash = ExchangeReader.TrashItems();
             if (trash == null) { SetVisible(false); return; }
 
-            var lang = GameState.DetectLanguage();
+            var lang = GameState.LangCode();
             var key = Key(st, trash, lang);
             if (key != _key || Time.unscaledTime >= _forceAt)
             {
@@ -141,7 +142,7 @@ namespace ProbablyStolenExchangePreview
                 {
                     // 只要判定，不組名稱與產出的文字（省掉遊戲的本地化查詢；字串表缺 key 時也不會一直往 Player.log 寫警告）
                     var items = ExchangeReader.ToSims(trash, false);
-                    var result = ExchangeReader.Run(st, items, Strings.For(lang), text: false);
+                    var result = ExchangeReader.Run(st, items, GameState.S, text: false);
                     ready = IndicatorLogic.AnyReady(result);
                     surplus = IndicatorLogic.AnySurplus(result);
                 }
@@ -153,12 +154,12 @@ namespace ProbablyStolenExchangePreview
 
             if (_state == IndicatorState.Hidden) { SetVisible(false); return; }
             if (!EnsureBuilt(note, led, lang)) return;
-            Apply(lang);
+            Apply();
             // 遊戲把垃圾桶圖關掉時（GameItemElement.ToggleBackground(false)，例如拖曳、多選）標示跟著藏；子物件不受父 Image 的 enabled 影響
             SetVisible(_trashImage.enabled);
         }
 
-        static string Key(ExchangeState st, List<GameItem> trash, Lang lang)
+        static string Key(ExchangeState st, List<GameItem> trash, string lang)
         {
             var sb = new StringBuilder();
             sb.Append(lang).Append(st.Unlocked).Append(st.Distrusted).Append(ExchangePreviewMod.TakenOut.Count).Append('|');
@@ -194,7 +195,7 @@ namespace ProbablyStolenExchangePreview
             return n != null && n.StartsWith("trashcan", StringComparison.Ordinal) && n.Length > 8 && char.IsDigit(n[8]);
         }
 
-        static bool EnsureBuilt(bool note, bool led, Lang lang)
+        static bool EnsureBuilt(bool note, bool led, string lang)
         {
             if (_trashImage == null || _root == null)
             {
@@ -273,7 +274,7 @@ namespace ProbablyStolenExchangePreview
             return img;
         }
 
-        static TextMeshProUGUI NewText(PixelRect area, (float x0, float y0, float x1, float y1) drawn, Lang lang)
+        static TextMeshProUGUI NewText(PixelRect area, (float x0, float y0, float x1, float y1) drawn, string lang)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(_root.transform, false);
@@ -289,7 +290,8 @@ namespace ProbablyStolenExchangePreview
             tmp.enableAutoSizing = true;
             tmp.fontSizeMin = 1f;
             tmp.fontSizeMax = 200f;
-            tmp.fontStyle = lang == Lang.En ? FontStyles.Bold : FontStyles.Normal; // 英文用粗體才讀得清楚（示意圖）
+            // 西文字型的 6 種語言用粗體才讀得清楚（示意圖）；中文、日文用自己的字型，照舊不加粗
+            tmp.fontStyle = GameState.UsesWesternFont(lang) ? FontStyles.Bold : FontStyles.Normal;
             return tmp;
         }
 
@@ -301,7 +303,7 @@ namespace ProbablyStolenExchangePreview
             rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
-        static void Apply(Lang lang)
+        static void Apply()
         {
             // 顏色表沒有 Hidden；Hidden 時呼叫端已經藏起來，這裡再擋一次
             if (_state == IndicatorState.Hidden) return;
@@ -312,7 +314,7 @@ namespace ProbablyStolenExchangePreview
             }
             if (_text != null)
             {
-                _text.text = IndicatorLogic.Label(Strings.For(lang), _state);
+                _text.text = IndicatorLogic.Label(GameState.S, _state);
                 _text.color = Ink[_state];
             }
             if (_led != null)
