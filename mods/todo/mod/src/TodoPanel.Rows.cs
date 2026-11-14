@@ -357,7 +357,7 @@ namespace ProbablyStolenTodo
         // ── 一列 ──
 
         string Placeholder(TodoItem item) =>
-            item.IsSection ? _s.NewSection : item.IsDaily ? _s.NewDaily : item.HasCheck ? _s.NewTodo : _s.NewNote;
+            item.IsSection ? Loc.Get("new_section") : item.IsDaily ? Loc.Get("new_daily") : item.HasCheck ? Loc.Get("new_todo") : Loc.Get("new_note");
 
         Color RowBg(TodoItem item) => item.IsSection ? _t.Section : _t.Row;
 
@@ -425,8 +425,8 @@ namespace ProbablyStolenTodo
                 barImg.raycastTarget = false;
             }
 
-            // ×（編輯模式才顯示，免得手滑刪掉）
-            row.Del = NewButton("Delete", rt, _s.Delete, Clear, _t.DeleteHover, () => RequestDelete(row), labelColor: _t.Text);
+            // ×（編輯模式才顯示，免得手滑刪掉）；符號不分語言，不進 Localization
+            row.Del = NewButton("Delete", rt, "×", Clear, _t.DeleteHover, () => RequestDelete(row), labelColor: _t.Text);
 
             var inRt = row.InputRt = NewRect("Input", rt);
             var inBg = inRt.gameObject.AddComponent<Image>();

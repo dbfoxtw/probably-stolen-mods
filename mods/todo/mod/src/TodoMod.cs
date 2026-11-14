@@ -29,12 +29,13 @@ namespace ProbablyStolenTodo
         static bool _debug;
         /// <summary>除錯標記讀過了沒（Init 時讀不到 mod 資料夾，見 EnsureDebugFlag）。</summary>
         static bool _debugChecked;
+        /// <summary>除錯模式（Loc 在最長字串模式下記每個 key 挑了哪個語言時看）。</summary>
+        internal static bool Debug => _debug;
 
         TodoStore _store;
         Settings _settings;
         TodoPanel _panel;
         SlotData _data;
-        Lang _lang;
         string _localeCode;
         bool _inStore;
         float _nextPoll, _nextReport = 60f;
@@ -339,7 +340,6 @@ namespace ProbablyStolenTodo
                 if (_panel == null || !_panel.Alive || code != _localeCode)
                 {
                     _localeCode = code;
-                    _lang = GameState.DetectLanguage(code);
                     RebuildPanel();
                 }
                 if (GameState.TryGetRun(out int slot, out string runId) && (_reload || _data == null || _data.Slot != slot || _data.RunId != runId))
@@ -384,12 +384,12 @@ namespace ProbablyStolenTodo
             _panel?.FlushEdits();
             _panel?.Destroy();
             var font = GameState.FindFont();
-            _panel = new TodoPanel(font, Strings.For(_lang), _settings, _gate.Changed, OnSettingsChanged, () => _seenDay);
+            _panel = new TodoPanel(font, _settings, _gate.Changed, OnSettingsChanged, () => _seenDay);
             if (_data != null) _panel.SetData(_data);
             if (restyle) _panel.RestoreView(editMode, listScroll);
             if (settingsOpen) _panel.OpenSettings(scroll);
             if (restyle) Log.Msg($"樣式：{_settings.StyleId}");
-            else Log.Msg($"介面：語言 {_localeCode ?? "（未知）"} → {_lang}{(GameState.ZhHantModLoaded() ? "（有繁中 mod）" : "")}，字型 {(font != null ? font.name : "（無）")}，樣式 {_settings.StyleId}");
+            else Log.Msg($"介面：語言 {_localeCode ?? "（未知）"}{(GameState.ZhHantModLoaded() ? "（有繁中 mod）" : "")}，字型 {(font != null ? font.name : "（無）")}，樣式 {_settings.StyleId}");
         }
 
         void Bind(int slot, string runId)

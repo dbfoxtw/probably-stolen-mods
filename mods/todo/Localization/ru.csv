@@ -1,0 +1,54 @@
+# Simple To-Do, Russian (ru): texts of the mod's own floating list. Translated from en.csv with AI help, not checked by a native speaker.
+# Same keys and order as en.csv (see its comments for where each text appears and how much space there is). Plural groups use .one, .few and .many.
+
+title,Задачи
+
+add_todo,+ Задача
+add_daily,+ Ежедн.
+add_note,+ Заметка
+add_section,+ Раздел
+
+empty,Здесь пока пусто.\nДобавьте задачу или заметку кнопками выше.
+
+new_todo,Новая задача…
+new_daily,Новая ежедневная задача…
+new_note,Новая заметка…
+new_section,Название раздела…
+
+delete_section_ask.one,{0} всё ещё содержит {1} пункт.
+delete_section_ask.few,{0} всё ещё содержит {1} пункта.
+delete_section_ask.many,{0} всё ещё содержит {1} пунктов.
+quote,«{0}»
+this_section,Этот раздел
+delete_all,Удалить всё
+delete_header_only,Удалить только заголовок
+cancel,Отмена
+
+more_items.one,+{0} пункт
+more_items.few,+{0} пункта
+more_items.many,+{0} пунктов
+
+font_size,Размер текста
+opacity,Непрозрачность
+show_progress,Прогресс в заголовке
+newline,Новая строка
+newline_shift_hint,Enter завершает ввод.
+auto_next,Новый пункт после Enter
+on,Вкл
+off,Выкл
+save_mode,Сохранение
+save_immediate,Сразу
+save_follow,Вместе с игрой
+save_immediate_hint,Изменения сохраняются сразу и остаются при загрузке сохранения.
+save_follow_hint,Изменения засчитываются, только когда игра сохраняется (новая игра или сон, чтобы закончить день). Загрузка посреди дня вернёт список к тому виду, что был при последнем сохранении.
+
+style,Стиль
+style_classic,Классика
+style_tablet,Блокнот
+style_info,Инфо
+style_crate,Ящик
+style_menu,Меню
+style_reputation,Репутация
+
+key_bind,Свернуть/развернуть «Простой список дел»
+key_bind_tip,Сворачивает или разворачивает «Простой список дел» — так же, как щелчок по стрелке в правом конце его заголовка.

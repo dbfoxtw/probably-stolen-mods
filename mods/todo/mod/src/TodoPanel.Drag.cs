@@ -19,6 +19,8 @@ namespace ProbablyStolenTodo
     sealed partial class TodoPanel
     {
         const float AutoScrollZone = 36, AutoScrollSpeed = 700;
+        /// <summary>拖動分區時「＋N 項」的最小寬度（字比較長時跟著字變寬）。</summary>
+        const float MoreW = 90;
 
         Row _reorderRow;
         /// <summary>這次拖動有沒有真的搬過（放開時才存檔）。</summary>
@@ -199,11 +201,15 @@ namespace ProbablyStolenTodo
                 int n = SectionCount(row);
                 if (n > 0)
                 {
-                    var more = NewText("More", _ghost, string.Format(_s.MoreItems, n), 16, _t.SectionDim);
-                    TopRight(more.rectTransform, right, 0, 90, _rowH);
+                    var label = Loc.Plural("more_items", n, n);
+                    var more = NewText("More", _ghost, label, 16, _t.SectionDim);
+                    // 寬度跟著字（2.1.0 多語系）：原本的 90 當最小值，英文、中文和以前一樣；俄文這類比較長的字不會往左壓到分區名稱。
+                    // 拖動時懸浮單一定顯示著，TMP 量得到寬度
+                    float mw = Mathf.Max(MoreW, Mathf.Ceil(more.GetPreferredValues(label).x));
+                    TopRight(more.rectTransform, right, 0, mw, _rowH);
                     more.alignment = TextAlignmentOptions.CaplineRight;
                     more.enableWordWrapping = false;
-                    right += 90 + 4;
+                    right += mw + 4;
                 }
             }
             else if (item.HasCheck)

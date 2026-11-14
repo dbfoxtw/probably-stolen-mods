@@ -1,0 +1,50 @@
+# Japanese (ja) text of Simple To-Do's floating list, settings page and key bind (read by ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
+# Format: key,value. \n is a line break; keep every {0}/{1} of the English text. Japanese has one plural form: only .other.
+
+title,ToDo
+
+add_todo,+ ToDo
+add_daily,+ 毎日
+add_note,+ メモ
+add_section,+ 見出し
+
+empty,まだ何もありません。\n上のボタンでToDoやメモを追加できます。
+
+new_todo,新しいToDo…
+new_daily,新しい毎日のToDo…
+new_note,新しいメモ…
+new_section,見出しの名前…
+
+delete_section_ask.other,{0}にはまだ{1}件の項目があります。
+quote,「{0}」
+this_section,この見出し
+delete_all,すべて削除
+delete_header_only,見出しだけ削除
+cancel,やめる
+
+more_items.other,+{0}件
+
+font_size,文字サイズ
+opacity,不透明度
+show_progress,タイトルバーに進捗を表示
+newline,改行
+newline_shift_hint,Enterで編集を終了します。
+auto_next,Enterで次の項目を作成
+on,オン
+off,オフ
+save_mode,保存
+save_immediate,すぐに
+save_follow,ゲームのセーブ時
+save_immediate_hint,変更はすぐに保存され、セーブデータをロードしても元に戻りません。
+save_follow_hint,変更はゲームがセーブしたとき（ゲームを新しく始めたとき、または就寝して1日を終えたとき）に確定します。1日の途中でロードすると、前回セーブしたときのリストに戻ります。
+
+style,スタイル
+style_classic,クラシック
+style_tablet,タブレット
+style_info,情報
+style_crate,箱
+style_menu,メニュー
+style_reputation,評判
+
+key_bind,シンプルToDoの折りたたみ/展開
+key_bind_tip,シンプルToDoを折りたたむ、または展開する。タイトルバー右端の矢印をクリックするのと同じ。

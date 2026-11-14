@@ -9,6 +9,7 @@ namespace ProbablyStolenTodo.Verify
     /// <summary>
     /// 資料檔的情境測試：在暫存資料夾模擬玩家的操作（開新遊戲、讀回舊存檔、檔案壞掉…），確認待辦對到正確的存檔、舊資料不會被刪。
     /// 遊戲裡資料檔透過 ModHelper 放在 ModData（TodoStore 的 IDataFiles），這裡換成暫存資料夾（<see cref="FolderFiles"/>）。
+    /// 另外測介面字串（2.1.0 起的 Localization\*.csv）與挑語言、單複數（LocPick）。
     /// 結束時刪掉暫存資料夾。任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -253,6 +254,8 @@ namespace ProbablyStolenTodo.Verify
             InputRulesCheck();
             SlotDeleteFlow();
             SlotDuplicateFlow();
+            StringsTest();
+            LocPickTest();
         }
 
         /// <summary>
@@ -626,12 +629,11 @@ namespace ProbablyStolenTodo.Verify
             Check(unknown.Style == "neon" && unknown.StyleId == Settings.StyleClassic, "看不懂的樣式當經典（設定檔裡的值不動）");
             File.WriteAllText(Path.Combine(dir, "settings.json"), "{\"style\":null}", Encoding.UTF8);
             Check(store.LoadSettings().StyleId == Settings.StyleClassic, "樣式是 null 時當經典");
-            foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
-            {
-                var str = Strings.For(lang);
-                Check(!string.IsNullOrEmpty(str.Style) && str.StyleNames != null && str.StyleNames.Length == Settings.Styles.Length
-                      && str.StyleNames.All(n => !string.IsNullOrWhiteSpace(n)), $"{lang} 的六個樣式名稱都有");
-            }
+            // 2.1.0 起介面字串在 Localization\*.csv（Loc.Get），樣式名稱的 key 是「style_」＋代號（程式裡寫成字面 key，見 TodoPanel.StyleName）
+            var tables = LocTables();
+            foreach (var (lang, t) in tables)
+                Check(t.TryGetValue("style", out var st) && st.Length > 0
+                      && Settings.Styles.All(id => t.TryGetValue("style_" + id, out var n) && !string.IsNullOrWhiteSpace(n)), $"{lang} 的六個樣式名稱都有");
 
             Hotkeys();
         }
@@ -998,6 +1000,207 @@ namespace ProbablyStolenTodo.Verify
             Check(!ops.EndDuplicate(out _, out _, out n) && n == 0, "複製：結束後才收到的不算、不會再通知一次");
             ops.BeginDuplicate(4);
             Check(!ops.EndDuplicate(out _, out _, out n) && n == 0, "複製：上一次結束後收到的不留到下一次");
+        }
+
+        static void Eq<T>(T actual, T expected, string what) =>
+            Check(EqualityComparer<T>.Default.Equals(actual, expected), $"{what}（實際：{actual}，應該是：{expected}）");
+
+        /// <summary>
+        /// 介面字串（2.1.0 起在 Localization\*.csv）：資料夾裡每份 csv（en、zh、zh-Hant 一定要有，另有 6 種翻譯）的 key 和 en 一樣
+        /// （單複數組照各語言的字形：en、de、fr、es 有 one、other，ru、pl 有 one、few、many，中文、日文只有 other）、
+        /// 佔位符和 en 一樣（單複數組的字形和 en 的 .other 比）；符號與按鍵名不進 csv；英文的單複數照決定 63 的定稿；
+        /// 幾條手寫繁中、簡中照 2.0.0 的原字。8 種語言齊不齊、缺字由根目錄的 tools/locale_check.py 查。
+        /// </summary>
+        static void StringsTest()
+        {
+            var tables = LocTables();
+            Check(tables.ContainsKey("en") && tables.ContainsKey("zh") && tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
+            if (!tables.TryGetValue("en", out var en) || !tables.TryGetValue("zh", out var zh) || !tables.TryGetValue("zh-Hant", out var hant)) return;
+            string[] plurals = { "delete_section_ask", "more_items" };
+            // 把單複數組的字形換成 base 再比：四個字形（one、few、many、other）都要拿掉，ru、pl 的 few、many 才對得到 base、
+            // 下面的佔位符比對才不會整組跳過；資料夾裡每份 csv（含 6 種翻譯）都和 en 比
+            string[] suffixes = { "one", "few", "many", "other" };
+            string Base(string k)
+            {
+                foreach (var s in suffixes)
+                    if (k.Length > s.Length + 1 && k.EndsWith("." + s, StringComparison.Ordinal)) return k.Substring(0, k.Length - s.Length - 1);
+                return k;
+            }
+            string Keys(Dictionary<string, string> t) => string.Join(",", t.Keys.Select(Base).Distinct().OrderBy(k => k, StringComparer.Ordinal));
+            foreach (var (lang, t) in tables)
+                if (lang != "en") Eq(Keys(t), Keys(en), $"{lang} 的 key 和英文一樣");
+            // 每個語言該有的字形照 LocPick.PluralCategory 實際會查的（0～200 涵蓋各規則的全部字形）：少了 Loc.Plural 取不到字、多了多半是寫錯語言
+            string Forms(string lang) => string.Join("、", suffixes.Where(s => Enumerable.Range(0, 201).Any(n => LocPick.PluralCategory(lang, n) == s)));
+            foreach (var p in plurals)
+            {
+                Check(en.ContainsKey(p + ".one") && en.ContainsKey(p + ".other") && !en.ContainsKey(p), $"英文的 {p} 有 one、other");
+                foreach (var (lang, t) in tables)
+                    Eq(string.Join("、", suffixes.Where(s => t.ContainsKey(p + "." + s))) + (t.ContainsKey(p) ? "＋沒有字形的 base" : ""), Forms(lang),
+                        $"{lang} 的 {p} 的字形");
+            }
+            // 佔位符：單複數組的每個字形都和 en 的 .other 比（和 tools/locale_check.py 一樣），其他照同一個 key
+            static string Holes(string s) => string.Join(",", System.Text.RegularExpressions.Regex.Matches(s, @"\{\d+\}").Select(m => m.Value).OrderBy(x => x));
+            foreach (var (lang, t) in tables)
+                foreach (var (k, v) in t)
+                {
+                    var enKey = Base(k) != k ? Base(k) + ".other" : k;
+                    if (en.TryGetValue(enKey, out var ev)) Eq(Holes(v), Holes(ev), $"{lang} 的 {k} 佔位符和英文的 {enKey} 一樣");
+                }
+            // 符號與按鍵名不分語言、留在程式裡
+            foreach (var (lang, t) in tables)
+                Check(!t.Values.Any(v => v == "×" || v == "Enter" || v == "Shift+Enter"), $"{lang} 沒有放 ×、Enter、Shift+Enter");
+            // 決定 63 的定稿
+            Eq(en.GetValueOrDefault("delete_section_ask.one"), "{0} still has {1} item.", "英文刪除分區的確認（1 項）");
+            Eq(en.GetValueOrDefault("delete_section_ask.other"), "{0} still has {1} items.", "英文刪除分區的確認（其他）");
+            Eq(zh.GetValueOrDefault("delete_section_ask.other"), "{0}里还有 {1} 项。", "簡中刪除分區的確認");
+            Eq(hant.GetValueOrDefault("delete_section_ask.other"), "{0}裡還有 {1} 項。", "繁中刪除分區的確認");
+            Eq(en.GetValueOrDefault("more_items.one"), "+{0} item", "英文拖分區的項數（1 項）");
+            Eq(en.GetValueOrDefault("more_items.other"), "+{0} items", "英文拖分區的項數（其他）");
+            Eq(zh.GetValueOrDefault("more_items.other"), "＋{0} 项", "簡中拖分區的項數");
+            Eq(hant.GetValueOrDefault("more_items.other"), "＋{0} 項", "繁中拖分區的項數");
+            // 2.0.0 的原字（搬進 csv 時一字不改）
+            Eq(en.GetValueOrDefault("title"), "To-do", "英文標題");
+            Eq(hant.GetValueOrDefault("title"), "待辦", "繁中標題");
+            Eq(zh.GetValueOrDefault("title"), "待办", "簡中標題");
+            Eq(en.GetValueOrDefault("empty"), "Nothing here yet.\nAdd a to-do or a note above.", "英文空清單的提示（\\n 換成換行）");
+            Eq(hant.GetValueOrDefault("key_bind"), "摺疊／展開簡易待辦", "繁中按鍵綁定那列的名稱");
+            Eq(en.GetValueOrDefault("quote"), "“{0}”", "英文的引號");
+            Eq(hant.GetValueOrDefault("quote"), "「{0}」", "繁中的引號");
+            Eq(LocPick.Format(en.GetValueOrDefault("delete_section_ask.other"), new object[] { LocPick.Format(en["quote"], new object[] { "A{0}" }), 3 }),
+                "“A{0}” still has 3 items.", "分區名稱有大括號也照字面代入");
+        }
+
+        /// <summary>
+        /// Loc 的挑法（LocPick，照視窗分頁）：最長字串模式在西文裡挑最寬的（多行比各行寬度的總和、同寬照 en、de、fr、es、ru、pl 取前面的、
+        /// 不在西文清單的不看、全沒有回傳 null）；中文時要三個條件都成立才用 zh-Hant；單複數的字形（CLDR 的整數規則）；
+        /// Format 照遊戲的 GetLocalized。
+        /// </summary>
+        static void LocPickTest()
+        {
+            Func<string, float> len = s => s.Length;
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "Next tab", ["de"] = "Nächster Tab", ["fr"] = "Onglet suivant" }, len),
+                "fr", "挑最寬的");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "abcd", ["ru"] = "abcd", ["pl"] = "abcd" }, len), "en", "同寬取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["pl"] = "abc", ["es"] = "abc" }, len), "es", "同寬照順序（es 在 pl 前面）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "short\nshort", ["de"] = "a much longer line\nx" }, len), "de",
+                "多行比各行寬度的總和（de 18＋1 比 en 5＋5 寬）");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "aaaaaaaaaa\nb", ["de"] = "aaaaaa\naaaaaa" }, len), "de",
+                "多行不看最寬的一行：de 6＋6 比 en 10＋1 寬");
+            Eq(LocPick.Widest(new Dictionary<string, string>
+                {
+                    ["en"] = new string('a', 500) + "\n" + new string('a', 100),
+                    ["de"] = new string('a', 480) + "\n" + new string('a', 450),
+                }, len), "de", "說明框折行後 de 比較高：en 500＋100、de 480＋450 挑 de");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab\ncd", ["de"] = "abcd" }, len), "en",
+                "多行的總和同寬也照順序取 en");
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "ab", ["ja"] = "とても長い日本語の文字列", ["zh"] = "很长很长很长很长" }, len), "en",
+                "日文、中文不在西文清單，不看");
+            Eq(LocPick.Widest(new Dictionary<string, string>(), len), null, "全都沒有回傳 null");
+            Eq(LocPick.Widest(null, len), null, "沒有字典回傳 null");
+            // 寬度照寬度函式量，不是字數
+            Func<string, float> wide = s => s.Sum(c => c == 'W' ? 3f : 1f);
+            Eq(LocPick.Widest(new Dictionary<string, string> { ["en"] = "iiii", ["de"] = "WWW" }, wide), "de", "照寬度函式量，不是字數");
+            Eq(LocPick.TotalWidth("a\nbbb\ncc", len), 6f, "各行寬度的總和（換行不量）");
+
+            Check(LocPick.UseZhHant("zh", true, true), "中文、繁中 mod 有跑、有 key：用 zh-Hant");
+            Check(LocPick.UseZhHant("zh-Hans", true, true), "zh 開頭的 code 都算中文");
+            Check(!LocPick.UseZhHant("zh", false, true), "繁中 mod 沒跑：不用");
+            Check(!LocPick.UseZhHant("zh", true, false), "zh-Hant.csv 沒有這個 key：不用");
+            Check(!LocPick.UseZhHant("en", true, true), "不是中文：不用");
+            Check(!LocPick.UseZhHant("ja", true, true), "日文：不用");
+            Check(!LocPick.UseZhHant(null, true, true), "還沒有語言：不用");
+            Check(!LocPick.UseZhHant("", true, true), "語言是空字串：不用");
+
+            // 單複數的字形
+            void Cat(string lang, int n, string want) => Eq(LocPick.PluralCategory(lang, n), want, $"{lang ?? "null"} 的 {n}");
+            Cat("en", 0, "other");
+            Cat("en", 1, "one");
+            Cat("en", 2, "other");
+            Cat("fr", 0, "one");
+            Cat("fr", 1, "one");
+            Cat("fr", 2, "other");
+            Cat("ru", 1, "one");
+            Cat("ru", 2, "few");
+            Cat("ru", 4, "few");
+            Cat("ru", 5, "many");
+            Cat("ru", 11, "many");
+            Cat("ru", 12, "many");
+            Cat("ru", 14, "many");
+            Cat("ru", 21, "one");
+            Cat("ru", 22, "few");
+            Cat("ru", 25, "many");
+            Cat("ru", 101, "one");
+            Cat("ru", 111, "many");
+            Cat("ru", 112, "many");
+            Cat("pl", 1, "one");
+            Cat("pl", 2, "few");
+            Cat("pl", 4, "few");
+            Cat("pl", 5, "many");
+            Cat("pl", 12, "many");
+            Cat("pl", 22, "few");
+            Cat("pl", 25, "many");
+            Cat("pl", 112, "many");
+            Cat("ja", 1, "other");
+            Cat("zh", 1, "other");
+            Cat("zh-Hant", 1, "other");
+            Cat(null, 1, "other");
+            Cat("", 1, "other");
+            Eq(LocPick.PluralKey("saved", "few"), "saved.few", "單複數組的 key");
+            Eq(LocPick.PluralKey("more_items", LocPick.PluralCategory("en", 1)), "more_items.one", "英文 1 項查 more_items.one");
+
+            Eq(LocPick.Format("{0} of {1}", new object[] { 1, 3 }), "1 of 3", "有參數就代入");
+            Eq(LocPick.Format("Keep {braces}", new object[0]), "Keep {braces}", "沒有參數不格式化（大括號原樣）");
+            Eq(LocPick.Format("Keep {braces}", null), "Keep {braces}", "參數是 null 也不格式化");
+            Eq(LocPick.Format("Bad {0", new object[] { 1 }), "Bad {0", "格式寫壞了回傳原字串");
+            Eq(LocPick.Format(null, new object[] { 1 }), null, "沒有文字回傳 null");
+        }
+
+        /// <summary>讀 Localization\*.csv（照檔名，不分大小寫，和遊戲的 LoadedMod.Localization 一樣）；找不到資料夾時記一項失敗、回傳空的。</summary>
+        static Dictionary<string, Dictionary<string, string>> LocTables()
+        {
+            var tables = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            var dir = FindLocalizationDir();
+            Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
+            if (dir == null) return tables;
+            foreach (var path in Directory.GetFiles(dir, "*.csv").OrderBy(p => p, StringComparer.Ordinal))
+                tables[Path.GetFileNameWithoutExtension(path)] = ReadCsv(path);
+            return tables;
+        }
+
+        static string FindLocalizationDir()
+        {
+            foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+                for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
+                {
+                    if (!Directory.Exists(Path.Combine(d.FullName, "mod", "verify"))) continue;
+                    foreach (var p in new[] { Path.Combine(d.FullName, "public", "Localization"), Path.Combine(d.FullName, "Localization") })
+                        if (File.Exists(Path.Combine(p, "en.csv"))) return p;
+                }
+            return null;
+        }
+
+        /// <summary>
+        /// 照遊戲的 ModLoader 讀 Localization\*.csv（照視窗分頁的 verify）：空白行與 # 開頭的行略過；key 是第一個逗號之前（去空白）；
+        /// 值（ParseCsvValue）去頭尾空白、頭尾都是 " 就拿掉並把 "" 換成 "，字面的 \n 換成換行。重複的 key、沒有逗號、空 key 算失敗。
+        /// </summary>
+        static Dictionary<string, string> ReadCsv(string path)
+        {
+            var d = new Dictionary<string, string>(StringComparer.Ordinal);
+            int lineNo = 0;
+            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            {
+                lineNo++;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                int comma = line.IndexOf(',');
+                if (comma < 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行沒有逗號"); continue; }
+                var key = line.Substring(0, comma).Trim();
+                if (key.Length == 0) { Check(false, $"{Path.GetFileName(path)} 第 {lineNo} 行的 key 是空的"); continue; }
+                Check(!d.ContainsKey(key), $"{Path.GetFileName(path)} 的 {key} 沒有重複");
+                var v = line.Substring(comma + 1).Trim();
+                if (v.Length >= 2 && v.StartsWith("\"") && v.EndsWith("\"")) v = v.Substring(1, v.Length - 2).Replace("\"\"", "\"");
+                d[key] = v.Replace("\\n", "\n");
+            }
+            return d;
         }
     }
 }

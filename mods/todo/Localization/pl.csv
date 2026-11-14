@@ -1,0 +1,54 @@
+# Simple To-Do: texts of the mod's own floating list, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
+# Where each text appears and how much space it has: see the comments in en.csv. Plural groups use .one, .few and .many.
+
+title,Zadania
+
+add_todo,+ Zadanie
+add_daily,+ Dzienne
+add_note,+ Notatka
+add_section,+ Sekcja
+
+empty,Nic tu jeszcze nie ma.\nDodaj zadanie lub notatkę powyżej.
+
+new_todo,Nowe zadanie…
+new_daily,Nowe zadanie dzienne…
+new_note,Nowa notatka…
+new_section,Nazwa sekcji…
+
+delete_section_ask.one,{0} nadal zawiera {1} pozycję.
+delete_section_ask.few,{0} nadal zawiera {1} pozycje.
+delete_section_ask.many,{0} nadal zawiera {1} pozycji.
+quote,Sekcja „{0}”
+this_section,Ta sekcja
+delete_all,Usuń wszystko
+delete_header_only,Usuń tylko nagłówek
+cancel,Anuluj
+
+more_items.one,+{0} pozycja
+more_items.few,+{0} pozycje
+more_items.many,+{0} pozycji
+
+font_size,Rozmiar tekstu
+opacity,Krycie
+show_progress,Pokazuj postęp na pasku tytułu
+newline,Nowy wiersz
+newline_shift_hint,Enter kończy edycję.
+auto_next,Nowa pozycja po Enterze
+on,Wł.
+off,Wył.
+save_mode,Zapisywanie
+save_immediate,Od razu
+save_follow,Razem z grą
+save_immediate_hint,Zmiany są zapisywane od razu i zostają po wczytaniu zapisu.
+save_follow_hint,Zmiany liczą się dopiero wtedy, gdy gra zapisze stan (nowa gra albo pójście spać, by zakończyć dzień). Wczytanie zapisu w trakcie dnia przywraca listę z ostatniego zapisu.
+
+style,Styl
+style_classic,Klasyczny
+style_tablet,Tablet
+style_info,Info
+style_crate,Skrzynia
+style_menu,Menu
+style_reputation,Reputacja
+
+key_bind,Prosta lista zadań: zwiń / rozwiń
+key_bind_tip,Zwija lub rozwija Prostą listę zadań, tak samo jak kliknięcie strzałki na prawym końcu jej paska tytułu.

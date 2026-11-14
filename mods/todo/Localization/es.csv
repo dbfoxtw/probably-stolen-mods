@@ -1,0 +1,61 @@
+# Simple To-Do: Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value
+# See en.csv for where each text appears and how much space it has. Plural groups for es: .one and .other.
+
+# Title bar of the list
+title,Tareas
+
+# The four buttons under the title bar
+add_todo,+ Tarea
+add_daily,+ Diaria
+add_note,+ Nota
+add_section,+ Sección
+
+# Empty list
+empty,Todavía no hay nada.\nAñade una tarea o una nota arriba.
+
+# Grey hint text in an empty row being typed in
+new_todo,Nueva tarea…
+new_daily,Nueva tarea diaria…
+new_note,Nueva nota…
+new_section,Nombre de la sección…
+
+# Deleting a section that still has items ({0} = quote or this_section, {1} = number of items)
+delete_section_ask.one,{0} todavía tiene {1} elemento.
+delete_section_ask.other,{0} todavía tiene {1} elementos.
+quote,«{0}»
+this_section,Esta sección
+delete_all,Borrar todo
+delete_header_only,Borrar solo el título
+cancel,Cancelar
+
+# While dragging a section ({0} = number of items)
+more_items.one,+{0} elemento
+more_items.other,+{0} elementos
+
+# Settings page
+font_size,Tamaño del texto
+opacity,Opacidad
+show_progress,Mostrar progreso en el título
+newline,Salto de línea
+newline_shift_hint,Enter termina la edición.
+auto_next,Nuevo elemento tras Enter
+on,Sí
+off,No
+save_mode,Guardado
+save_immediate,Al instante
+save_follow,Con la partida
+save_immediate_hint,Los cambios se guardan al instante y se mantienen al cargar una partida.
+save_follow_hint,Los cambios solo cuentan cuando el juego guarda (partida nueva, o al dormir para terminar el día). Si cargas a mitad de un día, la lista vuelve a como estaba en el último guardado.
+
+# Styles
+style,Estilo
+style_classic,Clásico
+style_tablet,Tablet
+style_info,Info
+style_crate,Caja
+style_menu,Menú
+style_reputation,Reputación
+
+# Options > Key Binds (Controles): name of this mod's row and its tooltip
+key_bind,Contraer / expandir Simple To-Do
+key_bind_tip,Contrae o expande Simple To-Do, igual que hacer clic en la flecha del extremo derecho de su barra de título.

@@ -1,14 +1,14 @@
 # Probably Stolen 簡易待辦 mod（Simple To-Do）
 
-*Probably Stolen* 的 mod：在店裡顯示一張懸浮單，記待辦和筆記，每個存檔各一份。遊戲官方格式的 mod（不需要 MelonLoader）。2.0.0 以前叫「待辦清單」（To-Do List）。
+*Probably Stolen* 的 mod：在店裡顯示一張懸浮單，記待辦和筆記，每個存檔各一份。2.0.0 以前叫「待辦清單」（To-Do List）。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Simple To-Do 的最新版，標記 `todo-v…`；Demo 版 1.0.x 的標題是 To-Do List）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或 [Nexus 頁面](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs)的 Bugs 分頁）。
 
-> A mod for *Probably Stolen* in the game's official mod format (no MelonLoader needed): a floating list in your store for to-dos and notes, with a separate list for each save. See [English](#english) below.
+> A mod for *Probably Stolen*: a floating list in your store for to-dos and notes, with a separate list for each save. See [English](#english) below.
 
 ## 功能
 
@@ -38,12 +38,12 @@
 
 ## 語言
 
-- 介面跟著遊戲的語言：英文、簡中。遊戲的其他語言顯示英文介面。
+- 介面跟著遊戲的語言：英文、簡中、俄文、德文、日文、法文、西班牙文、波蘭文。遊戲的其他語言顯示英文介面。
 - **繁體中文介面**：遊戲本身沒有繁中，要另外裝玩家自製的[繁中 mod](https://www.nexusmods.com/probablystolen/mods/280)。裝了以後在遊戲裡選簡中，這個 mod 就會顯示繁中。
 
 ## 安裝
 
-這是遊戲官方格式的 mod，不需要 MelonLoader。不需要任何權限，啟用時不會跳出權限確認。
+不需要任何權限，啟用時不會跳出權限確認。
 
 **從 Steam 工作坊**：在[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281)訂閱，開遊戲後在主選單的「Mods」（模組）畫面啟用「Simple To-Do」、照提示重開遊戲。更新由 Steam 自動處理。
 
@@ -80,7 +80,6 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 
 ## 已知限制
 
-- 遊戲語言是英文時，用的是遊戲的英文字型，打中文會缺字。
 - 用輸入法組字時，游標停在組字的最後，←／→ 看不出移到哪裡，也沒有底線標出還沒確定的字（和遊戲自己的輸入框一樣）。Demo 版 1.0.x 自己畫了組字的游標與底線，正式版要額外的權限才能做，2.0.0 拿掉了。
 
 ## 相容性
@@ -111,7 +110,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: a floating list in your store for to-dos and notes, with a separate list for each save. In the game's official mod format (no MelonLoader needed). Called To-Do List before 2.0.0. Supported game version: full release 1.0 (VERSION 100-REV13). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Simple To-Do, tagged `todo-v…`; the Demo versions 1.0.x are titled To-Do List).
+A mod for *Probably Stolen*: a floating list in your store for to-dos and notes, with a separate list for each save. Called To-Do List before 2.0.0. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Simple To-Do, tagged `todo-v…`; the Demo versions 1.0.x are titled To-Do List).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs).
 
@@ -137,11 +136,11 @@ The code was written by AI (Claude); the feature design and in-game testing were
 
 **Collapse key:** the game's Options → Key Binds, "Collapse / expand Simple To-Do", no key by default. It works like the arrow in the title bar, and does nothing while you type in any text field.
 
-**Languages:** the UI follows the game's language: English or Simplified Chinese; the game's other languages get the English UI. For a Traditional Chinese UI, install the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
+**Languages:** the UI follows the game's language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish; the game's other languages get the English UI. For a Traditional Chinese UI, install the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
 
 **Install**
 
-This mod uses the game's official mod format, so MelonLoader is not needed. It needs no permissions, so no permission prompt appears when you enable it.
+It needs no permissions, so no permission prompt appears when you enable it.
 
 - **From the Steam Workshop:** subscribe on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), start the game, activate "Simple To-Do" on the Mods screen of the main menu, and restart as prompted. Steam handles updates.
 - **Manually** (the zip from Nexus or GitHub): find the game folder (Steam library → right-click Probably Stolen → Manage → Browse local files; it contains `Probably Stolen.exe`).
@@ -164,7 +163,6 @@ The Demo version (v1.0.1 and earlier, MelonLoader) does not work on the full gam
 
 **Known limitations**
 
-- With the game in English, the game's English font is used, so Chinese characters typed into the list will be missing.
 - With an input method, the cursor stays at the end of the text being composed; ←/→ don't visibly move it, and the unconfirmed text isn't underlined (the same as the game's own text fields). The Demo versions 1.0.x drew their own composition cursor and underline; the full game would need extra permissions for that, so 2.0.0 removed it.
 
 **Compatibility**

@@ -67,7 +67,6 @@ namespace ProbablyStolenTodo
         float _pendingScroll = -1;
         int _pendingFrames;
         readonly TMP_FontAsset _font;
-        readonly Strings _s;
         readonly Settings _settings;
         readonly Action<SlotData> _save;
         readonly Action _saveSettings;
@@ -124,10 +123,13 @@ namespace ProbablyStolenTodo
         CanvasGroup _group;
         float _previewUntil;
 
-        public TodoPanel(TMP_FontAsset font, Strings s, Settings settings, Action<SlotData> save, Action saveSettings, Func<int?> today)
+        /// <summary>
+        /// 介面字串在建立時取（Loc.Get：照當時的遊戲語言、繁中 mod 有沒有在跑），換語言時 TodoMod 整張重建；
+        /// 設定頁的開／關與說明、刪除分區的確認、拖動時的項數、新列的提示字在用到時才取。
+        /// </summary>
+        public TodoPanel(TMP_FontAsset font, Settings settings, Action<SlotData> save, Action saveSettings, Func<int?> today)
         {
             _font = font;
-            _s = s;
             _settings = settings;
             _save = save;
             _saveSettings = saveSettings;
@@ -189,7 +191,7 @@ namespace ProbablyStolenTodo
                 Decor(line, _t.Frame);
                 AddThin(line, _t.TitleLineW, Thin.Horizontal);
             }
-            var title = _titleText = NewText("Text", _title, _s.Title, 22, _t.TitleText); // 右邊留給按鈕與進度，見 ApplyTitleProgress
+            var title = _titleText = NewText("Text", _title, Loc.Get("title"), 22, _t.TitleText); // 右邊留給按鈕與進度，見 ApplyTitleProgress
             title.alignment = TextAlignmentOptions.MidlineLeft;
             title.fontStyle = FontStyles.Bold;
             title.enableWordWrapping = false;
@@ -242,10 +244,10 @@ namespace ProbablyStolenTodo
             // 新增按鈕：水平均分，懸浮單變寬時跟著變寬
             var adds = new (string label, string kind)[]
             {
-                (_s.AddTodo, TodoItem.KindTodo),
-                (_s.AddDaily, TodoItem.KindDaily),
-                (_s.AddNote, TodoItem.KindNote),
-                (_s.AddSection, TodoItem.KindSection),
+                (Loc.Get("add_todo"), TodoItem.KindTodo),
+                (Loc.Get("add_daily"), TodoItem.KindDaily),
+                (Loc.Get("add_note"), TodoItem.KindNote),
+                (Loc.Get("add_section"), TodoItem.KindSection),
             };
             for (int i = 0; i < adds.Length; i++)
             {
@@ -293,7 +295,7 @@ namespace ProbablyStolenTodo
             barImg.raycastTarget = false;
             _scrollBar.gameObject.SetActive(false);
 
-            _empty = NewText("Empty", scrollRt, _s.Empty, 18, _t.Dim);
+            _empty = NewText("Empty", scrollRt, Loc.Get("empty"), 18, _t.Dim);
             Stretch(_empty.rectTransform, 12, 12, 12, 12);
             _empty.alignment = TextAlignmentOptions.Center;
 
@@ -576,9 +578,9 @@ namespace ProbablyStolenTodo
             _confirmText.alignment = TextAlignmentOptions.Center;
             var buttons = new (string label, Color color, System.Action act)[]
             {
-                (_s.DeleteAll, _t.Danger, () => ConfirmDelete(false)),
-                (_s.DeleteHeaderOnly, _t.Button, () => ConfirmDelete(true)),
-                (_s.Cancel, _t.Button, HideConfirm),
+                (Loc.Get("delete_all"), _t.Danger, () => ConfirmDelete(false)),
+                (Loc.Get("delete_header_only"), _t.Button, () => ConfirmDelete(true)),
+                (Loc.Get("cancel"), _t.Button, HideConfirm),
             };
             for (int i = 0; i < buttons.Length; i++)
             {
@@ -593,8 +595,9 @@ namespace ProbablyStolenTodo
             FlushEdits();
             if (!_rows.Contains(header)) return;
             _confirmRow = header;
-            var name = string.IsNullOrWhiteSpace(header.Item.Text) ? _s.ThisSection : string.Format(_s.Quote, header.Item.Text);
-            _confirmText.text = string.Format(_s.DeleteSectionAsk, name, count);
+            // 分區名稱是玩家打的字，當參數代入（不是格式字串），打了大括號也不會壞
+            var name = string.IsNullOrWhiteSpace(header.Item.Text) ? Loc.Get("this_section") : Loc.Get("quote", header.Item.Text);
+            _confirmText.text = Loc.Plural("delete_section_ask", count, name, count);
             _confirmOpen = true;
             _confirm.gameObject.SetActive(true);
             ApplyOverlay();
@@ -655,7 +658,11 @@ namespace ProbablyStolenTodo
             UpdateAlpha();
             if (!_settings.Collapsed)
             {
-                if (_settingsOpen) UpdateSettingsScroll();
+                if (_settingsOpen)
+                {
+                    FitToggles();
+                    UpdateSettingsScroll();
+                }
                 UpdateScroll();
                 UpdateHover();
             }

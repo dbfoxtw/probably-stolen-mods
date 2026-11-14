@@ -50,7 +50,7 @@ namespace ProbablyStolenTodo
         /// 繁中 mod 這次有沒有真的跑起來（遊戲的 mod 載入器；直接讀不是反射，不必宣告權限）。
         /// 不用 ModLoader.IsModEnabled：它只看玩家勾選的清單，勾了但沒載入（剛勾還沒重開、更新後要重新同意、掃描被拒、Init 失敗）
         /// 也是 true。LoadedMod.IsEnabled 要 Init／OnEnable 成功才是 true。
-        /// 不快取：本 mod Init 時繁中 mod 可能還沒載入；只在重建介面時查，不貴。
+        /// 不快取：本 mod Init 時繁中 mod 可能還沒載入；只在重建介面時記進 log（介面字串挑繁中是 Loc 自己查），不貴。
         /// </summary>
         internal static bool ZhHantModLoaded()
         {
@@ -69,18 +69,8 @@ namespace ProbablyStolenTodo
         }
 
         /// <summary>
-        /// 遊戲只有一個中文語系 zh（簡中），繁體是繁中 mod 在顯示時轉出來的：
-        /// 所以中文時看有沒有裝繁中 mod，有就用繁中，沒有就用簡中；其他語系先用英文。
-        /// </summary>
-        internal static Lang DetectLanguage(string code)
-        {
-            if (code != null && code.StartsWith("zh", StringComparison.Ordinal))
-                return ZhHantModLoaded() ? Lang.ZhHant : Lang.ZhHans;
-            return Lang.En;
-        }
-
-        /// <summary>
-        /// 用遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色：中文是 NotoSansSC 動態字型），
+        /// 用遊戲依語言挑的內文字型（FontLoader 的 Noto Sans 角色：en、de、fr、es、ru、pl 是西文字型 notoSans（含西里爾字母），
+        /// ja 是日文字型 japaneseFont，中文是 NotoSansSC 動態字型），
         /// 和遊戲用同一種字，玩家打的字和遊戲同一種語言時就不會缺字（缺字不處理，使用者決定）。
         /// </summary>
         internal static TMP_FontAsset FindFont()

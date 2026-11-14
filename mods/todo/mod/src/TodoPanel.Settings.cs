@@ -25,6 +25,14 @@ namespace ProbablyStolenTodo
         Button _nlEnter, _nlShift, _saveNow, _saveFollow, _autoNext, _showProgress;
         /// <summary>樣式的按鈕（順序同 Settings.Styles）。</summary>
         Button[] _styleBtns;
+        /// <summary>
+        /// 開／關按鈕的寬度（最小值）。2.1.0 起照「開」「關」較寬的那個加寬（<see cref="FitToggles"/>），名稱跟著讓出位置；
+        /// 英文、中文的字比 56 窄，和以前一樣。
+        /// </summary>
+        const float ToggleW = 56;
+        RectTransform _showProgressBtn, _autoNextBtn;
+        TextMeshProUGUI _showProgressLabel;
+        bool _togglesFitted;
 
         /// <summary>有東西蓋在清單上（確認、設定頁）：清單不接受捲動、拖動、滑過。</summary>
         bool Overlay => _confirmOpen || _settingsOpen;
@@ -63,12 +71,12 @@ namespace ProbablyStolenTodo
             // 樣式（第八輪）：六顆按鈕、兩排各三顆，選中的反白；點了整張馬上換（TodoMod 重建懸浮單，設定頁維持開著，可以接著點下一個比較）。
             // 放最上面，和字型大小、不透明度排在一起（都是外觀）
             float y = 14;
-            Label(page, _s.Style, y);
+            Label(page, Loc.Get("style"), y);
             _styleBtns = new Button[Settings.Styles.Length];
             for (int i = 0; i < Settings.Styles.Length; i++)
             {
                 var id = Settings.Styles[i];
-                var name = _s.StyleNames != null && i < _s.StyleNames.Length ? _s.StyleNames[i] : id;
+                var name = StyleName(id);
                 var b = NewButton("Style_" + id, page, name, _t.Button, _t.ButtonHover, () => SetStyle(id), 16);
                 TopCell(b, i % 3, 3, y + 30 + (i / 3) * 34, 28, 12, 12, 6);
                 _styleBtns[i] = b.GetComponent<Button>();
@@ -76,53 +84,55 @@ namespace ProbablyStolenTodo
 
             // 字型大小：−　100%　＋
             y = 114;
-            Label(page, _s.FontSize, y);
+            Label(page, Loc.Get("font_size"), y);
             _fontValue = Stepper(page, "Font", y, StepFont);
 
             // 不透明度：−　100%　＋（第五輪）
             y = 150;
-            Label(page, _s.Opacity, y);
+            Label(page, Loc.Get("opacity"), y);
             _opacityValue = Stepper(page, "Opacity", y, StepOpacity);
 
             // 鎖定位置不在這裡：在標題列的鎖頭（第五輪先做成這裡的開關，實機後使用者說要的是小鎖頭）
 
             // 標題列顯示進度：開／關（只管標題列整張的「4/19」，分區的進度照常）
             y = 186;
-            ToggleLabel(page, _s.ShowProgress, y);
+            _showProgressLabel = ToggleLabel(page, Loc.Get("show_progress"), y);
             var progressBtn = NewButton("ShowProgress", page, "", _t.Button, _t.ButtonHover, ToggleShowProgress);
-            TopRight(progressBtn, 12, y, 56, 28);
+            TopRight(progressBtn, 12, y, ToggleW, 28);
+            _showProgressBtn = progressBtn;
             _showProgress = progressBtn.GetComponent<Button>();
             _showProgressValue = progressBtn.GetComponentInChildren<TextMeshProUGUI>();
 
             // 摺疊快捷鍵 2.0.0 起不在這裡：在遊戲的「選項 → 按鍵綁定」（CollapseKey.cs）
 
-            // 換行：Enter｜Shift+Enter
+            // 換行：Enter｜Shift+Enter（按鍵名不分語言，留在程式裡、不進 Localization）
             y = 222;
-            Label(page, _s.Newline, y);
-            _nlEnter = Segment(page, _s.NewlineEnter, 0, y + 26, () => SetNewline(Settings.NewlineEnter));
-            _nlShift = Segment(page, _s.NewlineShift, 1, y + 26, () => SetNewline(Settings.NewlineShiftEnter));
-            _newlineHint = NewText("NewlineHint", page, _s.NewlineShiftHint, 15, _t.Dim);
+            Label(page, Loc.Get("newline"), y);
+            _nlEnter = Segment(page, "Enter", 0, y + 26, () => SetNewline(Settings.NewlineEnter));
+            _nlShift = Segment(page, "Shift+Enter", 1, y + 26, () => SetNewline(Settings.NewlineShiftEnter));
+            _newlineHint = NewText("NewlineHint", page, Loc.Get("newline_shift_hint"), 15, _t.Dim);
             TopStretch(_newlineHint.rectTransform, y + 56, 18, 14, 12);
             _newlineHint.alignment = TextAlignmentOptions.TopLeft;
 
             // Enter 後自動新增：開／關（只有 Shift+Enter 換行時能按，否則變灰）
             y = 300;
-            _autoNextLabel = NewText("AutoNextLabel", page, _s.AutoNext, 16, _t.Text);
-            TopStretch(_autoNextLabel.rectTransform, y, 28, 14, 12 + 56 + 6);
+            _autoNextLabel = NewText("AutoNextLabel", page, Loc.Get("auto_next"), 16, _t.Text);
+            TopStretch(_autoNextLabel.rectTransform, y, 28, 14, 12 + ToggleW + 6);
             _autoNextLabel.alignment = TextAlignmentOptions.MidlineLeft;
             _autoNextLabel.enableAutoSizing = true;
             _autoNextLabel.fontSizeMin = 11;
             _autoNextLabel.fontSizeMax = 16;
             var toggle = NewButton("AutoNext", page, "", _t.Button, _t.ButtonHover, ToggleAutoNext);
-            TopRight(toggle, 12, y, 56, 28);
+            TopRight(toggle, 12, y, ToggleW, 28);
+            _autoNextBtn = toggle;
             _autoNext = toggle.GetComponent<Button>();
             _autoNextValue = toggle.GetComponentInChildren<TextMeshProUGUI>();
 
             // 存檔點：馬上存｜跟著遊戲存檔
             y = 340;
-            Label(page, _s.SaveMode, y);
-            _saveNow = Segment(page, _s.SaveImmediate, 0, y + 28, () => SetSaveMode(Settings.SaveImmediate));
-            _saveFollow = Segment(page, _s.SaveFollow, 1, y + 28, () => SetSaveMode(Settings.SaveFollowGame));
+            Label(page, Loc.Get("save_mode"), y);
+            _saveNow = Segment(page, Loc.Get("save_immediate"), 0, y + 28, () => SetSaveMode(Settings.SaveImmediate));
+            _saveFollow = Segment(page, Loc.Get("save_follow"), 1, y + 28, () => SetSaveMode(Settings.SaveFollowGame));
             _saveHint = NewText("SaveHint", page, "", 15, _t.Dim);
             TopStretch(_saveHint.rectTransform, y + 64, SettingsContentH - (y + 64) - 8, 14, 12); // 填滿到內容底；放不下時字自動變小
             _saveHint.alignment = TextAlignmentOptions.TopLeft;
@@ -142,16 +152,57 @@ namespace ProbablyStolenTodo
             t.enableWordWrapping = false;
         }
 
-        /// <summary>右邊是開／關按鈕（寬 56）的那種行的名稱：讓出按鈕的位置，名稱長（英文）放不下時字自動縮小。</summary>
-        void ToggleLabel(RectTransform page, string text, float y)
+        /// <summary>右邊是開／關按鈕（寬 ToggleW，字長時更寬，見 FitToggles）的那種行的名稱：讓出按鈕的位置，名稱長（英文）放不下時字自動縮小。</summary>
+        TextMeshProUGUI ToggleLabel(RectTransform page, string text, float y)
         {
             var t = NewText("Label", page, text, 18, _t.Text);
-            TopStretch(t.rectTransform, y, 28, 14, 12 + 56 + 6);
+            TopStretch(t.rectTransform, y, 28, 14, 12 + ToggleW + 6);
             t.alignment = TextAlignmentOptions.MidlineLeft;
             t.enableWordWrapping = false;
             t.enableAutoSizing = true;
             t.fontSizeMin = 11;
             t.fontSizeMax = 18;
+            return t;
+        }
+
+        /// <summary>
+        /// 樣式的名字。key 寫成字面字串（不用 "style_" + id 拼）：根目錄 tools/locale_check.py 靠字面 key 比對程式用了哪些字串。
+        /// 不認得的代號（不會發生：按鈕照 Settings.Styles 建）顯示代號本身。
+        /// </summary>
+        static string StyleName(string id)
+        {
+            switch (id)
+            {
+                case Settings.StyleClassic: return Loc.Get("style_classic");
+                case Settings.StyleTablet: return Loc.Get("style_tablet");
+                case Settings.StyleInfo: return Loc.Get("style_info");
+                case Settings.StyleCrate: return Loc.Get("style_crate");
+                case Settings.StyleMenu: return Loc.Get("style_menu");
+                case Settings.StyleReputation: return Loc.Get("style_reputation");
+                default: return id;
+            }
+        }
+
+        /// <summary>
+        /// 開／關按鈕的寬度跟著字（2.1.0 多語系：德、法文這類的字比英文長，固定 56 會擠出按鈕）：量「開」「關」較寬的那個，
+        /// 原本的 56 當最小值，兩顆一樣寬；按鈕變寬時左邊的名稱跟著讓出位置。按鈕上的字照樣會自動縮小，量的是最大字級（18）。
+        /// 設定頁顯示後才量（Update 呼叫；懸浮單還沒顯示時 TMP 量不準，列高也是等顯示後才算），每張懸浮單量一次：
+        /// 換語言時整張重建，會重新量。
+        /// </summary>
+        void FitToggles()
+        {
+            if (_togglesFitted) return;
+            _togglesFitted = true;
+            float w = ToggleW;
+            foreach (var s in new[] { Loc.Get("on"), Loc.Get("off") })
+                w = Mathf.Max(w, Mathf.Ceil(_showProgressValue.GetPreferredValues(s).x) + 8); // 左右各留 4
+            if (w <= ToggleW) return;
+            foreach (var (btn, label) in new[] { (_showProgressBtn, _showProgressLabel), (_autoNextBtn, _autoNextLabel) })
+            {
+                btn.sizeDelta = new Vector2(w, btn.sizeDelta.y);
+                var rt = label.rectTransform;
+                rt.offsetMax = new Vector2(-(12 + w + 6), rt.offsetMax.y);
+            }
         }
 
         /// <summary>右邊的「−　值　＋」：按鈕呼叫 step(−1／＋1)，回傳顯示值的文字。</summary>
@@ -237,7 +288,7 @@ namespace ProbablyStolenTodo
             _fontValue.text = $"{Mathf.RoundToInt(_settings.FontK * 100)}%";
             _opacityValue.text = $"{Mathf.RoundToInt(_settings.OpacityK * 100)}%";
             Select(_showProgress, _settings.ShowProgress);
-            _showProgressValue.text = _settings.ShowProgress ? _s.On : _s.Off;
+            _showProgressValue.text = _settings.ShowProgress ? Loc.Get("on") : Loc.Get("off");
             Select(_nlEnter, !_settings.ShiftEnterNewline);
             Select(_nlShift, _settings.ShiftEnterNewline);
             _newlineHint.gameObject.SetActive(_settings.ShiftEnterNewline);
@@ -245,12 +296,12 @@ namespace ProbablyStolenTodo
             bool canAuto = _settings.ShiftEnterNewline;
             _autoNext.interactable = canAuto;
             Select(_autoNext, canAuto && _settings.AutoNext);
-            _autoNextValue.text = _settings.AutoNext ? _s.On : _s.Off;
+            _autoNextValue.text = _settings.AutoNext ? Loc.Get("on") : Loc.Get("off");
             _autoNextValue.color = canAuto ? _t.ButtonText : _t.ButtonTextOff;
             _autoNextLabel.color = canAuto ? _t.Text : _t.Dim;
             Select(_saveNow, !_settings.FollowGame);
             Select(_saveFollow, _settings.FollowGame);
-            _saveHint.text = _settings.FollowGame ? _s.SaveFollowHint : _s.SaveImmediateHint;
+            _saveHint.text = _settings.FollowGame ? Loc.Get("save_follow_hint") : Loc.Get("save_immediate_hint");
         }
 
         void Select(Button b, bool on) => SetColors(b, on ? _t.Selected : _t.Button, _t.ButtonHover, _t.ButtonHover);

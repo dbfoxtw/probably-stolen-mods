@@ -44,16 +44,14 @@ namespace ProbablyStolenTodo
         /// <summary>
         /// OnEnable 時加進「選項 → 按鍵綁定」。先叫 GameOptionRegistry.EnsureVanilla：遊戲自己的選項分區要到第一次打開選項視窗才登記，
         /// 不先登記的話「按鍵綁定」會被我們先建出來、排在所有分區最前面（一鍵關窗 2026-10-29 審查發現）。
-        /// 標籤與說明是函式，打開選項時才取：照當時的語言與繁中 mod 有沒有在跑選字串。
+        /// 標籤與說明是函式，打開選項時才取（Loc.Get）：照當時的語言與繁中 mod 有沒有在跑選字串。
         /// </summary>
         internal static void AddKeyBind()
         {
             GameOptionRegistry.EnsureVanilla();
             ModHelper.AddGameOptionKeyBind(TodoMod.ModId, ModHelper.OPTION_SECTION_KEYBIND, OptionId,
-                () => Text().KeyBind, () => _key, Set, () => Text().KeyBindTip);
+                () => Loc.Get("key_bind"), () => _key, Set, () => Loc.Get("key_bind_tip"));
         }
-
-        static Strings Text() => Strings.For(GameState.DetectLanguage(GameState.LocaleCode()));
 
         /// <summary>選項按套用時（遊戲每次按套用都會對每一列叫 setter，沒改這一列也會叫）：值變了才記下來、寫回 settings.json。</summary>
         static void Set(KeyCode k)

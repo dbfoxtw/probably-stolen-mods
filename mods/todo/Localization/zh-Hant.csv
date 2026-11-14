@@ -1,0 +1,52 @@
+# 簡易待辦懸浮單的介面字串（手寫的繁中：遊戲是中文、繁中 mod 有跑時由 mod 的 Loc.Get 用，其他時候用 zh.csv）。格式：key,值
+# 每條在哪裡、空間多大看 en.csv 的註解。\n 是換行；{0}、{1} 由 mod 代入，要和 en.csv 一樣。
+# 有數量的字串拆成單複數的字形（key.one／key.other…），中文只寫 .other。
+# 符號與按鍵名（刪除鈕的 ×、Enter、Shift+Enter）不分語言，留在程式裡。
+
+title,待辦
+
+add_todo,+ 待辦
+add_daily,+ 每日
+add_note,+ 筆記
+add_section,+ 分區
+
+empty,還沒有內容。\n按上面的按鈕新增待辦或筆記。
+
+new_todo,新待辦…
+new_daily,新每日待辦…
+new_note,新筆記…
+new_section,分區名稱…
+
+delete_section_ask.other,{0}裡還有 {1} 項。
+quote,「{0}」
+this_section,這個分區
+delete_all,全部刪除
+delete_header_only,只刪標題
+cancel,取消
+
+more_items.other,＋{0} 項
+
+font_size,字型大小
+opacity,不透明度
+show_progress,標題列顯示進度
+newline,換行
+newline_shift_hint,按 Enter 完成編輯。
+auto_next,Enter 後自動新增下一條
+on,開
+off,關
+save_mode,存檔點
+save_immediate,馬上存
+save_follow,跟著遊戲存檔
+save_immediate_hint,改了馬上存，讀檔也不會倒回。
+save_follow_hint,改動要等遊戲存檔（開新遊戲、睡覺結束今日）才算數；白天中途讀檔，會回到上次存檔時的樣子。
+
+style,樣式
+style_classic,經典
+style_tablet,平板
+style_info,資訊
+style_crate,箱子
+style_menu,選單
+style_reputation,聲望
+
+key_bind,摺疊／展開簡易待辦
+key_bind_tip,按下後摺疊或展開簡易待辦，和點一下標題列最右邊的箭頭一樣。

@@ -1,0 +1,84 @@
+# Simple To-Do: texts of the mod's own floating list (read by ModHelper.GetLocalized). Format: key,value
+# One entry per line; everything after the first comma is the value (commas inside the value are fine).
+# \n in a value is a line break. {0}, {1} are filled in by the mod: keep every placeholder of the English text.
+# Space is tight: the list can be as narrow as 320 units (about 1/6 of a 1920-wide screen) and button texts do not wrap
+# (they shrink down to a small size, then get cut off). Keep button texts as short as the English ones.
+# Symbols and key names (the delete button's x, "Enter", "Shift+Enter") are the same in every language and are not here.
+# The English interface font has no arrows (-> <-), no full-width plus and no corner brackets: use plain ASCII or the quotes of your language.
+#
+# Plural groups (texts with a number): one key per plural form, "<key>.<form>". Write exactly the forms of your language:
+#   en, de, es, fr: .one and .other (fr: one is used for 0 and 1)
+#   ru, pl: .one, .few and .many (ru one also covers 21, 31...; pl 21, 31... are many)
+#   ja, zh: .other only
+# Every form must keep the same placeholders as .other: never write the number itself (no "1 item"), always {1} / {0}.
+
+# Title bar of the list (short: the bar also holds four icon buttons; at the narrowest only about 6 to 8 letters fit)
+title,To-do
+
+# The four buttons in one row under the title bar (each gets a quarter of the width: about 70 units when narrowest)
+add_todo,+ To-do
+add_daily,+ Daily
+add_note,+ Note
+add_section,+ Section
+
+# Shown in the middle of an empty list (wraps)
+empty,Nothing here yet.\nAdd a to-do or a note above.
+
+# Grey hint text in an empty row being typed in (to-do, daily to-do, note, section name). Long ones wrap; the section name is one line.
+new_todo,New to-do…
+new_daily,New daily to-do…
+new_note,New note…
+new_section,Section name…
+
+# Confirmation when deleting a section that still has items. {0} = the section name in quotes (quote) or this_section, {1} = number of items.
+# Two lines at most fit above the buttons.
+delete_section_ask.one,{0} still has {1} item.
+delete_section_ask.other,{0} still has {1} items.
+# The section name put in quotes for delete_section_ask: use the quotation marks of your language
+quote,“{0}”
+# Used instead of the quoted name when the section has no name (start of a sentence)
+this_section,This section
+# Buttons of that confirmation (one per row, the whole width)
+delete_all,Delete everything
+delete_header_only,Delete heading only
+cancel,Cancel
+
+# While dragging a section, shown at the right of the dragged heading: how many items move with it. {0} = number of items.
+more_items.one,+{0} item
+more_items.other,+{0} items
+
+# Settings page (gear button). Labels are on the left of the row, the controls on the right.
+# Labels next to the - 100% + buttons (font_size, opacity) have about 160 units when narrowest.
+font_size,Text size
+opacity,Opacity
+# Label with an On/Off button on its right (shrinks when long)
+show_progress,Show progress in title bar
+# Label above the two buttons "Enter" and "Shift+Enter": how to start a new line while typing
+newline,New line
+# Shown under those buttons when Shift+Enter is chosen (one short line)
+newline_shift_hint,Enter finishes editing.
+# Label with an On/Off button on its right (shrinks when long): after pressing Enter, start a new item below
+auto_next,New item after Enter
+# The On/Off buttons (small: keep them about as short as the English)
+on,On
+off,Off
+# Label above two buttons (each half of the width): when changes are written to the mod's data file
+save_mode,Save
+save_immediate,Right away
+save_follow,With the game
+# Explanation under those buttons (wraps, shrinks if it does not fit)
+save_immediate_hint,Changes are saved right away and stay when you load a save.
+save_follow_hint,Changes only count once the game saves (new game, or sleeping to end the day). Loading in the middle of a day brings back how the list was at the last save.
+
+# Label above the six style buttons, and the style names (three buttons per row: about 95 units each when narrowest)
+style,Style
+style_classic,Classic
+style_tablet,Tablet
+style_info,Info
+style_crate,Crate
+style_menu,Menu
+style_reputation,Reputation
+
+# The game's Options > Key Binds: name of this mod's row and its tooltip
+key_bind,Collapse / expand Simple To-Do
+key_bind_tip,Collapses or expands Simple To-Do, same as clicking the arrow at the right end of its title bar.

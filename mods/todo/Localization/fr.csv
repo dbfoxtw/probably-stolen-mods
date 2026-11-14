@@ -1,0 +1,53 @@
+# Simple To-Do : textes de la liste flottante du mod (lus par ModHelper.GetLocalized). Format : key,value
+# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte et combien de place il a). \n = retour à la ligne.
+# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste ; le nombre est toujours un {0} ou {1}.
+
+title,À faire
+
+add_todo,+ Tâche
+add_daily,+ Quotidien
+add_note,+ Note
+add_section,+ Section
+
+empty,Rien pour l'instant.\nAjoutez une tâche ou une note ci-dessus.
+
+new_todo,Nouvelle tâche…
+new_daily,Nouvelle tâche quotidienne…
+new_note,Nouvelle note…
+new_section,Nom de la section…
+
+delete_section_ask.one,{0} contient encore {1} élément.
+delete_section_ask.other,{0} contient encore {1} éléments.
+quote,« {0} »
+this_section,Cette section
+delete_all,Tout supprimer
+delete_header_only,Ne supprimer que le titre
+cancel,Annuler
+
+more_items.one,+{0} élément
+more_items.other,+{0} éléments
+
+font_size,Taille du texte
+opacity,Opacité
+show_progress,Progression dans la barre de titre
+newline,Retour à la ligne
+newline_shift_hint,Enter termine la saisie.
+auto_next,Nouvel élément après Enter
+on,Oui
+off,Non
+save_mode,Sauvegarde
+save_immediate,Immédiate
+save_follow,Avec le jeu
+save_immediate_hint,Les modifications sont enregistrées tout de suite et restent quand vous chargez une sauvegarde.
+save_follow_hint,Les modifications ne comptent qu'une fois la partie sauvegardée par le jeu (nouvelle partie, ou dormir pour terminer la journée). Charger en pleine journée ramène la liste à son état de la dernière sauvegarde.
+
+style,Style
+style_classic,Classique
+style_tablet,Tablette
+style_info,Info
+style_crate,Caisse
+style_menu,Menu
+style_reputation,Réputation
+
+key_bind,Replier / déplier Simple To-Do
+key_bind_tip,Replie ou déplie Simple To-Do, comme un clic sur la flèche à l'extrémité droite de sa barre de titre.

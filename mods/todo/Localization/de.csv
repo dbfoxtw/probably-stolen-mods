@@ -1,0 +1,52 @@
+# Simple To-Do: texts of the mod's own floating list, German. Translated from en.csv with AI help. Format: key,value
+# Plural groups: German uses .one and .other. Keep button texts short (see the comments in en.csv).
+
+title,Aufgaben
+
+add_todo,+ Aufgabe
+add_daily,+ Täglich
+add_note,+ Notiz
+add_section,+ Abschnitt
+
+empty,Noch nichts hier.\nFüge oben eine Aufgabe oder Notiz hinzu.
+
+new_todo,Neue Aufgabe …
+new_daily,Neue tägliche Aufgabe …
+new_note,Neue Notiz …
+new_section,Name des Abschnitts …
+
+delete_section_ask.one,{0} enthält noch {1} Eintrag.
+delete_section_ask.other,{0} enthält noch {1} Einträge.
+quote,„{0}“
+this_section,Dieser Abschnitt
+delete_all,Alles löschen
+delete_header_only,Nur Überschrift löschen
+cancel,Abbrechen
+
+more_items.one,+{0} Eintrag
+more_items.other,+{0} Einträge
+
+font_size,Textgröße
+opacity,Deckkraft
+show_progress,Fortschritt in der Titelleiste
+newline,Neue Zeile
+newline_shift_hint,Enter beendet die Bearbeitung.
+auto_next,Nach Enter neuer Eintrag
+on,An
+off,Aus
+save_mode,Speichern
+save_immediate,Sofort
+save_follow,Mit dem Spiel
+save_immediate_hint,Änderungen werden sofort gespeichert und bleiben erhalten, wenn du einen Spielstand lädst.
+save_follow_hint,Änderungen zählen erst, wenn das Spiel speichert (neues Spiel oder Schlafen, um den Tag zu beenden). Lädst du mitten am Tag einen Spielstand, ist die Liste wieder so wie beim letzten Speichern.
+
+style,Stil
+style_classic,Klassisch
+style_tablet,Tablet
+style_info,Info
+style_crate,Kiste
+style_menu,Menü
+style_reputation,Ansehen
+
+key_bind,Einfache To-do-Liste ein-/ausklappen
+key_bind_tip,Klappt die Einfache To-do-Liste ein oder aus, wie ein Klick auf den Pfeil am rechten Ende ihrer Titelleiste.
