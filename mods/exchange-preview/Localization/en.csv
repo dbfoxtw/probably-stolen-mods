@@ -138,6 +138,7 @@ cfg.night_report_tip,Add a line to the night report saying what the Exchange lef
 cfg.reminder,End of day reminder
 cfg.reminder_tip,On the End of Day screen, warn when the Janitorial Service will clear items from the Exchange still in the trash can, or extra items beyond one trade per night
 cfg.note,Trash can note
-cfg.note_tip,A sticky note on the trash can in the store showing the exchange status; can be on together with the lid light
+# Off, Front, Lid, Counter are the values of the dropdown (shown as they are, not translated): keep them in English, one option per line.
+cfg.note_tip,A sticky note on the trash can in the store showing the exchange status, and where to put it; can be on together with the lid light.\nOff = no note\nFront = on the front\nLid = on the lid, slanted along it\nCounter = hanging from the edge of the counter above\nIf another mod sticks something on the front of the trash can, choose Lid or Counter.
 cfg.led,Trash can light
 cfg.led_tip,The light on the trash can lid shows the exchange status by color and blinks when items from the Exchange are waiting to be picked up; can be on together with the note

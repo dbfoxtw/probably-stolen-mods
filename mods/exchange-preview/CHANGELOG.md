@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.4.0（2026-11-15）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 新功能：垃圾桶紙條可以貼在正面、蓋子上（順著蓋子斜貼）或掛在垃圾桶上方的櫃檯邊，在設定「垃圾桶紙條」選。原本的開關換成下拉選單，關掉是 Off，原本的設定會照舊。別的 mod 在垃圾桶正面貼了東西時，可以換到上面去。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported)
+
+- New: the trash can note can go on the front, on the lid (slanted along it) or hang from the counter above the trash can; choose in the "Trash can note" setting. The on/off switch is now a dropdown (Off turns it off), and your old choice is kept. Handy when another mod sticks something on the front of the trash can.
+
 ## v2.3.0（2026-11-15）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

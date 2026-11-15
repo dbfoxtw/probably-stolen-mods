@@ -74,6 +74,7 @@ namespace ProbablyStolenExchangePreview.Verify
             Localization();
             LocPickTest();
             Indicator();
+            NotePlaces();
             Purity();
             Store();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
@@ -1197,6 +1198,208 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(Math.Abs(d.x0) < 1e-5 && Math.Abs(d.x1 - 0.48f) < 1e-3, "保持比例、pivot 在左：圖貼左邊");
             d = IndicatorLogic.Drawn(96, 288, 96, 144, true, 0.5f, 1f);
             Check(Math.Abs(d.y0 - 0.5f) < 1e-5 && Math.Abs(d.y1 - 1f) < 1e-5 && d.x0 == 0 && d.x1 == 1, "保持比例、框比圖高、pivot 在上：圖貼上面");
+        }
+
+        /// <summary>
+        /// 垃圾桶紙條的三種位置：舊設定（開關）怎麼轉、Front 和 2.3.0 一模一樣、Counter＝Front 往上 71、
+        /// Lid 每列的位置與斜度表（和示意圖 trash_note_place.py 的 slanted_note 一格一格比）、不蓋到燈；設定說明 9 種語言都列了四個選項。
+        /// </summary>
+        static void NotePlaces()
+        {
+            // 下拉選單的值（名稱與順序）：存進玩家的設定檔，定了不能改
+            Eq(string.Join(",", Enum.GetNames(typeof(NotePlace))), "Off,Front,Lid,Counter", "紙條位置的選項與順序");
+
+            // 舊設定（2.3.0 以前是開關，存 true／false）
+            Eq(IndicatorLogic.OldNoteValue("false"), (NotePlace?)NotePlace.Off, "舊值 false → Off");
+            Eq(IndicatorLogic.OldNoteValue(" False "), (NotePlace?)NotePlace.Off, "舊值 False（前後空白、大寫）→ Off");
+            Eq(IndicatorLogic.OldNoteValue("true"), (NotePlace?)NotePlace.Front, "舊值 true → Front");
+            Eq(IndicatorLogic.OldNoteValue("TRUE"), (NotePlace?)NotePlace.Front, "舊值 TRUE → Front");
+            Eq(IndicatorLogic.OldNoteValue("Lid"), (NotePlace?)null, "新值 Lid：不轉");
+            Eq(IndicatorLogic.OldNoteValue(""), (NotePlace?)null, "空的：不轉");
+            Eq(IndicatorLogic.OldNoteValue(null), (NotePlace?)null, "null：不轉");
+
+            // Front：版面照舊，每一格和 2.3.0 的 TrashIndicator.PaperSprite 的規則一樣
+            var front = IndicatorLogic.Layout(NotePlace.Front);
+            Eq(front.Texture.ToString(), "(18,61,69,85)", "Front 的貼圖範圍");
+            Eq(front.Text.ToString(), "(20,63,66,84)", "Front 的字框");
+            Eq(front.Slant, 0f, "Front 的字不斜");
+            Eq(IndicatorLogic.Paper.ToString(), "(18,63,68,84)", "Front 的紙張");
+            Eq(IndicatorLogic.Tape.ToString(), "(37,61,48,65)", "Front 的膠帶");
+            Eq(IndicatorLogic.Layout(NotePlace.Off).Place, NotePlace.Front, "Off 的版面給 Front 的（呼叫端不建紙條）");
+            int frontDiff = 0, frontCount = 0;
+            for (int gy = front.Texture.Y0; gy < front.Texture.Y1; gy++)
+                for (int gx = front.Texture.X0; gx < front.Texture.X1; gx++)
+                {
+                    frontCount++;
+                    var (oldKind, oldTape) = OldFrontPixel(gx, gy);
+                    var k = IndicatorLogic.NotePixelAt(NotePlace.Front, gx, gy, out bool tape);
+                    if (k != oldKind || tape != oldTape) frontDiff++;
+                }
+            Check(frontCount == 51 * 24 && frontDiff == 0, $"Front 的每一格和 2.3.0 一樣（{frontCount} 格，不一樣的 {frontDiff} 格）");
+
+            // Counter：Front 整塊往上 71，像素一樣、只是位置不同
+            var counter = IndicatorLogic.Layout(NotePlace.Counter);
+            Eq(counter.Texture.ToString(), "(18,-10,69,14)", "Counter 的貼圖範圍");
+            Eq(counter.Text.ToString(), "(20,-8,66,13)", "Counter 的字框");
+            Eq(counter.Slant, 0f, "Counter 的字不斜");
+            Eq(IndicatorLogic.Paper.MoveY(IndicatorLogic.CounterDy).ToString(), "(18,-8,68,13)", "Counter 的紙張");
+            Eq(IndicatorLogic.Tape.MoveY(IndicatorLogic.CounterDy).ToString(), "(37,-10,48,-6)", "Counter 的膠帶");
+            int counterDiff = 0;
+            for (int gy = counter.Texture.Y0 - 2; gy < counter.Texture.Y1 + 2; gy++)
+                for (int gx = counter.Texture.X0 - 2; gx < counter.Texture.X1 + 2; gx++)
+                {
+                    var k = IndicatorLogic.NotePixelAt(NotePlace.Counter, gx, gy, out bool tape);
+                    var f = IndicatorLogic.NotePixelAt(NotePlace.Front, gx, gy + 71, out bool fTape);
+                    if (k != f || tape != fTape) counterDiff++;
+                }
+            Check(counterDiff == 0, $"Counter 的每一格＝Front 往上 71（不一樣的 {counterDiff} 格）");
+            var glow = IndicatorLogic.Glow;
+            var ct = counter.Texture;
+            Check(glow.Y1 <= ct.Y0 || ct.Y1 <= glow.Y0 || glow.X1 <= ct.X0 || ct.X1 <= glow.X0, "Counter 的紙條和 LED 不重疊");
+            // 在垃圾桶圖上方：錨點大於 1 是預期的
+            var ca = IndicatorLogic.Anchors(counter.Texture, 96, 144);
+            Check(Math.Abs(ca.maxY - (1 + 10 / 144f)) < 1e-5 && Math.Abs(ca.minY - (1 - 14 / 144f)) < 1e-5, $"Counter 的上下錨點（上緣超出圖 10 像素）：{ca.minY}～{ca.maxY}");
+
+            // Lid：斜度表＝round(0.3×k)、銀行家捨入（和示意圖的 Python round 一樣）
+            Eq(IndicatorLogic.LidRise.Length, IndicatorLogic.LidH, "Lid 的斜度表有 20 列");
+            for (int k = 0; k < IndicatorLogic.LidRise.Length; k++)
+                Eq(IndicatorLogic.LidRise[k], (int)Math.Round(0.3 * k), $"Lid 的斜度表第 {k} 列＝Math.Round(0.3×{k})");
+            Eq(string.Join(",", IndicatorLogic.LidRise), "0,0,1,1,1,2,2,2,2,3,3,3,4,4,4,4,5,5,5,6", "Lid 的斜度表");
+            Eq(IndicatorLogic.LidShift(0), 6, "Lid 最上一列右移 6");
+            Eq(IndicatorLogic.LidShift(1), 5, "Lid 第二列右移 5");
+            Eq(IndicatorLogic.LidShift(19), 0, "Lid 最下一列不移");
+            var lid = IndicatorLogic.Layout(NotePlace.Lid);
+            Eq(lid.Texture.ToString(), "(25,10,74,33)", "Lid 的貼圖範圍");
+            Eq(lid.Text.ToString(), "(27,12,65,32)", "Lid 的字框");
+            Eq(lid.Slant, 0.3f, "Lid 的字斜 0.3");
+            for (int r = 0; r < IndicatorLogic.LidH; r++)
+            {
+                int y = 12 + r, x0 = 25 + IndicatorLogic.LidShift(r), want = r == 19 ? 1 : 0;
+                bool ok = IndicatorLogic.NotePixelAt(NotePlace.Lid, x0 - 1, y, out _) != NotePixel.Paper
+                       && IndicatorLogic.NotePixelAt(NotePlace.Lid, x0 + 42, y, out _) != NotePixel.Paper
+                       && Enumerable.Range(x0, 42).All(x => IndicatorLogic.NotePixelAt(NotePlace.Lid, x, y, out _) == (r == 19 ? NotePixel.Edge : NotePixel.Paper));
+                Check(ok, $"Lid 第 {r} 列（y {y}）的紙張在 x {x0}～{x0 + 41}{(want == 1 ? "、底邊色" : "")}");
+                Eq(IndicatorLogic.NotePixelAt(NotePlace.Lid, x0 + 42, y + 1, out _), NotePixel.Shadow, $"Lid 第 {r} 列的右側影子在 ({x0 + 42},{y + 1})");
+            }
+            Check(Enumerable.Range(26, 42).All(x => IndicatorLogic.NotePixelAt(NotePlace.Lid, x, 32, out _) == NotePixel.Shadow)
+                  && IndicatorLogic.NotePixelAt(NotePlace.Lid, 25, 32, out _) == NotePixel.Clear
+                  && IndicatorLogic.NotePixelAt(NotePlace.Lid, 68, 32, out _) == NotePixel.Clear, "Lid 的底下影子在 y 32、x 26～67");
+            foreach (var (ty, tx0) in new[] { (10, 47), (11, 47), (12, 47), (13, 46) })
+            {
+                bool ok = true;
+                for (int x = 20; x < 80; x++)
+                {
+                    IndicatorLogic.NotePixelAt(NotePlace.Lid, x, ty, out bool tape);
+                    if (tape != (x >= tx0 && x < tx0 + 11)) ok = false;
+                }
+                Check(ok, $"Lid 的膠帶在 y {ty}、x {tx0}～{tx0 + 10}");
+            }
+            Check(Enumerable.Range(20, 60).All(x => { IndicatorLogic.NotePixelAt(NotePlace.Lid, x, 9, out bool a); IndicatorLogic.NotePixelAt(NotePlace.Lid, x, 14, out bool b); return !a && !b; }),
+                "Lid 的膠帶只在 y 10～13");
+            // 有東西的格子剛好填滿貼圖範圍；燈（Led）上面什麼都沒有
+            int bx0 = int.MaxValue, by0 = int.MaxValue, bx1 = int.MinValue, by1 = int.MinValue;
+            for (int gy = 0; gy < 60; gy++)
+                for (int gx = 0; gx < 96; gx++)
+                {
+                    var k = IndicatorLogic.NotePixelAt(NotePlace.Lid, gx, gy, out bool tape);
+                    if (k == NotePixel.Clear && !tape) continue;
+                    bx0 = Math.Min(bx0, gx); by0 = Math.Min(by0, gy); bx1 = Math.Max(bx1, gx + 1); by1 = Math.Max(by1, gy + 1);
+                }
+            Eq($"({bx0},{by0},{bx1},{by1})", lid.Texture.ToString(), "Lid 畫到的範圍＝貼圖範圍");
+            var led = IndicatorLogic.Led;
+            bool ledClear = true;
+            for (int gy = led.Y0; gy < led.Y1; gy++)
+                for (int gx = led.X0; gx < led.X1; gx++)
+                    if (IndicatorLogic.NotePixelAt(NotePlace.Lid, gx, gy, out bool tape) != NotePixel.Clear || tape) ledClear = false;
+            Check(ledClear && (led.Y0 >= lid.Texture.Y1 || led.Y1 <= lid.Texture.Y0 || led.X1 <= lid.Texture.X0 || led.X0 >= lid.Texture.X1),
+                "Lid 的紙條與影子不蓋到蓋子上的燈");
+            // 和示意圖的 slanted_note(img, 25, 12, 42, 20) 一格一格比（膠帶的顏色照 TrashIndicator 疊色，這裡只比位置）
+            int mockDiff = 0;
+            var mock = MockLidPixels();
+            for (int gy = 0; gy < 60; gy++)
+                for (int gx = 0; gx < 96; gx++)
+                {
+                    var k = IndicatorLogic.NotePixelAt(NotePlace.Lid, gx, gy, out bool tape);
+                    mock.TryGetValue((gx, gy), out var m);
+                    bool mTape = m.tape;
+                    if (tape != mTape || (!tape && k != m.kind)) mockDiff++;
+                }
+            Check(mockDiff == 0, $"Lid 的每一格和示意圖一樣（不一樣的 {mockDiff} 格）");
+            // 字斜過去以後還在紙上：下緣不移、上緣右移 0.3×20＝6
+            var lt = lid.Text;
+            float top = lt.Height * lid.Slant;
+            Check(lt.X0 >= 25 + IndicatorLogic.LidShift(19) && lt.X1 <= 25 + IndicatorLogic.LidShift(19) + 42
+                  && lt.X0 + top >= 25 + IndicatorLogic.LidShift(0) && lt.X1 + top <= 25 + IndicatorLogic.LidShift(0) + 42,
+                "Lid 的字斜過去以後，上緣、下緣都在紙張裡");
+
+            // 剪切係數：一個像素在兩個方向一樣長時就是 0.3；被拉扁時照比例換
+            var text = lid.Text; // 38×20
+            Check(Math.Abs(IndicatorLogic.ShearFactor(0.3f, 38f, 20f, text) - 0.3f) < 1e-6, "剪切係數：像素是正方形時＝0.3");
+            Check(Math.Abs(IndicatorLogic.ShearFactor(0.3f, 76f, 20f, text) - 0.6f) < 1e-6, "剪切係數：寬拉成兩倍時＝0.6");
+            Eq(IndicatorLogic.ShearFactor(0f, 38f, 20f, text), 0f, "剪切係數：不斜時是 0");
+            Eq(IndicatorLogic.ShearFactor(0.3f, 0f, 20f, text), 0f, "剪切係數：框是空的時是 0");
+
+            // 設定說明：每種語言都列了四個選項（下拉選單的值不翻譯），一個選項一行、行數和英文一樣
+            if (Tables.TryGetValue("en", out var en) && en.TryGetValue("cfg.note_tip", out var enTip))
+            {
+                int lines = enTip.Split('\n').Length;
+                Eq(lines, 6, "英文的紙條說明 6 行");
+                foreach (var (lang, tb) in Tables)
+                {
+                    if (!tb.TryGetValue("cfg.note_tip", out var tip)) { Check(false, $"{lang} 沒有 cfg.note_tip"); continue; }
+                    var ls = tip.Split('\n');
+                    Eq(ls.Length, lines, $"{lang} 的紙條說明行數和英文一樣");
+                    string[] opts = { "Off", "Front", "Lid", "Counter" };
+                    for (int i = 0; i < opts.Length; i++)
+                        Check(ls.Length > i + 1 && ls[i + 1].StartsWith(opts[i], StringComparison.Ordinal), $"{lang} 的紙條說明第 {i + 2} 行是 {opts[i]}：{(ls.Length > i + 1 ? ls[i + 1] : "")}");
+                    Check(opts.All(o => tip.Contains(o)), $"{lang} 的紙條說明有 Off、Front、Lid、Counter");
+                }
+            }
+            else Check(false, "en.csv 有 cfg.note_tip");
+        }
+
+        /// <summary>2.3.0 的 TrashIndicator.PaperSprite 怎麼決定每一格（照抄，Front 的回歸測試用）。</summary>
+        static (NotePixel kind, bool tape) OldFrontPixel(int gx, int gy)
+        {
+            var p = new PixelRect(18, 63, 68, 84);
+            var tape = new PixelRect(37, 61, 48, 65);
+            bool inPaper = gx >= p.X0 && gx < p.X1 && gy >= p.Y0 && gy < p.Y1;
+            bool inShadow = gx >= p.X0 + 1 && gx <= p.X1 && gy >= p.Y0 + 1 && gy <= p.Y1;
+            bool inTape = gx >= tape.X0 && gx < tape.X1 && gy >= tape.Y0 && gy < tape.Y1;
+            var c = NotePixel.Clear;
+            if (inShadow) c = NotePixel.Shadow;
+            if (inPaper) c = gy == p.Y1 - 1 ? NotePixel.Edge : NotePixel.Paper;
+            return (c, inTape);
+        }
+
+        /// <summary>
+        /// 斜貼紙條示意圖的 slanted_note(img, 25, 12, 42, 20) 照它的畫法（一列一列畫、後畫的蓋掉先畫的）換成垃圾桶圖的格子：
+        /// row －2～20，每列右移 round(0.3×(19－row))（row 夾在 0～19）；row 20 是底下影子，0～19 先畫右側影子（下一列）再畫紙，row＜2 畫膠帶。
+        /// </summary>
+        static Dictionary<(int x, int y), (NotePixel kind, bool tape)> MockLidPixels()
+        {
+            const int x0 = 25, y0 = 12, w = 42, h = 20;
+            var g = new Dictionary<(int, int), (NotePixel, bool)>();
+            int Shift(int row) => (int)Math.Round(0.3 * (h - 1 - row), MidpointRounding.ToEven);
+            for (int row = -2; row <= h; row++)
+            {
+                int s = Shift(Math.Min(Math.Max(row, 0), h - 1));
+                int y = y0 + row;
+                if (row == h)
+                {
+                    for (int x = s + 1; x <= s + w; x++) g[(x0 + x, y)] = (NotePixel.Shadow, false);
+                    continue;
+                }
+                if (row >= 0)
+                {
+                    g[(x0 + s + w, y + 1)] = (NotePixel.Shadow, false);
+                    for (int x = s; x < s + w; x++) g[(x0 + x, y)] = (row == h - 1 ? NotePixel.Edge : NotePixel.Paper, false);
+                }
+                int tx = s + (w - 11) / 2 + 1;
+                if (row < 2)
+                    for (int x = tx; x < tx + 11; x++) g[(x0 + x, y)] = (NotePixel.Clear, true);
+            }
+            return g;
         }
 
         /// <summary>

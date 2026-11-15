@@ -71,6 +71,6 @@ cfg.night_report_tip,Fügt dem nächtlichen Bericht eine Zeile hinzu, die zeigt,
 cfg.reminder,Erinnerung am Ende des Tages
 cfg.reminder_tip,Warnt im Bildschirm „Ende des Tages“, wenn der Hausmeisterservice Gegenstände von der Börse entfernen wird, die noch im Mülleimer liegen, oder überzählige Gegenstände (jeder Tausch nur einmal pro Nacht)
 cfg.note,Zettel am Mülleimer
-cfg.note_tip,Ein Klebezettel am Mülleimer im Laden, der den Tauschstatus zeigt; kann zusammen mit dem Licht am Deckel an sein
+cfg.note_tip,Ein Klebezettel am Mülleimer im Laden, der den Tauschstatus zeigt – und wo er klebt; kann zusammen mit dem Licht am Deckel an sein.\nOff = kein Zettel\nFront = vorne\nLid = auf dem Deckel, schräg entlang seiner Neigung\nCounter = hängt an der Kante des Tresens darüber\nWenn eine andere Mod etwas vorne auf den Mülleimer klebt, wähle Lid oder Counter.
 cfg.led,Licht am Mülleimer
 cfg.led_tip,Das Licht am Mülleimerdeckel zeigt den Tauschstatus mit seiner Farbe und blinkt, wenn Gegenstände von der Börse darauf warten, abgeholt zu werden; kann zusammen mit dem Zettel an sein

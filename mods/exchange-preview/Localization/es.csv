@@ -81,6 +81,6 @@ cfg.night_report_tip,Añade al informe nocturno una línea con lo que el mercado
 cfg.reminder,Recordatorio de fin del día
 cfg.reminder_tip,En la pantalla «Fin del día», avisa cuando el servicio de limpieza vaya a retirar objetos del mercado clandestino que siguen en el cubo de basura, o lo que sobra más allá de un intercambio por noche
 cfg.note,Nota en el cubo de basura
-cfg.note_tip,Una nota adhesiva en el cubo de basura de la tienda que muestra el estado del intercambio; puede estar activada a la vez que la luz de la tapa
+cfg.note_tip,Una nota adhesiva en el cubo de basura de la tienda que muestra el estado del intercambio, y dónde ponerla; puede estar activada a la vez que la luz de la tapa.\nOff = sin nota\nFront = en la parte delantera\nLid = en la tapa, inclinada como ella\nCounter = colgada del borde del mostrador de arriba\nSi otro mod pega algo en la parte delantera del cubo de basura, elige Lid o Counter.
 cfg.led,Luz del cubo de basura
 cfg.led_tip,La luz de la tapa del cubo de basura muestra con colores el estado del intercambio y parpadea cuando hay objetos del mercado clandestino esperando a que los recojas; puede estar activada a la vez que la nota

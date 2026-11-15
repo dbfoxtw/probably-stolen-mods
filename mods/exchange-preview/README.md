@@ -21,7 +21,7 @@
   - 多放的：每種交換每晚只換一次，多放的會被清掉。
   - 其餘會被清掉的件數；夢塵純度不夠（收走了卻換不到東西）的警告；今晚沒有勾清潔服務時的提醒。
   - 本週促銷：最後列出這週地下交易所的三筆促銷交易（要丟什麼 → 換到什麼），和地下交易所清單上的一樣。列出時提示框會變寬。
-- **垃圾桶標示**：店裡的垃圾桶上貼一張紙條（也可以改用蓋子上的燈）：無交易、可交易、多放了、待收貨（交易所換來的東西還沒拿出來）、禁止交易。
+- **垃圾桶標示**：店裡的垃圾桶上貼一張紙條（也可以改用蓋子上的燈）：無交易、可交易、多放了、待收貨（交易所換來的東西還沒拿出來）、禁止交易。紙條可以貼在正面、蓋子上（順著蓋子斜貼），或掛在垃圾桶上方的櫃檯邊。
 - **夜間報告**：清潔服務換成功時，早上的報告多一行紫色，寫出交易所在垃圾桶裡留下了什麼。
 - **結束一天的提醒**：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時，在清潔服務那一列下面提醒。只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
 - **走私者暗格（改進）**：暗格和直接放在裡面的東西，清潔服務不會清掉（遊戲 VERSION 100-REV5 起），所以不算在會被清掉的東西裡，交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
@@ -39,7 +39,7 @@
 | 清單紅字（`ExchangeListWarning`） | 開 | 被禁止使用時，交易所清單的紅字 |
 | 夜間報告（`NightReport`） | 開 | 夜間報告那一行 |
 | 結束一天的提醒（`EndOfDayReminder`） | 開 | 結束一天的提醒 |
-| 垃圾桶紙條（`TrashNote`） | 開 | 垃圾桶上的紙條 |
+| 垃圾桶紙條（`TrashNote`） | Front | 垃圾桶上的紙條貼在哪裡（下拉選單照英文顯示）：Off＝不貼；Front＝貼在正面；Lid＝順著蓋子的斜度貼在蓋子上；Counter＝掛在垃圾桶上方的櫃檯邊 |
 | 垃圾桶的燈（`TrashLed`） | 關 | 垃圾桶蓋子上的燈（待收貨時會閃；可以和紙條同時開） |
 
 Demo 版在 `MelonPreferences.cfg` 的設定不會搬過來，正式版第一次用時是預設值。
@@ -91,6 +91,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 - 繁體中文介面要靠 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)（見上面「語言」）。
 - [Stackable Keycards](https://steamcommunity.com/sharedfiles/filedetails/?id=3837224174)（可疊鑰匙卡，Steam 工作坊）mod：疊在一起的鑰匙卡照張數算。
+- 遇到其他在垃圾桶正面貼東西的 mod 時，可把「垃圾桶紙條」改成 Lid 或 Counter。
 
 ## 從原始碼建置（開發者）
 
@@ -129,7 +130,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
   - Extras: each trade happens only once per night, so extra items get cleared.
   - How many other items will be cleared; a warning when Dream Dust purity is too low (taken, nothing given); a reminder when the Janitorial Service is off tonight.
   - This week's promotions: the three promotional exchanges running this week (what to put in for what you get) are listed last, the same as on the Underground Exchange Directive. The tooltip gets wider while they're shown.
-- **Trash can indicator**: a sticky note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up (items from the Exchange are still in the trash can), Banned.
+- **Trash can indicator**: a sticky note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up (items from the Exchange are still in the trash can), Banned. The note can go on the front, on the lid (slanted along it), or hang from the counter above the trash can.
 - **Night report**: when the Exchange made a trade, the morning report gets a purple line listing what it left in the trash can.
 - **End of day reminder**: under the Janitorial Service row, a reminder when items from the Exchange are still in the trash can, or extra items will be cleared tonight. It only covers the Exchange; other things you threw in the trash can aren't mentioned.
 - **Smuggler's Bay (Modified)**: the bay and items placed directly inside it are not cleared by the Janitorial Service (since game VERSION 100-REV5), so they are not counted as cleared, and a bay from the Exchange left in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
@@ -145,7 +146,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 | Exchange list warning (`ExchangeListWarning`) | on | Red text on the Exchange Directive when you're banned |
 | Night report (`NightReport`) | on | The line in the night report |
 | End of day reminder (`EndOfDayReminder`) | on | End of day reminder |
-| Trash can note (`TrashNote`) | on | Sticky note on the trash can |
+| Trash can note (`TrashNote`) | Front | Where the sticky note on the trash can goes: Off = no note; Front = on the front; Lid = on the lid, slanted along it; Counter = hanging from the edge of the counter above |
 | Trash can light (`TrashLed`) | off | The light on the trash can lid (blinks for Pick up; can be on together with the note) |
 
 **Languages:** the UI follows the game's language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish; the game's other languages get the English UI. The section title in the settings window is always "Exchange Preview". For a Traditional Chinese UI, install the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
@@ -178,6 +179,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.exchange-preview` folder
 
 - A Traditional Chinese UI needs the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod (see Languages).
 - [Stackable Keycards](https://steamcommunity.com/sharedfiles/filedetails/?id=3837224174) mod (Steam Workshop): stacked keycards are counted card by card.
+- If another mod sticks something on the front of the trash can, you can set "Trash can note" to Lid or Counter.
 
 **Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\exchange-preview` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the full release of the game, whose `Probably Stolen_Data\Managed` is referenced read-only; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log each night's predicted and actual exchanges to `Player.log` in the save folder). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.exchange-preview` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 

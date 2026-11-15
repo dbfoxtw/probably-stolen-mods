@@ -32,6 +32,7 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 - 夢塵的純度：夢塵的交換會成交時，產出後面寫出純度和下一級的門檻，例如「（純度合計 85，120 以上更好）」；
   促銷交易的四瓶夢塵看平均純度，例如「（平均純度 72，80 以上更好）」。只寫門檻，不列每一級會給什麼。
 - 垃圾桶上的紙條（或蓋子上的燈）：無交易、可交易、多放了、待收貨、禁止交易。
+  紙條可以貼在正面、蓋子上，或掛在上方的櫃檯邊。
 - 夜間報告：交易所換成功時多一行紫色，寫出在垃圾桶裡留下了什麼。
 - 結束一天的提醒：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時提醒。
   只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
@@ -42,7 +43,9 @@ ModConfigs\dbfoxtw.exchange-preview.json 與 ModData\dbfoxtw_exchange-preview �
 
 【設定】
 在遊戲的 Mods 畫面打開這個 mod 的設定，按套用就生效，不用重開遊戲：
-垃圾桶提示、垃圾桶提示列出本週促銷、清單紅字、夜間報告、結束一天的提醒、垃圾桶紙條預設開；垃圾桶的燈（蓋子上的燈）預設關，可以和紙條同時開。
+垃圾桶提示、垃圾桶提示列出本週促銷、清單紅字、夜間報告、結束一天的提醒預設開；
+垃圾桶紙條預設貼在正面（Front），也可以選 Off、Lid、Counter（遇到其他在垃圾桶正面貼東西的 mod 時，可以改成 Lid 或 Counter）；
+垃圾桶的燈（蓋子上的燈）預設關，可以和紙條同時開。
 
 【說明】
 - 不讀寫遊戲的存檔檔案。夜間報告那一行是在遊戲存檔之後才加上去的，不會寫進存檔。
@@ -103,6 +106,7 @@ Features
   e.g. "(total purity 85, 120+ is better)"; the four-vial promotional exchange uses the average purity,
   e.g. "(average purity 72, 80+ is better)". Only the thresholds are shown, not what each tier gives.
 - A note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up, Banned.
+  The note can go on the front, on the lid, or hang from the counter above.
 - Night report: a purple line listing what the Exchange left in the trash can.
 - End of day reminder: when items from the Exchange are still in the trash can, or extra items will be cleared tonight.
   It only covers the Exchange; other things you threw in the trash can aren't mentioned.
@@ -115,8 +119,9 @@ Features
 
 Settings
 Open this mod's settings on the game's Mods screen; changes apply as soon as you press Apply, no restart needed:
-trash can tooltip, weekly promotions in tooltip, Exchange list warning, night report, end of day reminder
-and trash can note are on by default;
+trash can tooltip, weekly promotions in tooltip, Exchange list warning, night report and end of day reminder
+are on by default; the trash can note goes on the front by default (Front; also Off, Lid or Counter;
+if another mod sticks something on the front of the trash can, choose Lid or Counter);
 the trash can light (on the lid) is off by default and can be on together with the note.
 
 Notes

@@ -71,6 +71,6 @@ cfg.night_report_tip,Ajoute au bilan nocturne une ligne indiquant ce que l'écha
 cfg.reminder,Rappel de fin de journée
 cfg.reminder_tip,Sur l'écran Fin de la journée, prévient quand le service d'entretien va jeter des objets de l'échange clandestin restés dans la poubelle, ou des objets en trop au-delà d'un échange par nuit
 cfg.note,Note sur la poubelle
-cfg.note_tip,Une note autocollante sur la poubelle de la boutique indique l'état de l'échange ; peut être activée en même temps que le voyant du couvercle
+cfg.note_tip,Une note autocollante sur la poubelle de la boutique indique l'état de l'échange ; choisissez où la coller. Peut être activée en même temps que le voyant du couvercle.\nOff = pas de note\nFront = sur le devant\nLid = sur le couvercle, inclinée comme lui\nCounter = suspendue au bord du comptoir au-dessus\nSi un autre mod colle quelque chose sur le devant de la poubelle, choisissez Lid ou Counter.
 cfg.led,Voyant de la poubelle
 cfg.led_tip,Le voyant du couvercle de la poubelle indique l'état de l'échange par sa couleur et clignote quand des objets de l'échange clandestin attendent d'être récupérés ; peut être activé en même temps que la note

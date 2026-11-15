@@ -86,6 +86,6 @@ cfg.night_report_tip,Dodaje do raportu nocnego wiersz z tym, co Giełda zostawi�
 cfg.reminder,Przypomnienie na koniec dnia
 cfg.reminder_tip,Na ekranie „Koniec dnia” ostrzega, gdy usługi dozorców usuną przedmioty z Giełdy, które wciąż leżą w koszu na śmieci, albo nadmiar ponad jedną wymianę na noc
 cfg.note,Karteczka na koszu na śmieci
-cfg.note_tip,Karteczka samoprzylepna na koszu na śmieci w sklepie, pokazująca stan wymiany; może działać razem z lampką na pokrywie
+cfg.note_tip,Karteczka samoprzylepna na koszu na śmieci w sklepie, pokazująca stan wymiany, oraz to, gdzie ją przykleić; może działać razem z lampką na pokrywie.\nOff = bez karteczki\nFront = z przodu\nLid = na pokrywie, ukośnie wzdłuż jej nachylenia\nCounter = zwisa z krawędzi lady powyżej\nJeśli inny mod przykleja coś z przodu kosza na śmieci, wybierz Lid lub Counter.
 cfg.led,Lampka kosza na śmieci
 cfg.led_tip,Lampka na pokrywie kosza na śmieci pokazuje kolorem stan wymiany i miga, gdy przedmioty z Giełdy czekają na odebranie; może działać razem z karteczką

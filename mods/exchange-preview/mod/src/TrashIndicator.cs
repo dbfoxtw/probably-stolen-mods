@@ -13,6 +13,7 @@ namespace ProbablyStolenExchangePreview
     /// 垃圾桶是 GameItemElement，它的圖畫在 background 節點（TreeNodeRender）的 UnityEngine.UI.Image（sprite 名稱 trashcan0／25／50／75／100，
     /// 依內容換圖但 Image 物件不變）。標示掛成那個 Image 的子物件、用「圖的像素座標換成的比例」當錨點（IndicatorLogic），
     /// 所以位置與大小跟著垃圾桶縮放，換解析度、視窗大小都不會偏。整塊用 CanvasGroup 關掉射線，不擋滑鼠移到垃圾桶上。
+    /// 紙條可以貼在正面、蓋子上（斜貼）或垃圾桶上方的櫃檯邊（Settings.TrashNotePlace；版面在 IndicatorLogic.Layout）。
     /// </summary>
     static class TrashIndicator
     {
@@ -48,14 +49,19 @@ namespace ProbablyStolenExchangePreview
             [IndicatorState.Banned] = new Color32(220, 60, 60, 255),
         };
 
-        static readonly Dictionary<IndicatorState, Sprite> _paperSprites = new Dictionary<IndicatorState, Sprite>();
+        /// <summary>紙條的像素圖：每個位置的形狀不同（Lid 是斜的），所以照（位置, 狀態）各一張。</summary>
+        static readonly Dictionary<(NotePlace, IndicatorState), Sprite> _paperSprites = new Dictionary<(NotePlace, IndicatorState), Sprite>();
         static Sprite _white;
 
         static Image _trashImage;
         static GameObject _root;
         static Image _paper, _led, _glow;
         static TextMeshProUGUI _text;
-        static bool _builtNote, _builtLed;
+        /// <summary>紙條是照哪個位置建的（Off＝沒建紙條）：玩家在設定換了位置就重建。</summary>
+        static NotePlace _builtPlace;
+        static bool _builtLed;
+        /// <summary>斜字的事件出錯時只記一次（它在 TMP 重建網格時跑，出錯會一直重複）。</summary>
+        static bool _warnedShear;
         /// <summary>紙條是用哪個語言代碼建的：換語言時重建（字型與粗體跟著語言）。</summary>
         static string _builtLang;
         static IndicatorState _state = IndicatorState.Hidden;
@@ -72,9 +78,10 @@ namespace ProbablyStolenExchangePreview
         {
             try
             {
-                // 紙條和 LED 各自一個開關，可以同時開
-                bool note = Settings.TrashNote, led = Settings.TrashLed;
-                if (!note && !led)
+                // 紙條（選位置，Off＝不貼）和 LED（開關）可以同時開
+                var place = Settings.TrashNotePlace;
+                bool led = Settings.TrashLed;
+                if (place == NotePlace.Off && !led)
                 {
                     SetVisible(false);
                     return;
@@ -82,7 +89,7 @@ namespace ProbablyStolenExchangePreview
                 if (Time.unscaledTime >= _nextCompute)
                 {
                     _nextCompute = Time.unscaledTime + RecomputeInterval;
-                    Recompute(note, led);
+                    Recompute(place, led);
                 }
                 // 待收貨的 LED 每 0.5 秒亮暗一次。暗的時候用「燈滅」的顏色蓋住，不能把燈關掉：
                 // 底下是蓋子原本那顆小綠點，關掉會變成橘綠交替、像「可交易」在閃（2026-10-09 實機截圖）
@@ -123,7 +130,7 @@ namespace ProbablyStolenExchangePreview
             _text = null;
         }
 
-        static void Recompute(bool note, bool led)
+        static void Recompute(NotePlace place, bool led)
         {
             var st = ExchangeReader.ReadState();
             if (!st.Ready) { SetVisible(false); return; }
@@ -153,7 +160,7 @@ namespace ProbablyStolenExchangePreview
             }
 
             if (_state == IndicatorState.Hidden) { SetVisible(false); return; }
-            if (!EnsureBuilt(note, led, lang)) return;
+            if (!EnsureBuilt(place, led, lang)) return;
             Apply();
             // 遊戲把垃圾桶圖關掉時（GameItemElement.ToggleBackground(false)，例如拖曳、多選）標示跟著藏；子物件不受父 Image 的 enabled 影響
             SetVisible(_trashImage.enabled);
@@ -195,7 +202,7 @@ namespace ProbablyStolenExchangePreview
             return n != null && n.StartsWith("trashcan", StringComparison.Ordinal) && n.Length > 8 && char.IsDigit(n[8]);
         }
 
-        static bool EnsureBuilt(bool note, bool led, string lang)
+        static bool EnsureBuilt(NotePlace place, bool led, string lang)
         {
             if (_trashImage == null || _root == null)
             {
@@ -213,7 +220,7 @@ namespace ProbablyStolenExchangePreview
                     return false;
                 }
             }
-            if (_root != null && _builtNote == note && _builtLed == led && _builtLang == lang) return true;
+            if (_root != null && _builtPlace == place && _builtLed == led && _builtLang == lang) return true;
             if (_root != null) UnityEngine.Object.Destroy(_root);
 
             _root = new GameObject(ObjectName);
@@ -242,11 +249,13 @@ namespace ProbablyStolenExchangePreview
 
             _paper = _led = _glow = null;
             _text = null;
-            // 紙條在容量計下面、LED 在蓋子上，兩塊不重疊，同時開也不會互相擋到
-            if (note)
+            // 先建紙條、字，再建燈的光暈與燈：燈畫在紙條上面。Front、Counter 和燈不重疊；
+            // Lid 的紙條在燈的上方（燈露在紙條下面），底下的影子和光暈重疊一列，光暈蓋在影子上沒關係
+            var layout = IndicatorLogic.Layout(place);
+            if (place != NotePlace.Off)
             {
-                _paper = NewImage("Paper", IndicatorLogic.NoteTexture, drawn);
-                _text = NewText(IndicatorLogic.Text, drawn, lang);
+                _paper = NewImage("Paper", layout.Texture, drawn);
+                _text = NewText(layout, drawn, lang);
             }
             if (led)
             {
@@ -255,12 +264,28 @@ namespace ProbablyStolenExchangePreview
                 _led = NewImage("Led", IndicatorLogic.Led, drawn);
                 _led.sprite = White();
             }
-            _builtNote = note;
+            _builtPlace = place;
             _builtLed = led;
             _builtLang = lang;
             if (ExchangePreviewMod.Debug)
-                ExchangePreviewMod.Log.Msg($"垃圾桶標示：建立 紙條={note} LED={led}，圖 {(sp != null ? sp.name : null)}（{sw}×{sh}）框 {r} pivot {pivot} 保持比例={_trashImage.preserveAspect} 畫出範圍 {drawn} 縮放 {_trashImage.transform.lossyScale}");
+            {
+                ExchangePreviewMod.Log.Msg($"垃圾桶標示：建立 紙條={place} LED={led}，圖 {(sp != null ? sp.name : null)}（{sw}×{sh}）框 {r} pivot {pivot} 保持比例={_trashImage.preserveAspect} 畫出範圍 {drawn} 縮放 {_trashImage.transform.lossyScale}");
+                // Counter 的紙條在垃圾桶圖外面（上方）：往上有 Mask／RectMask2D 的話，圖外的部分可能被裁掉（實機時查）
+                if (place == NotePlace.Counter) ExchangePreviewMod.Log.Msg($"垃圾桶標示：Counter 的紙條在垃圾桶圖上方，{MasksAbove(_trashImage.transform)}");
+            }
             return true;
+        }
+
+        /// <summary>從垃圾桶圖往上（含它自己）有哪些 Mask／RectMask2D（除錯用）。</summary>
+        static string MasksAbove(Transform from)
+        {
+            var found = new List<string>();
+            for (var t = from; t != null; t = t.parent)
+            {
+                if (t.GetComponent<Mask>() != null) found.Add($"{t.name}（Mask）");
+                if (t.GetComponent<RectMask2D>() != null) found.Add($"{t.name}（RectMask2D）");
+            }
+            return found.Count == 0 ? "往上的父物件沒有 Mask／RectMask2D" : $"往上的父物件有 {string.Join("、", found)}，圖外的部分可能被裁掉";
         }
 
         static Image NewImage(string name, PixelRect area, (float x0, float y0, float x1, float y1) drawn)
@@ -274,12 +299,12 @@ namespace ProbablyStolenExchangePreview
             return img;
         }
 
-        static TextMeshProUGUI NewText(PixelRect area, (float x0, float y0, float x1, float y1) drawn, string lang)
+        static TextMeshProUGUI NewText(NoteLayout layout, (float x0, float y0, float x1, float y1) drawn, string lang)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(_root.transform, false);
             var rt = go.AddComponent<RectTransform>();
-            Place(rt, area, drawn);
+            Place(rt, layout.Text, drawn);
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.font = GameState.FindFont();
             tmp.raycastTarget = false;
@@ -292,7 +317,53 @@ namespace ProbablyStolenExchangePreview
             tmp.fontSizeMax = 200f;
             // 西文字型的 6 種語言用粗體才讀得清楚（示意圖）；中文、日文用自己的字型，照舊不加粗
             tmp.fontStyle = GameState.UsesWesternFont(lang) ? FontStyles.Bold : FontStyles.Normal;
+            // Lid 的字照蓋子的斜度斜過去：自動縮放照樣以還沒斜的框為準，斜是畫之前才加在頂點上
+            if (layout.Slant != 0f)
+            {
+                var text = layout.Text;
+                float slant = layout.Slant;
+                tmp.OnPreRenderText += info => Shear(tmp, info, text, slant);
+            }
             return tmp;
+        }
+
+        /// <summary>
+        /// 把字整塊剪切（shear，不是旋轉）：頂點的 x 加上「係數×離字框下緣的高度」（本地座標、y 往上），越往上越往右，和紙一樣的斜度。
+        /// 掛在 TMP 的 OnPreRenderText：每次 TMP 重建網格（換字、自動縮放、換解析度）都會在送出網格前跑，所以斜度不會掉，也不會重複加。
+        /// 用 characterInfo 找每個看得到的字的四個頂點，備用字型的字在 meshInfo 的其他份（materialReferenceIndex），一起斜。
+        /// 不用 TMP 的 Italic：它的斜度看字型資產的設定，對不上紙。
+        /// </summary>
+        static void Shear(TextMeshProUGUI tmp, TMP_TextInfo info, PixelRect area, float slant)
+        {
+            try
+            {
+                if (tmp == null || info == null) return;
+                var rect = tmp.rectTransform.rect;
+                float k = IndicatorLogic.ShearFactor(slant, rect.width, rect.height, area);
+                if (k == 0f) return;
+                float baseY = rect.yMin; // 字框的下緣＝紙張下緣（LidText.Y1）
+                for (int i = 0; i < info.characterCount; i++)
+                {
+                    var ch = info.characterInfo[i];
+                    if (!ch.isVisible) continue;
+                    int m = ch.materialReferenceIndex;
+                    if (m < 0 || m >= info.meshInfo.Length) continue;
+                    var verts = info.meshInfo[m].vertices;
+                    if (verts == null || ch.vertexIndex < 0 || ch.vertexIndex + 3 >= verts.Length) continue;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        var v = verts[ch.vertexIndex + j];
+                        v.x += k * (v.y - baseY);
+                        verts[ch.vertexIndex + j] = v;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (_warnedShear) return;
+                _warnedShear = true;
+                ExchangePreviewMod.Log.Warning($"垃圾桶標示：紙條的字斜不過去（只記這一次，字照樣顯示、不斜）：{e.Message}");
+            }
         }
 
         static void Place(RectTransform rt, PixelRect area, (float x0, float y0, float x1, float y1) d)
@@ -309,7 +380,7 @@ namespace ProbablyStolenExchangePreview
             if (_state == IndicatorState.Hidden) return;
             if (_paper != null)
             {
-                _paper.sprite = PaperSprite(_state);
+                _paper.sprite = PaperSprite(_builtPlace, _state);
                 _paper.color = Color.white;
             }
             if (_text != null)
@@ -335,14 +406,15 @@ namespace ProbablyStolenExchangePreview
             if (_root != null && _root.activeSelf != on) _root.SetActive(on);
         }
 
-        /// <summary>紙條的像素圖（點取樣，和遊戲的像素畫一樣不糊）：紙張、底邊、右下影子、上緣膠帶。每種狀態一張。</summary>
-        static Sprite PaperSprite(IndicatorState st)
+        /// <summary>
+        /// 紙條的像素圖（點取樣，和遊戲的像素畫一樣不糊）：紙張、底邊、右下影子、上緣膠帶。每個位置、每種狀態一張。
+        /// 每一格是什麼由 IndicatorLogic.NotePixelAt 給（離線測試），這裡只上色。
+        /// </summary>
+        static Sprite PaperSprite(NotePlace place, IndicatorState st)
         {
-            if (_paperSprites.TryGetValue(st, out var s) && s != null) return s;
+            if (_paperSprites.TryGetValue((place, st), out var s) && s != null) return s;
             if (!Paper.TryGetValue(st, out var paper)) return null;
-            var t = IndicatorLogic.NoteTexture;
-            var p = IndicatorLogic.Paper;
-            var tape = IndicatorLogic.Tape;
+            var t = IndicatorLogic.Layout(place).Texture;
             int w = t.Width, h = t.Height;
             var px = new Color32[w * h];
             var edge = new Color32(180, 165, 120, 255);
@@ -353,12 +425,13 @@ namespace ProbablyStolenExchangePreview
                 for (int x = 0; x < w; x++)
                 {
                     int gx = t.X0 + x, gy = t.Y0 + y; // 垃圾桶圖的像素座標（y 往下）
-                    bool inPaper = gx >= p.X0 && gx < p.X1 && gy >= p.Y0 && gy < p.Y1;
-                    bool inShadow = gx >= p.X0 + 1 && gx <= p.X1 && gy >= p.Y0 + 1 && gy <= p.Y1;
-                    bool inTape = gx >= tape.X0 && gx < tape.X1 && gy >= tape.Y0 && gy < tape.Y1;
-                    Color32 c = clear;
-                    if (inShadow) c = shadow;
-                    if (inPaper) c = gy == p.Y1 - 1 ? edge : paper;
+                    Color32 c = IndicatorLogic.NotePixelAt(place, gx, gy, out bool inTape) switch
+                    {
+                        NotePixel.Paper => paper,
+                        NotePixel.Edge => edge,
+                        NotePixel.Shadow => shadow,
+                        _ => clear,
+                    };
                     if (inTape) c = Blend(c, tapeC);
                     px[(h - 1 - y) * w + x] = c; // Texture2D 的 y 往上
                 }
@@ -368,7 +441,7 @@ namespace ProbablyStolenExchangePreview
             tex.hideFlags = HideFlags.DontUnloadUnusedAsset; // 換場景時不要被卸掉
             var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
             sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
-            return _paperSprites[st] = sprite;
+            return _paperSprites[(place, st)] = sprite;
         }
 
         static Sprite White()
