@@ -20,6 +20,8 @@
 | 立繪框架（Portrait Framework） | 用圖包裡的圖換掉顧客、劇情角色的立繪和通緝令海報上的臉；框架本身不含圖，要另外裝圖包 | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3830171392) | [mods/portrait-framework](mods/portrait-framework) |
 | 物品速覽（Item Quick Info） | 按住一個鍵，畫面上的物品身上直接顯示水量、水質、電量、機器今晚不會運作的原因與剩幾天這類資訊，放開就消失 | 正式版 1.0（官方格式） | [Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383) | [mods/item-quick-info](mods/item-quick-info) |
 
+想一次訂閱好幾個：Steam 工作坊的合集 [dbfox's Quality of Life Mods](https://steamcommunity.com/sharedfiles/filedetails/?id=3840131243) 收了上表的便利 mod（繁體中文化 mod 與立繪框架以外的），可以一鍵全部訂閱。
+
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行（繁體中文化 mod 的台灣用語潤稿與缺翻補譯也是用 AI 做的）。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)，或各 mod Nexus 頁面的 Bugs 分頁）；請回報給 mod，不要回報給遊戲開發者。
 
 ## 下載與安裝
@@ -63,6 +65,8 @@ Mods for *Probably Stolen*. Each mod lives in its own folder under `mods/`, with
 | Window Tabs | Stack your container and machine windows into one window with tabs: drag a window onto another's title bar to merge, click a tab to switch, drag it out to split | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) | [mods/window-tabs](mods/window-tabs) |
 | Portrait Framework | Replaces the portraits of customers and story characters, and the faces on the wanted poster, with pictures from portrait packs; the framework has no pictures of its own, so you also need a pack | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3830171392) | [mods/portrait-framework](mods/portrait-framework) |
 | Item Quick Info | Hold a key to show info right on the items on screen, such as water volume and purity, battery charge, and why a machine won't run tonight or how many days it has left; release to hide | Full release 1.0 (official format) | [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383) | [mods/item-quick-info](mods/item-quick-info) |
+
+To subscribe to several at once: the Steam Workshop collection [dbfox's Quality of Life Mods](https://steamcommunity.com/sharedfiles/filedetails/?id=3840131243) has the quality-of-life mods above (all except the Traditional Chinese Translation and Portrait Framework), with a Subscribe to all button.
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author (the Taiwan-usage proofreading and missing translations of the Traditional Chinese mod were also made with AI). Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on each mod's Nexus page; please report problems to the mods, not to the game developers.
 
