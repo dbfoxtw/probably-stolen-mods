@@ -113,11 +113,13 @@ namespace ProbablyStolenExchangePreview
         }
 
         /// <summary>
-        /// 快取鍵裡的垃圾桶內容：編號＋物件的身分雜湊（MelonLoader 版用 IL2CPP 物件指標；身分雜湊不保證唯一，配上編號就分得出來）。
+        /// 快取鍵裡的垃圾桶內容：編號＋物件的身分雜湊（MelonLoader 版用 IL2CPP 物件指標；身分雜湊不保證唯一，配上編號就分得出來）＋張數。
+        /// 張數：Stackable Keycards 有載入時，把一張卡疊到垃圾桶裡的那疊上，編號不變、只有 unitCount 變，結果卻跟著變。
         /// </summary>
         internal static void AppendItems(StringBuilder sb, List<GameItem> trash)
         {
-            foreach (var it in trash) sb.Append(it.uniqueId).Append(':').Append(RuntimeHelpers.GetHashCode(it)).Append(',');
+            foreach (var it in trash)
+                sb.Append(it.uniqueId).Append(':').Append(RuntimeHelpers.GetHashCode(it)).Append('x').Append(it.unitCount).Append(',');
         }
 
         /// <summary>每一行的顏色（遊戲的 RenderHandler.ColorPalette）。</summary>

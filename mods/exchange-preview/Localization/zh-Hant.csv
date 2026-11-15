@@ -1,6 +1,7 @@
 # 交易所預覽的介面字串（手寫的繁中：遊戲是中文、繁中 mod 有跑時由 mod 的 Loc.Get 用，其他時候用 zh.csv）。格式：key,值
 # 每條在哪裡、空間多大、{0}、{1} 是什麼看 en.csv 的註解。{0}、{1} 由 mod 代入，要和 en.csv 一樣。
 # 值的前後空白讀的時候會去掉，需要空白的值用英文雙引號括起來（" → "）。
+# 句子裡的空白是不斷行空白（U+00A0，看起來和一般空白一樣）：遊戲的提示只在半形空白斷行，改字時要保留。
 # 有數量的字串拆成單複數的字形（key.one／key.other…），中文只寫 .other。
 # 遊戲名稱代進句子時，名稱碰到漢字的那一側由 mod 加零寬空白（繁中 mod 才認得出名稱的詞邊界），這裡不用寫。
 
@@ -9,25 +10,25 @@ tip.header_plain,地下交易所
 tip.no_janitorial,今晚沒有使用清潔服務，不會交換
 tip.no_janitorial_service,還沒有清潔服務，不會交換
 tip.nothing,沒有可換的
-tip.others_cleared.other,其餘 {0} 件會被清掉
-tip.all_cleared.other,垃圾桶裡的 {0} 件會被清掉
+tip.others_cleared.other,其餘 {0} 件會被清掉
+tip.all_cleared.other,垃圾桶裡的 {0} 件會被清掉
 tip.partial_included,（含差一點的{0}）
-tip.purity_fail,純度合計 {0}，不到 {1}，會被收走但換不到東西
-tip.purity_sum_next,純度合計 {0}，{1} 以上更好
-tip.purity_sum_max,純度合計 {0}，最高級
-tip.purity_avg_next,平均純度 {0}，{1} 以上更好
-tip.purity_avg_max,平均純度 {0}，最高級
-tip.missing,還差 {0} 個
+tip.purity_fail,純度合計 {0}，不到 {1}，會被收走但換不到東西
+tip.purity_sum_next,純度合計 {0}，{1} 以上更好
+tip.purity_sum_max,純度合計 {0}，最高級
+tip.purity_avg_next,平均純度 {0}，{1} 以上更好
+tip.purity_avg_max,平均純度 {0}，最高級
+tip.missing,還差 {0} 個
 tip.surplus,多放的{0}會被清掉（每晚只換一次）
 tip.promo_header,本週促銷
 
 banned.short,地下交易所不跟你交易
-banned.rep_line,黑市聲望 {0}（需要高於 {1}）
+banned.rep_line,黑市聲望 {0}（需要高於 {1}）
 
-fmt.arrow," → "
+fmt.arrow," → "
 fmt.list_sep,、
 fmt.colon,：
-fmt.times," ×{0}"
+fmt.times," ×{0}"
 fmt.paren,（{0}）
 fmt.adjective,{0}{1}
 fmt.sentences,{0}{1}
@@ -49,7 +50,7 @@ report.nothing_plain,地下交易所收走了{0}，什麼也沒留下。
 report.destroyed,垃圾桶放不下，{0}被銷毀了。
 
 tag.tooltip,交易所預覽（mod）
-tag.report,（交易所預覽 mod）
+tag.report,（交易所預覽 mod）
 
 note.none,無交易
 note.ready,可交易

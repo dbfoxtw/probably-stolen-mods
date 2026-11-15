@@ -33,7 +33,7 @@ banned.rep_line,Репутация на чёрном рынке: {0} (нужно
 fmt.arrow," — "
 fmt.list_sep,", "
 fmt.colon,": "
-fmt.times," x{0}"
+fmt.times," x{0}"
 fmt.paren," ({0})"
 fmt.adjective,{1} ({0})
 fmt.sentences,{0} {1}

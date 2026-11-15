@@ -70,7 +70,8 @@ fmt.list_sep,", "
 # Between the items and a note about them ("Dream Dust x2: total purity 45 is below 60...")
 fmt.colon,": "
 # Count after a repeated name (only from 2 on). {0} = count.
-fmt.times," x{0}"
+# The space before the count is a no-break space (U+00A0), so a line never breaks between a name and its count.
+fmt.times," x{0}"
 # Brackets added after a text. {0} = the text.
 fmt.paren," ({0})"
 # An adjective and an item name: {0} = the game's "New" label of the Exchange (for example French "État neuf"), {1} = the item name.

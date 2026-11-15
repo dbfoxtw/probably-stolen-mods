@@ -90,6 +90,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 ## 相容性
 
 - 繁體中文介面要靠 [Probably Stolen 繁體中文化 mod](https://www.nexusmods.com/probablystolen/mods/280)（見上面「語言」）。
+- [Stackable Keycards](https://steamcommunity.com/sharedfiles/filedetails/?id=3837224174)（可疊鑰匙卡，Steam 工作坊）mod：疊在一起的鑰匙卡照張數算。
 
 ## 從原始碼建置（開發者）
 
@@ -173,7 +174,10 @@ To update: close the game, delete the old `Mods\dbfoxtw.exchange-preview` folder
 - If a later game update changes the exchange list, new trades show "?" until the mod is updated.
 - Random rewards are named by category only (random food, random module…); the actual item is decided by the game that night.
 
-**Compatibility:** a Traditional Chinese UI needs the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod (see Languages).
+**Compatibility:**
+
+- A Traditional Chinese UI needs the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod (see Languages).
+- [Stackable Keycards](https://steamcommunity.com/sharedfiles/filedetails/?id=3837224174) mod (Steam Workshop): stacked keycards are counted card by card.
 
 **Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\exchange-preview` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the full release of the game, whose `Probably Stolen_Data\Managed` is referenced read-only; add `--game "game folder"` if the game is not in a default Steam library, `--debug` to log each night's predicted and actual exchanges to `Player.log` in the save folder). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.exchange-preview` folder, the same package for Nexus and the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 

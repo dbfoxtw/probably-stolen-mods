@@ -102,13 +102,32 @@ namespace ProbablyStolenExchangePreview
         public bool MarkNameEdges;
 
         /// <summary>
+        /// 中文、日文的這份：程式串進句子的空白（PreviewText.Fill 在「×2」後面補的、差一點的「濾水器 2/3」、「黑市聲望 +25」）
+        /// 用不斷行空白（U+00A0），和 zh、zh-Hant、ja.csv 的值一樣。遊戲的提示框（RichTextBuilder.Build）
+        /// 一行放不下時在寬度內最後一個半形空白斷，句子裡有半形空白就會在那裡斷、留下很短的一行；沒有半形空白就照中文的習慣
+        /// 填滿一行再切。西文照舊用半形空白（單字之間要能斷）。
+        /// </summary>
+        public bool NoBreakSpaces;
+
+        /// <summary>不斷行空白（U+00A0）：看起來和半形空白一樣，遊戲的提示框與 TMP 換行時都不在這裡斷。</summary>
+        internal const char NoBreakSpace = (char)0x00A0;
+
+        /// <summary>程式串進句子的空白：NoBreakSpaces 時是不斷行空白，其他是半形空白。</summary>
+        public string Space => NoBreakSpaces ? NoBreakSpace.ToString() : " ";
+
+        /// <summary>這個語言代碼（GameState.LangCode）的句子要不要用不斷行空白：中文（zh、zh-Hant）與日文。</summary>
+        internal static bool UsesNoBreakSpaces(string code) => code == "zh" || code == "zh-Hant" || code == "ja";
+
+        /// <summary>
         /// 照目前的語言從 csv 建一份（Loc 挑語言：最長字串模式、手寫繁中、遊戲目前的語言，沒有就英文）。
         /// key 一律寫字面字串：根目錄的 tools/locale_check.py 掃得到程式用了哪些 key，en.csv 少了就擋下來。
         /// markNameEdges：這份是手寫繁中（GameState.S 在語言代碼是 zh-Hant 時傳 true）。
+        /// noBreakSpaces：程式補的空白用不斷行空白（GameState.S 照 <see cref="UsesNoBreakSpaces"/> 傳）。
         /// </summary>
-        internal static Strings Build(bool markNameEdges) => new Strings
+        internal static Strings Build(bool markNameEdges, bool noBreakSpaces) => new Strings
         {
             MarkNameEdges = markNameEdges,
+            NoBreakSpaces = noBreakSpaces,
             Header = Loc.Get("tip.header"),
             HeaderPlain = Loc.Get("tip.header_plain"),
             NoJanitorial = Loc.Get("tip.no_janitorial"),

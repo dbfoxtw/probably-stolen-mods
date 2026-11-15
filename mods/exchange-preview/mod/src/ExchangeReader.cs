@@ -83,6 +83,8 @@ namespace ProbablyStolenExchangePreview
         /// 整份垃圾桶清單（TrashItems）轉成模擬的輸入，順序照原清單，並接上 SimItem.Parent
         /// （交換收走容器時，裡面的東西跟著不見，見 ExchangeSim）。
         /// name 是 false 時不取名稱（垃圾桶標示只要判定，不用顯示的文字，省掉遊戲的本地化查詢）。
+        /// Stackable Keycards 有載入時，疊著的鑰匙卡一張拆成一個 SimItem、連續排在原本的位置（ExchangeSim.StackCount、ExpandStacks）；
+        /// 垃圾桶標示與提示都走這裡，一起照張數算。
         /// </summary>
         internal static List<SimItem> ToSims(List<GameItem> trash, bool name)
         {
@@ -101,7 +103,12 @@ namespace ProbablyStolenExchangePreview
                 var parent = GraphUtils.FindParentType<GameItem>(item, null, null);
                 if (parent != null && byItem.TryGetValue(parent, out var p)) byItem[item].Parent = p;
             }
-            return result;
+            // 每次呼叫查一次（同 ZhHantModLoaded）：只是掃一遍 mod 清單，不受兩個 mod 載入的先後影響
+            bool stacks = GameState.KeycardStackLoaded();
+            // 先接好 Parent 再拆：複本照抄 Parent；上層對到原本那個就好，會拆的只有鑰匙卡，卡不是容器
+            var counts = new List<int>(trash.Count);
+            foreach (var item in trash) counts.Add(ExchangeSim.StackCount(item.identifier, item.unitCount, stacks));
+            return ExchangeSim.ExpandStacks(result, counts);
         }
 
         static SimItem ToSim(GameItem item, bool name) => new SimItem
@@ -230,7 +237,8 @@ namespace ProbablyStolenExchangePreview
             "sec_crate_barter" => Item("sec_box"),
             "med_crate_barter" => Item("med_box"),
             "eng_crate_barter" => Item("eng_box"),
-            "bm_rep_barter" => RepLabel() + " +25",
+            // 中日文用不斷行空白（Strings.Space）：提示框不會把「+25」單獨換到下一行
+            "bm_rep_barter" => RepLabel() + s.Space + "+25",
             "immunivax_barter" => Item("large_purple_injector"),
             _ => s.Unknown,
         };

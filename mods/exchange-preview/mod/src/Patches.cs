@@ -33,6 +33,10 @@ namespace ProbablyStolenExchangePreview
     [HarmonyPatch(typeof(ExchangeBarter), nameof(ExchangeBarter.Accept))]
     static class AcceptPatch
     {
+        // 排第一個跑：Stackable Keycards（可叠钥匙卡）也在 Accept 掛前置（它沒設優先序），自己做完成交、銷毀用掉的卡再回傳 false。
+        // 我們的前置要在它之前呼叫 GetRequiredItems（它換掉後的版本，一疊會重複回傳同一件），卡還沒銷毀，報告收走的張數才對
+        // 。後置不用排：前置回傳 false 只跳過原版，後置照樣跑。
+        [HarmonyPriority(Priority.First)]
         static void Prefix(ExchangeBarter __instance)
         {
             if (ExchangePreviewMod.Ready) NightReport.AcceptPrefix(__instance);

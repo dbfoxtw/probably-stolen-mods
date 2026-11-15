@@ -33,7 +33,7 @@ banned.rep_line,Reputacja na Czarnym Rynku: {0} (musi być powyżej {1})
 fmt.arrow," – "
 fmt.list_sep,", "
 fmt.colon,": "
-fmt.times," x{0}"
+fmt.times," x{0}"
 fmt.paren," ({0})"
 # The game's "Nowe" (neuter) does not agree with "Filtr do wody" (masculine), so the label goes in brackets.
 fmt.adjective,{1} ({0})

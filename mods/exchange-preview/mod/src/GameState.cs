@@ -11,6 +11,8 @@ namespace ProbablyStolenExchangePreview
         internal const string StoreScene = "InventoryScene";
         /// <summary>繁中 mod 的 manifest ID。</summary>
         const string ZhHantModId = "dbfoxtw.zh-hant";
+        /// <summary>Stackable Keycards（可叠钥匙卡，Workshop 上別人的 mod）的 manifest ID。</summary>
+        const string KeycardStackModId = "keycard_stack";
 
         /// <summary>
         /// 目前這場遊戲：PlayerStore.saveSlotId 與 runID（每開一場新遊戲產生一個 GUID）。
@@ -51,6 +53,16 @@ namespace ProbablyStolenExchangePreview
         internal static bool ZhHantModLoaded()
         {
             try { return ModLoader.Mods.Exists(m => m != null && m.IsEnabled && m.Manifest != null && m.Manifest.ID == ZhHantModId); }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// Stackable Keycards 這次有沒有真的跑起來：有跑時交易所照張數算疊著的鑰匙卡，模擬要跟著拆（ExchangeReader.ToSims）。
+        /// 寫法和為什麼看 IsEnabled、每次呼叫才查，同 ZhHantModLoaded。
+        /// </summary>
+        internal static bool KeycardStackLoaded()
+        {
+            try { return ModLoader.Mods.Exists(m => m != null && m.IsEnabled && m.Manifest != null && m.Manifest.ID == KeycardStackModId); }
             catch { return false; }
         }
 
@@ -99,7 +111,7 @@ namespace ProbablyStolenExchangePreview
             {
                 var code = LangCode();
                 if (_s != null && _sCode == code) return _s;
-                var s = Strings.Build(code == "zh-Hant");
+                var s = Strings.Build(code == "zh-Hant", Strings.UsesNoBreakSpaces(code));
                 if (Loc.Ready)
                 {
                     _s = s;

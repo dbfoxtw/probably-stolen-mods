@@ -32,7 +32,7 @@ namespace ProbablyStolenExchangePreview.Verify
         static Dictionary<string, Dictionary<string, string>> Tables => _tables ??= LocTables();
 
         /// <summary>
-        /// 照某份 csv 建 Strings（和遊戲裡 GameState.S 一樣：zh-Hant 標名稱的邊界）。假的 Loc 一次只看一份 csv，
+        /// 照某份 csv 建 Strings（和遊戲裡 GameState.S 一樣：zh-Hant 標名稱的邊界，中日文補的空白用不斷行空白）。假的 Loc 一次只看一份 csv，
         /// 單複數的函式又是呼叫時才取字，所以每個函式包一層：呼叫時換成這份 csv、用完換回去。
         /// </summary>
         static Strings L(string lang)
@@ -41,7 +41,7 @@ namespace ProbablyStolenExchangePreview.Verify
             var old = Loc.Use(lang, table);
             try
             {
-                var s = Strings.Build(lang == "zh-Hant");
+                var s = Strings.Build(lang == "zh-Hant", Strings.UsesNoBreakSpaces(lang));
                 foreach (var f in PluralFields)
                 {
                     var inner = (Func<int, string>)f.GetValue(s);
@@ -68,6 +68,7 @@ namespace ProbablyStolenExchangePreview.Verify
             Console.OutputEncoding = Encoding.UTF8;
             Sim();
             Text();
+            NoBreakSpaces();
             Promos();
             StringsComplete();
             Localization();
@@ -199,6 +200,169 @@ namespace ProbablyStolenExchangePreview.Verify
 
             Surplus();
             Containers();
+            KeycardStack();
+        }
+
+        // ── Stackable Keycards──
+
+        const string MedCard = "一次性鑰匙卡（醫療）";
+
+        /// <summary>醫療艙物資箱（促銷，優先序 8）：醫療鑰匙卡 ×4。</summary>
+        static SimBarter MedCrate() => B("med_crate_barter", 8, "醫療艙物資箱", Repeat(() => ById("med_keycard", MedCard), 4));
+
+        /// <summary>
+        /// 垃圾桶裡的一件東西照 ExchangeReader.ToSims 拆開：ExchangeSim.StackCount 算張數、ExchangeSim.ExpandStacks 拆
+        /// （和正式程式走同一份，不在這裡另寫一份拆法）。loaded 是 Stackable Keycards 有沒有載入。
+        /// </summary>
+        static List<SimItem> Stack(string id, string name, int unitCount, bool loaded, SimItem parent = null) =>
+            ExchangeSim.ExpandStacks(new[] { I(id, name, parent: parent) }, new[] { ExchangeSim.StackCount(id, unitCount, loaded) });
+
+        /// <summary>f 有丟出 T（剛好是 T，不算子類別）。</summary>
+        static bool Throws<T>(Action f) where T : Exception
+        {
+            try { f(); return false; }
+            catch (Exception e) { return e.GetType() == typeof(T); }
+        }
+
+        /// <summary>
+        /// Stackable Keycards 有載入時，疊著的鑰匙卡一張算一件（它換掉的 GetRequiredItems 一疊可以配給同一筆的好幾個條件，
+        /// Accept 只切掉用掉的張數）。
+        /// 拆成好幾個 SimItem 之後 Run 不用改；沒載入時照原版一疊算一件。
+        /// </summary>
+        static void KeycardStack()
+        {
+            // 拆幾個：只有它載入、認得的 6 種、張數 2 以上才拆
+            Eq(ExchangeSim.StackCount("med_keycard", 4, true), 4, "拆開：醫療鑰匙卡 4 張");
+            Eq(ExchangeSim.StackCount("med_keycard", 4, false), 1, "拆開：它沒載入時一疊算一件");
+            Eq(ExchangeSim.StackCount("med_keycard", 1, true), 1, "拆開：1 張就是 1 件");
+            Eq(ExchangeSim.StackCount("med_keycard", 0, true), 1, "拆開：張數 0 也算 1 件（不讓東西消失）");
+            Eq(ExchangeSim.StackCount("med_keycard", -1, true), 1, "拆開：張數是負的也算 1 件");
+            Eq(ExchangeSim.StackCount("ammo_10mm", 5, true), 1, "拆開：不是鑰匙卡的照樣 1 件");
+            Eq(ExchangeSim.StackCount(null, 5, true), 1, "拆開：沒有 id 的 1 件");
+            Eq(ExchangeSim.StackCount("", 5, true), 1, "拆開：id 是空字串的 1 件");
+            Eq(ExchangeSim.StackCount("MED_KEYCARD", 3, true), 1, "拆開：id 大小寫要一樣（遊戲的 identifier 比對分大小寫）");
+            foreach (var id in new[] { "cmd_keycard", "sec_keycard", "med_keycard", "eng_keycard", "ser_keycard", "blank_keycard" })
+                Eq(ExchangeSim.StackCount(id, 3, true), 3, $"拆開：{id} 認得");
+            Eq(ExchangeSim.StackableKeycardIds.Count, 6, "認得的卡是 6 種（照 Stackable Keycards 1.0.6）");
+            // 上限（防呆）：別的 mod 或壞掉的存檔讓張數變很大時照 100 算
+            Eq(ExchangeSim.MaxStackCount, 100, "上限是 100");
+            Eq(ExchangeSim.StackCount("med_keycard", 100, true), 100, "上限：100 張照算");
+            Eq(ExchangeSim.StackCount("med_keycard", 101, true), 100, "上限：101 張照 100 算");
+            Eq(ExchangeSim.StackCount("med_keycard", int.MaxValue, true), 100, "上限：極大值照 100 算");
+            Eq(ExchangeSim.StackCount("med_keycard", int.MaxValue, false), 1, "上限：它沒載入時極大值也是 1");
+            Eq(Stack("med_keycard", MedCard, int.MaxValue, true).Count, 100, "上限：極大值拆成 100 個");
+
+            ExpandStacksTest();
+
+            var s = L("zh-Hant");
+
+            // 有載入：一疊 4 張就夠醫療艙物資箱那筆，提示合併計數
+            var r = ExchangeSim.Run(Stack("med_keycard", MedCard, 4, true), new[] { MedCrate() });
+            Eq(string.Join(",", Ids(r.Accepted)), "med_crate_barter", "一疊 4 張（有載入）：醫療艙物資箱成交");
+            Eq(r.Cleared.Count, 0, "一疊 4 張（有載入）：沒有會被清掉的");
+            var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), $"地下交易所・今晚|{MedCard}\u00A0×4\u00A0→\u00A0醫療艙物資箱", "一疊 4 張（有載入）：提示合併計數");
+
+            // 沒載入：同一疊照原版算 1 件，差一點 1/4（和以前一樣）
+            r = ExchangeSim.Run(Stack("med_keycard", MedCard, 4, false), new[] { MedCrate() });
+            Eq(r.Accepted.Count, 0, "一疊 4 張（沒載入）：不成交");
+            Eq(PreviewText.PartialText(s, r.Partial[0]), $"{MedCard}\u00A01/4（還差\u00A03\u00A0個\u00A0→\u00A0醫療艙物資箱）", "一疊 4 張（沒載入）：差一點 1/4");
+            Eq(r.Cleared.Count, 1, "一疊 4 張（沒載入）：一疊算 1 件會被清掉");
+
+            // 有載入：一疊 3 張差一點，提示整份照張數（差一點 3/4、垃圾桶裡的 3 件、含差一點的 ×3）
+            r = ExchangeSim.Run(Stack("med_keycard", MedCard, 3, true), new[] { MedCrate() });
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)),
+                $"地下交易所・今晚|沒有可換的|{MedCard}\u00A03/4（還差\u00A01\u00A0個\u00A0→\u00A0醫療艙物資箱）|垃圾桶裡的\u00A03\u00A0件會被清掉（含差一點的{Z}{MedCard}\u00A0×3）",
+                "一疊 3 張（有載入）：提示照張數");
+            Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Normal,Partial,Warn", "一疊 3 張（有載入）：提示的顏色");
+
+            // 有載入：一疊 5 張，收走 4 張，剩的 1 張是多放的、會被清掉
+            r = ExchangeSim.Run(Stack("med_keycard", MedCard, 5, true), new[] { MedCrate() });
+            Eq(string.Join(",", Ids(r.Accepted)), "med_crate_barter", "一疊 5 張：成交");
+            Eq(r.Accepted[0].Taken.Count, 4, "一疊 5 張：收走 4 張");
+            Eq(r.Cleared.Count, 1, "一疊 5 張：剩 1 張會被清掉");
+            Eq(r.Accepted[0].Surplus.Count, 1, "一疊 5 張：剩的那張是多放的");
+
+            // 有載入：散的和一疊的混著放，照垃圾桶的順序挑（散1、一疊 2 張、散2 湊滿 4 張；後面那疊 3 張多放）
+            var items = new List<SimItem> { I("med_keycard", "散1") };
+            items.AddRange(Stack("med_keycard", "疊A", 2, true));
+            items.Add(I("med_keycard", "散2"));
+            items.AddRange(Stack("med_keycard", "疊B", 3, true));
+            r = ExchangeSim.Run(items, new[] { MedCrate() });
+            Eq(Names(r.Accepted[0].Taken), "散1,疊A,疊A,散2", "混著放：照垃圾桶的順序收走 4 張");
+            Eq(Names(r.Accepted[0].Surplus), "疊B,疊B,疊B", "混著放：後面那疊 3 張是多放的");
+            // 先放一疊 3 張、後面散的：一疊用完再用散的
+            items = Stack("med_keycard", "疊", 3, true);
+            items.Add(I("med_keycard", "散"));
+            items.Add(I("med_keycard", "散後"));
+            r = ExchangeSim.Run(items, new[] { MedCrate() });
+            Eq(Names(r.Accepted[0].Taken), "疊,疊,疊,散", "一疊在前：一疊 3 張用完再用散的");
+            Eq(Names(r.Cleared), "散後", "一疊在前：最後那張散的會被清掉");
+
+            // 有載入：兩筆搶同一種卡（優先序高的先），一疊收剩的張數留給下一筆
+            var low = B("low_card_barter", 1, "測試產出", Repeat(() => ById("med_keycard", MedCard), 2));
+            r = ExchangeSim.Run(Stack("med_keycard", MedCard, 5, true), new[] { low, MedCrate() });
+            Eq(string.Join(",", Ids(r.Accepted)), "med_crate_barter", "一疊 5 張、兩筆：醫療艙物資箱先拿 4 張");
+            Eq(string.Join(",", r.Partial.Select(p => p.Barter.Id)), "low_card_barter", "一疊 5 張、兩筆：剩 1 張給下一筆，差一點");
+            r = ExchangeSim.Run(Stack("med_keycard", MedCard, 6, true), new[] { low, MedCrate() });
+            Eq(string.Join(",", Ids(r.Accepted)), "med_crate_barter,low_card_barter", "一疊 6 張、兩筆：兩筆都成交");
+
+            // 有載入：不是那 6 種的東西，張數 2 以上照樣算 1 件
+            r = ExchangeSim.Run(Stack("ammo_10mm", "10毫米彈藥", 5, true), new[] { Bullet() });
+            Eq(r.Accepted.Count, 0, "彈藥一疊 5（有載入）：照樣算 1 件、不成交");
+            Eq(PreviewText.PartialText(s, r.Partial[0]), "彈藥\u00A01/2（還差\u00A01\u00A0個\u00A0→\u00A0隨機食物）", "彈藥一疊 5（有載入）：差一點 1/2");
+
+            // 拆出來的都接上同一個上層：收走背包時一起不見；放在走私者暗格（改進）裡的照樣留著
+            var bag = I("backpack", "背包");
+            items = new List<SimItem> { bag };
+            items.AddRange(Stack("med_keycard", MedCard, 3, true, parent: bag));
+            r = ExchangeSim.Run(items, new[] { B("bag_barter", 9, "測試產出", ById("backpack")) });
+            Eq(r.Cleared.Count, 3, "背包裡一疊 3 張：背包被收走，3 張跟著不見");
+            var bay = I("smuggler_bay_mod", "走私者暗格（改進）", kept: true);
+            items = new List<SimItem> { bay };
+            items.AddRange(Stack("med_keycard", MedCard, 3, true, parent: bay).Select(x => { x.Kept = true; return x; }));
+            r = ExchangeSim.Run(items, new[] { MedCrate() });
+            Check(r.Accepted.Count == 0 && r.Partial.Count == 1 && r.Cleared.Count == 0, "暗格裡一疊 3 張：差一點 3/4、不會被清掉");
+            Eq(PreviewText.PartialText(s, r.Partial[0]), $"{MedCard}\u00A03/4（還差\u00A01\u00A0個\u00A0→\u00A0醫療艙物資箱）", "暗格裡一疊 3 張：差一點照張數算");
+        }
+
+        /// <summary>ExchangeSim.ExpandStacks（ExchangeReader.ToSims 拆疊用的那一步）本身：順序、照抄的欄位、物件分開、張數的防呆。</summary>
+        static void ExpandStacksTest()
+        {
+            var bag = I("backpack", "背包");
+            var hBag = new object();
+            var hCard = new object();
+            var hNews = new object();
+            bag.Handle = hBag;
+            var card = new SimItem { Id = "med_keycard", Name = MedCard, Hazardous = true, Kept = true, Purity = 12.5, Parent = bag, Handle = hCard };
+            var news = new SimItem { Id = "newspaper", Name = "報紙", Handle = hNews };
+            var items = new List<SimItem> { bag, card, news };
+
+            var r = ExchangeSim.ExpandStacks(items, new[] { 1, 3, 1 });
+            Eq(r.Count, 5, "拆疊：1＋3＋1 共 5 個");
+            Eq(Names(r), $"背包,{MedCard},{MedCard},{MedCard},報紙", "拆疊：複本緊接在原本那件後面");
+            Check(ReferenceEquals(r[0], bag) && ReferenceEquals(r[1], card) && ReferenceEquals(r[4], news), "拆疊：原本那幾件是同一個物件");
+            Check(!ReferenceEquals(r[2], card) && !ReferenceEquals(r[3], card) && !ReferenceEquals(r[2], r[3]), "拆疊：複本是各自分開的物件");
+            for (int i = 2; i <= 3; i++)
+            {
+                var c = r[i];
+                Check(c.Id == "med_keycard" && c.Name == MedCard && c.Hazardous && c.Kept && c.Purity == 12.5, $"拆疊：第 {i} 個複本的 Id、Name、Hazardous、Kept、Purity 照抄");
+                Check(ReferenceEquals(c.Parent, bag), $"拆疊：第 {i} 個複本的 Parent 照抄");
+                Check(ReferenceEquals(c.Handle, hCard), $"拆疊：第 {i} 個複本的 Handle 照抄");
+            }
+            Check(!ReferenceEquals(items, r) && items.Count == 3, "拆疊：回傳新清單，原清單不變");
+
+            // 張數 1 不加複本；0 與負數當 1
+            r = ExchangeSim.ExpandStacks(items, new[] { 1, 1, 1 });
+            Check(r.Count == 3 && r.Zip(items, ReferenceEquals).All(x => x), "拆疊：張數都是 1 時原樣");
+            r = ExchangeSim.ExpandStacks(items, new[] { 0, -1, int.MinValue });
+            Check(r.Count == 3 && r.Zip(items, ReferenceEquals).All(x => x), "拆疊：張數 0 與負數當 1");
+            Eq(ExchangeSim.ExpandStacks(new SimItem[0], new int[0]).Count, 0, "拆疊：空清單");
+
+            // 長度不同丟 ArgumentException
+            Check(Throws<ArgumentException>(() => ExchangeSim.ExpandStacks(items, new[] { 1, 1 })), "拆疊：counts 比較短丟 ArgumentException");
+            Check(Throws<ArgumentException>(() => ExchangeSim.ExpandStacks(items, new[] { 1, 1, 1, 1 })), "拆疊：counts 比較長丟 ArgumentException");
         }
 
         /// <summary>
@@ -230,8 +394,8 @@ namespace ProbablyStolenExchangePreview.Verify
 
             // 5 個空的包：包本身就算種子
             r = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("seed_packet")).ToList(), new[] { Seed() });
-            Eq(string.Join(",", Ids(r.Accepted)), "seed_barter", "空的種子包 ×5：成交");
-            Eq(r.Cleared.Count, 0, "空的種子包 ×5：全部收走");
+            Eq(string.Join(",", Ids(r.Accepted)), "seed_barter", "空的種子包\u00A0×5：成交");
+            Eq(r.Cleared.Count, 0, "空的種子包\u00A0×5：全部收走");
 
             // 14. 走私者暗格裡 10 支注射器（垃圾桶直接放的只有暗格）：走私者暗格收走暗格＋8 支，剩的 2 支跟著暗格不見，
             // 免疫寧看不到它們，不成交、也不是差一點；那 2 支是走私者暗格那筆多放的
@@ -386,34 +550,34 @@ namespace ProbablyStolenExchangePreview.Verify
         static void Text()
         {
             var s = L("zh-Hant");
-            Eq(PreviewText.Group(s, new[] { "A", "B", "A" }), "A ×2、B", "合併同名");
-            Eq(PreviewText.Group(L("en"), new[] { "A", "A" }), "A x2", "英文的數量");
+            Eq(PreviewText.Group(s, new[] { "A", "B", "A" }), "A\u00A0×2、B", "合併同名");
+            Eq(PreviewText.Group(L("en"), new[] { "A", "A" }), "A\u00A0x2", "英文的數量");
 
             // 會成交＋差一點＋會被清掉
             var r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("water_filter", "濾水器"), I("water_filter", "濾水器"), I("bottle", "空瓶") },
                 new[] { Bullet(), Filter() });
             var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                $"地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 2/3（還差 1 個 → 全新濾水器）|其餘 3 件會被清掉（含差一點的{Z}濾水器 ×2）", "提示：會成交（其餘點明差一點的）");
+                $"地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|濾水器\u00A02/3（還差\u00A01\u00A0個\u00A0→\u00A0全新濾水器）|其餘\u00A03\u00A0件會被清掉（含差一點的{Z}濾水器\u00A0×2）", "提示：會成交（其餘點明差一點的）");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Partial,Warn", "提示：會成交的顏色");
 
             // 只有差一點的：垃圾桶裡的 1 件（含差一點的…）；英文
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(lines.Last().Text, "垃圾桶裡的 1 件會被清掉（含差一點的10毫米彈藥）", "提示：只有差一點的");
+            Eq(lines.Last().Text, "垃圾桶裡的\u00A01\u00A0件會被清掉（含差一點的10毫米彈藥）", "提示：只有差一點的");
             lines = PreviewText.Tooltip(L("en"), new PreviewInput { JanitorialOn = true, Result = r });
             Eq(lines.Last().Text, "The 1 item in the trash can will be cleared, including 10毫米彈藥 from incomplete trades", "提示：只有差一點的（英文）");
 
             // 沒有可換的
             r = ExchangeSim.Run(new[] { I("newspaper", "報紙") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的|垃圾桶裡的 1 件會被清掉", "提示：沒有可換的");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的|垃圾桶裡的\u00A01\u00A0件會被清掉", "提示：沒有可換的");
 
             // 走私者暗格（改進）和裡面的東西留著：件數不算它們；只剩它們時不說會被清掉
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("newspaper", "報紙"), I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("bottle", "空瓶", kept: true) },
                 new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|其餘 1 件會被清掉", "提示：走私者暗格（改進）不算在會被清掉的件數裡");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|其餘\u00A01\u00A0件會被清掉", "提示：走私者暗格（改進）不算在會被清掉的件數裡");
             r = ExchangeSim.Run(new[] { I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("bottle", "空瓶", kept: true) }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的", "提示：只有走私者暗格（改進）時不說會被清掉");
@@ -421,22 +585,22 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(new[] { I("newspaper", "報紙"), I("smuggler_bay_mod", "走私者暗格（改進）", kept: true), I("ammo_a", "10毫米彈藥", kept: true) },
                 new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(lines.Last().Text, "垃圾桶裡的 1 件會被清掉", "提示：差一點的東西在暗格裡，不算在會被清掉裡");
+            Eq(lines.Last().Text, "垃圾桶裡的\u00A01\u00A0件會被清掉", "提示：差一點的東西在暗格裡，不算在會被清掉裡");
 
             // 今晚沒用清潔服務：照樣預覽，灰色，不說會被清掉
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("newspaper", "報紙") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|今晚沒有使用清潔服務，不會交換|10毫米彈藥 ×2 → 隨機食物", "提示：今晚沒用清潔服務");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|今晚沒有使用清潔服務，不會交換|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物", "提示：今晚沒用清潔服務");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim", "提示：今晚沒用清潔服務的顏色");
             // 清潔服務還沒開放（正式版 Fence 開局的第 1～9 天）：警告換一句，其餘照「沒用」灰色預覽
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, JanitorialLocked = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|還沒有清潔服務，不會交換|10毫米彈藥 ×2 → 隨機食物", "提示：清潔服務還沒開放");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|還沒有清潔服務，不會交換|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物", "提示：清潔服務還沒開放");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim", "提示：清潔服務還沒開放的顏色");
 
             // 被禁用
             r = ExchangeSim.Run(new[] { I("ammo_a"), I("toxic", hazard: true) }, new List<SimBarter>());
             lines = PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, BannedText = "（遊戲的說明）", JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所|（遊戲的說明）|黑市聲望 -97（需要高於 -40）|垃圾桶裡的 1 件會被清掉", "提示：被禁用");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所|（遊戲的說明）|黑市聲望\u00A0-97（需要高於\u00A0-40）|垃圾桶裡的\u00A01\u00A0件會被清掉", "提示：被禁用");
             lines = PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, JanitorialOn = false, Result = r });
             Eq(lines.Count, 3, "提示：被禁用、沒用清潔服務時不說會被清掉");
             Eq(lines[1].Text, s.BannedShort, "提示：遊戲字串讀不到時用 mod 的說明");
@@ -444,7 +608,7 @@ namespace ProbablyStolenExchangePreview.Verify
             // 夢塵純度不夠
             r = ExchangeSim.Run(new[] { I("dream_dust", "一小瓶「夢塵」", purity: 20), I("dream_dust", "一小瓶「夢塵」", purity: 25) }, new[] { DreamDust() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(lines[1].Text, "一小瓶「夢塵」 ×2：純度合計 45，不到 60，會被收走但換不到東西", "提示：夢塵純度不夠");
+            Eq(lines[1].Text, "一小瓶「夢塵」\u00A0×2：純度合計\u00A045，不到\u00A060，會被收走但換不到東西", "提示：夢塵純度不夠");
             Eq(lines[1].Tone, Tone.Warn, "提示：夢塵純度不夠是警告色");
 
             // 差一點，條件有兩種
@@ -454,7 +618,7 @@ namespace ProbablyStolenExchangePreview.Verify
             sm.Conditions[0].Label = "走私者暗格";
             foreach (var c in sm.Conditions.Skip(1)) c.Label = "奧克西莫注射器";
             r = ExchangeSim.Run(items, new[] { sm });
-            Eq(PreviewText.PartialText(s, r.Partial[0]), "走私者暗格 1/1、奧克西莫注射器 3/8（還差 5 個 → 走私者暗格（改進）＋隨機附贈）", "差一點：條件有兩種");
+            Eq(PreviewText.PartialText(s, r.Partial[0]), "走私者暗格\u00A01/1、奧克西莫注射器\u00A03/8（還差\u00A05\u00A0個\u00A0→\u00A0走私者暗格（改進）＋隨機附贈）", "差一點：條件有兩種");
 
             // 夜間報告
             var deals = new List<NightDeal>
@@ -464,19 +628,19 @@ namespace ProbablyStolenExchangePreview.Verify
             };
             Eq(PreviewText.Report(s, deals, "黑市聲望"), "地下交易所在垃圾桶裡留下了：「泥炭」合成肉、治安部物資箱。", "報告：只寫留下了什麼");
             deals.Add(new NightDeal { BarterId = "bm_rep_barter", Taken = { "拾荒者信物" }, RepDelta = 25 });
-            Eq(PreviewText.Report(s, deals, "黑市聲望"), "地下交易所在垃圾桶裡留下了：「泥炭」合成肉、治安部物資箱（黑市聲望 +25）。", "報告：東西加聲望");
-            Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", RepDelta = 24.6 } }, "黑市聲望"), "地下交易所：黑市聲望 +25。", "報告：只換到聲望");
+            Eq(PreviewText.Report(s, deals, "黑市聲望"), "地下交易所在垃圾桶裡留下了：「泥炭」合成肉、治安部物資箱（黑市聲望\u00A0+25）。", "報告：東西加聲望");
+            Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", RepDelta = 24.6 } }, "黑市聲望"), "地下交易所：黑市聲望\u00A0+25。", "報告：只換到聲望");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "夢塵", "夢塵" }, NoOutput = true } }, "黑市聲望"),
-                $"地下交易所收走了{Z}夢塵 ×2，但純度不夠，什麼也沒留下。", "報告：純度不夠");
+                $"地下交易所收走了{Z}夢塵\u00A0×2，但純度不夠，什麼也沒留下。", "報告：純度不夠");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", Taken = { "拾荒者信物" }, NoOutput = true } }, "黑市聲望"),
                 $"地下交易所收走了{Z}拾荒者信物，什麼也沒留下。", "報告：聲望到頂（不是純度的句子）");
             Eq(PreviewText.Report(s, new[] { new NightDeal { BarterId = "x", Outputs = { "甲" }, Destroyed = { "乙" } } }, "黑市聲望"),
                 $"地下交易所在垃圾桶裡留下了：甲。垃圾桶放不下，乙{Z}被銷毀了。", "報告：放不下被銷毀（兩句直接接）");
             Check(PreviewText.Report(s, new List<NightDeal>(), "黑市聲望") == null, "報告：沒成交就不加行");
             Eq(PreviewText.Report(L("en"), new[] { new NightDeal { Outputs = { "Peat", "Peat" } } }, "Blackmarket Reputation"),
-                "The Underground Exchange left in the trash can: Peat x2.", "報告：英文");
-            Eq(PreviewText.ReportLine(s, "地下交易所：黑市聲望 +25。", "6E3F78", "88948A"),
-                "<color=#6E3F78>地下交易所：黑市聲望 +25。</color><size=80%><color=#88948A>（交易所預覽 mod）</color></size>", "報告：句尾加 mod 標示");
+                "The Underground Exchange left in the trash can: Peat\u00A0x2.", "報告：英文");
+            Eq(PreviewText.ReportLine(s, "地下交易所：黑市聲望\u00A0+25。", "6E3F78", "88948A"),
+                "<color=#6E3F78>地下交易所：黑市聲望\u00A0+25。</color><size=80%><color=#88948A>（交易所預覽\u00A0mod）</color></size>", "報告：句尾加 mod 標示");
             Check(PreviewText.ReportLine(L("en"), "x", "a", "b").EndsWith("<color=#b> (Exchange Preview mod)</color></size>"), "報告：英文的標示前面空一格");
 
             // 多放的：放在差一點後面、「其餘」前面，「其餘」不再算多放的
@@ -484,12 +648,12 @@ namespace ProbablyStolenExchangePreview.Verify
                 I("water_filter", "濾水器"), I("newspaper", "報紙") }, new[] { Bullet(), Filter() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                $"地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|濾水器 1/3（還差 2 個 → 全新濾水器）|多放的10毫米彈藥 ×2 會被清掉（每晚只換一次）|其餘 2 件會被清掉（含差一點的{Z}濾水器）", "提示：多放的");
+                $"地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|濾水器\u00A01/3（還差\u00A02\u00A0個\u00A0→\u00A0全新濾水器）|多放的10毫米彈藥\u00A0×2\u00A0會被清掉（每晚只換一次）|其餘\u00A02\u00A0件會被清掉（含差一點的{Z}濾水器）", "提示：多放的");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Partial,Warn,Warn", "提示：多放的是警告色");
             // 只有多放的：沒有「其餘」那行
             r = ExchangeSim.Run(new[] { I("ammo_a", "甲彈"), I("ammo_b", "甲彈"), I("ammo_c", "乙彈") }, new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
-            Eq(string.Join("|", lines.Select(l => l.Text)), $"地下交易所・今晚|甲彈 ×2 → 隨機食物|多放的{Z}乙彈{Z}會被清掉（每晚只換一次）", "提示：只有多放的、名稱結尾是中文不補空白（前後加零寬空白）");
+            Eq(string.Join("|", lines.Select(l => l.Text)), $"地下交易所・今晚|甲彈\u00A0×2\u00A0→\u00A0隨機食物|多放的{Z}乙彈{Z}會被清掉（每晚只換一次）", "提示：只有多放的、名稱結尾是中文不補空白（前後加零寬空白）");
             // 今晚沒用清潔服務：照樣列、灰色
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, Result = r });
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Warn,Dim,Dim", "提示：沒用清潔服務時多放的也變灰");
@@ -500,26 +664,113 @@ namespace ProbablyStolenExchangePreview.Verify
             // （差一點那行的名稱是條件的標籤，測試用的 Filter() 標成「濾水器」；產出也是測試用的中文）
             r = ExchangeSim.Run(new[] { I("ammo_a", "10mm Ammunition"), I("ammo_b", "10mm Ammunition"), I("water_filter", "Water Filter") }, new[] { Bullet(), Filter() });
             var enLines = PreviewText.Tooltip(L("en"), new PreviewInput { JanitorialOn = true, Result = r }).Select(l => l.Text).ToList();
-            Eq(enLines[1], "10mm Ammunition x2 for 隨機食物", "提示：英文會成交的那行用 for");
+            Eq(enLines[1], "10mm Ammunition\u00A0x2 for 隨機食物", "提示：英文會成交的那行用 for");
             Eq(enLines[2], "濾水器 1/3 (2 more for 全新濾水器)", "提示：英文差一點的那行用 for");
             Check(enLines.All(t => !t.Contains('→')), "提示：英文沒有「→」");
 
             // 中英混排：清單以英數字結尾、後面直接接中文才補空白
-            Eq(PreviewText.Fill(false, "多放的{0}會被清掉", "彈藥 ×2"), "多放的彈藥 ×2 會被清掉", "補空白：×2 後面接中文");
-            Eq(PreviewText.Fill(false, "多放的{0}會被清掉", "彈藥"), "多放的彈藥會被清掉", "補空白：中文結尾不補");
-            Eq(PreviewText.Fill(false, "Extra {0} will", "Ammo x2"), "Extra Ammo x2 will", "補空白：英文本來就有空白");
-            Eq(PreviewText.Fill(false, "{0}。", "A x2"), "A x2。", "補空白：後面是標點不補");
+            Eq(PreviewText.Fill(false, false, "多放的{0}會被清掉", "彈藥\u00A0×2"), "多放的彈藥\u00A0×2 會被清掉", "補空白：×2 後面接中文");
+            Eq(PreviewText.Fill(false, false, "多放的{0}會被清掉", "彈藥"), "多放的彈藥會被清掉", "補空白：中文結尾不補");
+            Eq(PreviewText.Fill(false, false, "Extra {0} will", "Ammo\u00A0x2"), "Extra Ammo\u00A0x2 will", "補空白：英文本來就有空白");
+            Eq(PreviewText.Fill(false, false, "{0}。", "A\u00A0x2"), "A\u00A0x2。", "補空白：後面是標點不補");
 
             // 結束一天的提醒
             Eq(PreviewText.Reminder(s, new[] { "治安部物資箱", "「泥炭」合成肉" }, null), $"交易所換來的{Z}治安部物資箱、「泥炭」合成肉{Z}還在垃圾桶裡，今晚會被清掉", "提醒");
             Eq(PreviewText.Reminder(s, new[] { "治安部物資箱" }, new[] { "彈藥", "彈藥" }),
-                $"交易所換來的{Z}治安部物資箱{Z}還在垃圾桶裡，今晚會被清掉\n多放的{Z}彈藥 ×2 今晚也會被清掉（每晚只換一次）", "提醒：兩種都有，第二行說「也會」");
-            Eq(PreviewText.Reminder(s, new string[0], new[] { "彈藥", "彈藥" }), $"多放的{Z}彈藥 ×2 今晚會被清掉（每晚只換一次）", "提醒：只有多放的");
+                $"交易所換來的{Z}治安部物資箱{Z}還在垃圾桶裡，今晚會被清掉\n多放的{Z}彈藥\u00A0×2\u00A0今晚也會被清掉（每晚只換一次）", "提醒：兩種都有，第二行說「也會」");
+            Eq(PreviewText.Reminder(s, new string[0], new[] { "彈藥", "彈藥" }), $"多放的{Z}彈藥\u00A0×2\u00A0今晚會被清掉（每晚只換一次）", "提醒：只有多放的");
             Check(PreviewText.Reminder(s, new string[0], new string[0]) == null, "提醒：都沒有就是 null");
             Eq(PreviewText.BannedBlock(s, -97, -40, 16, 12),
-                "<size=16>地下交易所不跟你交易</size>\n<size=12>黑市聲望 <nobr>-97</nobr>（需要高於 <nobr>-40</nobr>）</size>", "清單紅字：只用短句，數字不從減號斷行");
+                "<size=16>地下交易所不跟你交易</size>\n<size=12>黑市聲望\u00A0<nobr>-97</nobr>（需要高於\u00A0<nobr>-40</nobr>）</size>", "清單紅字：只用短句，數字不從減號斷行");
             Check(PreviewText.BannedBlock(L("en"), -97, -40, 16, 12).StartsWith("<size=16>The Underground Exchange won't trade with you</size>"),
                 "清單紅字：英文用 mod 自己的話");
+        }
+
+        /// <summary>
+        /// 中文、日文的句子裡沒有半形空白：遊戲的提示框在寬度內最後一個半形空白斷行，
+        /// 中日文改用不斷行空白（csv 的值與程式補的都是），才會照中文的習慣填滿一行再切。西文照舊用半形空白。
+        /// 情境照 Text()、Purity()、Promos() 的，涵蓋提示的每種行、夜間報告、結束一天的提醒、清單紅字。
+        /// </summary>
+        static void NoBreakSpaces()
+        {
+            const string Nbsp = " ";
+            foreach (var lang in new[] { "zh", "zh-Hant", "ja" })
+                Check(Strings.UsesNoBreakSpaces(lang) && L(lang).NoBreakSpaces && L(lang).Space == Nbsp, $"{lang}：補的空白用不斷行空白");
+            foreach (var lang in LocPick.Western)
+                Check(!Strings.UsesNoBreakSpaces(lang) && !L(lang).NoBreakSpaces && L(lang).Space == " ", $"{lang}：補的空白照舊是半形空白");
+
+            // Fill 在「×2」後面接非 ASCII 字母時補的空白：中日文是不斷行空白，英文是半形空白
+            Eq(PreviewText.Fill(false, true, "多放的{0}會被清掉", "彈藥 ×2"), "多放的彈藥 ×2 會被清掉", "補空白：中日文補不斷行空白");
+            Eq(PreviewText.Fill(false, true, "多放的{0}會被清掉", "彈藥"), "多放的彈藥會被清掉", "補空白：中日文、中文結尾照樣不補");
+            var ja = L("ja");
+            Eq(PreviewText.Fill(ja, ja.SurplusLine, "弾薬 ×2"), "余分な弾薬 ×2 は回収される（取引は1晩に1回）", "補空白：日文的「×2」後面接假名補不斷行空白");
+            Eq(PreviewText.Fill(L("en"), "多放的{0}會", "Ammo x2"), "多放的Ammo x2 會", "補空白：英文的這份補半形空白");
+
+            foreach (var lang in new[] { "zh", "zh-Hant", "ja" })
+                foreach (var t in Sentences(L(lang), "黑市聲望"))
+                    Check(!t.Contains(' '), $"{lang}：句子裡沒有半形空白（「{t.Replace(Nbsp, "·")}」）");
+
+            // 西文照舊：名稱和「2/3」之間、聲望和數字之間、句子裡的單字之間都是半形空白
+            var en = L("en");
+            var enAll = Sentences(en, "Blackmarket Reputation");
+            Check(enAll.Any(t => t.StartsWith("濾水器 1/3 (")), "英文：差一點的名稱和 1/3 之間是半形空白");
+            Check(enAll.Any(t => t.Contains("Blackmarket Reputation +25")), "英文：聲望和數字之間是半形空白");
+            Check(enAll.Any(t => t.Contains(" other item")), "英文：句子裡的單字之間是半形空白");
+            Check(enAll.All(t => !t.Contains(" ") || t.Contains(" x")), "英文：不斷行空白只在數量（x2）前面");
+        }
+
+        /// <summary>給 NoBreakSpaces 檢查的句子：提示的每種行、夜間報告（含 mod 標示）、結束一天的提醒、清單紅字。repLabel 是遊戲的「黑市聲望」。</summary>
+        static List<string> Sentences(Strings s, string repLabel)
+        {
+            var all = new List<string>();
+            void Add(IEnumerable<Line> lines) => all.AddRange(lines.Select(l => l.Text).Where(t => t.Length > 0));
+
+            // 會成交＋差一點＋多放的＋其餘（含差一點的）
+            var r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("ammo_c", "10毫米彈藥"), I("ammo_d", "10毫米彈藥"),
+                I("water_filter", "濾水器"), I("newspaper", "報紙") }, new[] { Bullet(), Filter() });
+            var on = new PreviewInput { JanitorialOn = true, Result = r };
+            var promos = new List<SimBarter>
+            {
+                B("sec_crate_barter", 3, "治安部物資箱", Repeat(() => ById("sec_keycard", "一次性鑰匙卡（治安）"), 3)),
+                B("bm_rep_barter", 1, repLabel + s.Space + "+25", ById("scav_token", "拾荒者信物")),
+            };
+            Add(PreviewText.TooltipFull(s, on, promos));
+            // 只有差一點的、沒有可換的
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥") }, new[] { Bullet() }) }));
+            // 沒用清潔服務、清潔服務還沒開放
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, Result = r }));
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = false, JanitorialLocked = true, Result = r }));
+            // 被禁用
+            var bannedRun = ExchangeSim.Run(new[] { I("ammo_a"), I("toxic", hazard: true) }, new List<SimBarter>());
+            Add(PreviewText.Tooltip(s, new PreviewInput { Distrusted = true, Rep = -97, Threshold = -40, JanitorialOn = true, Result = bannedRun }));
+            // 夢塵：純度不夠、常駐的純度提示、加強版的純度提示（最高級與下一級）
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true,
+                Result = ExchangeSim.Run(new[] { I("dream_dust", "一小瓶「夢塵」", purity: 20), I("dream_dust", "一小瓶「夢塵」", purity: 25) }, new[] { DreamDust() }) }));
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true,
+                Result = ExchangeSim.Run(new[] { I("dream_dust", "一小瓶「夢塵」", purity: 42), I("dream_dust", "一小瓶「夢塵」", purity: 43) }, new[] { DreamDust() }) }));
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true,
+                Result = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("dream_dust", "一小瓶「夢塵」", purity: 72)).ToList(), new[] { DreamDust(), ImprovedDreamDust() }) }));
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true,
+                Result = ExchangeSim.Run(Enumerable.Range(0, 4).Select(_ => I("dream_dust", "一小瓶「夢塵」", purity: 99)).ToList(), new[] { ImprovedDreamDust() }) }));
+            Add(PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true,
+                Result = ExchangeSim.Run(new[] { I("dream_dust", "一小瓶「夢塵」", purity: 65), I("dream_dust", "一小瓶「夢塵」", purity: 65) }, new[] { DreamDust() }) }));
+
+            // 夜間報告：東西加聲望、只換到聲望、純度不夠、聲望到頂、放不下被銷毀；句尾的 mod 標示
+            var deals = new List<NightDeal>
+            {
+                new NightDeal { BarterId = "bullet_barter", Taken = { "10毫米彈藥", "10毫米彈藥" }, Outputs = { "「泥炭」合成肉", "「泥炭」合成肉" } },
+                new NightDeal { BarterId = "bm_rep_barter", Taken = { "拾荒者信物" }, RepDelta = 25 },
+                new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "夢塵", "夢塵" }, NoOutput = true },
+                new NightDeal { BarterId = "x", Destroyed = { "乙" } },
+            };
+            all.Add(PreviewText.ReportLine(s, PreviewText.Report(s, deals, repLabel), "6E3F78", "88948A"));
+            all.Add(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", RepDelta = 25 } }, repLabel));
+            all.Add(PreviewText.Report(s, new[] { new NightDeal { BarterId = "bm_rep_barter", Taken = { "拾荒者信物" }, NoOutput = true } }, repLabel));
+            // 結束一天的提醒（兩行都有）
+            all.AddRange(PreviewText.Reminder(s, new[] { "治安部物資箱" }, new[] { "彈藥", "彈藥" }).Split('\n'));
+            // 清單紅字
+            all.Add(PreviewText.BannedBlock(s, -97, -40, 16, 12));
+            return all;
         }
 
         /// <summary>
@@ -538,13 +789,13 @@ namespace ProbablyStolenExchangePreview.Verify
                     Repeat(() => ById("dream_dust", english ? "Vial of \"Dream Dust\"" : "一小瓶「夢塵」"), 4)),
                 B("sec_crate_barter", 3, english ? "Security Department Supply Crate" : "治安部物資箱",
                     Repeat(() => ById("sec_keycard", english ? "Disposable Keycard (Security)" : "一次性鑰匙卡（治安）"), 3)),
-                B("bm_rep_barter", 1, english ? "Blackmarket Reputation +25" : "黑市聲望 +25",
+                B("bm_rep_barter", 1, english ? "Blackmarket Reputation +25" : "黑市聲望\u00A0+25",
                     ById("scav_token", english ? "Scavenger's Token" : "拾荒者信物")),
             };
 
             var promo = PreviewText.Promos(s, Week(false));
             Eq(string.Join("|", promo.Select(l => l.Text)),
-                "本週促銷|一小瓶「夢塵」 ×4 → 隨機醫療用品|一次性鑰匙卡（治安） ×3 → 治安部物資箱|拾荒者信物 → 黑市聲望 +25", "促銷：一筆一行、同名合併計數、照遊戲的順序");
+                "本週促銷|一小瓶「夢塵」\u00A0×4\u00A0→\u00A0隨機醫療用品|一次性鑰匙卡（治安）\u00A0×3\u00A0→\u00A0治安部物資箱|拾荒者信物\u00A0→\u00A0黑市聲望\u00A0+25", "促銷：一筆一行、同名合併計數、照遊戲的順序");
             Eq(string.Join(",", promo.Select(l => l.Tone)), "Header,Normal,Normal,Normal", "促銷：標題紫色、三筆白字");
             Eq(promo[0].Tone, Tone.Header, "促銷：標題和「地下交易所・今晚」同色");
             Check(PreviewText.Promos(s, new List<SimBarter>()).Count == 0, "促銷：沒有本週促銷就沒有這段（不加標題）");
@@ -552,7 +803,7 @@ namespace ProbablyStolenExchangePreview.Verify
 
             var enPromo = PreviewText.Promos(en, Week(true)).Select(l => l.Text).ToList();
             Eq(enPromo[0], "This week's promotions", "促銷：英文標題");
-            Eq(enPromo[2], "Disposable Keycard (Security) x3 for Security Department Supply Crate", "促銷：英文合併計數的那筆用 for");
+            Eq(enPromo[2], "Disposable Keycard (Security)\u00A0x3 for Security Department Supply Crate", "促銷：英文合併計數的那筆用 for");
             Eq(enPromo[3], "Scavenger's Token for Blackmarket Reputation +25", "促銷：英文單件的那筆");
             Check(enPromo.All(t => !t.Contains('→')), "促銷：英文沒有「→」");
             Check(en.PromoHeader.All(c => c < 128) && en.CfgPromos.All(c => c < 128) && en.CfgPromosTip.All(c => c < 128),
@@ -563,7 +814,7 @@ namespace ProbablyStolenExchangePreview.Verify
             var on = new PreviewInput { JanitorialOn = true, Result = r };
             var lines = PreviewText.TooltipFull(s, on, Week(false));
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物||本週促銷|一小瓶「夢塵」 ×4 → 隨機醫療用品|一次性鑰匙卡（治安） ×3 → 治安部物資箱|拾荒者信物 → 黑市聲望 +25|交易所預覽（mod）",
+                "地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物||本週促銷|一小瓶「夢塵」\u00A0×4\u00A0→\u00A0隨機醫療用品|一次性鑰匙卡（治安）\u00A0×3\u00A0→\u00A0治安部物資箱|拾荒者信物\u00A0→\u00A0黑市聲望\u00A0+25|交易所預覽（mod）",
                 "提示：今晚 → 空一行 → 促銷 → mod 標示");
             Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Blank,Header,Normal,Normal,Normal,Dim", "提示：促銷那段的顏色與空行");
             Eq(lines.Count(l => l.Tone == Tone.Blank), 1, "提示：只空一行");
@@ -571,7 +822,7 @@ namespace ProbablyStolenExchangePreview.Verify
 
             // 設定關掉（呼叫端傳 null）、沒有本週促銷：今晚那段後面直接接 mod 標示，不空行、不加寬
             lines = PreviewText.TooltipFull(s, on, null);
-            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥 ×2 → 隨機食物|交易所預覽（mod）", "提示：設定關掉時不列促銷");
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|交易所預覽（mod）", "提示：設定關掉時不列促銷");
             lines = PreviewText.TooltipFull(s, on, new List<SimBarter>());
             Check(lines.All(l => l.Tone != Tone.Blank) && lines.Last().Text == s.TooltipTag, "提示：沒有本週促銷時不空行、mod 標示照樣在最後");
             Check(!PreviewText.ShowPromos(on, null) && !PreviewText.ShowPromos(on, new List<SimBarter>()), "沒有列促銷時不加寬");
@@ -612,12 +863,12 @@ namespace ProbablyStolenExchangePreview.Verify
             var week = Week(false);
             r = ExchangeSim.Run(new[] { I("sec_keycard", "一次性鑰匙卡（治安）"), I("sec_keycard", "一次性鑰匙卡（治安）") }, week);
             lines = PreviewText.TooltipFull(s, new PreviewInput { JanitorialOn = true, Result = r }, week);
-            Check(lines.Any(l => l.Tone == Tone.Partial && l.Text.StartsWith("一次性鑰匙卡（治安） 2/3")), "促銷：上面有差一點的治安鑰匙卡");
+            Check(lines.Any(l => l.Tone == Tone.Partial && l.Text.StartsWith("一次性鑰匙卡（治安）\u00A02/3")), "促銷：上面有差一點的治安鑰匙卡");
             Eq(lines.SkipWhile(l => l.Tone != Tone.Blank).Skip(1).Count(l => l.Tone == Tone.Normal), 3, "促銷：上面已經出現的那筆，下面照樣列（三筆）");
             // 同一筆今晚會成交時也一樣
             r = ExchangeSim.Run(Enumerable.Range(0, 3).Select(_ => I("sec_keycard", "一次性鑰匙卡（治安）")).ToList(), week);
             lines = PreviewText.TooltipFull(s, new PreviewInput { JanitorialOn = true, Result = r }, week);
-            Check(lines.Any(l => l.Tone == Tone.Good && l.Text.StartsWith("一次性鑰匙卡（治安） ×3 → 治安部物資箱")), "促銷：上面有今晚會成交的治安鑰匙卡");
+            Check(lines.Any(l => l.Tone == Tone.Good && l.Text.StartsWith("一次性鑰匙卡（治安）\u00A0×3\u00A0→\u00A0治安部物資箱")), "促銷：上面有今晚會成交的治安鑰匙卡");
             Eq(lines.SkipWhile(l => l.Tone != Tone.Blank).Skip(1).Count(l => l.Tone == Tone.Normal), 3, "促銷：今晚會成交的那筆，下面照樣列（三筆）");
 
             // 英文、簡中的整份順序與標題
@@ -625,8 +876,8 @@ namespace ProbablyStolenExchangePreview.Verify
                 new[] { B("bullet_barter", 1, "random food", Repeat(() => ByTag("ammo", "Ammunition"), 2)) });
             lines = PreviewText.TooltipFull(en, new PreviewInput { JanitorialOn = true, Result = bulletTwo }, Week(true));
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                "Underground Exchange · tonight|10mm Ammunition x2 for random food||This week's promotions|Vial of \"Dream Dust\" x4 for random medical supplies|"
-                + "Disposable Keycard (Security) x3 for Security Department Supply Crate|Scavenger's Token for Blackmarket Reputation +25|Exchange Preview (mod)",
+                "Underground Exchange · tonight|10mm Ammunition\u00A0x2 for random food||This week's promotions|Vial of \"Dream Dust\"\u00A0x4 for random medical supplies|"
+                + "Disposable Keycard (Security)\u00A0x3 for Security Department Supply Crate|Scavenger's Token for Blackmarket Reputation +25|Exchange Preview (mod)",
                 "提示（英文）：今晚 → 空一行 → 促銷 → mod 標示");
             var hans = L("zh");
             Eq(hans.PromoHeader, "本周促销", "促銷：簡中標題");
@@ -740,10 +991,10 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(enS.OthersCleared(0), "0 other items will be cleared", "英文：0 用複數");
             Eq(enS.AllCleared(1), "The 1 item in the trash can will be cleared", "英文：垃圾桶裡的 1 件");
             Eq(enS.AllCleared(3), "The 3 items in the trash can will be cleared", "英文：垃圾桶裡的 3 件");
-            Eq(hans.OthersCleared(1), "其余 1 件会被清掉", "簡中：其餘");
-            Eq(hans.AllCleared(3), "垃圾桶里的 3 件会被清掉", "簡中：垃圾桶裡的");
-            Eq(hant.OthersCleared(3), "其餘 3 件會被清掉", "繁中：其餘");
-            Eq(hant.AllCleared(1), "垃圾桶裡的 1 件會被清掉", "繁中：垃圾桶裡的");
+            Eq(hans.OthersCleared(1), "其余\u00A01\u00A0件会被清掉", "簡中：其餘");
+            Eq(hans.AllCleared(3), "垃圾桶里的\u00A03\u00A0件会被清掉", "簡中：垃圾桶裡的");
+            Eq(hant.OthersCleared(3), "其餘\u00A03\u00A0件會被清掉", "繁中：其餘");
+            Eq(hant.AllCleared(1), "垃圾桶裡的\u00A01\u00A0件會被清掉", "繁中：垃圾桶裡的");
             var r = ExchangeSim.Run(new[] { I("ammo_a", "Ammo"), I("ammo_b", "Ammo"), I("paper", "Paper"), I("paper", "Paper"), I("paper", "Paper") }, new[] { Bullet() });
             Eq(PreviewText.Tooltip(enS, new PreviewInput { JanitorialOn = true, Result = r }).Last().Text, "3 other items will be cleared", "提示（英文）：其餘 3 件");
             r = ExchangeSim.Run(new[] { I("ammo_a", "Ammo"), I("ammo_b", "Ammo"), I("paper", "Paper") }, new[] { Bullet() });
@@ -755,7 +1006,7 @@ namespace ProbablyStolenExchangePreview.Verify
             // 零寬空白：只在手寫繁中、名稱的頭尾是漢字而且緊貼漢字的那一側
             Check(hant.MarkNameEdges && !hans.MarkNameEdges && !enS.MarkNameEdges, "只有 zh-Hant 標名稱的邊界");
             Eq(PreviewText.Fill(hant, hant.SurplusLine, "撬棍"), $"多放的{Z}撬棍{Z}會被清掉（每晚只換一次）", "零寬空白：名稱前後都是漢字");
-            Eq(PreviewText.Fill(hant, hant.SurplusLine, "撬棍 ×2"), $"多放的{Z}撬棍 ×2 會被清掉（每晚只換一次）", "零寬空白：×2 結尾照舊補空白、後面不加零寬空白");
+            Eq(PreviewText.Fill(hant, hant.SurplusLine, "撬棍\u00A0×2"), $"多放的{Z}撬棍\u00A0×2\u00A0會被清掉（每晚只換一次）", "零寬空白：×2 結尾照舊補空白（不斷行）、後面不加零寬空白");
             Eq(PreviewText.Report(hant, new[] { new NightDeal { Outputs = { "撬棍" } } }, "黑市聲望"), "地下交易所在垃圾桶裡留下了：撬棍。", "零寬空白：冒號與句號旁不加");
             Eq(PreviewText.Report(hant, new[] { new NightDeal { BarterId = ExchangeSim.DreamDustBarterId, Taken = { "撬棍" }, NoOutput = true } }, "黑市聲望"),
                 $"地下交易所收走了{Z}撬棍，但純度不夠，什麼也沒留下。", "零寬空白：收走了＋名稱");
@@ -764,20 +1015,20 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(PreviewText.Fill(hant, hant.ReportRepOnly, "黑市聲望 +25"), "地下交易所：黑市聲望 +25。", "零寬空白：全形冒號後不加");
             Eq(PreviewText.Fill(hant, hant.PartialIncluded, "濾水器"), $"（含差一點的{Z}濾水器）", "零寬空白：差一點的");
             Eq(PreviewText.Fill(hant, hant.ReminderSurplusAlso, "撬棍"), $"多放的{Z}撬棍{Z}今晚也會被清掉（每晚只換一次）", "零寬空白：提醒的也會");
-            Eq(PreviewText.Fill(true, "{0}會", "撬棍"), $"撬棍{Z}會", "零寬空白：格式開頭不加");
-            Eq(PreviewText.Fill(true, "會{0}", "撬棍"), $"會{Z}撬棍", "零寬空白：格式結尾不加");
-            Eq(PreviewText.Fill(true, "的{0}會", "「泥炭」合成肉"), $"的「泥炭」合成肉{Z}會", "零寬空白：名稱開頭是標點不加");
-            Eq(PreviewText.Fill(true, "の{0}", "撬棍"), "の撬棍", "零寬空白：假名不是漢字");
-            Eq(PreviewText.Fill(true, "的{0}會", "10毫米彈藥"), $"的10毫米彈藥{Z}會", "零寬空白：數字開頭不加");
+            Eq(PreviewText.Fill(true, true, "{0}會", "撬棍"), $"撬棍{Z}會", "零寬空白：格式開頭不加");
+            Eq(PreviewText.Fill(true, true, "會{0}", "撬棍"), $"會{Z}撬棍", "零寬空白：格式結尾不加");
+            Eq(PreviewText.Fill(true, true, "的{0}會", "「泥炭」合成肉"), $"的「泥炭」合成肉{Z}會", "零寬空白：名稱開頭是標點不加");
+            Eq(PreviewText.Fill(true, true, "の{0}", "撬棍"), "の撬棍", "零寬空白：假名不是漢字");
+            Eq(PreviewText.Fill(true, true, "的{0}會", "10毫米彈藥"), $"的10毫米彈藥{Z}會", "零寬空白：數字開頭不加");
             var ext = char.ConvertFromUtf32(0x20000);
-            Eq(PreviewText.Fill(true, "的{0}", ext), $"的{Z}{ext}", "零寬空白：擴充 B 的字（代理字元）也算漢字");
-            Eq(PreviewText.Fill(true, "{0}{1}", "", "撬棍"), "撬棍", "零寬空白：空的名稱跳過");
+            Eq(PreviewText.Fill(true, true, "的{0}", ext), $"的{Z}{ext}", "零寬空白：擴充 B 的字（代理字元）也算漢字");
+            Eq(PreviewText.Fill(true, true, "{0}{1}", "", "撬棍"), "撬棍", "零寬空白：空的名稱跳過");
             // 格式有 {{ 或 {0:N0} 這種寫法時照 string.Format（不補空白、不加零寬空白）；佔位符比參數多時和 string.Format 一樣丟例外
             // （2.2.0 審查時提的：退回的路徑沒測，之後改切割的迴圈才擋得住）
-            Eq(PreviewText.Fill(true, "的{{x}}{0}會", "撬棍"), "的{x}撬棍會", "Fill：{{ 照 string.Format、不加零寬空白");
-            Eq(PreviewText.Fill(true, "{0:N0}件", "5"), "5件", "Fill：{0:N0} 照 string.Format");
+            Eq(PreviewText.Fill(true, true, "的{{x}}{0}會", "撬棍"), "的{x}撬棍會", "Fill：{{ 照 string.Format、不加零寬空白");
+            Eq(PreviewText.Fill(true, true, "{0:N0}件", "5"), "5件", "Fill：{0:N0} 照 string.Format");
             bool fillThrew = false;
-            try { PreviewText.Fill(false, "{1}", "a"); }
+            try { PreviewText.Fill(false, false, "{1}", "a"); }
             catch (FormatException) { fillThrew = true; }
             Check(fillThrew, "Fill：佔位符比參數多時丟 FormatException");
             // 簡中與英文的同樣句子不加
@@ -974,33 +1225,33 @@ namespace ProbablyStolenExchangePreview.Verify
             Check(Math.Abs(r.Accepted[0].PurityAverage - 70.475) < 1e-9, $"加強版夢塵：平均不截整數（實際 {r.Accepted[0].PurityAverage}）");
             Eq(r.Accepted[0].PuritySum, 0, "加強版夢塵：不算合計");
             // 每瓶 29.9：截整數的話平均 29，不截是 29.9，都還不到 30
-            Eq(PreviewText.PurityNote(s, Improved(29.9, 29.9, 29.9, 29.9).Accepted[0]), "（平均純度 29，30 以上更好）", "加強版：不到 30");
+            Eq(PreviewText.PurityNote(s, Improved(29.9, 29.9, 29.9, 29.9).Accepted[0]), "（平均純度\u00A029，30\u00A0以上更好）", "加強版：不到 30");
             // 平均剛好 30（29.5 與 30.5 混著；截整數再平均的話只有 29.5）：已經是第二級
-            Eq(PreviewText.PurityNote(s, Improved(29.5, 30.5, 29.5, 30.5).Accepted[0]), "（平均純度 30，45 以上更好）", "加強版：剛好 30");
-            Eq(PreviewText.PurityNote(s, Improved(72, 72, 72, 72).Accepted[0]), "（平均純度 72，80 以上更好）", "加強版：72");
+            Eq(PreviewText.PurityNote(s, Improved(29.5, 30.5, 29.5, 30.5).Accepted[0]), "（平均純度\u00A030，45\u00A0以上更好）", "加強版：剛好 30");
+            Eq(PreviewText.PurityNote(s, Improved(72, 72, 72, 72).Accepted[0]), "（平均純度\u00A072，80\u00A0以上更好）", "加強版：72");
             // 79.75 捨去成 79：不會顯示成「80，80 以上更好」
-            Eq(PreviewText.PurityNote(s, Improved(79.75, 79.75, 79.75, 79.75).Accepted[0]), "（平均純度 79，80 以上更好）", "加強版：79.75 捨去小數");
-            Eq(PreviewText.PurityNote(s, Improved(80, 80, 80, 80).Accepted[0]), "（平均純度 80，90 以上更好）", "加強版：剛好 80");
-            Eq(PreviewText.PurityNote(s, Improved(89.9, 90, 90, 90).Accepted[0]), "（平均純度 89，90 以上更好）", "加強版：差一點到 90");
-            Eq(PreviewText.PurityNote(s, Improved(90, 90, 90, 90).Accepted[0]), "（平均純度 90，99 以上更好）", "加強版：剛好 90");
-            Eq(PreviewText.PurityNote(s, Improved(98.9, 99, 99, 99).Accepted[0]), "（平均純度 98，99 以上更好）", "加強版：差一點到 99");
-            Eq(PreviewText.PurityNote(s, Improved(99, 99, 99, 99).Accepted[0]), "（平均純度 99，最高級）", "加強版：剛好 99 是最高級");
-            Eq(PreviewText.PurityNote(s, Improved(100, 100, 98, 100).Accepted[0]), "（平均純度 99，最高級）", "加強版：平均 99.5");
+            Eq(PreviewText.PurityNote(s, Improved(79.75, 79.75, 79.75, 79.75).Accepted[0]), "（平均純度\u00A079，80\u00A0以上更好）", "加強版：79.75 捨去小數");
+            Eq(PreviewText.PurityNote(s, Improved(80, 80, 80, 80).Accepted[0]), "（平均純度\u00A080，90\u00A0以上更好）", "加強版：剛好 80");
+            Eq(PreviewText.PurityNote(s, Improved(89.9, 90, 90, 90).Accepted[0]), "（平均純度\u00A089，90\u00A0以上更好）", "加強版：差一點到 90");
+            Eq(PreviewText.PurityNote(s, Improved(90, 90, 90, 90).Accepted[0]), "（平均純度\u00A090，99\u00A0以上更好）", "加強版：剛好 90");
+            Eq(PreviewText.PurityNote(s, Improved(98.9, 99, 99, 99).Accepted[0]), "（平均純度\u00A098，99\u00A0以上更好）", "加強版：差一點到 99");
+            Eq(PreviewText.PurityNote(s, Improved(99, 99, 99, 99).Accepted[0]), "（平均純度\u00A099，最高級）", "加強版：剛好 99 是最高級");
+            Eq(PreviewText.PurityNote(s, Improved(100, 100, 98, 100).Accepted[0]), "（平均純度\u00A099，最高級）", "加強版：平均 99.5");
             Eq(PreviewText.PurityNote(en, Improved(72, 72, 72, 72).Accepted[0]), " (average purity 72, 80+ is better)", "加強版：英文");
             Eq(PreviewText.PurityNote(en, Improved(99, 99, 99, 99).Accepted[0]), " (average purity 99, top tier)", "加強版：英文最高級");
-            Eq(PreviewText.PurityNote(hans, Improved(72, 72, 72, 72).Accepted[0]), "（平均纯度 72，80 以上更好）", "加強版：簡中");
+            Eq(PreviewText.PurityNote(hans, Improved(72, 72, 72, 72).Accepted[0]), "（平均纯度\u00A072，80\u00A0以上更好）", "加強版：簡中");
 
             // 常駐兩瓶：每瓶截整數再加總；不到 60 另有警告（不加純度提示）
             SimResult Regular(params double[] p) =>
                 ExchangeSim.Run(p.Select(x => I("dream_dust", "一小瓶「夢塵」", purity: x)).ToList(), new[] { DreamDust() });
             Eq(PreviewText.PurityNote(s, Regular(29.9, 30.9).Accepted[0]), "", "常駐：合計 59 收走不給，不加純度提示");
-            Eq(PreviewText.PurityNote(s, Regular(30, 30).Accepted[0]), "（純度合計 60，120 以上更好）", "常駐：剛好 60");
-            Eq(PreviewText.PurityNote(s, Regular(42.7, 42.9).Accepted[0]), "（純度合計 84，120 以上更好）", "常駐：每瓶截整數");
-            Eq(PreviewText.PurityNote(s, Regular(59.9, 60.9).Accepted[0]), "（純度合計 119，120 以上更好）", "常駐：119（59.9＋60.9 截成 59＋60）");
-            Eq(PreviewText.PurityNote(s, Regular(60, 60).Accepted[0]), "（純度合計 120，最高級）", "常駐：剛好 120 是最高級");
-            Eq(PreviewText.PurityNote(s, Regular(65, 65).Accepted[0]), "（純度合計 130，最高級）", "常駐：130");
+            Eq(PreviewText.PurityNote(s, Regular(30, 30).Accepted[0]), "（純度合計\u00A060，120\u00A0以上更好）", "常駐：剛好 60");
+            Eq(PreviewText.PurityNote(s, Regular(42.7, 42.9).Accepted[0]), "（純度合計\u00A084，120\u00A0以上更好）", "常駐：每瓶截整數");
+            Eq(PreviewText.PurityNote(s, Regular(59.9, 60.9).Accepted[0]), "（純度合計\u00A0119，120\u00A0以上更好）", "常駐：119（59.9＋60.9 截成 59＋60）");
+            Eq(PreviewText.PurityNote(s, Regular(60, 60).Accepted[0]), "（純度合計\u00A0120，最高級）", "常駐：剛好 120 是最高級");
+            Eq(PreviewText.PurityNote(s, Regular(65, 65).Accepted[0]), "（純度合計\u00A0130，最高級）", "常駐：130");
             Eq(PreviewText.PurityNote(en, Regular(42, 43).Accepted[0]), " (total purity 85, 120+ is better)", "常駐：英文");
-            Eq(PreviewText.PurityNote(hans, Regular(65, 65).Accepted[0]), "（纯度合计 130，最高级）", "常駐：簡中最高級");
+            Eq(PreviewText.PurityNote(hans, Regular(65, 65).Accepted[0]), "（纯度合计\u00A0130，最高级）", "常駐：簡中最高級");
 
             // 其他交換不加
             r = ExchangeSim.Run(new[] { I("ammo_a"), I("ammo_b") }, new[] { Bullet() });
@@ -1010,13 +1261,13 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(Enumerable.Range(0, 5).Select(_ => I("dream_dust", "一小瓶「夢塵」", purity: 72)).ToList(), new[] { DreamDust(), ImprovedDreamDust() });
             var lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(string.Join("|", lines.Select(l => l.Text)),
-                $"地下交易所・今晚|一小瓶「夢塵」 ×4 → 隨機醫療用品（平均純度 72，80 以上更好）|dream_dust 1/2（還差 1 個 → 隨機合法商品）|其餘 1 件會被清掉（含差一點的{Z}一小瓶「夢塵」）",
+                $"地下交易所・今晚|一小瓶「夢塵」\u00A0×4\u00A0→\u00A0隨機醫療用品（平均純度\u00A072，80\u00A0以上更好）|dream_dust\u00A01/2（還差\u00A01\u00A0個\u00A0→\u00A0隨機合法商品）|其餘\u00A01\u00A0件會被清掉（含差一點的{Z}一小瓶「夢塵」）",
                 "提示：加強版夢塵的整行，差一點的常駐不加");
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = Regular(42.7, 42.9) });
-            Eq(lines[1].Text, "一小瓶「夢塵」 ×2 → 隨機合法商品（純度合計 84，120 以上更好）", "提示：常駐夢塵的整行");
+            Eq(lines[1].Text, "一小瓶「夢塵」\u00A0×2\u00A0→\u00A0隨機合法商品（純度合計\u00A084，120\u00A0以上更好）", "提示：常駐夢塵的整行");
             Eq(lines[1].Tone, Tone.Good, "提示：常駐夢塵會成交是綠色");
             lines = PreviewText.Tooltip(en, new PreviewInput { JanitorialOn = true, Result = Improved(99, 99, 99, 99) });
-            Eq(lines[1].Text, "一小瓶「夢塵」 x4 for 隨機醫療用品 (average purity 99, top tier)", "提示：英文的整行（名稱與產出是測試用的）");
+            Eq(lines[1].Text, "一小瓶「夢塵」\u00A0x4 for 隨機醫療用品 (average purity 99, top tier)", "提示：英文的整行（名稱與產出是測試用的）");
         }
 
         /// <summary>資料檔：用記憶體裡的「檔案」測（遊戲裡是 ModHelper 的 ModData）。</summary>

@@ -1,5 +1,6 @@
 # Japanese (ja) text of Exchange Preview's own interface (read by ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
 # Format: key,value. Keys and their order are the same as en.csv (see its comments for where each text appears). Keep every {0}/{1} of the English text.
+# Spaces inside sentences are no-break spaces (U+00A0; they look like normal spaces): the game's tooltip only wraps at normal spaces, so keep them when editing.
 # Japanese has one plural form: only .other. Game words follow the game's Japanese string table (アングラ取引, 清掃サービス, 闇市場からの評判, ゴミ箱, 夜間レポート, 1日の終わり, 新品, 適用).
 
 tip.header,アングラ取引・今夜
@@ -20,12 +21,12 @@ tip.surplus,余分な{0}は回収される（取引は1晩に1回）
 tip.promo_header,今週のプロモーション取引
 
 banned.short,アングラ取引を利用できない
-banned.rep_line,闇市場からの評判 {0}（{1}より上が必要）
+banned.rep_line,闇市場からの評判 {0}（{1}より上が必要）
 
-fmt.arrow," → "
+fmt.arrow," → "
 fmt.list_sep,、
 fmt.colon,：
-fmt.times," ×{0}"
+fmt.times," ×{0}"
 fmt.paren,（{0}）
 fmt.adjective,{0}の{1}
 fmt.sentences,{0}{1}
@@ -46,8 +47,8 @@ report.nothing,アングラ取引は{0}を引き取ったが、純度が低す�
 report.nothing_plain,アングラ取引は{0}を引き取ったが、何も残さなかった。
 report.destroyed,ゴミ箱がいっぱいで、{0}は破棄された。
 
-tag.tooltip,Exchange Preview（MOD）
-tag.report,（Exchange Preview MOD）
+tag.tooltip,Exchange Preview（MOD）
+tag.report,（Exchange Preview MOD）
 
 note.none,取引なし
 note.ready,取引可

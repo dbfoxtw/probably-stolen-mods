@@ -30,7 +30,7 @@ banned.rep_line,Reputación en el mercado negro {0} (necesitas más de {1})
 fmt.arrow," por "
 fmt.list_sep,", "
 fmt.colon,": "
-fmt.times," x{0}"
+fmt.times," x{0}"
 fmt.paren," ({0})"
 fmt.adjective,{1} ({0})
 fmt.sentences,{0} {1}

@@ -124,6 +124,68 @@ namespace ProbablyStolenExchangePreview
         }
 
         /// <summary>
+        /// Stackable Keycards（可叠钥匙卡，Workshop 上別人的 mod，manifest ID keycard_stack）讓它疊在一起的卡：
+        /// 5 種鑰匙卡＋空白卡。照它 1.0.6 的 ID 清單抄的（1.0.7 對過沒變），它改了清單要跟著改；
+        /// 。
+        /// </summary>
+        public static readonly HashSet<string> StackableKeycardIds = new HashSet<string>
+        {
+            "cmd_keycard", "sec_keycard", "med_keycard", "eng_keycard", "ser_keycard", "blank_keycard",
+        };
+
+        /// <summary>
+        /// 垃圾桶裡的一件東西要拆成幾個 SimItem。
+        /// Stackable Keycards 有載入時，它換掉的 GetRequiredItems 讓一疊卡（上面那幾種、unitCount &gt; 1）配給同一筆的好幾個條件，
+        /// 一張算一個，Accept 也只切掉用掉的張數；拆成 unitCount 個、排在原本的位置，Run 照順序挑第一個沒用過的，結果就和它一樣。
+        /// 它沒載入時（例如玩家沒先拆開就移除它），遊戲照原版一疊只算一件，這裡也是 1；其他東西一律 1（原版不看張數）。
+        /// 張數超過 MaxStackCount 時照 MaxStackCount 算。
+        /// </summary>
+        public static int StackCount(string id, int unitCount, bool keycardStackLoaded) =>
+            keycardStackLoaded && unitCount > 1 && id != null && StackableKeycardIds.Contains(id) ? Math.Min(unitCount, MaxStackCount) : 1;
+
+        /// <summary>
+        /// 一疊最多拆成幾個（防呆）：Stackable Keycards 自己每疊最多 5 張，正常玩到不了這裡。
+        /// 別的 mod 或壞掉的存檔讓 unitCount 變成好幾千時，拆開的件數和 Run 的計算量會跟著暴增，
+        /// 滑鼠移到垃圾桶上就卡住；照這個數算，預測會不準，但不會卡。
+        /// </summary>
+        public const int MaxStackCount = 100;
+
+        /// <summary>
+        /// 把一疊拆成好幾個 SimItem（ExchangeReader.ToSims 用，counts[i] 是 StackCount 算出的張數）：回傳新清單，
+        /// items[i] 後面緊接 counts[i] - 1 個複本，順序照原清單（Run 照順序挑第一個沒用過的，一疊的張數要連在原本的位置）。
+        /// 複本照抄全部欄位，Parent、Handle 也一樣：拆出來的都是同一件 GameItem，遊戲的條件比對、追蹤的編號照樣對得上；
+        /// 物件本身要分開，Run 才會把它們當成不同的幾張（used、remaining 比的是物件）。
+        /// 會拆的只有鑰匙卡，卡不是容器，不會有東西把複本當成上層，所以上層只接原本那個就夠。
+        /// counts[i] 小於 1 一律當 1（不讓東西消失）。兩個清單長度不同丟 ArgumentException。
+        /// </summary>
+        public static List<SimItem> ExpandStacks(IList<SimItem> items, IList<int> counts)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (counts == null) throw new ArgumentNullException(nameof(counts));
+            if (items.Count != counts.Count)
+                throw new ArgumentException($"items 有 {items.Count} 件、counts 有 {counts.Count} 個，長度要一樣", nameof(counts));
+            var result = new List<SimItem>(items.Count);
+            for (int i = 0; i < items.Count; i++)
+            {
+                result.Add(items[i]);
+                for (int k = 1; k < counts[i]; k++) result.Add(Copy(items[i]));
+            }
+            return result;
+        }
+
+        /// <summary>拆開一疊時的另一張：全部欄位照抄，名稱也不用再查一次。</summary>
+        static SimItem Copy(SimItem s) => new SimItem
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Hazardous = s.Hazardous,
+            Kept = s.Kept,
+            Purity = s.Purity,
+            Parent = s.Parent,
+            Handle = s.Handle,
+        };
+
+        /// <summary>
         /// 本週促銷的篩選與順序：照遊戲 promotionalBarter 的順序走，只留 id 在 activePromotionalBarterIds 的。
         /// 不照 activePromotionalBarterIds 的順序：那是每週隨機抽出來的順序，每週都不一樣。null 的跳過。
         /// </summary>

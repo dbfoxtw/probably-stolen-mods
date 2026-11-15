@@ -186,19 +186,24 @@ namespace ProbablyStolenExchangePreview
         /// <summary>零寬空白（U+200B）：看不見、不佔寬度，繁中 mod 把它當成詞邊界。</summary>
         const char ZeroWidthSpace = (char)0x200B;
 
-        /// <summary>把遊戲名稱或名稱清單代進句子（{0}、{1}…），照這份字串要不要標名稱的邊界（Strings.MarkNameEdges，手寫繁中才有）。</summary>
-        public static string Fill(Strings s, string format, params string[] names) => Fill(s != null && s.MarkNameEdges, format, names);
+        /// <summary>
+        /// 把遊戲名稱或名稱清單代進句子（{0}、{1}…），照這份字串要不要標名稱的邊界（Strings.MarkNameEdges，手寫繁中才有）、
+        /// 補的空白要不要用不斷行空白（Strings.NoBreakSpaces，中文、日文）。
+        /// </summary>
+        public static string Fill(Strings s, string format, params string[] names) =>
+            Fill(s != null && s.MarkNameEdges, s != null && s.NoBreakSpaces, format, names);
 
         /// <summary>
         /// 把名稱填進句子，名稱和前後的字之間：
         /// - 名稱以 ASCII 英數字結尾（例如「×2」）、後面直接接非 ASCII 的字母時補一個空白，
-        ///   免得變成「彈藥 ×2會被清掉」（中英混排的習慣；每個語言都做）。
+        ///   免得變成「彈藥 ×2會被清掉」（中英混排的習慣；每個語言都做）。noBreakSpaces（中文、日文）時補不斷行空白，
+        ///   遊戲的提示框才不會在「×2」後面斷行。
         /// - markNameEdges（手寫繁中）：名稱的第一個字是漢字而前一個字也是漢字時前面加零寬空白，最後一個字是漢字而後一個字也是漢字時
         ///   後面加零寬空白。繁中 mod 的短詞表看詞邊界（詞的頭尾是漢字時，前後不能緊貼漢字），「多放的撬棍會被清掉」裡的 2 字名稱
         ///   不隔開就不會被轉成繁中（2026-11-14 使用者定的做法）。格式的開頭、結尾、標點旁本來就是邊界，不加。
         /// 只認 {數字} 這種佔位符（mod 的格式都是這種）；格式有別的寫法（{{、{0:N0}）時照 string.Format，不補空白與零寬空白。
         /// </summary>
-        public static string Fill(bool markNameEdges, string format, params string[] names)
+        public static string Fill(bool markNameEdges, bool noBreakSpaces, string format, params string[] names)
         {
             if (format == null) return null;
             if (names == null) names = new string[0];
@@ -245,7 +250,7 @@ namespace ProbablyStolenExchangePreview
                 if (after >= parts.Count) continue;
                 char next = parts[after][0];
                 char last = p[p.Length - 1];
-                if (last < 128 && char.IsLetterOrDigit(last) && next >= 128 && char.IsLetter(next)) sb.Append(' ');
+                if (last < 128 && char.IsLetterOrDigit(last) && next >= 128 && char.IsLetter(next)) sb.Append(noBreakSpaces ? Strings.NoBreakSpace : ' ');
                 else if (markNameEdges && IsHan(last) && IsHan(next)) sb.Append(ZeroWidthSpace);
             }
             return sb.ToString();
@@ -259,7 +264,7 @@ namespace ProbablyStolenExchangePreview
             (c >= 0x3400 && c <= 0x4DBF) || (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) || c == 0x3007
             || (c >= 0xD800 && c <= 0xDFFF);
 
-        /// <summary>「濾水器 2/3（還差 1 個 → 全新濾水器）」；條件有好幾種時依名稱分組。</summary>
+        /// <summary>「濾水器 2/3（還差 1 個 → 全新濾水器）」；條件有好幾種時依名稱分組。名稱與「2/3」之間是 Strings.Space（中日文不斷行）。</summary>
         public static string PartialText(Strings s, SimPartial pp)
         {
             var order = new List<string>();
@@ -273,14 +278,14 @@ namespace ProbablyStolenExchangePreview
                 if (pp.Matched[i]) have[label]++;
             }
             int missing = pp.Matched.Count(m => !m);
-            var groups = string.Join(s.ListSep, order.Select(l => $"{l} {have[l]}/{need[l]}"));
+            var groups = string.Join(s.ListSep, order.Select(l => $"{l}{s.Space}{have[l]}/{need[l]}"));
             return groups + string.Format(s.Paren, string.Format(s.Missing, missing) + s.Arrow + pp.Barter.Output);
         }
 
         /// <summary>
         /// 夜間報告那一行：只寫留下了什麼；只換到黑市聲望時寫聲望；
         /// 收走了卻什麼都沒留下（夢塵純度不夠）才寫收走了什麼。都沒有就回傳 null（不加行）。
-        /// repLabel 是遊戲的「黑市聲望」。
+        /// repLabel 是遊戲的「黑市聲望」；和數字之間是 Strings.Space（中日文不斷行）。
         /// </summary>
         public static string Report(Strings s, IList<NightDeal> deals, string repLabel)
         {
@@ -288,7 +293,7 @@ namespace ProbablyStolenExchangePreview
             var outputs = deals.SelectMany(d => d.Outputs).ToList();
             var destroyed = deals.SelectMany(d => d.Destroyed).ToList();
             int rep = (int)Math.Round(deals.Sum(d => d.RepDelta));
-            string repText = rep == 0 ? null : $"{repLabel} {(rep > 0 ? "+" : "")}{rep}";
+            string repText = rep == 0 ? null : $"{repLabel}{s.Space}{(rep > 0 ? "+" : "")}{rep}";
 
             var parts = new List<string>();
             if (outputs.Count > 0)

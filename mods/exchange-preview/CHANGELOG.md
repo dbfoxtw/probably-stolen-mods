@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.3.0（2026-11-15）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 和 Stackable Keycards mod 相容：裝了它之後，垃圾桶裡疊在一起的鑰匙卡照張數算（提示、紙條、夜間報告、結束一天的提醒）。原本一疊只算 1 張，例如 4 張一次性鑰匙卡（醫療）疊成一疊時，提示說還差 3 張。
+- 修正：提示與結束一天的提醒換行時，數量（例如「×2」）不會再和前面的名稱分開。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported)
+
+- Works with the Stackable Keycards mod: with it installed, stacked keycards in the trash can are counted card by card (tooltip, note, night report, end of day reminder). A stack used to count as one card; for example, a stack of 4 Disposable Keycards (Medical) showed 3 more needed.
+- Fixed: when a line wraps in the tooltip or the end of day reminder, a count (such as "x2") no longer gets separated from the name before it.
+
 ## v2.2.0（2026-11-14）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
