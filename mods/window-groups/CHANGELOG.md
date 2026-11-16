@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.5.0（2026-11-16）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+
+- 新裝的「也記儲物分頁」預設改成開（可以在設定裡關掉）；已經裝過的照原本的設定，要用請自己打開。打開之前存的群組沒有分頁資料，要記的話重新存一次。（預設行為改變）
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+
+- "Remember storage tabs" is now on by default for new installs (you can turn it off in the settings). If you already had the mod, your setting stays as it was; turn it on yourself to use it. Groups saved before it was on don't have tab data; save them again to include it. (default changed)
+
 ## v2.4.0（2026-11-14）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

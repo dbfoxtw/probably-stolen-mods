@@ -50,7 +50,7 @@
 |---|---|---|
 | 再按一次（`RecallAgain`） | Close if all open | 同一組再按一次叫出鍵時怎麼做，下拉選單三選一：Close if all open＝全開就關、Close if unmoved＝沒動才關、Rearrange＝重新排好（見上面「叫出」）。選項只有英文（遊戲的下拉選單不能換語言），說明欄有中文對照 |
 | 也關鎖住的（`CloseLockedToo`） | 開 | 再按一次關掉這組時，一鍵關窗鎖住的視窗也關；關掉這個設定時，鎖住的留著。只有「再按一次」是 Close if all open 或 Close if unmoved 時有作用；沒裝一鍵關窗時沒有作用 |
-| 也記儲物分頁（`RememberTabs`） | 關 | 儲存時也記下每個視窗裡選的分頁（儲藏區擴建套件加的儲物分頁，以及視窗裡其他的分頁），叫出時切回去。只對打開之後儲存的群組有作用；其他的照遊戲記的分頁打開（那個箱子上次關掉時的那一頁）。關掉這個設定時，連已經記的分頁也不套用 |
+| 也記儲物分頁（`RememberTabs`） | 開 | 儲存時也記下每個視窗裡選的分頁（儲藏區擴建套件加的儲物分頁，以及視窗裡其他的分頁），叫出時切回去。只對開著這個設定時儲存的群組有作用；其他的照遊戲記的分頁打開（那個箱子上次關掉時的那一頁）。關掉這個設定時，連已經記的分頁也不套用 |
 | 群組清單（`GroupList`） | `Ctrl+0` | 打開群組清單的鍵（見上面「群組清單」），寫法和群組的鍵一樣，留空＝不使用。和某一組的鍵相同時清單優先，那一組的鍵沒有作用 |
 | 清單再按一次（`ListAgain`） | Close | 清單開著時再按一次清單的鍵怎麼做，下拉選單二選一：Close＝關掉清單、Move to mouse＝不關，把清單移到滑鼠旁邊（被箱子蓋住時也回到最上面）。選項只有英文 |
 
@@ -144,7 +144,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 ## 已知限制
 
 - 只記位置，不記視窗大小。
-- 視窗裡的分頁（例如儲藏區擴建套件加的儲物分頁）預設不記：叫出時開在那個箱子上次關掉時的分頁，和雙擊打開一樣。要記的話打開設定「也記儲物分頁」，打開之後儲存的群組才有。
+- 視窗裡的分頁（例如儲藏區擴建套件加的儲物分頁）只有設定「也記儲物分頁」開著時存的群組才記；沒記的叫出時開在那個箱子上次關掉時的分頁，和雙擊打開一樣。這個設定 2.5.0 起新裝的預設開，以前就裝了的照原本的設定（原本預設關）。
 - 「沒動才關」比的位置只記在這次開遊戲的記憶體裡：重開遊戲、讀檔之後，第一次再按會先照常叫出，再按一次才關。
 - 遊戲同時最多開 25 個可以移動的視窗，超過時會關掉最舊的。群組本身不會超過（叫出時先關掉不在群組的），但加上一鍵關窗鎖住、留著的視窗就可能超過，這時群組裡最下面的那個會被遊戲關掉，沒有提示。
 - 拖著視窗的標題列時按鍵沒有擋：拖到一半的視窗可能被移回去或關掉，不會壞東西。
@@ -227,7 +227,7 @@ The messages come from this mod, not the base game (they all start with "Window 
 |---|---|---|
 | Press again (`RecallAgain`) | Close if all open | What pressing the same group's recall key again does: Close if all open, Close if unmoved, or Rearrange (see Recall above) |
 | Close locked too (`CloseLockedToo`) | on | When pressing again closes the group, also close its windows locked with Close All Windows; turned off, locked ones stay open. Only matters when "Press again" is Close if all open or Close if unmoved, and only with Close All Windows |
-| Remember storage tabs (`RememberTabs`) | off | When saving, also remember which tab each window shows (the storage tabs added by the Storage Bay Expansion Kit, and other tabs inside a window), and switch back to it on recall. Only for groups saved while this is on; others open on the tab the game remembers (the one shown when the container was last closed). While it's off, tabs already remembered aren't applied either |
+| Remember storage tabs (`RememberTabs`) | on | When saving, also remember which tab each window shows (the storage tabs added by the Storage Bay Expansion Kit, and other tabs inside a window), and switch back to it on recall. Only for groups saved while this is on; others open on the tab the game remembers (the one shown when the container was last closed). While it's off, tabs already remembered aren't applied either |
 | Group list (`GroupList`) | `Ctrl+0` | The key that opens the group list (see Group list above), written like the group keys; empty = not used. If a group uses the same key, the list wins and that group's key does nothing |
 | List: press again (`ListAgain`) | Close | What pressing the list's key again does while it's open: Close closes the list, Move to mouse keeps it open and moves it next to the mouse (back on top if a window covered it) |
 
@@ -309,7 +309,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-groups` folder, a
 **Known limitations**
 
 - Only positions are saved, not window sizes.
-- Tabs inside a window (e.g. the storage tabs added by the Storage Bay Expansion Kit) aren't saved by default: a recalled window opens on the tab it was last closed on, just like a double-click. Turn on "Remember storage tabs" to save them (for groups saved after that).
+- Tabs inside a window (e.g. the storage tabs added by the Storage Bay Expansion Kit) are only saved for groups saved while "Remember storage tabs" is on; otherwise a recalled window opens on the tab it was last closed on, just like a double-click. Since 2.5.0 this setting is on by default for new installs; if you installed earlier, it stays as you had it (it used to be off by default).
 - The positions Close if unmoved compares with are only kept in memory: after restarting the game or loading a save, the first press recalls it as usual and the next one closes it.
 - The game keeps at most 25 movable windows open and closes the oldest beyond that. A group alone never goes over (recalling closes the others first), but windows kept open by Close All Windows' padlock can push it over; then the game closes the bottom window of the group, without a message.
 - Keys aren't blocked while you drag a window by its title bar: that window may jump back or close. Nothing breaks.

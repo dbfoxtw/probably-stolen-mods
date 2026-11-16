@@ -59,8 +59,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   Close if all open＝全開就關、Close if unmoved＝沒動才關、Rearrange＝重新排好（見【功能】）。
 - 也關鎖住的（CloseLockedToo，預設開）：再按一次關掉這組時，一鍵關窗鎖住的也關；關掉時鎖住的留著。
   只有「再按一次」是 Close if all open 或 Close if unmoved 時有作用。
-- 也記儲物分頁（RememberTabs，預設關）：儲存時也記下每個視窗選的分頁（儲物分頁等），叫出時切回去。
-  只對打開之後儲存的群組有作用；關掉時連已經記的分頁也不套用。
+- 也記儲物分頁（RememberTabs，預設開）：儲存時也記下每個視窗選的分頁（儲物分頁等），叫出時切回去。
+  只對開著這個設定時儲存的群組有作用；關掉時連已經記的分頁也不套用。
 接著兩個是 2.3.0 加的：
 - 群組清單（GroupList，預設 Ctrl+0）：打開群組清單的鍵，留空＝不使用。和某一組的鍵相同時清單優先。
 - 清單再按一次（ListAgain，預設 Close）：清單開著時再按一次清單的鍵，Close＝關掉清單、
@@ -118,7 +118,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
   遊戲照原本的方式記下那時的位置，之後一般雙擊打開也會開在那裡。
 - 提示、群組清單與設定視窗的文字跟著遊戲語言：英文、簡中（有裝繁中 mod 時是繁中）、俄、德、日、法、
   西班牙、波蘭文，其他語言是英文。
-- 已知限制：只記位置，不記視窗大小；視窗裡的分頁預設不記（開在那個箱子上次關掉時的分頁，設定「也記儲物分頁」打開時才記）；
+- 已知限制：只記位置，不記視窗大小；視窗裡的分頁只有設定「也記儲物分頁」開著時存的才記
+  （沒記的開在那個箱子上次關掉時的分頁；這個設定 2.5.0 起新裝的預設開，以前就裝了的照原本的設定）；
   「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
   遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉；
   拖著物品的途中把物品原本所在的視窗關掉再打開，拖著的物品圖案會消失、只剩選取的框，照樣放得下
@@ -219,9 +220,9 @@ This mod's settings on the Mods screen of the main menu. The three at the top we
   (see Features).
 - Close locked too (CloseLockedToo, default on): when pressing again closes the group, also close windows
   locked with Close All Windows; turned off, they stay open. Only matters with Close if all open or Close if unmoved.
-- Remember storage tabs (RememberTabs, default off): when saving, also remember which tab each window shows
-  (storage tabs and other tabs inside a window) and switch back to it on recall. Only for groups saved after
-  turning it on; while it's off, tabs already remembered aren't applied either.
+- Remember storage tabs (RememberTabs, default on): when saving, also remember which tab each window shows
+  (storage tabs and other tabs inside a window) and switch back to it on recall. Only for groups saved while
+  this is on; while it's off, tabs already remembered aren't applied either.
 The next two were added in 2.3.0:
 - Group list (GroupList, default Ctrl+0): the key that opens the group list; empty = not used.
   If a group uses the same key, the list wins.
@@ -287,8 +288,9 @@ Notes
   a group is closed, the game records its position as usual, so a normal double-click opens it there next time.
 - Messages, the group list and the settings window follow the game language: English, Simplified Chinese (Traditional
   Chinese with the Traditional Chinese mod), Russian, German, Japanese, French, Spanish or Polish, English otherwise.
-- Known limitations: only positions are saved, not window sizes; tabs inside a window aren't saved by default
-  (a recalled window opens on the tab it was last closed on, unless "Remember storage tabs" is on);
+- Known limitations: only positions are saved, not window sizes; tabs inside a window are only saved while
+  "Remember storage tabs" is on (otherwise a recalled window opens on the tab it was last closed on; since 2.5.0
+  it's on by default for new installs, earlier installs keep their setting);
   the positions Close if unmoved compares with are only kept in memory, so after restarting or loading,
   the first press recalls the group as usual; the game keeps at most 25 movable windows open, so with windows
   kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game;

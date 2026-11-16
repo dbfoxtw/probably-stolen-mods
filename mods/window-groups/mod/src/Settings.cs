@@ -60,8 +60,11 @@ namespace ProbablyStolenWindowGroups
         internal static ListAgainMode ListAgain => Rules.ParseListAgain(_listAgain != null ? _listAgain.Value : Rules.ListAgainDefault);
         /// <summary>再按一次關掉時一鍵關窗鎖住的也關（預設開）。</summary>
         internal static bool CloseLockedToo => _closeLockedToo == null || _closeLockedToo.Value;
-        /// <summary>群組也記儲物標籤頁（內容分頁；預設關）。</summary>
-        internal static bool RememberTabs => _rememberTabs != null && _rememberTabs.Value;
+        /// <summary>
+        /// 群組也記儲物標籤頁（內容分頁）。2.5.0 起預設開：遊戲載入時把設定檔沒寫到的鍵
+        /// 用預設補齊、寫回，所以開過 2.1.0～2.4.0 的人檔裡已經是 false，照原本的；新裝的才是開。
+        /// </summary>
+        internal static bool RememberTabs => _rememberTabs == null || _rememberTabs.Value;
 
         internal static void Init()
         {
@@ -70,7 +73,7 @@ namespace ProbablyStolenWindowGroups
             _repeat = cfg.Define("RecallAgain", Rules.RepeatDefault, Section, () => Strings.RepeatLabel,
                 Rules.RepeatChoices, () => Strings.RepeatTip);
             _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => Strings.CloseLockedLabel, () => Strings.CloseLockedTip);
-            _rememberTabs = cfg.Define("RememberTabs", false, Section, () => Strings.TabsLabel, () => Strings.TabsTip);
+            _rememberTabs = cfg.Define("RememberTabs", true, Section, () => Strings.TabsLabel, () => Strings.TabsTip);
             // 2.3.0 的群組清單：排在 2.1.0 的三個設定後面、40 個按鍵前面。寫法和群組的鍵一樣（Hotkey.Parse）
             _listKey = cfg.Define(Rules.ListEntryName, Rules.DefaultListKey, Section, () => Strings.ListLabel,
                 choices: null, tooltip: () => Strings.ListTip);

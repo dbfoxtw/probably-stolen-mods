@@ -18,7 +18,7 @@ repeat_tip,再按一次同一組的叫出鍵時：\nRearrange＝重新排好：�
 close_locked_label,也關鎖住的
 close_locked_tip,有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。
 tabs_label,也記儲物分頁
-tabs_tip,儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對打開這個設定後儲存的群組有作用。
+tabs_tip,儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對開著這個設定時儲存的群組有作用。
 list_label,群組清單
 list_tip,打開群組清單的按鍵：列出存過的群組，點名字叫出那組，也能改名、刪除。\n例如 Ctrl+0；留空＝不使用
 list_again_label,清單再按一次

@@ -898,7 +898,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(zhs.ConfigTip(7, false), "调出窗口组 7 的按键：先关掉其他箱子、机器窗口，再把这一组的窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "簡中：叫出的說明");
             Eq(zht.CloseLockedTip, "有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。", "繁中：也關鎖住的（開頭寫要有一鍵關窗 mod）");
             Eq(en.CloseLockedTip, "Only works with the Close All Windows mod installed.\nWhen pressing the recall key again closes the group, also close its locked windows; only when \"Press again\" is Close if all open or Close if unmoved.", "英文：也關鎖住的");
-            Eq(zht.TabsTip, "儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對打開這個設定後儲存的群組有作用。", "繁中：也記儲物分頁（縮短）");
+            Eq(zht.TabsTip, "儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對開著這個設定時儲存的群組有作用。", "繁中：也記儲物分頁（縮短）");
 
             foreach (var lang in new[] { Lang.En, Lang.ZhHans, Lang.ZhHant })
             {

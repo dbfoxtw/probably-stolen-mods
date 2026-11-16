@@ -18,7 +18,7 @@ repeat_tip,再按一次同一组的调出键时：\nRearrange＝重新排好：�
 close_locked_label,也关锁住的
 close_locked_tip,装了一键关窗 mod 时才有作用。\n再按一次关掉这一组时，锁住的窗口也关；只在“再按一次”选了 Close if all open 或 Close if unmoved 时。
 tabs_label,也记储物标签页
-tabs_tip,保存窗口组时也记下每个窗口选的标签页，调出时切回去（储物标签页，以及有些机器窗口里的标签页）。\n只对打开这个设置后保存的窗口组有效。
+tabs_tip,保存窗口组时也记下每个窗口选的标签页，调出时切回去（储物标签页，以及有些机器窗口里的标签页）。\n只对开着这个设置时保存的窗口组有效。
 list_label,窗口组列表
 list_tip,打开窗口组列表的按键：列出保存过的窗口组，点名字调出那一组，也能改名、删除。\n例如 Ctrl+0；留空＝不使用
 list_again_label,列表再按一次
