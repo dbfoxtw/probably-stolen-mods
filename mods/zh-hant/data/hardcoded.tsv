@@ -130,6 +130,103 @@ Details are in the console (mod-scan).	The mod author needs to update it\. Detai
 # ui_mods_trust_stopped 與 ui_mods_enable_stopped 的 {0}／{1}；譯法照 ui_mods_note_stopped_process
 developer console commands	it tried to run developer console commands from its own code, which mods are never allowed to do	它試圖從自己的程式碼執行開發者主控台指令，而模組絕不允許這樣做
 
+# 100-Rev15 beta（buildid 26711633，2026-11-18 查）新加、字串表沒有的英文：程式用 LocHelper.GetLocalized*OrDefault，key 不在任何語言的字串表，
+# 遊戲顯示寫死的英文預設值（參數已代入）。官方補進字串表以後這些規則就用不到（不刪也不會換錯；缺貨牌的名稱與說明例外，見下面）。
+# 括號是使用它的類別與方法。只出現在單獨一個文字物件的短句錨定整段，免得換到玩家自己打的字和別的 mod 的英文；
+# 提示框裡的行照 RichTextBuilder 的格式比對（顏色標籤、斷行），規則依序套用，長句排在會被它包含的短句前面。
+
+# 缺貨牌（OutOfStockSignHelper，新物品，某個顧客會賣）：名稱與說明在 InitSign 建立物品時寫進物品、會存進存檔，
+# 官方補進字串表以後，之前拿到的牌子仍是英文，這兩條還用得到。
+# 名稱出現在物品提示的標題、視窗標題（CustomUIManager.CreateWindow）、議價畫面、選取物品的提示、代入字串表的句子等很多地方，
+# 寫法照上面破舊水培系統那條：不錨定格式，只比對前後不是英文字母的完整名稱，單字之間接受提示框斷行的標籤
+Stock	(?<![A-Za-z])Out(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)of(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Stock(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Sign(?![A-Za-z])	缺貨牌
+# 說明只在物品提示框（GameItemElement.GetTooltipBasic，白色一段，寬度 40、中文 26）：英文一定斷成好幾行，每行各包一組白色標籤。
+# 每個空格接受斷行的標籤，斷行記進 br 群組；譯文照遊戲斷中文的方式（沒有空格，逐字每 26 個字斷一行）在固定的位置插回 ${br}。
+# 不在提示框裡（沒有顏色標籤、沒有斷行，例如別的 mod 顯示說明）時 br 是空的，譯文就是不斷行的一整句，不會留下不成對的標籤
+configured	(?<=^|\n|<color=#c4c4b0>)Can(?: |(?<br></color>\n<color=#c4c4b0>))be(?: |(?<br></color>\n<color=#c4c4b0>))configured(?: |(?<br></color>\n<color=#c4c4b0>))to(?: |(?<br></color>\n<color=#c4c4b0>))keep(?: |(?<br></color>\n<color=#c4c4b0>))certain(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))from(?: |(?<br></color>\n<color=#c4c4b0>))visiting\.(?: |(?<br></color>\n<color=#c4c4b0>))It(?: |(?<br></color>\n<color=#c4c4b0>))must(?: |(?<br></color>\n<color=#c4c4b0>))be(?: |(?<br></color>\n<color=#c4c4b0>))in(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))Display(?: |(?<br></color>\n<color=#c4c4b0>))Case(?: |(?<br></color>\n<color=#c4c4b0>))before(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))Shutter(?: |(?<br></color>\n<color=#c4c4b0>))Door(?: |(?<br></color>\n<color=#c4c4b0>))is(?: |(?<br></color>\n<color=#c4c4b0>))opened(?: |(?<br></color>\n<color=#c4c4b0>))to(?: |(?<br></color>\n<color=#c4c4b0>))work\.(?: |(?<br></color>\n<color=#c4c4b0>))Unique(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))and(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))from(?: |(?<br></color>\n<color=#c4c4b0>))event(?: |(?<br></color>\n<color=#c4c4b0>))ignore(?: |(?<br></color>\n<color=#c4c4b0>))this(?: |(?<br></color>\n<color=#c4c4b0>))sign\.(?=</color>|\n|$)	可設定不讓某些顧客上門。必須在打開鐵捲門之前放進展示${br}櫃才有效。特殊人物和活動帶來的顧客不受這塊牌子影響。
+# 設定視窗（OpenWindow）：段落標題包粗體（AddSectionTitle 的 AddLabel("<b>" + 標題 + "</b>")），其他都是單獨一個文字物件的 AddLabel、AddToggle
+Retired Merchants:	(?<=^<b>)Retired Merchants:(?=</b>$)	退休商人：
+Buyers:	(?<=^<b>)Buyers:(?=</b>$)	買家：
+Sellers:	(?<=^<b>)Sellers:(?=</b>$)	賣家：
+Special:	(?<=^<b>)Special:(?=</b>$)	特殊：
+No retired merchant	^No retired merchant visits your store yet\.$	還沒有退休商人光顧你的店鋪。
+# 每一列右邊的開關：退休商人代入字串表的星期（mech_calendar_*，中文模式時是「星期一」等），隨機來的顧客是 at random；
+# at random 那條排在前面。星期只認字串表的七個，玩家打的「Visits: …」不換
+Visits: at random	^Visits: at random$	來訪：隨機
+Visits: 	^Visits: (星期[一二三四五六日])$	來訪：$1
+# 每一列左邊的名稱（RandomGroups 與 InspectableSellerName）。食物買家和顧客名稱 ClientName/name_food_buyer 同字，
+# 用參照（公開的檔案不放剛好等於一條遊戲字串的欄位）
+General scavenger	^General scavenger$	一般拾荒者
+Bulk food scavenger	^Bulk food scavenger$	整箱食物拾荒者
+Water sellers	^Water sellers$	水賣家
+Material sellers	^Material sellers$	材料賣家
+Medical sellers	^Medical sellers$	醫療用品賣家
+Barter customers	^Barter customers$	以物易物的顧客
+Food buyers	^Food buyers$	=ClientName/name_food_buyer
+Weapon buyers	^Weapon buyers$	武器買家
+Household goods buyers	^Household goods buyers$	日用品買家
+Inspectable item seller	^Inspectable item seller$	可檢驗物品賣家
+
+# 反應爐（ReactorHelper、ReactorUpgradeGraph、ReactorUpgradeWindow）。
+# 物品說明（ReactorHelper.Description，建立時和每次讀檔都重設）：只在物品提示框，寫法照上面缺貨牌的說明。參數固定是 25、60、30、5，
+# 用擷取群組代入；${br} 的位置照這四個數字的字數算好，數字的位數變了，那幾行會差一兩個字（不影響其他行）
+Powers the Store	(?<=^|\n|<color=#c4c4b0>)Powers(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))Store(?: |(?<br></color>\n<color=#c4c4b0>))while(?: |(?<br></color>\n<color=#c4c4b0>))its(?: |(?<br></color>\n<color=#c4c4b0>))integrity(?: |(?<br></color>\n<color=#c4c4b0>))is(?: |(?<br></color>\n<color=#c4c4b0>))above(?: |(?<br></color>\n<color=#c4c4b0>))(\d+)\.(?: |(?<br></color>\n<color=#c4c4b0>))Loses(?: |(?<br></color>\n<color=#c4c4b0>))integrity(?: |(?<br></color>\n<color=#c4c4b0>))every(?: |(?<br></color>\n<color=#c4c4b0>))night(?: |(?<br></color>\n<color=#c4c4b0>))and(?: |(?<br></color>\n<color=#c4c4b0>))explodes(?: |(?<br></color>\n<color=#c4c4b0>))at(?: |(?<br></color>\n<color=#c4c4b0>))0\.(?: |(?<br></color>\n<color=#c4c4b0>))Scrap(?: |(?<br></color>\n<color=#c4c4b0>))metal(?: |(?<br></color>\n<color=#c4c4b0>))restores(?: |(?<br></color>\n<color=#c4c4b0>))(\d+)(?: |(?<br></color>\n<color=#c4c4b0>))integrity\.(?: |(?<br></color>\n<color=#c4c4b0>))Junk(?: |(?<br></color>\n<color=#c4c4b0>))restores(?: |(?<br></color>\n<color=#c4c4b0>))(\d+)(?: |(?<br></color>\n<color=#c4c4b0>))integrity(?: |(?<br></color>\n<color=#c4c4b0>))but(?: |(?<br></color>\n<color=#c4c4b0>))lowers(?: |(?<br></color>\n<color=#c4c4b0>))maximum(?: |(?<br></color>\n<color=#c4c4b0>))integrity(?: |(?<br></color>\n<color=#c4c4b0>))by(?: |(?<br></color>\n<color=#c4c4b0>))(\d+)\.(?: |(?<br></color>\n<color=#c4c4b0>))Each(?: |(?<br></color>\n<color=#c4c4b0>))common(?: |(?<br></color>\n<color=#c4c4b0>))electronic(?: |(?<br></color>\n<color=#c4c4b0>))part(?: |(?<br></color>\n<color=#c4c4b0>))gives(?: |(?<br></color>\n<color=#c4c4b0>))1(?: |(?<br></color>\n<color=#c4c4b0>))upgrade(?: |(?<br></color>\n<color=#c4c4b0>))point:(?: |(?<br></color>\n<color=#c4c4b0>))activate(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))reactor(?: |(?<br></color>\n<color=#c4c4b0>))to(?: |(?<br></color>\n<color=#c4c4b0>))spend(?: |(?<br></color>\n<color=#c4c4b0>))them\.(?: |(?<br></color>\n<color=#c4c4b0>))Gains(?: |(?<br></color>\n<color=#c4c4b0>))stored(?: |(?<br></color>\n<color=#c4c4b0>))charge(?: |(?<br></color>\n<color=#c4c4b0>))every(?: |(?<br></color>\n<color=#c4c4b0>))night,(?: |(?<br></color>\n<color=#c4c4b0>))which(?: |(?<br></color>\n<color=#c4c4b0>))pays(?: |(?<br></color>\n<color=#c4c4b0>))for(?: |(?<br></color>\n<color=#c4c4b0>))your(?: |(?<br></color>\n<color=#c4c4b0>))Current(?: |(?<br></color>\n<color=#c4c4b0>))Converters(?: |(?<br></color>\n<color=#c4c4b0>))first\.(?: |(?<br></color>\n<color=#c4c4b0>))An(?: |(?<br></color>\n<color=#c4c4b0>))Energy(?: |(?<br></color>\n<color=#c4c4b0>))Cell(?: |(?<br></color>\n<color=#c4c4b0>))used(?: |(?<br></color>\n<color=#c4c4b0>))on(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))reactor(?: |(?<br></color>\n<color=#c4c4b0>))raises(?: |(?<br></color>\n<color=#c4c4b0>))its(?: |(?<br></color>\n<color=#c4c4b0>))maximum(?: |(?<br></color>\n<color=#c4c4b0>))stored(?: |(?<br></color>\n<color=#c4c4b0>))charge\.(?=</color>|\n|$)	完整度高於$1時可替店鋪供電；每晚會損失完整度，歸零${br}就會爆炸。廢金屬可恢復$2完整度；垃圾可恢復$3完整${br}度，但完整度上限會減少$4。每個普通電子元件可換1升級${br}點數：啟用反應爐來分配。每晚會累積儲存電量，先拿來支${br}付電流轉換器。對反應爐使用能量電池，可提高儲存電量上${br}限。
+# 物品提示框（ReactorHelper.CreateTooltip）的升級點數是淺綠色一行，升級視窗頂端（AddLabel）是單獨一個文字物件。不會斷行
+Upgrade points: 	(?<=^|<color=#7a9d4a>)Upgrade points: (\d+)(?=</color>|$)	升級點數：$1
+# 儲存電量與每晚增加：物品提示框是淺青色各一行（寬度 26，數字變長時會斷行，譯文合成一行）；
+# 升級視窗是同一個文字物件「儲存電量  ·  每晚增加」（EnergyLine），所以各自比對到中間的「  ·  」或整段的頭尾。kJ 照上面電池的寫法譯千焦、緊接數字
+charge:	(?<=^|<color=#42a2aa>)Stored(?: |</color>\n<color=#42a2aa>)charge:(?: |</color>\n<color=#42a2aa>)(\d+)/(\d+)(?: |</color>\n<color=#42a2aa>)kJ(?=</color>|  ·  )	儲存電量：$1/$2千焦
+gain per	(?<=  ·  |<color=#42a2aa>)Stored(?: |</color>\n<color=#42a2aa>)charge(?: |</color>\n<color=#42a2aa>)gain(?: |</color>\n<color=#42a2aa>)per(?: |</color>\n<color=#42a2aa>)night:(?: |</color>\n<color=#42a2aa>)(\d+)(?: |</color>\n<color=#42a2aa>)kJ(?=</color>|$)	每晚增加儲存電量：$1千焦
+# 垃圾修復降低的完整度上限（升級過才顯示）：只在物品提示框，淺青色一行，會斷行
+Maximum integrity	(?<=<color=#42a2aa>)Maximum(?: |</color>\n<color=#42a2aa>)integrity(?: |</color>\n<color=#42a2aa>)lost(?: |</color>\n<color=#42a2aa>)per(?: |</color>\n<color=#42a2aa>)junk(?: |</color>\n<color=#42a2aa>)repair:(?: |</color>\n<color=#42a2aa>)(\d+)(?=</color>)	每次垃圾修復降低完整度上限：$1
+# 工業電力的效果（ReactorUpgradeGraph.PowerOutputText）：物品提示框淺青色一行（會斷行），也是升級節點的提示（見下面）
+PowerBloc	(?<=^|\n|<color=#42a2aa>)The(?: |</color>\n<color=#42a2aa>)Recharger(?: |</color>\n<color=#42a2aa>)and(?: |</color>\n<color=#42a2aa>)PowerBloc(?: |</color>\n<color=#42a2aa>)charge(?: |</color>\n<color=#42a2aa>)(\d+)%(?: |</color>\n<color=#42a2aa>)quicker\.(?=</color>|\n|$)	充能器和能量陣列的充電速度加快$1%。
+# 升級視窗：解鎖規則是單獨一個 AddLabel，也接在還沒解鎖的節點提示後面（Describe(node) + "\n" + 規則；CustomUI 的提示是純文字）
+A node unlocks	(?<=^|\n)A node unlocks once a connected node is fully upgraded\.$	相連的節點升到滿級後，這個節點才會解鎖。
+# 升級節點的提示（ReactorUpgradeGraph.Describe）：整段開頭，後面可能接「\n解鎖規則」
+Each level lowers the integrity loss	^Each level lowers the integrity loss per night by (\d+)\.(?=\n|$)	每升一級，每晚損失的完整度減少$1。
+Charges adjacent batteries	^Charges adjacent batteries and machines by (\d+) more each night\.(?=\n|$)	每晚為相鄰電池和機器多補充$1能量。
+Each level lowers the maximum integrity	^Each level lowers the maximum integrity lost per junk repair by (\d+)\.(?=\n|$)	每升一級，每次垃圾修復降低的完整度上限減少$1。
+Each level raises the stored charge	^Each level raises the stored charge gain per night by (\d+) kJ\.(?=\n|$)	每升一級，每晚增加的儲存電量多$1千焦。
+# 升級節點的按鈕：名稱 + 兩個空格 + 等級/上限（Refresh 的 button.SetText）。羅馬數字前留一個空格，照字串表裡別的「… IV」
+Integrity 	^Integrity (I{1,3}|IV)(?=  \d+/\d+$)	完整度 $1
+Charge 	^Charge (I{1,3}|IV)(?=  \d+/\d+$)	充能 $1
+Generation 	^Generation (I{1,3}|IV)(?=  \d+/\d+$)	發電 $1
+Junk Repair	^Junk Repair(?=  \d+/\d+$)	垃圾修復
+Industrial Power	^Industrial Power(?=  \d+/\d+$)	工業電力
+# 夜間報告（CurrentConverterHelper.DrawReactorEnergyForNight 的 AddNightLog，沒有顏色）：StartOfDayUIManager 每筆一個文字物件、前面加「-」
+Your reactor supplied	(?<=^-)Your reactor supplied (\d+) kJ of stored charge to your Current Converters\.$	反應爐為電流轉換器供應了$1千焦的儲存電量。
+
+# 機器工作中可以取消（MachineHelper.SetupCancelAction）：物品選單的啟用按鈕（ItemContextHandler，RichTextElement.SetText，純文字）、
+# 確認視窗的內文（GenericConfirmationUIManager.OpenPanel；3D 印表機 MachinePrinter 傳自己的確認文字）。都是單獨一個文字物件，錨定整段
+The materials used for this print	^Are you sure you want to cancel\? The materials used for this print are lost\.$	確定要取消嗎？這次列印用掉的材料會損失。
+Are you sure you want to cancel?	^Are you sure you want to cancel\?$	確定要取消嗎？
+Cancel	^Cancel$	取消
+
+# 高利貸收債人的玩家選項「提前還清」（StoreClientList.CreateLoanSharkCollect 的 Dialogue.SetText("PLAYER", …)，{0} 是整數）：
+# 對話選項也可能出現在錄音機的「店主: …」裡，所以和上面的台詞一樣不錨定整行；譯法照同一組的 dialog_loan_shark_collect_player_pay
+Pay off the whole loan	\[Pay off the whole loan \((\d+) Credits\)\]	[一次還清全部貸款（$1信用點）]
+
+# 議價畫面（NegociationUIManager）：已固定的物品那一列右邊的標籤（GetRefusalLabel）與滑鼠提示的理由（GetNotBuyingReason，TooltipManager 純文字）
+Pinned items are not sold	^Pinned items are not sold\. Unpin it to offer it\.$	已固定的物品不會賣出。要賣請先取消固定。
+Pinned	^Pinned$	已固定
+
+# 啟用要權限的模組時的確認視窗（ModEnablePromptUI.AddUploaderLine）：上傳者那行是單獨一個 AddLabel，顏色用 SetTextColor（不是標籤）。
+# 建立日期那句在風險最高時整句包 <b>（Emphasis）；{0} 是 createdUtc.ToString("d")（格式看系統的地區設定），{1} 是字串表的「N天前」等，
+# 帳號不到一天時是寫死的 today：換好整句以後只換括號裡的 today
+Checking the mod uploader	^Checking the mod uploader's Steam account\.\.\.$	正在查詢模組上傳者的Steam帳號……
+Steam profile is private	^The mod uploader's Steam profile is private\.$	模組上傳者的Steam個人檔案不公開。
+Steam account created on	^(<b>)?Mod uploader's Steam account created on ([^\n]+?) \(([^()\n]+)\)(</b>)?$	$1模組上傳者的Steam帳號建立日期：$2（$3）$4
+today	(?<=^(?:<b>)?模組上傳者的Steam帳號建立日期：[^\n]*（)today(?=）(?:</b>)?$)	今天
+# 「N週前」：字串表 ui_mods_prompt_ago_weeks 的簡中是「{0}周前」，代進這句以後整句沒有簡體專用字，轉換時「周」原樣留著
+# （同一個視窗的上傳日期那行走字串表，會轉成「週前」）。只換這句括號裡的
+周前	(?<=^(?:<b>)?模組上傳者的Steam帳號建立日期：[^\n]*（\d+)周前(?=）(?:</b>)?$)	週前
+could not be checked	^The mod uploader's Steam account could not be checked\.$	無法查詢模組上傳者的Steam帳號。
+
+# 測試版的說明（BetaNotice：遊戲資料夾有 beta.txt 才在主選單出現）：標題 AddHeader、內文 AddLabel，各是單獨一個文字物件
+Beta Branch	^Beta Branch$	測試版分支
+beta branch version	^You are playing a beta branch version of the game\. The translation of some text may not be available yet, or may not be final\.$	你正在遊玩本遊戲的測試版分支。部分文字可能還沒有翻譯，或譯文尚未定稿。
+
 # 彩券說明頁（PaperUIManager.OpenLotteryInfo 打開的 _LotteryInfographic，level1 場景裡序列化好的文字，2026-10-31 實機看到）：
 # 獎品表右欄的獎金寫死成「1000000 Credits」等五個（字型設成全大寫，畫面上是 CREDITS），左欄「中6個」等走字串表。
 # 照字串表「{0}信用點」緊接數字；只列這五個金額、整段剛好是「數字 Credits」才換，免得換到玩家自己打的字
@@ -167,3 +264,8 @@ Continue Playing	^Continue Playing$	繼續遊玩
 # 機器說明的係數：官方 Rev12 寫「性能（系数：0.25）：吸引力」，括號裡的冒號拿掉、和 DNA 編輯器一樣（2026-11-07 第三輪）。
 # 物品提示框逐行轉換時術語表套不到，所以用這裡（所有轉換完的文字都會套）
 （係數：	（係數：(?=\d)	（係數
+
+# 反應爐提示框的完整度（ReactorHelper.CreateTooltip 第一行，字串表 Mechanic/mech_reactor_tooltip_integrity，依完整度包淺紅、淺橘或淺綠）：
+# 簡中「完好度：{0}/{1}」整行都是繁簡同形的字，提示框逐行轉換時判斷不用轉，逐條修正的「完整度」套不上（2026-11-18 離線試轉發現，Rev15 以前就有）。
+# 同一個提示框的每晚損失和 Rev15 的新行都寫完整度，這行跟著換；只換顏色標籤裡「完好度：數字/數字」這個格式
+完好度：	(?<=<color=#[0-9a-f]{6}>)完好度：(?=\d+/\d+</color>)	完整度：
