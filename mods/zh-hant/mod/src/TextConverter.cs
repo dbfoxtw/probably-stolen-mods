@@ -21,6 +21,13 @@ namespace ProbablyStolenZhHant
         readonly HashSet<string> _keyPrefixes = new HashSet<string>(StringComparer.Ordinal);
         readonly List<Template> _templates = new List<Template>();
         readonly List<Template> _plainTemplates = new List<Template>(); // 字面沒有簡體專用字的樣板，見 ConvertCore
+        // 上面每個樣板最長的一段固定字（去重）：不用轉的帶標籤文字含有其中一段才逐段處理，見 ConvertSimplified
+        string[] _plainLiterals = new string[0];
+        readonly bool[] _plainLiteralStart = new bool[char.MaxValue + 1]; // 上面每段固定字的第一個字
+        // 有樣板沒有任何固定字（字面全是標記與佔位符）：用固定字篩選會漏掉它，篩選就不用（目前沒有這種樣板）
+        bool _plainWithoutLiteral;
+        // 字串表裡本身有換行的整句（多行說明），去掉換行後的樣子，依第一個字分組，見 TryMultiline
+        readonly Dictionary<char, List<MultiLine>> _multiline = new Dictionary<char, List<MultiLine>>();
         // 單位改成英文時，字面沒有簡體專用字、只因為單位才和譯文不同的樣板（「耗水率：{0}毫升/天」）：佔位符要是數字才套，見 TryUnits
         readonly List<Template> _unitTemplates = new List<Template>();
         // 沒有簡體專用字、譯文卻不同的短詞（例如聲望特性的狀態標籤、某些職稱）：不用轉的文字裡也要換掉，見 ReplacePlainPhrases。
@@ -58,6 +65,8 @@ namespace ProbablyStolenZhHant
         public bool ChineseActive;
 
         public long Calls, ExactHits, TemplateHits, FallbackHits, CacheHits, Skipped, HardcodedHits, Ticks;
+        /// <summary>多行整句在組合文字裡對上的次數（TryMultiline），離線驗證確認每條多行整句都真的走到這裡。</summary>
+        public long MultilineHits;
         public int ExactCount => _exact.Count;
         /// <summary>載入的寫死英文規則數（「=表/key」參照找不到而略過的不算），log 用來確認 hardcoded.tsv 有載入。</summary>
         public int HardcodedCount => _hardcoded.Count;
@@ -73,6 +82,18 @@ namespace ProbablyStolenZhHant
         /// <summary>建立時翻譯的字串表條目數；同一句原文有兩種譯文、只能留一種的次數。</summary>
         public int EntryCount { get; private set; }
         public int Conflicts { get; private set; }
+        /// <summary>多行整句的索引收了幾條（見 TryMultiline）。</summary>
+        public int MultilineCount { get; private set; }
+        /// <summary>多行整句裡沒收進索引的（「原文開頭（原因）」：譯文行數不同、空行對不上、去掉換行後和別句相同），預期是空的。</summary>
+        public readonly List<string> MultilineSkipped = new List<string>();
+
+        /// <summary>字面沒有簡體專用字、套用後字面會變的樣板（原文, 譯文），離線驗證逐條測用。</summary>
+        internal List<KeyValuePair<string, string>> PlainTemplatePairs()
+        {
+            var list = new List<KeyValuePair<string, string>>();
+            foreach (var t in _plainTemplates) list.Add(new KeyValuePair<string, string>(t.Source, t.Target));
+            return list;
+        }
 
         // TextMeshPro 內建標籤；其他 <...> 視為 Text Animator 標籤（Text Animator 會先拿掉自己的標籤再交給 TMP）
         static readonly HashSet<string> TmpTags = new HashSet<string>(StringComparer.Ordinal)
@@ -222,6 +243,7 @@ namespace ProbablyStolenZhHant
                 if (end < 0) end = k.Length;
                 for (int n = 1; n <= PrefixLen && a + n <= end; n++) c._keyPrefixes.Add(k.Substring(a, n));
             }
+            c.BuildMultiline();
             // 短詞（名稱、狀態等）：整句查不到時用來分詞，處理遊戲自己拼接的字串。照三個開關都開時的內容建（見上面 zhExact）
             foreach (var kv in zhExact)
             {
@@ -294,8 +316,71 @@ namespace ProbablyStolenZhHant
                     c._unitTemplates.Add(t);
                 }
             }
+            var literals = new List<string>();
+            foreach (var t in c._plainTemplates)
+                if (t.LongestText.Length == 0) c._plainWithoutLiteral = true;
+                else if (!literals.Contains(t.LongestText))
+                {
+                    literals.Add(t.LongestText);
+                    c._plainLiteralStart[t.LongestText[0]] = true;
+                }
+            c._plainLiterals = literals.ToArray();
             return c;
         }
+
+        /// <summary>
+        /// 多行整句的索引（TryMultiline 用）：字串表裡 key 本身有換行的整句，去掉前後空白、再去掉換行，依第一個字分組。
+        /// 譯文和原文行數不同、或某一行只有一邊是空行的不收：分不出譯文的哪一行該放到畫面上的哪一行。
+        /// 去掉換行後和別的整句相同、或兩條多行整句去掉換行後相同但譯文不同的也不收：拼起來的字串分不出是哪一句。
+        /// 有標記或佔位符的不收：拼接只接文字片段，標記不在拼起來的字串裡，永遠對不上。
+        /// </summary>
+        void BuildMultiline()
+        {
+            var all = new Dictionary<string, MultiLine>(StringComparer.Ordinal);
+            var clash = new List<string>();
+            foreach (var kv in _exact)
+            {
+                if (kv.Key.IndexOf('\n') < 0 || Markup.IsMatch(kv.Key)) continue;
+                var src = kv.Key.Trim();
+                var dst = kv.Value.Trim();
+                var sl = src.Split('\n');
+                if (sl.Length < 2) continue; // 換行只在頭尾：LookupFlexible 去掉空白就查得到
+                var dl = dst.Split('\n');
+                string why = sl.Length != dl.Length ? $"原文 {sl.Length} 行、譯文 {dl.Length} 行" : null;
+                for (int i = 0; why == null && i < sl.Length; i++)
+                    if ((sl[i].Trim().Length == 0) != (dl[i].Trim().Length == 0)) why = $"第 {i + 1} 行只有一邊是空行";
+                var flat = src.Replace("\n", "");
+                if (why == null && (_exact.ContainsKey(flat) || _exactTrim.ContainsKey(flat))) why = "去掉換行後和別的整句相同";
+                if (why != null) { MultilineSkipped.Add($"{Head(src)}（{why}）"); continue; }
+                if (all.TryGetValue(flat, out var old))
+                {
+                    if (string.Join("\n", old.Dst) != dst && !clash.Contains(flat)) clash.Add(flat);
+                    continue;
+                }
+                var starts = new int[sl.Length + 1];
+                for (int i = 0; i < sl.Length; i++) starts[i + 1] = starts[i] + sl[i].Length;
+                all[flat] = new MultiLine
+                {
+                    Flat = flat, LineStart = starts, Dst = dl,
+                    SrcLead = Lead(kv.Key), SrcTrail = Trail(kv.Key), DstLead = Lead(kv.Value), DstTrail = Trail(kv.Value),
+                };
+            }
+            foreach (var f in clash)
+            {
+                all.Remove(f);
+                MultilineSkipped.Add($"{Head(f)}（去掉換行後和別的多行整句相同、譯文不同）");
+            }
+            foreach (var m in all.Values)
+            {
+                if (!_multiline.TryGetValue(m.Flat[0], out var list)) _multiline[m.Flat[0]] = list = new List<MultiLine>();
+                list.Add(m);
+                MultilineCount++;
+            }
+        }
+
+        static string Head(string s) => (s.Length > 20 ? s.Substring(0, 20) + "…" : s).Replace("\n", "⏎");
+        static string Lead(string s) => s.Substring(0, s.Length - s.TrimStart().Length);
+        static string Trail(string s) => s.Substring(s.TrimEnd().Length);
 
         /// <summary>不為 null 時記錄「轉換結果 → 原文」：字串表載入前的暫用轉換器用，載入後把畫面上這些字重新轉換。</summary>
         public Dictionary<string, string> Produced;
@@ -331,14 +416,25 @@ namespace ProbablyStolenZhHant
             if ((r = TrySpeaker(s)) != null) { ExactHits++; return r; }
             if (!NeedsConversion(s))
             {
-                // 樣板的字面沒有簡體專用字、填入的又是數字時，整句也沒有（例如房東說下週租金那句），仍要套樣板
-                foreach (var t in _plainTemplates)
-                    if ((r = t.Apply(s, Convert)) != null) { TemplateHits++; return r; }
-                // 單位改成英文時：「耗水率：100毫升/天」這種沒有簡體字的句子可能和別的行拼在一起、或前面有空白，
-                // 整句的樣板對不上，逐段查（ConvertComposite 也會換短詞；佔位符一樣要是數字）
-                if (_unitTemplates.Count > 0 && _tr.Units.HasEnglishUnit(s))
+                // 樣板的字面沒有簡體專用字、填入的又是數字時，整句也沒有（例如房東說下週租金那句），仍要套樣板。
+                // 樣板對得上的一定含它最長的那段固定字，所以先掃一遍固定字，沒有就不必一條條試（這裡每次設文字都會跑）；
+                // 有樣板沒有固定字時照舊全試
+                bool literal = HasPlainLiteral(s);
+                if (literal || _plainWithoutLiteral)
+                    foreach (var t in _plainTemplates)
+                        if ((r = t.Apply(s, Convert)) != null) { TemplateHits++; return r; }
+                // 整段對不上、但可能是標記或換行把樣板那一句和別的字接在一起的，逐段查：
+                // - 單位改成英文時：「耗水率：100毫升/天」這種沒有簡體字的句子可能和別的行拼在一起、或前面有空白。
+                //   每段查整句、只差在單位的樣板、字面沒有簡體專用字的樣板（佔位符要是數字）與短詞
+                // - 標記或換行，而且含某個樣板的固定字、有數字：下班後活動的效果「•<indent=14px>找到垃圾的概率降低50%</indent>」
+                //   （TransitUI 包上項目符號與縮排），整段沒有簡體字，以前原樣顯示「概率」。每段只套字面沒有簡體專用字的樣板
+                //   （佔位符要是數字，所以整段沒有數字就不必切）與短詞，不查整句：這裡多半是玩家打的繁體、別的 mod 的繁中，
+                //   「出售中\n明白了。」的「明白了。」剛好是字串表的整句，查了就會換成遊戲那句的譯文。
+                //   一般的帶標籤文字（計時器、數字）沒有固定字，不會多做事
+                bool units = _unitTemplates.Count > 0 && _tr.Units.HasEnglishUnit(s);
+                if (units || ((literal || _plainWithoutLiteral) && (s.IndexOf('<') >= 0 || s.IndexOf('\n') >= 0) && HasDigit(s)))
                 {
-                    r = ConvertComposite(s);
+                    r = ConvertComposite(s, plainOnly: true, exact: units);
                     if (r != s) { TemplateHits++; return r; }
                 }
                 if ((r = ReplacePlainPhrases(s)) != null) { FallbackHits++; return r; }
@@ -452,8 +548,13 @@ namespace ProbablyStolenZhHant
         /// <summary>
         /// 遊戲自己拼接的字串（說明框、新聞、夜間報告…）：依標記與換行切段，每段（去掉前後空白與「-」）
         /// 先查整句對照與樣板，都查不到才逐字轉換，並記到 Misses。
+        /// plainOnly：整段已經判定不用轉（ConvertSimplified 的路徑 3），每段都只做沒有簡體專用字的片段那幾樣，也不試多行整句。
+        /// 片段單獨看可能含詞觸發（「信息」），但整段有繁體的字（玩家打的、別的 mod 的繁中）時本來就不看詞觸發，切段後也不能看。
+        /// exact：沒有簡體專用字的片段要不要查整句對照（只差在單位的樣板跟著它）。路徑 3 只因為樣板的固定字才逐段處理時不查，見 ConvertSimplified
         /// </summary>
-        public string ConvertComposite(string s)
+        public string ConvertComposite(string s) => ConvertComposite(s, plainOnly: false, exact: true);
+
+        string ConvertComposite(string s, bool plainOnly, bool exact)
         {
             // 切成「標記／換行」與「文字片段」；說明框的長句會被遊戲按字數斷行，而且每行各包一組 <color>，
             // 所以連續幾個文字片段（跨標記、跨換行）拼起來查整句，查到就依各片段原本的長度分配回去。
@@ -475,11 +576,22 @@ namespace ProbablyStolenZhHant
 
             for (int u = 0; u < units.Count; u++)
             {
-                if (!NeedsConversion(tokens[units[u]]))
+                // 多行整句從這段開始：第一段沒有簡體專用字的也要試（「投入消耗增加\n-每晚产量增加\n-纯度降低」），
+                // 不然它的逐條修正永遠套不上。依第一個字查，成本小；這條路（路徑 4）有快取
+                if (!plainOnly)
                 {
-                    // 沒有簡體專用字的片段：整句查得到，或含有譯文不同的短詞（例如聲望特性標題的狀態標籤）
+                    int mv = TryMultiline(tokens, units, u);
+                    if (mv >= 0) { u = mv; continue; }
+                }
+                if (plainOnly || !NeedsConversion(tokens[units[u]]))
+                {
+                    // 沒有簡體專用字的片段：整句查得到，或含有譯文不同的短詞（例如聲望特性標題的狀態標籤）。
+                    // 字面沒有簡體專用字的樣板也查（貸款合約第 3 行「1.3. 利率：年利率100%（周利率1.923%）」，前後幾行有簡體字、
+                    // 整段不等於那一句），佔位符要是數字（見 TryPlainTemplates）。
                     // 單位改成英文時另外查只差在單位的樣板（說明框裡的「耗水率：100毫升/天」）
-                    var ex = LookupFlexible(tokens[units[u]], templates: false) ?? TryUnits(tokens[units[u]]) ?? ReplacePlainPhrases(tokens[units[u]]);
+                    var tok = tokens[units[u]];
+                    var ex = (exact ? LookupFlexible(tok, templates: false) : null) ?? TryPlainTemplates(tok)
+                             ?? (exact ? TryUnits(tok) : null) ?? ReplacePlainPhrases(tok);
                     if (ex != null) tokens[units[u]] = ex;
                     continue;
                 }
@@ -646,6 +758,187 @@ namespace ProbablyStolenZhHant
                     if (t.Apply(x, Convert) is string r) return r;
                 return null;
             });
+        }
+
+        /// <summary>
+        /// 組合文字裡沒有簡體專用字的一段，查字面沒有簡體專用字的樣板（_plainTemplates）；同樣去掉前後空白、符號、括號再查。
+        /// 佔位符一律要是數字：這裡多半是玩家打的繁體、別的 mod 的繁中，佔位符什麼都吃的話，粗體的「槽位很多」也會對上「槽位{0}」。
+        /// 整段比對（ConvertSimplified 的路徑 3）照舊不限數字：漏斗的「撬棍已在列表中。」代的是物品名稱。
+        /// 先看有沒有樣板的固定字，沒有就不必一條條試。沒有就傳回 null
+        /// </summary>
+        string TryPlainTemplates(string line)
+        {
+            if (_plainTemplates.Count == 0 || (!_plainWithoutLiteral && !HasPlainLiteral(line))) return null;
+            return LookupFlexible(line, x =>
+            {
+                foreach (var t in _plainTemplates)
+                    if (t.Apply(x, Convert, numbersOnly: true) is string r) return r;
+                return null;
+            });
+        }
+
+        /// <summary>
+        /// s 含有某個字面沒有簡體專用字的樣板最長的那段固定字（_plainLiterals）。不用轉的帶標籤文字每次設文字都會跑，
+        /// 所以只掃一遍：遇到某段固定字的第一個字才比對（不是每段固定字各掃一次）
+        /// </summary>
+        bool HasPlainLiteral(string s)
+        {
+            if (_plainLiterals.Length == 0) return false;
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (!_plainLiteralStart[s[i]]) continue;
+                foreach (var p in _plainLiterals)
+                    if (p[0] == s[i] && p.Length <= s.Length - i && string.CompareOrdinal(s, i, p, 0, p.Length) == 0) return true;
+            }
+            return false;
+        }
+
+        /// <summary>s 有沒有 ASCII 數字：字面沒有簡體專用字的樣板逐段套時佔位符要是數字（Template.IsNumber 至少要一個 0～9）。</summary>
+        static bool HasDigit(string s)
+        {
+            foreach (var ch in s)
+                if (ch >= '0' && ch <= '9') return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 多行整句：原文（去掉前後空白與換行）、每一行在裡面的起點（最後多一個＝長度）、譯文（去掉前後空白）的每一行，
+        /// 以及原文與譯文前後的空白（導師筆記的原文開頭有空格，譯文換成縮排標籤、沒有空格）
+        /// </summary>
+        sealed class MultiLine
+        {
+            public string Flat;
+            public int[] LineStart;
+            public string[] Dst;
+            public string SrcLead, SrcTrail, DstLead, DstTrail;
+        }
+
+        /// <summary>
+        /// 字串表裡本身有換行的整句（機器說明書「[模组影响]：\n效率影响功耗\n…」、DNA 編輯器的說明）放進物品提示框時，
+        /// 遊戲依換行拆成好幾行、每行各包標籤，太長的行再按字數斷（GameItemElement.GetTooltipBasic、RichTextBuilder）。
+        /// 一般的拼接只接文字片段、丟掉換行，對不上 key 裡的換行，以前走後備轉換，逐條修正與譯文的縮排都套不上。
+        /// 原文的換行和遊戲斷行插的換行在字串裡分不出來，所以從第 u 段起逐段和去掉換行的 key 比對，對上了再用 key 的行界線
+        /// 判斷每段是原文第幾行，譯文第 i 行照原長分給原文第 i 行的那幾段（同一般的拼接）。
+        /// 逐段比對、對不上就停，不受 MaxJoin 限制（DNA 編輯器的說明在提示框裡會斷成二十幾段）。
+        /// 成功時改好 tokens、傳回最後一段的位置；對不上傳回 -1，tokens 不動
+        /// </summary>
+        int TryMultiline(List<string> tokens, List<int> units, int u)
+        {
+            if (_multiline.Count == 0) return -1;
+            var head = tokens[units[u]];
+            int a = 0;
+            while (a < head.Length && char.IsWhiteSpace(head[a])) a++;
+            if (a >= head.Length || !_multiline.TryGetValue(head[a], out var list)) return -1;
+            var starts = new List<int>();
+            foreach (var m in list)
+            {
+                int v = MatchMultiline(m, tokens, units, u, a, starts);
+                if (v >= 0 && SplitMultiline(m, tokens, units, u, v, a, starts)) { MultilineHits++; return v; }
+            }
+            return -1;
+        }
+
+        /// <summary>從第 u 段（跳過開頭 a 個空白）起逐段比對 m.Flat；對上時傳回最後一段的位置，starts 是各段在 Flat 裡的起點。</summary>
+        static int MatchMultiline(MultiLine m, List<string> tokens, List<int> units, int u, int a, List<int> starts)
+        {
+            starts.Clear();
+            int pos = 0;
+            for (int k = u; k < units.Count; k++)
+            {
+                var t = tokens[units[k]];
+                int from = k == u ? a : 0;
+                // 遊戲在空格斷行時拿掉那個空格（RichTextBuilder.Build），原文在這裡的空格畫面上沒有，跳過
+                if (k > u && pos < m.Flat.Length && m.Flat[pos] == ' ' && t.Length > 0 && t[0] != ' ') pos++;
+                starts.Add(pos);
+                int len = t.Length - from, rest = m.Flat.Length - pos;
+                if (len >= rest)
+                {
+                    // 最後一段：剩下的原文要對上，後面多的只能是空白
+                    if (string.CompareOrdinal(t, from, m.Flat, pos, rest) != 0) return -1;
+                    for (int i = from + rest; i < t.Length; i++)
+                        if (!char.IsWhiteSpace(t[i])) return -1;
+                    return k;
+                }
+                if (string.CompareOrdinal(t, from, m.Flat, pos, len) != 0) return -1;
+                pos += len;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// 對上的第 u～v 段照原文的行分配譯文：每段屬於起點所在的那一行，同一行的幾段依原長分配譯文的那一行，多出來的給最後一段；
+        /// 分不到字的段落，遊戲斷行插的換行跟著拿掉（同一般的拼接）。原文的換行不動。第一段前面的空白（提示框在說明前面加的空格）、
+        /// 最後一段後面的空白原樣留著，其中原文本身的頭尾空白換成譯文的。有一段跨過原文的換行（不是遊戲組的，例如別人把整句去掉換行設成一行）、
+        /// 或譯文有字的那一行一段都沒有時，不採用、傳回 false
+        /// </summary>
+        static bool SplitMultiline(MultiLine m, List<string> tokens, List<int> units, int u, int v, int a, List<int> starts)
+        {
+            int n = v - u + 1;
+            // 各段的原文在 Flat 裡的終點：下一段跳過了遊戲拿掉的空格時只到那個空格前面，最後一段到結尾（後面的空白不算）
+            var ends = new int[n];
+            for (int j = 0; j < n; j++)
+                ends[j] = Math.Min(j + 1 < n ? starts[j + 1] : m.Flat.Length, starts[j] + tokens[units[u + j]].Length - (j == 0 ? a : 0));
+            var pieces = new string[n];
+            var dropBreak = new bool[n];
+            int k = 0;
+            for (int line = 0; line < m.Dst.Length; line++)
+            {
+                int lineEnd = m.LineStart[line + 1], first = k;
+                for (; k < n && starts[k] < lineEnd; k++)
+                    if (ends[k] > lineEnd) return false;
+                var dst = m.Dst[line];
+                if (first == k)
+                {
+                    if (dst.Trim().Length > 0) return false;
+                    continue;
+                }
+                int p = 0;
+                for (int j = first; j < k; j++)
+                {
+                    int len = j == k - 1 ? dst.Length - p : NoTagCut(dst, p, Math.Min(ends[j] - starts[j], dst.Length - p));
+                    pieces[j] = dst.Substring(p, len);
+                    p += len;
+                    if (len == 0 && j > first) dropBreak[j] = true;
+                }
+            }
+            if (k < n) return false;
+            for (int j = 0; j < n; j++)
+            {
+                var t = tokens[units[u + j]];
+                var r = pieces[j];
+                if (j == 0)
+                {
+                    // 第一段前面的空白：提示框加的空格原樣留著，原文本身開頭的空白換成譯文開頭的
+                    var lead = t.Substring(0, a);
+                    if (lead.EndsWith(m.SrcLead, StringComparison.Ordinal)) lead = lead.Substring(0, lead.Length - m.SrcLead.Length) + m.DstLead;
+                    r = lead + r;
+                }
+                if (j == n - 1)
+                {
+                    // 最後一段在原文結尾之後的空白，同上
+                    int b = t.Length;
+                    while (b > 0 && char.IsWhiteSpace(t[b - 1])) b--;
+                    var trail = t.Substring(b);
+                    if (trail.StartsWith(m.SrcTrail, StringComparison.Ordinal)) trail = m.DstTrail + trail.Substring(m.SrcTrail.Length);
+                    r += trail;
+                }
+                tokens[units[u + j]] = r;
+                if (dropBreak[j])
+                    for (int x = units[u + j] - 1; x > units[u + j - 1]; x--)
+                        if (tokens[x] == "\n") { tokens[x] = ""; break; }
+            }
+            return true;
+        }
+
+        /// <summary>從 s 的 p 起切 len 個字，切點落在標籤（譯文的縮排 &lt;space=1em&gt;）中間時移到標籤後面，傳回調整後的長度。</summary>
+        static int NoTagCut(string s, int p, int len)
+        {
+            int q = p + len;
+            if (q <= p || q >= s.Length) return len;
+            int lt = s.LastIndexOf('<', q - 1, q - p);
+            if (lt < 0) return len;
+            int gt = s.IndexOf('>', lt);
+            return gt < 0 || gt < q ? len : gt + 1 - p;
         }
 
         string LookupFlexible(string line, Func<string, string> find)
@@ -822,6 +1115,9 @@ namespace ProbablyStolenZhHant
             public readonly string Source;  // 原文（整句對照的 key）
             public readonly string Literal; // 原文去掉佔位符後的字面部分
             public int LiteralLength => Literal.Length;
+            /// <summary>原文標記與佔位符之間最長的一段文字（ConvertSimplified 篩要不要逐段處理用）。</summary>
+            public readonly string LongestText;
+            public string Target => _target;
             /// <summary>佔位符的內容要是數字才套（只因為單位改成英文才收進來的樣板，見 Build）。</summary>
             public bool NumbersOnly;
             /// <summary>譯文去掉佔位符後和原文字面相同：套用只會轉換佔位符的內容。</summary>
@@ -840,6 +1136,10 @@ namespace ProbablyStolenZhHant
             {
                 _re = re; _prefix = prefix; _suffix = suffix; _names = names; _target = target;
                 Source = source; Literal = literal;
+                var parts = Markup.Split(source);
+                LongestText = "";
+                for (int i = 0; i < parts.Length; i += 2)
+                    if (parts[i].Length > LongestText.Length) LongestText = parts[i];
             }
 
             public static bool TryCreate(string src, string dst, out Template t)
@@ -876,14 +1176,16 @@ namespace ProbablyStolenZhHant
             /// <summary>佔位符的內容去掉 rich text 標籤後是不是數字（遊戲可能用 &lt;color&gt; 包住數字）。</summary>
             static bool IsNumber(string s) => Number.IsMatch(s.IndexOf('<') < 0 ? s : RichTag.Replace(s, ""));
 
-            public string Apply(string s, Func<string, string> convert)
+            /// <summary>numbersOnly：這次佔位符要是數字才套（組合文字裡的片段，見 TryPlainTemplates），NumbersOnly 的樣板不論如何都要。</summary>
+            public string Apply(string s, Func<string, string> convert, bool numbersOnly = false)
             {
                 if (!s.StartsWith(_prefix, StringComparison.Ordinal) || !s.EndsWith(_suffix, StringComparison.Ordinal)) return null;
                 var m = _re.Match(s);
                 if (!m.Success) return null;
                 // 佔位符是名字、數字等，不會跨行；跨行代表把別段拼接的文字也吃進來了
+                bool numbers = NumbersOnly || numbersOnly;
                 for (int i = 1; i < m.Groups.Count; i++)
-                    if (m.Groups[i].Value.IndexOf('\n') >= 0 || (NumbersOnly && !IsNumber(m.Groups[i].Value))) return null;
+                    if (m.Groups[i].Value.IndexOf('\n') >= 0 || (numbers && !IsNumber(m.Groups[i].Value))) return null;
                 var r = _target;
                 for (int i = 0; i < _names.Length; i++)
                     r = r.Replace(_names[i], convert(m.Groups[i + 1].Value));
