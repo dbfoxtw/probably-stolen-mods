@@ -49,5 +49,9 @@ style_crate,箱子
 style_menu,菜单
 style_reputation,声望
 
-key_bind,折叠/展开简易待办
-key_bind_tip,按下后折叠或展开简易待办，和点一下标题栏最右边的箭头一样。
+key_bind,切换简易待办显示
+key_bind_tip,按下后折叠或隐藏简易待办，看下面的设置。\n再按一次就展开或重新出现。
+key_mode,简易待办按键的作用
+key_mode_collapse,折叠/展开
+key_mode_hide,隐藏/显示
+key_mode_tip,上面简易待办的按键按下时做什么。\n折叠/展开＝只留标题栏，和标题栏最右边的箭头一样。\n隐藏/显示＝整个藏起来，再按一次按键就会出现。

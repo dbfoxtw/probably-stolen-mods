@@ -635,7 +635,9 @@ namespace ProbablyStolenTodo
             _visible = v;
             if (!v)
             {
-                _dragging = false;
+                // 拖到一半被藏起來（隱藏模式按鍵、Esc 選單、離開店鋪）：位置照放開時存，不然單停在新位置、settings.json 卻是舊的，
+                // 之後整張重建、解析度變了或重開遊戲就跳回去
+                if (_dragging) EndDrag();
                 if (Reordering) EndReorder();
                 if (_resizing) EndResize();
             }
@@ -654,7 +656,7 @@ namespace ProbablyStolenTodo
             ProcessFinish();
             ResizeForComposition();
             CheckKeptBlank();
-            CheckHotkey();
+            // 簡易待辦的鍵不在這裡檢查：這裡只在顯示時跑，藏起來就收不到；改由 TodoMod.Update 每幀叫 HotkeyPressed
             UpdateAlpha();
             if (!_settings.Collapsed)
             {
@@ -709,15 +711,21 @@ namespace ProbablyStolenTodo
             }
             if (!Input.GetMouseButton(0))
             {
-                _dragging = false;
-                var p = _panel.anchoredPosition;
-                _settings.PanelX = p.x;
-                _settings.PanelY = p.y;
-                _saveSettings();
+                EndDrag();
                 return;
             }
             var scale = _canvas.scaleFactor > 0 ? _canvas.scaleFactor : 1f;
             _panel.anchoredPosition = Clamp(_dragPanel + (mouse - _dragMouse) / scale);
+        }
+
+        /// <summary>放開標題列（或拖到一半懸浮單被藏起來）：把目前的位置存進設定。</summary>
+        void EndDrag()
+        {
+            _dragging = false;
+            var p = _panel.anchoredPosition;
+            _settings.PanelX = p.x;
+            _settings.PanelY = p.y;
+            _saveSettings();
         }
 
         bool OverTitleButton(Vector2 mouse) =>

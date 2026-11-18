@@ -79,6 +79,11 @@ style_crate,Crate
 style_menu,Menu
 style_reputation,Reputation
 
-# The game's Options > Key Binds: name of this mod's row and its tooltip
-key_bind,Collapse / expand Simple To-Do
-key_bind_tip,Collapses or expands Simple To-Do, same as clicking the arrow at the right end of its title bar.
+# The game's Options > Key Binds: name of this mod's row and its tooltip, then the dropdown right below it
+# (its name, its two choices and its tooltip). The game's dropdown is a fixed 306 units wide; tooltips wrap by themselves (240 or 400 wide).
+key_bind,Toggle Simple To-Do
+key_bind_tip,Collapses or hides Simple To-Do, depending on the setting below.\nPress it again to expand it or bring it back.
+key_mode,Simple To-Do key action
+key_mode_collapse,Collapse / expand
+key_mode_hide,Hide / show
+key_mode_tip,What the Simple To-Do key above does.\nCollapse / expand = keep only the title bar, same as the arrow at the right end of the title bar.\nHide / show = hide the whole list; press the key again to bring it back.

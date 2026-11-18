@@ -48,5 +48,9 @@ style_crate,Kiste
 style_menu,Menü
 style_reputation,Ansehen
 
-key_bind,Einfache To-do-Liste ein-/ausklappen
-key_bind_tip,Klappt die Einfache To-do-Liste ein oder aus, wie ein Klick auf den Pfeil am rechten Ende ihrer Titelleiste.
+key_bind,Einfache To-do-Liste umschalten
+key_bind_tip,Klappt die Einfache To-do-Liste ein oder blendet sie aus, je nach Einstellung darunter.\nErneut drücken, um sie wieder auszuklappen oder einzublenden.
+key_mode,Tastenfunktion der Einfachen To-do-Liste
+key_mode_collapse,Ein-/ausklappen
+key_mode_hide,Aus-/einblenden
+key_mode_tip,Was die obige Taste der Einfachen To-do-Liste bewirkt.\nEin-/ausklappen = nur die Titelleiste bleibt, wie bei einem Klick auf den Pfeil am rechten Ende der Titelleiste.\nAus-/einblenden = die ganze Liste ausblenden; die Taste erneut drücken, um sie wieder einzublenden.

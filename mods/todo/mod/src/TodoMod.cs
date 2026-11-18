@@ -84,11 +84,11 @@ namespace ProbablyStolenTodo
             Ready = true;
         }
 
-        /// <summary>遊戲「選項 → 按鍵綁定」裡摺疊整張的那一列（官方指南：從 OnEnable 加、OnDisable 拿掉）。</summary>
+        /// <summary>遊戲「選項 → 按鍵綁定」裡簡易待辦的鍵與它的作用那兩列（官方指南：從 OnEnable 加、OnDisable 拿掉）。</summary>
         public void OnEnable()
         {
             try { CollapseKey.AddKeyBind(); }
-            catch (Exception e) { Log.Warning($"加進按鍵綁定失敗（摺疊的鍵照樣是 settings.json 的 {CollapseKey.Key}，只是不能在選項裡改）：{e.Message}"); }
+            catch (Exception e) { Log.Warning($"加進按鍵綁定失敗（簡易待辦的鍵照樣是 settings.json 的 {CollapseKey.Key}，只是不能在選項裡改）：{e.Message}"); }
         }
 
         /// <summary>
@@ -316,7 +316,16 @@ namespace ProbablyStolenTodo
                 {
                     if (_panel != null && _panel.Alive)
                     {
-                        _panel.SetVisible(_data != null && !GameState.EscapeMenuOpen());
+                        // 還沒綁定待辦、Esc 選單開著時不顯示，鍵也不觸發；其他時候照隱藏
+                        bool show = _data != null && !GameState.EscapeMenuOpen();
+                        _panel.SetVisible(show && !CollapseKey.HiddenActive);
+                        // 鍵在這裡檢查（懸浮單藏著時也要收得到），而且在 SetVisible 之後：剛關掉 Esc 選單的那一幀，
+                        // 摺疊要在已經顯示的單上做（和 2.1.0 以前在懸浮單的 Update 裡檢查時一樣）。一幀只檢查這一次
+                        if (show && _panel.HotkeyPressed())
+                        {
+                            _panel.PressHotkey();
+                            _panel.SetVisible(!CollapseKey.HiddenActive); // 隱藏的切換同一幀就生效
+                        }
                         _panel.Update();
                     }
                 }

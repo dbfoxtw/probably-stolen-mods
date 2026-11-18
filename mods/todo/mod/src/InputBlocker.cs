@@ -20,7 +20,7 @@ namespace ProbablyStolenTodo
     /// 掛點本身是 Patches.cs 的 [HarmonyPatch]，這裡是內容。遊戲在 Init 之前就掛上，每個掛點先看 TodoMod.Ready，還沒好就放行；
     /// 例外不丟回遊戲（同一個地方只記一次 log，照常執行遊戲的方法）。
     ///
-    /// 本 mod 自己讀鍵盤、滑鼠（摺疊的鍵、Enter、拖動標題列、捲動）直接呼叫 Input，不經過上面這些掛點，不會被自己擋掉；
+    /// 本 mod 自己讀鍵盤、滑鼠（簡易待辦的鍵、Enter、拖動標題列、捲動）直接呼叫 Input，不經過上面這些掛點，不會被自己擋掉；
     /// 直接呼叫引擎方法不算權限，攔截才算。輸入框打字讀的是 IMGUI 的事件佇列（Event.PopEvent），本來就不受影響。
     /// </summary>
     static class InputBlocker

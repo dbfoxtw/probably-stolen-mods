@@ -1,5 +1,23 @@
 # 版本紀錄（Changelog）
 
+## v2.2.0（2026-11-18）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
+
+- 按鍵可以改成整張藏起來：在「選項 → 按鍵綁定」的「簡易待辦按鍵的作用」選「隱藏／顯示」，再按一次就出現；預設照舊是摺疊／展開。
+- 按鍵綁定那一列改名為「切換簡易待辦顯示」。
+- 修正：拖標題列拖到一半時懸浮單被藏起來（例如按 Esc 打開選單），新位置沒有存起來。
+- 對應遊戲版本改成 VERSION 100-REV13，也支援 beta 分支的 100-REV15。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
+
+- The key can now hide the whole list: in Options → Key Binds, set "Simple To-Do key action" to "Hide / show", and press the key again to bring the list back. Collapse / expand is still the default.
+- The key bind row is renamed "Toggle Simple To-Do".
+- Fixed: when the list was hidden while you were dragging its title bar (for example by pressing Esc), its new position was not saved.
+- Supported game version is now VERSION 100-REV13 (also the 100-REV15 beta).
+
 ## v2.1.0（2026-11-14）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

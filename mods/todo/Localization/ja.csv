@@ -46,5 +46,9 @@ style_crate,箱
 style_menu,メニュー
 style_reputation,評判
 
-key_bind,シンプルToDoの折りたたみ/展開
-key_bind_tip,シンプルToDoを折りたたむ、または展開する。タイトルバー右端の矢印をクリックするのと同じ。
+key_bind,シンプルToDoの表示を切り替える
+key_bind_tip,下の設定に応じて、シンプルToDoを折りたたむ、または非表示にする。\nもう一度押すと、展開する、または再び表示する。
+key_mode,シンプルToDoキーの動作
+key_mode_collapse,折りたたみ/展開
+key_mode_hide,非表示/表示
+key_mode_tip,上のシンプルToDoのキーを押したときの動作。\n折りたたみ/展開＝タイトルバーだけを残す。タイトルバー右端の矢印をクリックするのと同じ。\n非表示/表示＝リスト全体を隠す。もう一度キーを押すと再び表示する。

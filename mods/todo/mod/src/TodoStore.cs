@@ -122,6 +122,50 @@ namespace ProbablyStolenTodo
         /// </summary>
         [JsonProperty("hotkey")] public string Hotkey { get; set; } = "";
 
+        /// <summary>摺疊整張的鍵的作用：collapse＝摺疊／展開（預設，和 2.1.0 以前一樣）；hide＝隱藏／顯示整張。</summary>
+        public const string KeyActionCollapse = "collapse", KeyActionHide = "hide";
+        /// <summary>鍵的作用；讀的時候用 <see cref="KeyHides"/>。舊的設定檔沒有這一欄＝摺疊。</summary>
+        [JsonProperty("keyAction")] public string KeyAction { get; set; } = KeyActionCollapse;
+        /// <summary>鍵的作用是隱藏／顯示：看不懂的值（手改設定檔、之後的版本加的作用）當摺疊，照 <see cref="StyleId"/>。</summary>
+        [JsonIgnore] public bool KeyHides => KeyAction == KeyActionHide;
+        /// <summary>
+        /// 整張藏起來：全域的，和 <see cref="Collapsed"/> 一樣重開遊戲、換存檔、回主選單再進店都維持；和摺疊各自獨立。
+        /// 只有作用是隱藏、而且有鍵時才算數（<see cref="HiddenActive"/>）；不成立時由 <see cref="ClearStaleHidden"/> 清掉。
+        /// </summary>
+        [JsonProperty("hidden")] public bool Hidden { get; set; }
+
+        /// <summary>隱藏有沒有生效：作用是隱藏、有綁鍵（hasKey），而且存著隱藏。沒有鍵就叫不回來，所以一律顯示。</summary>
+        public bool HiddenActive(bool hasKey) => Hidden && KeyHides && hasKey;
+
+        /// <summary>
+        /// 隱藏不成立（作用是摺疊、或沒有鍵）時把存著的隱藏清掉，回傳有沒有清（呼叫端要寫回 settings.json）。
+        /// 不清的話，之後重新綁鍵或改回隱藏時懸浮單會突然不見。讀設定（Init）、改鍵、改作用時都要叫。
+        /// </summary>
+        public bool ClearStaleHidden(bool hasKey)
+        {
+            if (!Hidden || (KeyHides && hasKey)) return false;
+            Hidden = false;
+            return true;
+        }
+
+        /// <summary>
+        /// 選項裡鍵的作用的下拉按套用（CollapseKey.SetAction；遊戲每次按套用都叫，沒改也會叫）：0＝摺疊／展開、1＝隱藏／顯示。
+        /// 範圍外的值、和目前作用相同時不動，回 false；看不懂的作用（當摺疊）選摺疊也算相同，留著原本的字（照 <see cref="StyleId"/>）。
+        /// 不同就改 <see cref="KeyAction"/>、套 <see cref="ClearStaleHidden"/> 的清除，回 true（呼叫端寫回 settings.json）。判斷放這裡，離線測試測得到同一份。
+        /// </summary>
+        public bool ApplyKeyAction(int index, bool hasKey)
+        {
+            if (index != 0 && index != 1) return false;
+            bool hide = index == 1;
+            if (hide == KeyHides) return false;
+            KeyAction = hide ? KeyActionHide : KeyActionCollapse;
+            ClearStaleHidden(hasKey);
+            return true;
+        }
+
+        /// <summary>隱藏模式下按鍵：切換隱藏、回傳新的狀態；只動 <see cref="Hidden"/>，不動 <see cref="Collapsed"/>（叫回來時照原本摺不摺）。</summary>
+        public bool ToggleHidden() => Hidden = !Hidden;
+
         [JsonIgnore] public float FontK => MathUtil.Clamp(FontScale, MinFontScale, MaxFontScale) / 100f;
         [JsonIgnore] public float OpacityK => MathUtil.Clamp(Opacity, MinOpacity, MaxOpacity) / 100f;
         [JsonIgnore] public bool ShiftEnterNewline => Newline == NewlineShiftEnter;

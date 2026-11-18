@@ -49,5 +49,9 @@ style_crate,Caisse
 style_menu,Menu
 style_reputation,Réputation
 
-key_bind,Replier / déplier Simple To-Do
-key_bind_tip,Replie ou déplie Simple To-Do, comme un clic sur la flèche à l'extrémité droite de sa barre de titre.
+key_bind,Basculer l'affichage de Simple To-Do
+key_bind_tip,Replie ou masque Simple To-Do, selon le réglage ci-dessous.\nAppuyez de nouveau pour le déplier ou le réafficher.
+key_mode,Action de la touche Simple To-Do
+key_mode_collapse,Replier / déplier
+key_mode_hide,Masquer / afficher
+key_mode_tip,Ce que fait la touche Simple To-Do ci-dessus.\nReplier / déplier = ne garder que la barre de titre, comme un clic sur la flèche à l'extrémité droite de la barre de titre.\nMasquer / afficher = masquer toute la liste ; appuyez de nouveau sur la touche pour la réafficher.

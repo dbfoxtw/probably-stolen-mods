@@ -50,5 +50,9 @@ style_crate,Skrzynia
 style_menu,Menu
 style_reputation,Reputacja
 
-key_bind,Prosta lista zadań: zwiń / rozwiń
-key_bind_tip,Zwija lub rozwija Prostą listę zadań, tak samo jak kliknięcie strzałki na prawym końcu jej paska tytułu.
+key_bind,Przełącz Prostą listę zadań
+key_bind_tip,Zwija lub ukrywa Prostą listę zadań, zależnie od ustawienia poniżej.\nNaciśnij jeszcze raz, aby ją rozwinąć lub znów pokazać.
+key_mode,Działanie klawisza Prostej listy zadań
+key_mode_collapse,Zwiń / rozwiń
+key_mode_hide,Ukryj / pokaż
+key_mode_tip,Co robi klawisz Prostej listy zadań powyżej.\nZwiń / rozwiń = zostaje tylko pasek tytułu, tak samo jak po kliknięciu strzałki na prawym końcu paska tytułu.\nUkryj / pokaż = cała lista znika; naciśnij klawisz jeszcze raz, aby ją znów pokazać.

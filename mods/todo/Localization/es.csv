@@ -56,6 +56,10 @@ style_crate,Caja
 style_menu,Menú
 style_reputation,Reputación
 
-# Options > Key Binds (Controles): name of this mod's row and its tooltip
-key_bind,Contraer / expandir Simple To-Do
-key_bind_tip,Contrae o expande Simple To-Do, igual que hacer clic en la flecha del extremo derecho de su barra de título.
+# Options > Key Binds (Controles): name of this mod's row and its tooltip, then the dropdown right below it
+key_bind,Alternar Simple To-Do
+key_bind_tip,Contrae u oculta Simple To-Do, según el ajuste de abajo.\nPulsa otra vez para expandirlo o volver a mostrarlo.
+key_mode,Acción de la tecla de Simple To-Do
+key_mode_collapse,Contraer / expandir
+key_mode_hide,Ocultar / mostrar
+key_mode_tip,Lo que hace la tecla de Simple To-Do de arriba.\nContraer / expandir = dejar solo la barra de título, igual que hacer clic en la flecha del extremo derecho de la barra de título.\nOcultar / mostrar = ocultar toda la lista; pulsa la tecla otra vez para que vuelva a aparecer.

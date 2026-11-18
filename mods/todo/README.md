@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：在店裡顯示一張懸浮單，記待辦和筆記，每個存檔各一份。2.0.0 以前叫「待辦清單」（To-Do List）。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Simple To-Do 的最新版，標記 `todo-v…`；Demo 版 1.0.x 的標題是 To-Do List）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -34,7 +34,7 @@
   - 馬上存（預設）：改了就存，讀檔也不會倒回。
   - 跟著遊戲存檔：改動要等遊戲存檔（開新遊戲、睡覺結束今日）才算數；白天中途讀檔，會回到上次存檔時的樣子。
 
-**摺疊的鍵**：遊戲的「選項 → 按鍵綁定」裡的「摺疊／展開簡易待辦」，預設沒有鍵。作用和標題列的箭頭一樣；在任何輸入框打字時不動作。
+**按鍵**：遊戲的「選項 → 按鍵綁定」裡的「切換簡易待辦顯示」，預設沒有鍵；在任何輸入框打字時不動作。正下方的「簡易待辦按鍵的作用」選按下時做什麼：摺疊／展開（預設，和標題列的箭頭一樣）或隱藏／顯示（整張藏起來，再按一次出現；重開遊戲也記得）。
 
 ## 語言
 
@@ -110,7 +110,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: a floating list in your store for to-dos and notes, with a separate list for each save. Called To-Do List before 2.0.0. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Simple To-Do, tagged `todo-v…`; the Demo versions 1.0.x are titled To-Do List).
+A mod for *Probably Stolen*: a floating list in your store for to-dos and notes, with a separate list for each save. Called To-Do List before 2.0.0. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836877281), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/488) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Simple To-Do, tagged `todo-v…`; the Demo versions 1.0.x are titled To-Do List).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/488?tab=bugs).
 
@@ -134,7 +134,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
 - New item after Enter: only with New line set to Shift+Enter. After you finish an item with Enter, a new item of the same kind is added below it; press Enter on an empty new item to stop.
 - Save: Right away (default; changes are saved immediately and stay when you load a save) or With the game (changes only count once the game saves, at a new game or when you sleep to end the day; loading in the middle of a day brings back the list as it was at the last save).
 
-**Collapse key:** the game's Options → Key Binds, "Collapse / expand Simple To-Do", no key by default. It works like the arrow in the title bar, and does nothing while you type in any text field.
+**Key:** the game's Options → Key Binds, "Toggle Simple To-Do", no key by default; it does nothing while you type in any text field. "Simple To-Do key action" right below it sets what the key does: Collapse / expand (default, like the arrow in the title bar) or Hide / show (hides the whole list until you press the key again, even after restarting the game).
 
 **Languages:** the UI follows the game's language: English, Simplified Chinese, Russian, German, Japanese, French, Spanish or Polish; the game's other languages get the English UI. For a Traditional Chinese UI, install the [Traditional Chinese Translation](https://www.nexusmods.com/probablystolen/mods/280) mod and choose Simplified Chinese in the game.
 

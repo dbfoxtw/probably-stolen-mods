@@ -635,7 +635,89 @@ namespace ProbablyStolenTodo.Verify
                 Check(t.TryGetValue("style", out var st) && st.Length > 0
                       && Settings.Styles.All(id => t.TryGetValue("style_" + id, out var n) && !string.IsNullOrWhiteSpace(n)), $"{lang} 的六個樣式名稱都有");
 
+            KeyActions(Path.Combine(dir, "keyaction"));
             Hotkeys();
+        }
+
+        /// <summary>
+        /// 2.2.0：鍵的作用（keyAction）與隱藏（hidden）存在 settings.json，
+        /// 隱藏什麼時候生效、什麼時候要清掉（CollapseKey 叫的是同一份 Settings.HiddenActive／ClearStaleHidden）。
+        /// </summary>
+        static void KeyActions(string dir)
+        {
+            Directory.CreateDirectory(dir);
+            var store = Store(dir, new ListLog());
+            var path = Path.Combine(dir, "settings.json");
+
+            var fresh = store.LoadSettings();
+            Check(fresh.KeyAction == Settings.KeyActionCollapse && !fresh.KeyHides && !fresh.Hidden, "沒有設定檔時：鍵的作用是摺疊、沒有隱藏");
+            // 2.1.0 存的設定檔：沒有 keyAction、hidden 兩欄
+            File.WriteAllText(path, "{\"version\":1,\"collapsed\":true,\"hotkey\":\"F6\"}", Encoding.UTF8);
+            var old = store.LoadSettings();
+            Check(!old.KeyHides && !old.Hidden && old.Collapsed && old.Hotkey == "F6", "2.1.0 的設定檔（沒有 keyAction／hidden）：摺疊、沒有隱藏，其他欄照舊");
+            Check(!old.ClearStaleHidden(true) && !old.HiddenActive(true), "2.1.0 的設定檔：沒有要清的隱藏、不會藏起來");
+
+            old.KeyAction = Settings.KeyActionHide;
+            old.Hidden = true;
+            store.SaveSettings(old);
+            var json = File.ReadAllText(path, Encoding.UTF8);
+            Check(json.Contains("\"keyAction\": \"hide\"") && json.Contains("\"hidden\": true") && !json.Contains("keyHides"), "keyAction、hidden 寫進設定檔，算出來的屬性不寫");
+            var back = store.LoadSettings();
+            Check(back.KeyHides && back.Hidden && back.Collapsed && back.HiddenActive(true), "隱藏、摺疊讀回來相同（各自獨立）");
+
+            File.WriteAllText(path, "{\"keyAction\":\"vanish\",\"hidden\":true}", Encoding.UTF8);
+            var unknown = store.LoadSettings();
+            Check(unknown.KeyAction == "vanish" && !unknown.KeyHides && !unknown.HiddenActive(true), "看不懂的 keyAction 當摺疊（設定檔裡的值不動），存著的隱藏不生效");
+            File.WriteAllText(path, "{\"keyAction\":null}", Encoding.UTF8);
+            Check(!store.LoadSettings().KeyHides, "keyAction 是 null 時當摺疊");
+            File.WriteAllText(path, "{\"keyAction\":\"Hide\"}", Encoding.UTF8);
+            Check(!store.LoadSettings().KeyHides, "keyAction 要照寫法（Hide 大寫不算，和樣式一樣）");
+
+            // 隱藏只在「作用是隱藏、有鍵」時生效；不成立就清掉（回傳 true＝呼叫端要寫回）
+            Settings S(string action, bool hidden) => new Settings { KeyAction = action, Hidden = hidden };
+            var a = S(Settings.KeyActionHide, true);
+            Check(a.HiddenActive(true) && !a.ClearStaleHidden(true) && a.Hidden, "隱藏模式、有鍵：藏著、不清");
+            var b = S(Settings.KeyActionHide, true);
+            Check(!b.HiddenActive(false) && b.ClearStaleHidden(false) && !b.Hidden, "隱藏模式、沒有鍵（例如鍵讀不懂）：顯示、清掉隱藏");
+            var c = S(Settings.KeyActionCollapse, true);
+            Check(!c.HiddenActive(true) && c.ClearStaleHidden(true) && !c.Hidden, "作用改回摺疊：顯示、清掉隱藏");
+            var d = S("vanish", true);
+            Check(d.ClearStaleHidden(true) && !d.Hidden && d.KeyAction == "vanish", "看不懂的作用（當摺疊）：清掉隱藏，作用的字不動");
+            var e = S(Settings.KeyActionCollapse, false);
+            Check(!e.ClearStaleHidden(false) && !e.HiddenActive(false), "沒有隱藏：不用清、不用寫檔");
+            // 清掉以後重新綁鍵、改回隱藏：不會突然藏起來（這就是要清的理由）。c 的作用還是摺疊，先改回隱藏再看
+            c.KeyAction = Settings.KeyActionHide;
+            Check(!b.HiddenActive(true) && !c.HiddenActive(true), "清掉後重新綁鍵或改回隱藏：照樣顯示");
+            var f = S(Settings.KeyActionHide, false);
+            f.Collapsed = true;
+            f.Hidden = true;
+            Check(f.HiddenActive(true) && f.Collapsed, "藏起來不動摺疊（叫回來還是摺著）");
+            f.KeyAction = Settings.KeyActionCollapse;
+            Check(f.ClearStaleHidden(true) && f.Collapsed, "改回摺疊時清掉隱藏，摺疊照舊");
+
+            // 選項裡作用的下拉按套用（CollapseKey.SetAction 叫的是同一份 Settings.ApplyKeyAction）
+            var g = S(Settings.KeyActionCollapse, false);
+            Check(!g.ApplyKeyAction(-1, true) && !g.ApplyKeyAction(2, true) && g.KeyAction == Settings.KeyActionCollapse,
+                "作用的下拉：範圍外的值不動、回 false");
+            Check(!g.ApplyKeyAction(0, true) && g.KeyAction == Settings.KeyActionCollapse, "作用的下拉：選的和目前相同（摺疊選摺疊）不改、回 false");
+            var h = S("vanish", true);
+            Check(!h.ApplyKeyAction(0, true) && h.KeyAction == "vanish" && h.Hidden, "作用的下拉：看不懂的作用選摺疊算相同，不改字、回 false");
+            Check(g.ApplyKeyAction(1, true) && g.KeyAction == Settings.KeyActionHide && g.KeyHides && !g.Hidden, "作用的下拉：選隱藏就改、回 true（還沒藏）");
+            Check(!g.ApplyKeyAction(1, true) && g.KeyHides, "作用的下拉：隱藏選隱藏不改、回 false");
+            g.Hidden = true;
+            g.Collapsed = true;
+            Check(g.ApplyKeyAction(0, true) && g.KeyAction == Settings.KeyActionCollapse && !g.Hidden && g.Collapsed,
+                "作用的下拉：從隱藏改回摺疊，清掉隱藏（摺疊不動）、回 true");
+            var k = S("vanish", false);
+            Check(k.ApplyKeyAction(1, false) && k.KeyHides && !k.Hidden, "作用的下拉：看不懂的作用選隱藏就改成 hide（沒有鍵也照改）");
+
+            // 隱藏模式下按鍵（TodoPanel.PressHotkey 叫的是同一份 Settings.ToggleHidden）
+            var m = S(Settings.KeyActionHide, false);
+            m.Collapsed = true;
+            Check(m.ToggleHidden() && m.Hidden && m.Collapsed, "按鍵：藏起來，回傳 true，摺疊不動");
+            Check(!m.ToggleHidden() && !m.Hidden && m.Collapsed, "按鍵：再按叫回來，回傳 false，摺疊不動");
+            var n = S(Settings.KeyActionHide, false);
+            Check(n.ToggleHidden() && !n.Collapsed, "按鍵：展開著藏起來，摺疊照樣是展開");
         }
 
         /// <summary>
@@ -1063,7 +1145,9 @@ namespace ProbablyStolenTodo.Verify
             Eq(hant.GetValueOrDefault("title"), "待辦", "繁中標題");
             Eq(zh.GetValueOrDefault("title"), "待办", "簡中標題");
             Eq(en.GetValueOrDefault("empty"), "Nothing here yet.\nAdd a to-do or a note above.", "英文空清單的提示（\\n 換成換行）");
-            Eq(hant.GetValueOrDefault("key_bind"), "摺疊／展開簡易待辦", "繁中按鍵綁定那列的名稱");
+            Eq(hant.GetValueOrDefault("key_bind"), "切換簡易待辦顯示", "繁中按鍵綁定那列的名稱");
+            Eq(hant.GetValueOrDefault("key_mode_tip"), "上面簡易待辦的鍵按下時做什麼。\n摺疊／展開＝只留標題列，和標題列最右邊的箭頭一樣。\n隱藏／顯示＝整張藏起來，再按一次鍵就會出現。",
+                "繁中鍵的作用的說明（\\n 換成換行）");
             Eq(en.GetValueOrDefault("quote"), "“{0}”", "英文的引號");
             Eq(hant.GetValueOrDefault("quote"), "「{0}」", "繁中的引號");
             Eq(LocPick.Format(en.GetValueOrDefault("delete_section_ask.other"), new object[] { LocPick.Format(en["quote"], new object[] { "A{0}" }), 3 }),

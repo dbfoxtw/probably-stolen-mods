@@ -3,7 +3,7 @@ Probably Stolen 簡易待辦 mod（Simple To-Do） v{version}
 
 在店裡顯示一張懸浮單，記待辦和筆記，每個存檔各一份。
 2.0.0 以前叫「待辦清單」（To-Do List）。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/488?tab=bugs
@@ -39,7 +39,9 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用。
 【設定】
 設定頁（標題列的齒輪；所有存檔共用）：樣式、字型大小、不透明度、標題列顯示進度、
 換行（Enter 或 Shift+Enter）、Enter 後自動新增下一條、存檔點（馬上存，或跟著遊戲存檔）。
-摺疊的鍵：遊戲的「選項 → 按鍵綁定」裡的「摺疊／展開簡易待辦」，預設沒有鍵。
+按鍵：遊戲的「選項 → 按鍵綁定」裡的「切換簡易待辦顯示」，預設沒有鍵；在任何輸入框打字時不動作。
+正下方的「簡易待辦按鍵的作用」選按下時做什麼：摺疊／展開（預設，和標題列的箭頭一樣）
+或隱藏／顯示（整張藏起來，再按一次出現；重開遊戲也記得）。
 
 【說明】
 - 完全不讀寫遊戲的存檔檔案。待辦另外存在存檔資料夾的 ModData\dbfoxtw_todo\
@@ -63,7 +65,7 @@ Probably Stolen Simple To-Do mod v{version}
 
 A floating list in your store for to-dos and notes, with a separate list for each save.
 Called To-Do List before 2.0.0.
-Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -107,7 +109,10 @@ Settings
 The settings page (the gear in the title bar; shared by all saves): Style, Text size, Opacity,
 Show progress in title bar, New line (Enter or Shift+Enter), New item after Enter,
 and Save (Right away, or With the game).
-Collapse key: the game's Options → Key Binds, "Collapse / expand Simple To-Do", no key by default.
+Key: the game's Options → Key Binds, "Toggle Simple To-Do", no key by default;
+it does nothing while you type in any text field. "Simple To-Do key action" right below it
+sets what the key does: Collapse / expand (default, like the arrow in the title bar)
+or Hide / show (hides the whole list until you press the key again, even after restarting the game).
 
 Notes
 - The game's save files are never read or written. Lists are stored in the save folder's ModData\dbfoxtw_todo\

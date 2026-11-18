@@ -48,5 +48,9 @@ style_crate,箱子
 style_menu,選單
 style_reputation,聲望
 
-key_bind,摺疊／展開簡易待辦
-key_bind_tip,按下後摺疊或展開簡易待辦，和點一下標題列最右邊的箭頭一樣。
+key_bind,切換簡易待辦顯示
+key_bind_tip,按下後摺疊或隱藏簡易待辦，看下面的設定。\n再按一次就展開或重新出現。
+key_mode,簡易待辦按鍵的作用
+key_mode_collapse,摺疊／展開
+key_mode_hide,隱藏／顯示
+key_mode_tip,上面簡易待辦的鍵按下時做什麼。\n摺疊／展開＝只留標題列，和標題列最右邊的箭頭一樣。\n隱藏／顯示＝整張藏起來，再按一次鍵就會出現。
