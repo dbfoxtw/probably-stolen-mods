@@ -12,10 +12,14 @@ cfg_item_name,顯示其他物品名稱
 cfg_item_name_tip,在箱子、機器以外的物品上（例如水桶、金屬錠），用淺藍色顯示你取的名稱。
 cfg_always_names,總是顯示名稱
 cfg_always_names_tip,打開時，名稱不用按鍵也一直顯示；其他資訊照舊要按鍵才顯示。\n顯示哪幾種名稱，照舊看下面三個名稱開關。
-cfg_name_position,名稱位置
-cfg_name_position_tip,名稱顯示的位置。\nTop＝物品上方置中\nInfoBox＝顯示在資訊框的第一行
+cfg_idle_name_position,名稱位置（資訊框未顯示時）
+cfg_idle_name_position_tip,沒按鍵、只顯示名稱時，名稱顯示的位置。要先打開「總是顯示名稱」才有作用。\nTop＝物品上方置中\nCenter＝物品正中央\nBottomLeft＝物品左下角
+cfg_name_position,名稱位置（資訊框顯示時）
+cfg_name_position_tip,按鍵顯示資訊時，名稱顯示的位置。\nTop＝物品上方置中\nInfoBox＝顯示在資訊框的第一行
 cfg_name_text_size,名稱文字大小
-cfg_name_text_size_tip,名稱的文字大小：Small（小）、Medium（中）、Large（大），大小和「文字大小」的三級一樣。
+cfg_name_text_size_tip,名稱的文字大小：Small（小）、Medium（中）、Large（大）、ExtraLarge（特大），大小和「文字大小」的四級一樣。
+cfg_wrap_names,長名稱換行
+cfg_wrap_names_tip,打開時，比物品寬的名稱會換行，寬度不超過物品。\n關掉時，長名稱照樣伸出物品外。
 cfg_water_volume,顯示水量
 # {0}＝短前綴的水量那行（水 4000ml），{1}＝長前綴的（水量 4000ml）
 cfg_water_volume_tip,顯示容器裡有多少水，單位毫升。\nShort：{0}\nLong：{1}
@@ -60,7 +64,7 @@ cfg_ingot_purity_tip,在金屬錠上顯示純度的等級，例如「{0}」。
 cfg_key_mode,按鍵方式
 cfg_key_mode_tip,選擇「顯示物品資訊」這個鍵要按住，還是按一下切換。\nHold＝按住時顯示，放開就消失\nToggle＝按一下顯示，再按一下消失；讀檔、回主選單時自動關閉
 cfg_text_size,文字大小
-cfg_text_size_tip,資訊框的文字大小（名稱另外看「名稱文字大小」）：Small（小）、Medium（中）、Large（大）。一個物品格是 16 單位，文字高 3.5、4.5 或 6 單位。
+cfg_text_size_tip,資訊框的文字大小（名稱另外看「名稱文字大小」）：Small（小）、Medium（中）、Large（大）、ExtraLarge（特大）。一個物品格是 16 單位，文字高 3.5、4.5、6 或 8 單位。
 cfg_prefix,每行開頭的字
 # {0}～{7}＝短的前綴，{8}～{15}＝長的，順序是水量、水質、機器的電、剩 3 天、成品數、熱度、使用次數、耐久度
 cfg_prefix_tip,每行開頭用短的字還是長的詞。Long 放不下物品寬度時，那個資訊框改用短的。\nShort：{0}、{1}、{2}、{3}、{4}、{5}、{6}、{7}\nLong：{8}、{9}、{10}、{11}、{12}、{13}、{14}、{15}

@@ -2,7 +2,7 @@
 # Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, place disponible, sens de {0}, {1}...).
 # Deux parties : libellés et infobulles des réglages et du raccourci (key_, cfg_), puis le texte des encadrés d'infos dessinés sur les objets (info_, à la fin).
 # Dans les infobulles, {0}, {1}... sont des exemples que le mod remplit avec le texte des encadrés d'infos ci-dessous (ex. « V 4000ml » / « Vol 4000ml »).
-# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes (Top, InfoBox, Small, Medium, Large, Hold, Toggle, Short, Long) restent en anglais.
+# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) restent en anglais.
 key_show_info,Afficher les infos des objets
 key_show_info_tip,"Maintenez cette touche pour afficher les infos des objets à l'écran, selon vos réglages et le type d'objet. Relâchez-la pour les masquer. Si « Mode de la touche » est sur Toggle, appuyez une fois pour afficher et une autre fois pour masquer."
 cfg_container_name,Afficher le nom des conteneurs
@@ -13,10 +13,14 @@ cfg_item_name,Afficher le nom des autres objets
 cfg_item_name_tip,Affiche en bleu clair le nom que vous avez donné à tout autre objet (par exemple un bidon d'eau ou un lingot de métal).
 cfg_always_names,Toujours afficher les noms
 cfg_always_names_tip,"Activé : les noms restent à l'écran sans la touche ; les autres infos demandent toujours la touche.\nLes noms affichés suivent toujours les trois réglages de noms ci-dessous."
-cfg_name_position,Position des noms
-cfg_name_position_tip,Où les noms sont affichés.\nTop = centrés en haut de l'objet\nInfoBox = première ligne de l'encadré d'infos
+cfg_idle_name_position,Position des noms (encadré d'infos masqué)
+cfg_idle_name_position_tip,"Où les noms sont affichés quand seuls les noms sont à l'écran, sans la touche. Nécessite « Toujours afficher les noms » activé.\nTop = centrés en haut de l'objet\nCenter = au milieu de l'objet\nBottomLeft = dans le coin inférieur gauche de l'objet"
+cfg_name_position,Position des noms (encadré d'infos affiché)
+cfg_name_position_tip,Où les noms sont affichés pendant que la touche affiche les infos.\nTop = centrés en haut de l'objet\nInfoBox = première ligne de l'encadré d'infos
 cfg_name_text_size,Taille du texte des noms
-cfg_name_text_size_tip,"Taille des noms : Small, Medium ou Large, les mêmes tailles que pour « Taille du texte »."
+cfg_name_text_size_tip,"Taille des noms : Small, Medium, Large ou ExtraLarge, les mêmes tailles que pour « Taille du texte »."
+cfg_wrap_names,Retour à la ligne des noms longs
+cfg_wrap_names_tip,Activé : les noms plus larges que l'objet passent sur plusieurs lignes pour rester dans la largeur de l'objet.\nDésactivé : les noms longs dépassent de l'objet.
 cfg_water_volume,Afficher le volume d'eau
 # {0} = ligne du volume avec le préfixe court (« V 4000ml »), {1} = avec le préfixe long (« Vol 4000ml »)
 cfg_water_volume_tip,"Affiche la quantité d'eau d'un récipient, en ml.\nShort : {0}\nLong : {1}"
@@ -61,7 +65,7 @@ cfg_ingot_purity_tip,"Affiche le niveau de pureté d'un lingot de métal, par ex
 cfg_key_mode,Mode de la touche
 cfg_key_mode_tip,"Choisissez s'il faut maintenir la touche « Afficher les infos des objets » ou appuyer dessus pour basculer.\nHold = affiche tant qu'elle est maintenue, masque quand vous la relâchez\nToggle = appuyez une fois pour afficher, encore une fois pour masquer ; se désactive quand vous chargez une sauvegarde ou revenez au menu principal"
 cfg_text_size,Taille du texte
-cfg_text_size_tip,"Taille du texte des encadrés d'infos (les noms suivent « Taille du texte des noms ») : Small, Medium ou Large. Une case d'objet fait 16 unités ; le texte fait 3,5 ; 4,5 ou 6 unités de haut."
+cfg_text_size_tip,"Taille du texte des encadrés d'infos (les noms suivent « Taille du texte des noms ») : Small, Medium, Large ou ExtraLarge. Une case d'objet fait 16 unités ; le texte fait 3,5 ; 4,5 ; 6 ou 8 unités de haut."
 cfg_prefix,Préfixes des lignes
 # {0} à {7} = préfixes courts, {8} à {15} = préfixes longs, dans cet ordre : volume d'eau, pureté de l'eau, énergie de la machine,
 # 3 jours restants, nombre en sortie, danger, utilisations restantes, durabilité. Séparateur : « , ».

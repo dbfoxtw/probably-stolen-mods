@@ -12,11 +12,12 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// <summary>
     /// 離線測試（不用開遊戲）：數字格式、水量估計的分段、掃描結果的解析、水容器／電池／機器標籤的行序、顏色與開關、箱子與機器的名稱、
     /// 剩幾天的算法與今晚不會動時藏進度（含今晚才開始的機器）、每台機器今晚會不會動（MachineLogic，照遊戲每晚處理的順序）、
-    /// 贓物熱度／使用次數／耐久度／金屬錠純度的行、前綴的長短、一格寬放不下時的排法（長→短→拆兩行）、名稱位置與名稱字級、
-    /// 機器裡的水（水耕機、循環水養殖系統）、輸出區的成品數、今晚的充電（紅字用早充後的電量、電池的 +NkJ）、
+    /// 贓物熱度／使用次數／耐久度／金屬錠純度的行、前綴的長短、一格寬放不下時的排法（長→短→拆兩行）、名稱位置（未顯示時、顯示時）與名稱字級、
+    /// 長名稱換行（中日韓逐字、拉丁從空白、超長的詞從中間、surrogate pair 不切）、
+    /// 機器裡的水（水耕機、循環水養殖系統）、輸出區的成品數、今晚的充電（紅字用早充後的電量、電池的 +NkJ；加倍看 PowerReader 的原始碼：Rev15 才有的 IsPowerOutputDoubled 包在不內聯的方法裡）、
     /// 機器今晚的電力收支（先充再扣、警報系統先扣再充、每晚耗電、+4kJ／-8kJ 的行）、缺電（別的原因優先、判紅看今晚會扣的電）、
     /// 按鍵的 Hold／Toggle（KeySwitch）、這一幀畫什麼（ShowStateOf：不畫、常駐名稱、完整資訊）、常駐名稱（分類、料斗自動編的號碼）、
-    /// 名稱位置舊值 Label 的轉換、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
+    /// 名稱位置舊值 Label 的轉換與 1.3.0 拆成兩個設定時的轉換（InfoBox → 未顯示時 BottomLeft）、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
     /// 資訊框的字（1.2.0 起在 public/Localization 的 csv，經過假的 Loc（FakeLoc.cs，照遊戲的解析規則讀）建 Strings：en、zh、zh-Hant 每個都有）、
     /// 換語言時才重建（語言沒變不配置記憶體）、剩幾天的單複數（超過查表時用代表數字查建好的格式，和直接取的一樣、切語言也不變）、
     /// LocPick（最長字串模式、手寫繁中、單複數的字形）、找繁中 mod 的找過就記住（LookupOnce）、
@@ -63,6 +64,9 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Machines();
             Fit();
             NameLayout();
+            NameWrap();
+            RendererSource();
+            PowerReaderSource();
             StartingDays();
             MachineWaterAndOutput();
             Charging();
@@ -101,7 +105,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Rules.FontSize(TextSize.Small), 3.5f, "字級小");
             Eq(Rules.FontSize(TextSize.Medium), 4.5f, "字級中");
             Eq(Rules.FontSize(TextSize.Large), 6f, "字級大");
-            Eq(string.Join(",", Enum.GetNames(typeof(TextSize))), "Small,Medium,Large", "字級設定存的名稱（改了玩家的設定會讀不回來）");
+            Eq(Rules.FontSize(TextSize.ExtraLarge), 8f, "字級特大");
+            Eq(string.Join(",", Enum.GetNames(typeof(TextSize))), "Small,Medium,Large,ExtraLarge", "字級設定存的名稱（改了玩家的設定會讀不回來；特大加在最後）");
             Eq(string.Join(",", Enum.GetNames(typeof(PrefixStyle))), "Short,Long", "前綴設定存的名稱與下拉選單的順序（Short 在前）");
             Eq(string.Join(",", Enum.GetNames(typeof(KeyMode))), "Hold,Toggle", "按鍵方式存的名稱與下拉選單的順序（Hold 在前）");
         }
@@ -779,6 +784,17 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 Check(Rules.IsOldNamePosition(v), $"「{v}」要轉成 InfoBox");
             foreach (var v in new[] { "Top", "InfoBox", "", " ", null, "Labels", "Label1", "InfoBox Label" })
                 Check(!Rules.IsOldNamePosition(v), $"「{v ?? "null"}」不轉");
+
+            // 1.3.0 名稱位置拆成兩個（Rules.IdleNeedsBottomLeft）：設定檔還沒有 IdleNamePosition（探測到 ""）、而且顯示時是 InfoBox 才轉成 BottomLeft；
+            // 已經有這個 key（玩家選過或轉過一次）、探測不了（null）、顯示時是 Top 都不轉
+            Check(Rules.IdleNeedsBottomLeft("", NamePosition.InfoBox), "沒有 IdleNamePosition、顯示時 InfoBox：未顯示時設成 BottomLeft");
+            Check(!Rules.IdleNeedsBottomLeft("", NamePosition.Top), "沒有 IdleNamePosition、顯示時 Top：不轉（預設 Top 就一樣）");
+            foreach (var v in new[] { "Top", "Center", "BottomLeft", "garbage" })
+                Check(!Rules.IdleNeedsBottomLeft(v, NamePosition.InfoBox), $"設定檔已經有 IdleNamePosition（{v}）：不轉（只轉一次）");
+            Check(!Rules.IdleNeedsBottomLeft(null, NamePosition.InfoBox), "探測不了（null）：不轉");
+            // 1.0.x 存 Label 的玩家：先轉成 InfoBox，再照 InfoBox 設成 BottomLeft
+            var shown = Rules.IsOldNamePosition("Label") ? NamePosition.InfoBox : NamePosition.Top;
+            Check(Rules.IdleNeedsBottomLeft("", shown), "1.0.x 存 Label：先轉 InfoBox，未顯示時再設成 BottomLeft");
         }
 
         /// <summary>
@@ -1306,40 +1322,67 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// 名稱位置與名稱字級：Top 時名稱另外一個框、資訊框沒有名稱；InfoBox 時名稱是資訊框的第一行；
+        /// 名稱位置與名稱字級：Top、Center 時名稱另外一個框、資訊框沒有名稱；InfoBox（未顯示時是 BottomLeft）時
+        /// 名稱是資訊框的第一行；完整資訊照「顯示時」、只畫名稱照「未顯示時」（Rules.NamePlaceOf，三種×兩種的組合）；
         /// 名稱行的字級照名稱文字大小、行高跟著；內距照名稱以外的行（只有名稱時照名稱的）。
         /// </summary>
         static void NameLayout()
         {
-            Eq(string.Join(",", Enum.GetNames(typeof(NamePosition))), "Top,InfoBox", "名稱位置存的名稱與下拉選單的順序（Top 在前，Label 改名 InfoBox）");
+            Eq(string.Join(",", Enum.GetNames(typeof(NamePosition))), "Top,InfoBox", "名稱位置（顯示時）存的名稱與下拉選單的順序（Top 在前，Label 改名 InfoBox，不加 Center）");
+            Eq(string.Join(",", Enum.GetNames(typeof(IdleNamePosition))), "Top,Center,BottomLeft", "名稱位置（未顯示時）存的名稱與下拉選單的順序");
+            Eq(default(IdleNamePosition), IdleNamePosition.Top, "名稱位置（未顯示時）的第一個是 Top");
+
+            // 這一輪名稱畫在哪：完整資訊照顯示時、只畫名稱照未顯示時，兩個設定各自獨立
+            foreach (IdleNamePosition idle in Enum.GetValues(typeof(IdleNamePosition)))
+                foreach (NamePosition shown in Enum.GetValues(typeof(NamePosition)))
+                {
+                    var full = Rules.NamePlaceOf(ShowState.Full, idle, shown);
+                    var names = Rules.NamePlaceOf(ShowState.Names, idle, shown);
+                    Eq(full, shown == NamePosition.InfoBox ? NamePlace.InfoBox : NamePlace.Top, $"完整資訊（未顯示時 {idle}、顯示時 {shown}）：照顯示時");
+                    Eq(names, idle == IdleNamePosition.Center ? NamePlace.Center : idle == IdleNamePosition.BottomLeft ? NamePlace.InfoBox : NamePlace.Top,
+                        $"只畫名稱（未顯示時 {idle}、顯示時 {shown}）：照未顯示時");
+                }
+            // BottomLeft＋InfoBox：按下、放開鍵時名稱都在資訊框（1.1.0～1.2.0 選 InfoBox 的樣子）
+            Check(Rules.NamePlaceOf(ShowState.Names, IdleNamePosition.BottomLeft, NamePosition.InfoBox) == NamePlace.InfoBox
+                && Rules.NamePlaceOf(ShowState.Full, IdleNamePosition.BottomLeft, NamePosition.InfoBox) == NamePlace.InfoBox, "BottomLeft＋InfoBox：按鍵前後名稱都在資訊框");
+
             var lines = Rules.WithName("Tank", true, Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All));
             var info = new List<Line> { new Line("leftover") };
-            var name = Rules.SplitName(lines, NamePosition.Top, info);
+            var name = Rules.SplitName(lines, NamePlace.Top, info);
             Check(name.HasValue && name.Value.Text == "Tank" && name.Value.IsName, "Top：名稱另外一個框");
             Eq(Join(info), "Vol 4000ml / Pur 98.52%", "Top：資訊框沒有名稱（先清掉上一次的）");
-            name = Rules.SplitName(lines, NamePosition.InfoBox, info);
+            name = Rules.SplitName(lines, NamePlace.InfoBox, info);
             Check(!name.HasValue, "InfoBox：沒有名稱框");
             Eq(Join(info), "Tank / Vol 4000ml / Pur 98.52%", "InfoBox：名稱是資訊框的第一行");
-            // 常駐的名稱：只有名稱一行。Top 是名稱框；InfoBox 是只有名稱一行的資訊框，按鍵時資訊加進同一個框、名稱留在第一行
+            name = Rules.SplitName(lines, NamePlace.Center, info);
+            Check(name.HasValue && name.Value.Text == "Tank" && Join(info) == "Vol 4000ml / Pur 98.52%", "Center：名稱也另外一個框");
+            // 常駐的名稱：只有名稱一行。Top、Center 是名稱框；BottomLeft（InfoBox）是只有名稱一行的資訊框，按鍵（顯示時 InfoBox）時資訊加進同一個框、名稱留在第一行
             var pinned = Rules.PinnedNameLines("Tank", true, false, new List<Line>());
-            name = Rules.SplitName(pinned, NamePosition.Top, info);
-            Check(name.HasValue && name.Value.Text == "Tank" && info.Count == 0, "常駐、Top：只有名稱框");
-            name = Rules.SplitName(pinned, NamePosition.InfoBox, info);
-            Check(!name.HasValue && Join(info) == "Tank" && info[0].IsName, "常駐、InfoBox：資訊框只有名稱一行");
-            Check(Near(Rules.Padding(info, 4.5f, 6f), 6f * Rules.PaddingRatio), "常駐、InfoBox：只有名稱的資訊框內距照名稱的字級");
-            name = Rules.SplitName(lines, NamePosition.InfoBox, info);
+            foreach (IdleNamePosition idle in Enum.GetValues(typeof(IdleNamePosition)))
+            {
+                name = Rules.SplitName(pinned, Rules.NamePlaceOf(ShowState.Names, idle, NamePosition.Top), info);
+                if (idle == IdleNamePosition.BottomLeft)
+                    Check(!name.HasValue && Join(info) == "Tank" && info[0].IsName, "常駐、BottomLeft：資訊框只有名稱一行");
+                else
+                    Check(name.HasValue && name.Value.Text == "Tank" && info.Count == 0, $"常駐、{idle}：只有名稱框");
+            }
+            name = Rules.SplitName(pinned, NamePlace.InfoBox, info);
+            Check(Near(Rules.Padding(info, 4.5f, 6f), 6f * Rules.PaddingRatio), "常駐、BottomLeft：只有名稱的資訊框內距照名稱的字級");
+            name = Rules.SplitName(lines, NamePlace.InfoBox, info);
             Check(!name.HasValue && info[0].Text == "Tank" && info.Count == 3, "按鍵、InfoBox：資訊加進同一個框，名稱留在第一行");
-            name = Rules.SplitName(Rules.WithName("Box", true, null), NamePosition.Top, info);
+            name = Rules.SplitName(Rules.WithName("Box", true, null), NamePlace.Top, info);
             Check(name.HasValue && name.Value.Text == "Box" && info.Count == 0, "Top、只有名稱的箱子：只有名稱框");
-            name = Rules.SplitName(Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All), NamePosition.Top, info);
+            name = Rules.SplitName(Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All), NamePlace.Top, info);
             Check(!name.HasValue && info.Count == 2, "Top、沒取名：只有資訊框");
+            name = Rules.SplitName(Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All), NamePlace.Center, info);
+            Check(!name.HasValue && info.Count == 2, "Center、沒取名：只有資訊框");
             var m = FullMachine();
             m.Name = "Purifier A";
-            name = Rules.SplitName(Rules.WithExtras(Rules.MachineLines(EnL, m, All), EnL, Heat(75), All), NamePosition.Top, info);
+            name = Rules.SplitName(Rules.WithExtras(Rules.MachineLines(EnL, m, All), EnL, Heat(75), All), NamePlace.Top, info);
             Check(name.HasValue && name.Value.Text == "Purifier A", "Top：機器的名稱也另外一個框");
             Eq(Join(info), "Vol 4000ml / Pur 99.01% / Max purity / Pwr 87kJ / Heat 75%", "Top：機器的資訊框照舊");
 
-            // 字級：名稱行照名稱文字大小，其他照文字大小；三級和文字大小一樣
+            // 字級：名稱行照名稱文字大小，其他照文字大小；四級和文字大小一樣（特大是 1.3.0 加的）
             Eq(Rules.RowSize(new Line("Tank", LineColor.Name), 4.5f, 6f), 6f, "名稱行照名稱文字大小");
             Eq(Rules.RowSize(new Line("W 1ml"), 4.5f, 6f), 4.5f, "其他行照文字大小");
             Eq(Rules.RowSize(new Line("Tank", LineColor.Name), 6f, 3.5f), 3.5f, "名稱也可以比較小");
@@ -1347,6 +1390,161 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Near(Rules.Padding(new List<Line> { new Line("Tank", LineColor.Name) }, 4.5f, 6f), 6f * Rules.PaddingRatio), "只有名稱的框：內距照名稱的字級");
             Check(Near(Rules.BoxHeight(lines, 4.5f, 6f, 0.5f), 1f + 6f * Rules.LineHeightRatio + 2f * 4.5f * Rules.LineHeightRatio), "框高：名稱那行照名稱字級的行高");
             Check(Near(Rules.BoxHeight(new List<Line> { new Line("Tank", LineColor.Name) }, 4.5f, 6f, 0.9f), 1.8f + 6f * Rules.LineHeightRatio), "名稱框的高");
+        }
+
+        /// <summary>
+        /// 長名稱換行（Rules.WrapName）：假的量法是每個字（code point）中日韓 1、其他 0.5。放得下（剛好等寬也算）、空字串、
+        /// 寬度無限大時一行、原字不動；中日韓逐字斷（假名、諺文、全形標點也是）；拉丁文字從空白斷、行首行尾不留空白；
+        /// 一個詞比一行寬時從字元中間斷（剩下的接後面的詞）；一行至少一個字；surrogate pair 不切開；每一行都不超過可用寬度。
+        /// 換好的行放回名稱的位置（Rules.WithWrappedName）。
+        /// </summary>
+        static void NameWrap()
+        {
+            int calls = 0;
+            float Measure(string s)
+            {
+                calls++;
+                float w = 0f;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    bool pair = char.IsHighSurrogate(s[i]) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]);
+                    w += Rules.IsCjk(s, i) ? 1f : 0.5f;
+                    if (pair) i++;
+                }
+                return w;
+            }
+            string Wrap(string text, float available) => string.Join(" / ", Rules.WrapName(text, available, Measure));
+
+            // 放得下：一行、原字不動、只量一次
+            calls = 0;
+            var one = Rules.WrapName("Water Tank", 5f, Measure);
+            Check(one.Count == 1 && one[0] == "Water Tank" && calls == 1, "放得下：一行、只量一次");
+            Eq(Wrap("ABCD", 2f), "ABCD", "剛好等寬：放得下");
+            Eq(Wrap("ABCD", 1.9f), "ABC / D", "多一點：斷開");
+            Eq(Wrap("", 1f), "", "空字串：一行");
+            Check(Rules.WrapName("", 1f, Measure).Count == 1, "空字串：一行（不是零行）");
+            calls = 0;
+            Eq(Wrap("很長的名稱很長的名稱", float.PositiveInfinity), "很長的名稱很長的名稱", "寬度無限大（拿不到物品寬度）：一行");
+            Eq(calls, 0, "寬度無限大：不量");
+
+            // 中日韓文字逐字斷
+            Eq(Wrap("很長的名稱很長的名稱", 4f), "很長的名 / 稱很長的 / 名稱", "中文逐字斷，行數不限");
+            Eq(Wrap("名稱（備用）", 3f), "名稱（ / 備用）", "全形標點也能斷");
+            Eq(Wrap("ウォーターサーバー", 4f), "ウォータ / ーサーバ / ー", "日文假名逐字斷");
+            Eq(Wrap("물통이름표", 2f), "물통 / 이름 / 표", "韓文逐字斷");
+            Eq(Wrap("水桶Tank", 2.5f), "水桶 / Tank", "中文和拉丁文字之間能斷");
+            Eq(Wrap("1號水桶", 2f), "1號 / 水桶", "數字和漢字之間能斷");
+
+            // 拉丁文字從空白斷，行首行尾的空白去掉
+            Eq(Wrap("Water Tank Two", 5f), "Water Tank / Two", "英文從空白斷");
+            Eq(Wrap("  Water   Tank  ", 3f), "Water / Tank", "行首行尾、斷開處的空白去掉");
+            Eq(Wrap("Big Water Tank", 4.5f), "Big Water / Tank", "放得下的詞接在同一行，中間的空白照原樣");
+            Eq(Wrap("A  B", 2f), "A  B", "整個放得下：連續空白照原樣");
+
+            // 一個詞比一行寬：從字元中間斷，剩下的接後面的詞
+            Eq(Wrap("Supercalifragilistic", 3f), "Superc / alifra / gilist / ic", "超長的詞從中間切");
+            Eq(Wrap("Hi Supercalifragilistic", 3f), "Hi / Superc / alifra / gilist / ic", "超長的詞另起一行再切");
+            Eq(Wrap("Supercalifragilistic go", 3f), "Superc / alifra / gilist / ic go", "切剩的接後面的詞");
+            Eq(Wrap("很長", 0.5f), "很 / 長", "一個字就比一行寬：一行一個字（不會卡住）");
+
+            // surrogate pair 不切開
+            var ext = Rules.WrapName("\U00020BB7野家\U00020BB7\U00020BB7", 2f, Measure);
+            Eq(string.Join(" / ", ext), "\U00020BB7野 / 家\U00020BB7 / \U00020BB7", "補充平面的漢字算中日韓、逐字斷");
+            var emoji = Rules.WrapName("\U0001F600\U0001F600\U0001F600\U0001F600", 1f, Measure);
+            Eq(string.Join(" / ", emoji), "\U0001F600\U0001F600 / \U0001F600\U0001F600", "表情符號（不是中日韓）當一個詞，從中間切也不切開 pair");
+            foreach (var l in ext.Concat(emoji))
+                Check(l.Length > 0 && !char.IsHighSurrogate(l[l.Length - 1]) && !char.IsLowSurrogate(l[0]), $"沒有切開 surrogate pair：{l}");
+
+            // 每一行都不超過可用寬度（除了一個字就比一行寬）
+            foreach (var (text, avail) in new[] { ("很長的名稱很長的名稱", 3f), ("Water Tank Number Two", 4f), ("Big 水桶 Tank 二號", 2.5f), ("Supercalifragilistic go", 2f) })
+                foreach (var l in Rules.WrapName(text, avail, Measure))
+                    Check(Measure(l) <= avail + 0.01f && l == l.Trim(), $"「{text}」寬 {avail}：一行「{l}」不超過、頭尾沒有空白");
+
+            Check(Rules.IsCjk("漢", 0) && Rules.IsCjk("か", 0) && Rules.IsCjk("カ", 0) && Rules.IsCjk("한", 0) && Rules.IsCjk("，", 0) && Rules.IsCjk("。", 0),
+                "IsCjk：漢字、平假名、片假名、諺文、全形標點");
+            Check(!Rules.IsCjk("A", 0) && !Rules.IsCjk("é", 0) && !Rules.IsCjk("Ж", 0) && !Rules.IsCjk("\u3000", 0) && !Rules.IsCjk("\U0001F600", 0),
+                "IsCjk：拉丁、俄文字母、全形空白、表情符號不算");
+
+            // 換好的行放回名稱的位置：名稱的多行都在最上面、名稱色，其他行照舊
+            var rows = Rules.Rows(Rules.WithName("Tank", true, Rules.WaterLines(EnL, Water(4000000, 9852, PurityKnown.Exact), All)), LabelForm.Normal);
+            var wrapped = Rules.WithWrappedName(rows, new List<string> { "Ta", "nk" });
+            Eq(Join(wrapped), "Ta / nk / Vol 4000ml / Pur 98.52%", "InfoBox：名稱的多行在資訊框最上面");
+            Check(wrapped[0].IsName && wrapped[1].IsName && !wrapped[2].IsName, "換行的名稱每一行都是名稱色（名稱字級）");
+            Check(ReferenceEquals(Rules.WithWrappedName(rows, new List<string> { "Tank" }), rows) && ReferenceEquals(Rules.WithWrappedName(rows, null), rows),
+                "名稱只有一行（或沒換行）：照原本的行、不配置");
+            Check(Near(Rules.BoxHeight(wrapped, 4.5f, 6f, 0f), 2f * 6f * Rules.LineHeightRatio + 2f * 4.5f * Rules.LineHeightRatio), "框高：名稱每一行照名稱字級的行高");
+            var onlyName = new List<Line> { new Line("Ta", LineColor.Name), new Line("nk", LineColor.Name) };
+            Check(Near(Rules.Padding(onlyName, 4.5f, 6f), 6f * Rules.PaddingRatio), "只有名稱的多行框：內距照名稱字級");
+        }
+
+        /// <summary>
+        /// LabelRenderer 的原始碼（它碰 Unity，離線測試不編，只讀原始碼）：
+        /// - FillInfo、FillSingleName 的本體沒有 lambda（=>）：lambda 捕捉參數時，編譯器在方法一進來就建閉包物件（比快取比對、return 還早），
+        ///   常駐名稱每 0.25 秒每個名稱都會配置一次（2026-11-16 審查發現）。量字的 lambda 放在只有重排時才叫的 ChooseFormFor、WrapNameLines。
+        /// - 多行名稱的對齊：名稱框（Top、Center）每一行置中，資訊框靠左。
+        /// </summary>
+        static void RendererSource()
+        {
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            string src = File.ReadAllText(Path.Combine(root, "mod", "src", "LabelRenderer.cs"));
+            string Body(string signature)
+            {
+                int at = src.IndexOf(signature, StringComparison.Ordinal);
+                if (at < 0) return null;
+                int open = src.IndexOf('{', at);
+                if (open < 0) return null;
+                int depth = 0;
+                for (int i = open; i < src.Length; i++)
+                {
+                    if (src[i] == '{') depth++;
+                    else if (src[i] == '}' && --depth == 0) return src.Substring(open, i - open + 1);
+                }
+                return null;
+            }
+            foreach (var method in new[] { "static void FillInfo(", "static void FillSingleName(" })
+            {
+                var body = Body(method);
+                Check(body != null && body.Length > 100, $"LabelRenderer 找得到 {method}…) 的本體");
+                Check(body != null && !body.Contains("=>"), $"{method}…) 的本體沒有 lambda（不會每次呼叫都配置閉包）");
+            }
+            Check(Regex.IsMatch(src, @"static LabelForm ChooseFormFor\([^)]*\)\s*=>\s*Rules\.ChooseForm\("), "ChooseForm 的量法包在 ChooseFormFor");
+            Check(Regex.IsMatch(src, @"static List<string> WrapNameLines\([^)]*\)\s*=>\s*Rules\.WrapName\("), "WrapName 的量法包在 WrapNameLines");
+            // 對齊：名稱框置中、資訊框（含只有名稱一行的資訊框）靠左
+            Check(Regex.IsMatch(src, @"static void FillName\([^)]*\)\s*=>\s*FillSingleName\([^;]*,\s*true\);"), "名稱框（FillName）每一行置中");
+            Check(src.Contains("FillSingleName(layer, box, lines[0], style, itemWidth, false);"), "資訊框裡只有名稱一行（BottomLeft）靠左");
+            Check(src.Contains("SetRows(box, Rules.WithWrappedName(Rules.Rows(lines, form), nameLines), style, pad, false);"), "資訊框（InfoBox）靠左");
+            Check(src.Contains("center ? TextAlignmentOptions.Center : TextAlignmentOptions.Left") && src.Contains("if (t.alignment != align) t.alignment = align;"),
+                "SetRows 每次照這一輪設對齊（物件池重用的 TMP 不會留著上一輪的對齊）");
+        }
+
+        /// <summary>
+        /// 反應爐的 Industrial Power：ReactorHelper.IsPowerOutputDoubled 是 Rev15 才有的，舊版遊戲上 Mono 編譯「呼叫它的方法」時
+        /// 才丟 MissingMethodException。離線測不到 Mono 的編譯，看 PowerReader 的原始碼（註解與字串拿掉）擋寫法被改掉：
+        /// 遊戲方法只在一個標了 NoInlining、只做這個呼叫的小方法裡叫；那個小方法只在加倍那裡叫的方法的 try 裡出現一次（方法群組也算），
+        /// 接 MissingMethodException；能量陣列與充能器都看「王爾德的升級 || Industrial Power」，王爾德的升級沒有別處直接讀。
+        /// </summary>
+        static void PowerReaderSource()
+        {
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            // 先拿掉 // 註解（/// 裡寫了方法名），再拿掉字串（log 裡寫了遊戲的方法名）；PowerReader 的字串裡沒有 //
+            string code = Regex.Replace(File.ReadAllText(Path.Combine(root, "mod", "src", "PowerReader.cs")), @"//.*", "");
+            code = Regex.Replace(code, @"""(?:[^""\\\n]|\\.)*""", @"""""");
+            int Count(string pattern) => Regex.Matches(code, pattern).Count;
+            Eq(Count(@"\bIsPowerOutputDoubled\b"), 1, "PowerReader 只在一個地方用到 IsPowerOutputDoubled");
+            var core = Regex.Match(code, @"\[MethodImpl\(MethodImplOptions\.NoInlining\)\]\s*static bool (\w+)\(\)\s*=>\s*ReactorHelper\.IsPowerOutputDoubled\(\);");
+            Check(core.Success, "IsPowerOutputDoubled 放在標了 NoInlining、只做這個呼叫的小方法裡");
+            var wrapper = Regex.Match(code, @"NetworkUpgrade\.IsCommercialPowerUnlocked\(\)\s*\|\|\s*(\w+)\(\)");
+            Check(wrapper.Success, "加倍＝王爾德的升級 || Industrial Power（照遊戲的寫法）");
+            if (core.Success && wrapper.Success)
+            {
+                string name = Regex.Escape(core.Groups[1].Value), outer = Regex.Escape(wrapper.Groups[1].Value);
+                Eq(Count($@"\b{name}\b"), 2, $"{core.Groups[1].Value} 只有宣告與一個呼叫的地方（方法群組也算）");
+                Check(Regex.IsMatch(code, $@"static bool {outer}\(\)\s*\{{[^{{}}]*try\s*\{{\s*return\s+{name}\(\);\s*\}}\s*catch\s*\((System\.)?MissingMethodException\)"),
+                    $"{core.Groups[1].Value} 從 {wrapper.Groups[1].Value} 的 try 裡叫，接 MissingMethodException（舊版遊戲當成沒有加倍）");
+            }
+            Eq(Count(@"\bIsCommercialPowerUnlocked\b"), 1, "王爾德的升級只在加倍那裡讀");
+            Check(code.Contains("doubled() ? PowerBlockChargeUpgraded : PowerBlockCharge"), "能量陣列看加倍");
+            Check(code.Contains("doubled() ? RechargerChargeUpgraded : RechargerCharge"), "充能器看加倍");
         }
 
         /// <summary>
@@ -1797,8 +1995,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
             {
                 // 2026-11-08 使用者要的：每行開頭的字排在文字大小前面；名稱位置、名稱文字大小排在 Names 段最前面
                 ("SectionGeneral", "KeyMode,Prefix,TextSize"),
-                // 總是顯示名稱排在 Names 段最前面
-                ("SectionNames", "AlwaysShowNames,NamePosition,NameTextSize,ShowContainerName,ShowMachineName,ShowItemName"),
+                // 總是顯示名稱排在 Names 段最前面；名稱位置未顯示時在顯示時前面、長名稱換行接在名稱文字大小後面
+                ("SectionNames", "AlwaysShowNames,IdleNamePosition,NamePosition,NameTextSize,WrapLongNames,ShowContainerName,ShowMachineName,ShowItemName"),
                 ("SectionWater", "ShowWaterVolume,ShowWaterPurity,ShowRealPurity"),
                 ("SectionBatteries", "ShowBatteryCharge,ShowBatteryTonightCharge"),
                 ("SectionMachines", "ShowMachinePower,ShowMachineTonightNet,ShowMachineReason,ShowMachineProgress,ShowMachineOutput,ShowMachineWater"),
@@ -1807,9 +2005,23 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(string.Join(",", defs.Select(x => x.section).Distinct()), string.Join(",", expected.Select(x => x.section)), "段落的順序（照第一次定義）");
             foreach (var (section, keys) in expected)
                 Eq(string.Join(",", defs.Where(x => x.section == section).Select(x => x.key)), keys, $"{section} 裡的順序");
-            Eq(defs.Count, 24, "設定共 24 個");
+            Eq(defs.Count, 26, "設定共 26 個");
             string Default(string key) => defs.FirstOrDefault(x => x.key == key).def;
             Eq(Default("NamePosition"), "NamePosition.Top", "名稱位置預設 Top");
+            Eq(Default("IdleNamePosition"), "IdleNamePosition.Top", "名稱位置（未顯示時）預設 Top");
+            Eq(Default("WrapLongNames"), "false", "長名稱換行預設關");
+            Check(settings.Contains("_idleNamePosition != null ? _idleNamePosition.Value : IdleNamePosition.Top"), "IdleNamePosition 屬性的預設是 Top");
+            Check(settings.Contains("_wrapNames != null && _wrapNames.Value"), "WrapLongNames 屬性還沒讀設定時是關的");
+            // 1.3.0 的轉換：DefineEnum("IdleNamePosition") 之前探測同一個 key，兩個名稱位置都定義完才 Set(BottomLeft)
+            Check(settings.Contains("const string IdleNamePositionKey = \"IdleNamePosition\";"), "探測的 key 和名稱位置（未顯示時）的 key 一樣");
+            int probeIdle = settings.IndexOf("ProbeRaw(cfg, IdleNamePositionKey", StringComparison.Ordinal);
+            int defineIdle = settings.IndexOf("cfg.DefineEnum(\"IdleNamePosition\"", StringComparison.Ordinal);
+            int defineShown = settings.IndexOf("cfg.DefineEnum(\"NamePosition\"", StringComparison.Ordinal);
+            int migrateIdle = settings.IndexOf("MigrateIdleNamePosition(idleRaw);", StringComparison.Ordinal);
+            Check(probeIdle >= 0 && defineIdle > probeIdle, "名稱位置（未顯示時）在 DefineEnum 之前先探測");
+            Check(defineShown > defineIdle && migrateIdle > defineShown, "轉成 BottomLeft 在兩個 DefineEnum 都叫完之後（Set 會存檔）");
+            Check(settings.Contains("_idleNamePosition.Set(IdleNamePosition.BottomLeft)") && settings.Contains("Rules.IdleNeedsBottomLeft(idleRaw, _namePosition.Value)"),
+                "照 Rules.IdleNeedsBottomLeft 設成 BottomLeft");
             Eq(Default("AlwaysShowNames"), "false", "總是顯示名稱預設關");
             Check(settings.Contains("_alwaysNames != null && _alwaysNames.Value"), "AlwaysShowNames 屬性還沒讀設定時是關的");
             // 段落改名：段落字串是 General，舊的 Labels 不見了
@@ -1817,8 +2029,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 名稱位置的舊值轉換：探測用同一個 key、沒有 choices 的文字型，讀完一定拿掉，DefineEnum 包在 MigrateNamePosition 裡
             Check(settings.Contains("const string NamePositionKey = \"NamePosition\";"), "探測的 key 和名稱位置的 key 一樣");
             Check(Regex.IsMatch(settings, "MigrateNamePosition\\(cfg, \\(\\) =>\\s*cfg\\.DefineEnum\\(\"NamePosition\""), "名稱位置的 DefineEnum 經過 MigrateNamePosition");
-            Check(settings.Contains("cfg.Define(NamePositionKey, \"\", SectionNames, null)"), "探測是沒有 choices 的文字型（有 choices 的會把 Label 換成預設值）");
-            Check(settings.Contains("list.RemoveAll(e => e != null && e.Key == NamePositionKey)"), "探測讀完拿掉（設定視窗不多一列）");
+            Check(settings.Contains("Rules.IsOldNamePosition(ProbeRaw(cfg, NamePositionKey"), "名稱位置的舊值用 ProbeRaw 探測");
+            // 1.3.0 起兩個探測共用 ProbeRaw：沒有 choices、預設 "" 的文字型，讀完在 finally 裡一定拿掉
+            Check(settings.Contains("cfg.Define(key, \"\", SectionNames, null)"), "探測是沒有 choices 的文字型（有 choices 的會把 Label 換成預設值），預設 \"\"（分得出沒有這個 key）");
+            Check(Regex.IsMatch(settings, "finally\\s*\\{[^}]*list\\.RemoveAll\\(e => e != null && e\\.Key == key\\)"), "探測讀完在 finally 裡拿掉（設定視窗不多一列，中途出錯也拿掉）");
             Check(settings.Contains("entry.Set(NamePosition.InfoBox)"), "舊值 Label 轉成 InfoBox");
             Eq(Default("NameTextSize"), "TextSize.Large", "名稱文字大小預設 Large");
             foreach (var key in new[] { "ShowBatteryTonightCharge", "ShowMachineTonightNet", "ShowMachineOutput" })
@@ -2127,7 +2341,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var infoPlurals = Keys(stringsSrc, "Plural");
             Check(!settings.Contains("ModHelper.GetLocalized"), "Settings 取字都經過 Loc（最長字串模式也涵蓋設定）");
             var labels = used.Where(k => !k.EndsWith("_tip")).ToList();
-            Eq(labels.Count, 25, "Settings 用到的標籤數（24 個設定＋按鍵）");
+            Eq(labels.Count, 27, "Settings 用到的標籤數（26 個設定＋按鍵）");
             foreach (var k in labels)
             {
                 Check(used.Contains(k + "_tip"), $"Settings 的 {k} 有說明");
@@ -2199,10 +2413,11 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 "zh-Hant：說明與例子都用 zh-Hant.csv 的字");
             // 沒有前綴的不加例子
             foreach (var key in new[] { "cfg_container_name", "cfg_machine_name", "cfg_item_name", "cfg_machine_reason", "cfg_battery_charge", "cfg_real_purity", "cfg_ingot_purity", "cfg_text_size",
-                "cfg_name_position", "cfg_name_text_size", "cfg_battery_tonight_charge", "cfg_machine_tonight_net" })
+                "cfg_name_position", "cfg_idle_name_position", "cfg_name_text_size", "cfg_wrap_names", "cfg_battery_tonight_charge", "cfg_machine_tonight_net" })
                 foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
                     Check(csv.TryGetValue(key + "_tip", out var tip) && !tip.Contains("Short")
-                        && (key == "cfg_real_purity" || key == "cfg_name_position" || key == "cfg_machine_tonight_net" || !tip.Contains('\n')),
+                        && (key == "cfg_real_purity" || key == "cfg_name_position" || key == "cfg_idle_name_position" || key == "cfg_wrap_names"
+                            || key == "cfg_machine_tonight_net" || !tip.Contains('\n')),
                         $"{name} {key}_tip 沒有長短的例子");
             // 電池今晚會充多少：沒有前綴，說明裡舉一個例子，和標籤畫的一樣
             foreach (var (name, csv) in new[] { ("en.csv", en), ("zh.csv", zh) })
@@ -2243,14 +2458,44 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Tips.IngotPurity(HansL), "在金属锭上显示纯度的等级，例如“高纯度”。", "zh cfg_ingot_purity_tip");
             Loc.Use(Lang.ZhHant);
             Check(Tips.IngotPurity(HantL).Contains("「高純度」"), "zh-Hant cfg_ingot_purity_tip 的例子是高純度（台灣用「」）");
-            // 名稱位置：兩個選項各一行，用下拉選單顯示的英文名稱；簡中寫「置中」（繁中 mod 不會把「居中」轉成「置中」）
-            foreach (var (name, csv, sep) in new[] { ("en.csv", en, " = "), ("zh.csv", zh, "＝") })
-                if (csv.TryGetValue("cfg_name_position_tip", out var np))
+            // 名稱位置：選項各一行，用下拉選單顯示的英文名稱（照 enum 的順序）；簡中寫「置中」（繁中 mod 不會把「居中」轉成「置中」）。
+            // 每個語言都查（選項的值照舊英文、換行的位置和英文一樣）
+            var aiLangs = new[] { "ru", "de", "ja", "fr", "es", "pl" };
+            var allLangs = new[] { ("en", en), ("zh", zh), ("zh-Hant", hant) }.Concat(aiLangs.Select(l => (l, ReadCsv(Path.Combine(locDir, l + ".csv"))))).ToList();
+            foreach (var (name, csv) in allLangs)
+            {
+                string sep = name.StartsWith("zh") || name == "ja" ? "＝" : " = ";
+                foreach (var (key, options) in new[] { ("cfg_name_position_tip", Enum.GetNames(typeof(NamePosition))), ("cfg_idle_name_position_tip", Enum.GetNames(typeof(IdleNamePosition))) })
                 {
+                    if (!csv.TryGetValue(key, out var np)) { Check(false, $"{name}.csv 有 {key}"); continue; }
                     var rows = np.Split('\n');
-                    Eq(rows.Length, 3, $"{name} cfg_name_position_tip 三行");
-                    Check(rows.Length == 3 && rows[1].StartsWith("Top" + sep) && rows[2].StartsWith("InfoBox" + sep), $"{name} cfg_name_position_tip 的選項 Top、InfoBox 各一行");
+                    Eq(rows.Length, options.Length + 1, $"{name}.csv {key} 一行說明＋每個選項一行");
+                    Check(rows.Length == options.Length + 1 && options.Select((o, i) => rows[i + 1].StartsWith(o + sep)).All(x => x),
+                        $"{name}.csv {key} 的選項 {string.Join("、", options)} 各一行");
                 }
+            }
+            Check(zh.TryGetValue("cfg_idle_name_position_tip", out var inpZh) && inpZh.Contains("置中") && !inpZh.Contains("居中"), "zh.csv cfg_idle_name_position_tip 寫置中");
+            // 兩個名稱位置的標籤分得出來：未顯示時、顯示時
+            Check(en.TryGetValue("cfg_idle_name_position", out var inEn) && inEn == "Name position (info box hidden)", "en.csv cfg_idle_name_position");
+            Check(en.TryGetValue("cfg_name_position", out var npEn) && npEn == "Name position (info box shown)", "en.csv cfg_name_position 改成顯示時");
+            Check(zh.TryGetValue("cfg_idle_name_position", out var inZh) && inZh == "名称位置（信息框未显示时）", "zh.csv cfg_idle_name_position");
+            Check(hant.TryGetValue("cfg_name_position", out var npHant) && npHant == "名稱位置（資訊框顯示時）", "zh-Hant.csv cfg_name_position 改成顯示時");
+            // 長名稱換行：兩行（開、關），9 種語言都是
+            foreach (var (name, csv) in allLangs)
+                Check(csv.TryGetValue("cfg_wrap_names_tip", out var wn) && wn.Split('\n').Length == 2, $"{name}.csv cfg_wrap_names_tip 兩行");
+            // 特大：兩個字級的說明都列出 ExtraLarge（下拉選項照舊英文），文字大小寫 8 單位，9 種語言都是
+            foreach (var (name, csv) in allLangs)
+            {
+                Check(csv.TryGetValue("cfg_text_size_tip", out var ts) && ts.Contains("ExtraLarge") && ts.Contains("8"), $"{name}.csv cfg_text_size_tip 有 ExtraLarge 與 8 單位");
+                Check(csv.TryGetValue("cfg_name_text_size_tip", out var nts) && nts.Contains("ExtraLarge"), $"{name}.csv cfg_name_text_size_tip 有 ExtraLarge");
+            }
+            // AI 翻的 6 種語言，開頭註解列的「下拉選項保持英文」清單有 1.3.0 的新選項（之後重翻時譯者照這份清單）
+            foreach (var l in aiLangs)
+            {
+                var comments = File.ReadAllLines(Path.Combine(locDir, l + ".csv")).Where(x => x.TrimStart().StartsWith("#") && x.Contains("InfoBox")).ToList();
+                Check(comments.Count > 0 && comments.All(x => x.Contains("Center") && x.Contains("BottomLeft") && x.Contains("ExtraLarge")),
+                    $"{l}.csv 開頭註解的下拉選項清單有 Center、BottomLeft、ExtraLarge");
+            }
             // 總是顯示名稱：兩份都有，說明兩行（開著時的樣子、哪幾種名稱照三個開關）
             Check(en.TryGetValue("cfg_always_names", out var anEn) && anEn == "Always show names", "en.csv cfg_always_names");
             Check(zh.TryGetValue("cfg_always_names", out var anZh) && anZh == "总是显示名称", "zh.csv cfg_always_names");

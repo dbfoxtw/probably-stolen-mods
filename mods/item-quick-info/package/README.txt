@@ -3,7 +3,7 @@ Probably Stolen 物品速覽 mod（Item Quick Info） v{version}
 
 按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、
 機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383 的留言
@@ -39,6 +39,7 @@ ModConfigs\dbfoxtw.item-quick-info.json 與 ModData\dbfoxtw_item-quick-info 資�
 - 任何物品：耐久度（剩 1/4 以下變橘色）、金屬錠的純度等級、還能用幾次（用完變紅）、贓物的熱度（紅字）。
 - 名稱：你取過名稱的箱子、背包、機器和其他物品，用淺藍色顯示在物品上方（也可以放在資訊框的第一行）。
   設定打開「總是顯示名稱」，名稱就不用按鍵、一直顯示，其他資訊照舊按鍵才顯示（料斗自動編的號碼照舊只在按鍵時顯示）。
+  只顯示名稱時的位置另外設定（物品上方置中、中間或左下角）；打開「長名稱換行」，比物品寬的名稱會換行。
 - 文字大小、每行開頭用短的字（水）還是長的詞（水量）都可以在設定改。一格寬的物品放不下時，
   那個資訊框自動改用短的字，還放不下就拆成兩行。
 我還沒玩過所有的專精，之後會陸續加上新的資訊。新加的資訊預設都會顯示，不想看的話，可以在設定裡關掉。
@@ -49,8 +50,8 @@ ModConfigs\dbfoxtw.item-quick-info.json 與 ModData\dbfoxtw_item-quick-info 資�
 - 按鍵：遊戲的「選項 → 按鍵綁定」最後幾列的「顯示物品資訊」，預設 Tab。
   存在存檔資料夾的 ModData\dbfoxtw_item-quick-info\settings.json。
 - 其他設定：在主選單的「Mods」（模組）畫面打開這個 mod 的設定，改好套用就生效，不用重開遊戲。
-  段落是 General（按鍵方式、每行開頭的字、文字大小）、Names（總是顯示名稱、名稱位置、名稱文字大小、三種名稱的開關）、
-  Water containers、Batteries、Machines、Items（每種資訊一個開關，一開始全部打開）。「總是顯示名稱」一開始是關的。
+  段落是 General（按鍵方式、每行開頭的字、文字大小）、Names（總是顯示名稱、兩個名稱位置、名稱文字大小、長名稱換行、三種名稱的開關）、
+  Water containers、Batteries、Machines、Items（每種資訊一個開關，一開始全部打開）。「總是顯示名稱」「長名稱換行」一開始是關的。
   每個設定的說明在設定視窗裡，滑鼠移上去就看得到。下拉選單的選項只有英文，中文對照寫在說明裡。
   設定存在存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json。
 
@@ -60,7 +61,8 @@ ModConfigs\dbfoxtw.item-quick-info.json 與 ModData\dbfoxtw_item-quick-info 資�
   法文、西班牙文、波蘭文，其他語言是英文。
 - 已知限制：剩幾天照機器現在的作業速度算，假設之後每晚都會運作，模組效果之後改了速度，天數會跟著變。
   原因與收支只看機器裡現在的東西（接了進料斗的機器，材料格空著時會寫缺料、收支不扣今晚的耗電）。
-  名稱或資訊框比物品寬時會伸出物品外，蓋住旁邊的物品。遊戲之後如果改了物品或機器的做法，要等 mod 更新。
+  名稱或資訊框比物品寬時會伸出物品外，蓋住旁邊的物品；打開「長名稱換行」可以讓名稱不超出物品。
+  遊戲之後如果改了物品或機器的做法，要等 mod 更新。
 - 相容性：和一鍵關窗、視窗分頁一起測過，鎖頭和分頁條不會被蓋住。
   工作坊的「容器与标签切换 / Container & Tab Switch」也用 Tab，一起裝時把其中一個改成別的鍵。
   其他也在物品身上畫標示的 mod 一起裝時，兩邊的標示可能疊在同一個物品上。
@@ -76,7 +78,7 @@ Probably Stolen Item Quick Info mod v{version}
 Hold a key (Tab by default) to show key info right on the items on screen: water volume and purity,
 battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left,
 stolen heat and the names you gave things. Release to hide.
-Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -124,6 +126,8 @@ Features
 - Names: the names you gave containers, backpacks, machines and other items, in light blue above the item
   (or on the first line of the info box). Turn on "Always show names" to keep names on screen without
   the key; the other info still needs the key (hopper numbers the game assigns still show only with the key).
+  Where names go when only names are shown is a separate setting (top, middle or bottom-left of the item);
+  turn on "Wrap long names" to wrap names wider than the item onto more lines.
 - Change the text size, and whether each line starts with a short word (W) or a long one (Vol), in the
   settings. When an info box doesn't fit an item one cell wide, it switches to the short words, and splits
   into two lines if it still doesn't fit.
@@ -138,9 +142,10 @@ Settings
   Saved in ModData\dbfoxtw_item-quick-info\settings.json in the save folder.
 - Everything else: open this mod's settings on the Mods screen of the main menu; apply, and the change
   takes effect (no restart needed). The sections are General (Key mode, Line prefixes, Text size),
-  Names (Always show names, Name position, Name text size, a switch for each of the three kinds of names),
+  Names (Always show names, two Name position settings, Name text size, Wrap long names, a switch for each
+  of the three kinds of names),
   Water containers, Batteries, Machines and Items (a switch for each kind of info; all start on).
-  Always show names starts off.
+  Always show names and Wrap long names start off.
   Each setting's tooltip in the settings window explains it.
   The settings are kept in ModConfigs\dbfoxtw.item-quick-info.json in the save folder.
 
@@ -154,7 +159,7 @@ Notes
   if module effects change the speed later, the days change with it. Reasons and tonight's net energy only
   look at what's in the machine now (a machine fed by an Intake Hopper says No input while its input slot
   is empty, and its net energy leaves out tonight's use). Names or info boxes wider than the item stick out and cover
-  the items next to it. If a game update changes how items or machines work, wait for a mod update.
+  the items next to it; turn on Wrap long names to keep names within the item. If a game update changes how items or machines work, wait for a mod update.
 - Compatibility: tested with Close All Windows and Window Tabs; nothing covers the padlocks or
   the tab bars. "Container & Tab Switch" on the Workshop also uses Tab: if you use both, change one of them
   to another key. Other mods that also draw markers on items may put theirs on the same item as this mod's.

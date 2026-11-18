@@ -1,7 +1,7 @@
 # Japanese (ja) text of Item Quick Info (ModHelper.GetLocalized). Translated from en.csv with AI help; not checked by a native speaker.
 # Format: key,value. \n is a line break. Two parts: the labels and tooltips of the settings and key bind (key_, cfg_), then the info box text drawn on the items (info_, at the end).
 # In tooltips, {0}, {1}... are filled in by the mod with the info box text below (for example "水 4000ml" / "水量 4000ml"). Keep every placeholder.
-# The dropdown choices (Top, InfoBox, Small, Medium, Large, Hold, Toggle) and the Short / Long labels stay in English, as in the settings window.
+# The dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle) and the Short / Long labels stay in English, as in the settings window.
 # Game words follow the game's Japanese string table (水差し, インゴット, 投入ホッパー, 排出ホッパー, 進行速度, 過充電, 劣化, ヒート値, 耐久性, 残り使用回数).
 key_show_info,アイテム情報を表示
 key_show_info_tip,押している間、設定とアイテムの種類に応じて、画面上のアイテムに情報を表示する。離すと消える。「キーモード」をToggleにすると、1回押すと表示、もう1回押すと消える。
@@ -13,10 +13,14 @@ cfg_item_name,その他のアイテムの名前を表示
 cfg_item_name_tip,その他のアイテム（水差しやインゴットなど）に付けた名前を水色で表示する。
 cfg_always_names,名前を常に表示
 cfg_always_names_tip,オンにすると、キーを押さなくても名前が表示されたままになる。その他の情報は今までどおりキーが必要。\nどの名前を表示するかは、今までどおり下にある3つの名前の設定に従う。
-cfg_name_position,名前の位置
-cfg_name_position_tip,名前を表示する位置。\nTop＝アイテムの上部中央\nInfoBox＝情報ボックスの1行目
+cfg_idle_name_position,名前の位置（情報ボックス非表示時）
+cfg_idle_name_position_tip,キーを押さずに名前だけが表示されているときの、名前の位置。「名前を常に表示」をオンにする必要がある。\nTop＝アイテムの上部中央\nCenter＝アイテムの中央\nBottomLeft＝アイテムの左下
+cfg_name_position,名前の位置（情報ボックス表示時）
+cfg_name_position_tip,キーで情報を表示しているときの、名前の位置。\nTop＝アイテムの上部中央\nInfoBox＝情報ボックスの1行目
 cfg_name_text_size,名前の文字サイズ
-cfg_name_text_size_tip,名前の大きさ：Small、Medium、Large（「文字サイズ」と同じ3段階）。
+cfg_name_text_size_tip,名前の大きさ：Small、Medium、Large、ExtraLarge（「文字サイズ」と同じ4段階）。
+cfg_wrap_names,長い名前を折り返す
+cfg_wrap_names_tip,オンにすると、アイテムより幅の広い名前は複数行に折り返され、アイテムの幅に収まる。\nオフにすると、長い名前はアイテムからはみ出す。
 cfg_water_volume,水量を表示
 # {0} = the volume line with the short prefix ("水 4000ml"), {1} = with the long prefix ("水量 4000ml")
 cfg_water_volume_tip,容器に入っている水の量をmlで表示する。\nShort：{0}\nLong：{1}
@@ -61,7 +65,7 @@ cfg_ingot_purity_tip,インゴットの純度の等級を表示する（例：�
 cfg_key_mode,キーモード
 cfg_key_mode_tip,「アイテム情報を表示」キーを押している間だけ表示するか、押すたびに切り替えるかを選ぶ。\nHold＝押している間は表示し、離すと消える\nToggle＝1回押すと表示、もう1回押すと消える。セーブデータをロードしたときや、メインメニューに戻ったときはオフになる
 cfg_text_size,文字サイズ
-cfg_text_size_tip,情報ボックスの文字の大きさ（名前は「名前の文字サイズ」に従う）：Small、Medium、Large。アイテム1マスは16単位で、文字の高さは3.5、4.5、6単位。
+cfg_text_size_tip,情報ボックスの文字の大きさ（名前は「名前の文字サイズ」に従う）：Small、Medium、Large、ExtraLarge。アイテム1マスは16単位で、文字の高さは3.5、4.5、6、8単位。
 cfg_prefix,行頭の言葉
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones: water volume, water purity, machine power,
 # 3 days left, output count, stolen heat, uses left, durability. Separated with "、".

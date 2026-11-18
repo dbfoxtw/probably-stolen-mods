@@ -1,5 +1,5 @@
 # Item Quick Info: labels and tooltips of the settings and key bind, and the info box text drawn on the items, German. Translated from en.csv with AI help. Format: key,value
-# Dropdown choices (Top, InfoBox, Small, Medium, Large, Hold, Toggle, Short, Long) stay English: they are fixed in the code.
+# Dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) stay English: they are fixed in the code.
 # In tooltips, {0}, {1}... are filled in with the info box text below (for example "W 4000ml" / "Vol. 4000ml"). Keep every placeholder.
 key_show_info,Gegenstandsinfo anzeigen
 key_show_info_tip,"Gedrückt halten, um auf den Gegenständen am Bildschirm Infos anzuzeigen, je nach deinen Einstellungen und der Art des Gegenstands. Loslassen blendet sie aus. Steht „Tastenmodus“ auf Toggle, einmal drücken zum Anzeigen und erneut zum Ausblenden."
@@ -11,10 +11,14 @@ cfg_item_name,Namen anderer Gegenstände anzeigen
 cfg_item_name_tip,"Zeigt in Hellblau den Namen, den du einem anderen Gegenstand gegeben hast (z. B. einem Krug Wasser oder einem Metallbarren)."
 cfg_always_names,Namen immer anzeigen
 cfg_always_names_tip,"Ist dies an, bleiben die Namen auch ohne Taste sichtbar; die übrigen Infos brauchen weiterhin die Taste.\nWelche Namen erscheinen, richtet sich weiterhin nach den drei Namens-Einstellungen darunter."
-cfg_name_position,Namensposition
-cfg_name_position_tip,Wo die Namen angezeigt werden.\nTop = mittig oben auf dem Gegenstand\nInfoBox = erste Zeile der Infobox
+cfg_idle_name_position,Namensposition (Infobox ausgeblendet)
+cfg_idle_name_position_tip,"Wo die Namen angezeigt werden, wenn ohne Taste nur die Namen zu sehen sind. Dafür muss „Namen immer anzeigen“ an sein.\nTop = mittig oben auf dem Gegenstand\nCenter = in der Mitte des Gegenstands\nBottomLeft = unten links am Gegenstand"
+cfg_name_position,Namensposition (Infobox angezeigt)
+cfg_name_position_tip,"Wo die Namen angezeigt werden, während die Taste die Infos anzeigt.\nTop = mittig oben auf dem Gegenstand\nInfoBox = erste Zeile der Infobox"
 cfg_name_text_size,Textgröße der Namen
-cfg_name_text_size_tip,"Größe der Namen: Small, Medium oder Large, dieselben Größen wie bei „Textgröße“."
+cfg_name_text_size_tip,"Größe der Namen: Small, Medium, Large oder ExtraLarge, dieselben Größen wie bei „Textgröße“."
+cfg_wrap_names,Lange Namen umbrechen
+cfg_wrap_names_tip,"Ist dies an, werden Namen, die breiter als der Gegenstand sind, auf mehrere Zeilen umbrochen und bleiben so innerhalb seiner Breite.\nIst dies aus, ragen lange Namen über den Gegenstand hinaus."
 cfg_water_volume,Wassermenge anzeigen
 # {0} = the volume line with the short prefix ("W 4000ml"), {1} = with the long prefix ("Vol. 4000ml")
 cfg_water_volume_tip,"Zeigt, wie viel Wasser ein Behälter enthält, in ml.\nShort: {0}\nLong: {1}"
@@ -59,7 +63,7 @@ cfg_ingot_purity_tip,"Zeigt die Reinheitsstufe eines Metallbarrens, z. B. „{0}
 cfg_key_mode,Tastenmodus
 cfg_key_mode_tip,"Wähle, ob die Taste „Gegenstandsinfo anzeigen“ gehalten oder zum Umschalten gedrückt wird.\nHold = anzeigen, solange sie gehalten wird; beim Loslassen ausblenden\nToggle = einmal drücken zum Anzeigen, erneut zum Ausblenden; schaltet sich aus, wenn du einen Spielstand lädst oder ins Hauptmenü zurückkehrst"
 cfg_text_size,Textgröße
-cfg_text_size_tip,"Größe des Texts in der Infobox (Namen richten sich nach „Textgröße der Namen“): Small, Medium oder Large. Ein Inventarfeld ist 16 Einheiten groß; der Text ist 3,5 (Small), 4,5 (Medium) oder 6 Einheiten (Large) hoch."
+cfg_text_size_tip,"Größe des Texts in der Infobox (Namen richten sich nach „Textgröße der Namen“): Small, Medium, Large oder ExtraLarge. Ein Inventarfeld ist 16 Einheiten groß; der Text ist 3,5 (Small), 4,5 (Medium), 6 (Large) oder 8 Einheiten (ExtraLarge) hoch."
 cfg_prefix,Zeilenpräfixe
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
 # 3 days left, output count, stolen heat, uses left, durability.

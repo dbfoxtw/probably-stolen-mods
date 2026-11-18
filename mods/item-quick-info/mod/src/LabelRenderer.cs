@@ -5,18 +5,23 @@ using UnityEngine.UI;
 
 namespace ProbablyStolenItemQuickInfo
 {
-    /// <summary>畫標籤的樣式（每輪重算時從設定讀）：資訊行與名稱的字級、名稱位置、字型。</summary>
+    /// <summary>
+    /// 畫標籤的樣式（每輪重算時從設定讀）：資訊行與名稱的字級、這一輪名稱畫在哪（Runner 照顯示狀態
+    /// 從兩個名稱位置設定換成 NamePlace，Rules.NamePlaceOf）、長名稱換行、字型。
+    /// </summary>
     readonly struct LabelStyle
     {
         public readonly float InfoSize, NameSize;
-        public readonly NamePosition NamePosition;
+        public readonly NamePlace Place;
+        public readonly bool WrapNames;
         public readonly TMP_FontAsset Font;
 
-        public LabelStyle(float infoSize, float nameSize, NamePosition namePosition, TMP_FontAsset font)
+        public LabelStyle(float infoSize, float nameSize, NamePlace place, bool wrapNames, TMP_FontAsset font)
         {
             InfoSize = infoSize;
             NameSize = nameSize;
-            NamePosition = namePosition;
+            Place = place;
+            WrapNames = wrapNames;
             Font = font;
         }
     }
@@ -35,8 +40,10 @@ namespace ProbablyStolenItemQuickInfo
     /// 除了加我們自己的圖層，不改遊戲物件的父子關係或順序；不用 Canvas.overrideSorting（會蓋到別的視窗上面）。
     ///
     /// 圖層掛 CanvasGroup（不擋射線、不能互動）：不影響提示框、點擊、拖曳；LayoutElement.ignoreLayout 免得被版面配置排進去。
-    /// 一個物品最多兩個框：資訊框貼在物品外框（GameItemElement.middle，大小＝外框格數 × 格子）的左下角往上、往右長；
-    /// 名稱位置是 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長（名稱位置是 InfoBox 時名稱是資訊框的第一行）。
+    /// 一個物品最多兩個框：資訊框貼在物品外框（ItemRect：rotator 的外接矩形）的左下角往上、往右長；
+    /// 名稱畫在 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長；Center（只畫名稱時）時名稱框的中心對齊物品的中心；
+    /// InfoBox（顯示時選 InfoBox、未顯示時選 BottomLeft）時名稱是資訊框的第一行。名稱框的 pivot 跟著每一輪的位置換（同一個框會在 Top、Center 之間換）。
+    /// 長名稱換行開著時名稱比物品寬就斷成幾行（Rules.WrapName），框照 pivot 長：Top 往下、Center 上下各一半、資訊框往上。
     /// 都換算到圖層的座標，超出物品也沒關係。
     /// 物件用池子重複用；不畫時（放開鍵、Toggle 關掉、被擋；總是顯示名稱開著時這些情形照樣畫名稱、圖層不停用，只有過場時才不畫）整個圖層停用；
     /// 圖層跟著遊戲的節點銷毀（場景卸載時 Reset 清參照）。
@@ -63,11 +70,16 @@ namespace ProbablyStolenItemQuickInfo
             /// 是 SingleNameKey，內容另外記在 Name* 欄位。排的途中是 null（出錯時留著 null，下一輪重排）。
             /// </summary>
             public string Key;
-            /// <summary>只有名稱一行時上次排好的字、顏色、名稱字級、字型（Key 是 SingleNameKey 時才有意義）。</summary>
+            /// <summary>
+            /// 只有名稱的框上次排好的字、顏色、名稱字級、字型、換行開關與物品寬度（WidthKey；換行關著時一律 0，物品寬度不影響排法）。
+            /// Key 是 SingleNameKey 時才有意義。
+            /// </summary>
             public string NameText;
             public LineColor NameColor;
             public float NameSize;
             public TMP_FontAsset NameFont;
+            public bool NameWrap;
+            public int NameWidth;
             /// <summary>這一輪這個物品有沒有用到這個框（沒用到的一直藏著）。</summary>
             public bool Used;
             /// <summary>
@@ -78,11 +90,13 @@ namespace ProbablyStolenItemQuickInfo
             public bool HasPos;
         }
 
-        /// <summary>一個物品的標籤：資訊框，和名稱位置是 Top 時的名稱框。框用到時才建。</summary>
+        /// <summary>一個物品的標籤：資訊框，和名稱畫在 Top、Center 時的名稱框。框用到時才建。</summary>
         sealed class Label
         {
             public Box Info, Name;
             public GameItemElement Item;
+            /// <summary>這一輪名稱畫在哪（Put 時記下）：每幀擺位置（Place）時名稱框照它對齊上緣或中心。</summary>
+            public NamePlace Place;
         }
 
         sealed class Layer
@@ -195,7 +209,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 給一個物品畫（或更新）標籤。找不到宿主節點時不畫，回 false。
-        /// 名稱位置是 Top 時名稱行（IsName）另外畫在名稱框，其他行在資訊框；InfoBox 時全部在資訊框（名稱是第一行、字級照名稱的）。
+        /// 名稱畫在 Top、Center 時名稱行（IsName）另外畫在名稱框，其他行在資訊框；InfoBox 時全部在資訊框（名稱是第一行、字級照名稱的）。
         /// </summary>
         internal static bool Put(GameItemElement item, List<Line> lines, LabelStyle style)
         {
@@ -215,7 +229,8 @@ namespace ProbablyStolenItemQuickInfo
             layer.Used++;
             label.Item = item;
 
-            var name = Rules.SplitName(lines, style.NamePosition, _info);
+            var name = Rules.SplitName(lines, style.Place, _info);
+            label.Place = style.Place;
             try
             {
                 float width = ItemWidth(layer, item);
@@ -229,9 +244,10 @@ namespace ProbablyStolenItemQuickInfo
                 else SetUsed(label.Info, false);
                 if (name.HasValue)
                 {
-                    label.Name ??= NewBox(layer, new Vector2(0.5f, 1f));
+                    label.Name ??= NewBox(layer, NamePivot(style.Place));
+                    SetNamePivot(label.Name, style.Place);
                     SetUsed(label.Name, true);
-                    FillName(label.Name, name.Value, style);
+                    FillName(layer, label.Name, name.Value, style, width);
                 }
                 else SetUsed(label.Name, false);
                 if (label.Info != null && label.Name != null) KeepNameAbove(label);
@@ -363,7 +379,25 @@ namespace ProbablyStolenItemQuickInfo
             return layer;
         }
 
-        /// <summary>黑底的框。pivot：資訊框 (0,0) 對齊物品左下角；名稱框 (0.5,1) 對齊物品上緣的中點。</summary>
+        /// <summary>
+        /// 名稱框的 pivot：Top (0.5,1) 對齊物品上緣的中點、往下長；Center (0.5,0.5) 對齊物品的中心、換行時上下各長一半。
+        /// （InfoBox 時名稱在資訊框裡，資訊框的 pivot 一律 (0,0)，不會叫這裡；照 Top 回。）
+        /// </summary>
+        static Vector2 NamePivot(NamePlace place) => place == NamePlace.Center ? new Vector2(0.5f, 0.5f) : new Vector2(0.5f, 1f);
+
+        /// <summary>
+        /// 同一個名稱框會在 Top、Center 之間換（按鍵前後名稱位置不同）：pivot 跟著這一輪的位置設。沒變就不設（改 pivot 會讓畫布重排）；
+        /// 變了就當作位置沒設過，Place 一定重設。
+        /// </summary>
+        static void SetNamePivot(Box box, NamePlace place)
+        {
+            var p = NamePivot(place);
+            if (box.Rt.pivot == p) return;
+            box.Rt.pivot = p;
+            box.HasPos = false;
+        }
+
+        /// <summary>黑底的框。pivot：資訊框 (0,0) 對齊物品左下角；名稱框見 NamePivot。</summary>
         static Box NewBox(Layer layer, Vector2 pivot)
         {
             var go = new GameObject("ItemQuickInfo_Label");
@@ -378,15 +412,16 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 資訊框（名稱位置是 InfoBox 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，/// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），再排字。內距照名稱以外的行的字級算（只有名稱時照名稱的）。
+        /// 資訊框（名稱畫在 InfoBox 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，/// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），長名稱換行開著時名稱行再照物品寬度斷成幾行（都在框的最上面），
+        /// 再排字。內距照名稱以外的行的字級算（只有名稱時照名稱的）。
         /// </summary>
         static void FillInfo(Layer layer, Box box, List<Line> lines, LabelStyle style, float itemWidth)
         {
-            // 只有名稱一行（名稱位置是 InfoBox 時的常駐名稱、只有名稱的箱子）：排法不看物品寬度（名稱行不算進 ChooseForm），
+            // 只有名稱一行（未顯示時選 BottomLeft 的常駐名稱、只有名稱的箱子）：排法不看物品寬度（名稱行不算進 ChooseForm），
             // 走不組 Key 的那條，內容沒變時不配置（常駐時每 0.25 秒一次）
             if (lines.Count == 1 && lines[0].IsName)
             {
-                FillSingleName(box, lines[0], style);
+                FillSingleName(layer, box, lines[0], style, itemWidth, false);
                 return;
             }
             string key = Key(lines, style, itemWidth);
@@ -395,48 +430,102 @@ namespace ProbablyStolenItemQuickInfo
             box.Key = null;
             float pad = Rules.Padding(lines, style.InfoSize, style.NameSize);
             var form = LabelForm.Normal;
+            List<string> nameLines = null;
             if (!float.IsInfinity(itemWidth))
             {
-                form = Rules.ChooseForm(lines, itemWidth - 2f * pad, s => MeasureWidth(layer, s, style));
+                float available = itemWidth - 2f * pad;
+                form = ChooseFormFor(layer, lines, available, style.Font, style.InfoSize);
+                // 長名稱換行：名稱行（只有第一行會是）用名稱的字級量；ChooseForm 照舊不把名稱算進判斷
+                if (style.WrapNames)
+                    foreach (var l in lines)
+                        if (l.IsName)
+                        {
+                            nameLines = WrapNameLines(layer, l.Text, available, style.Font, style.NameSize);
+                            break;
+                        }
                 if (layer.Measure != null) layer.Measure.text = ""; // 量完清掉，不畫出東西（只有名稱時沒有量）
             }
-            SetRows(box, Rules.Rows(lines, form), style, pad);
+            SetRows(box, Rules.WithWrappedName(Rules.Rows(lines, form), nameLines), style, pad, false);
             box.Key = key;
         }
 
-        /// <summary>名稱框（名稱位置是 Top）：一行，字級照名稱文字大小，內距也照它。</summary>
-        static void FillName(Box box, Line name, LabelStyle style) => FillSingleName(box, name, style);
+        /// <summary>
+        /// 量字的 lambda 包在這兩個小方法裡，不寫在 FillInfo、FillSingleName 本體：lambda 捕捉了參數（layer、字型、字級），
+        /// 編譯器會在方法一進來就建閉包物件（比快取比對、return 還早），寫在本體的話常駐名稱每 0.25 秒每個名稱都配置一次（2026-11-16 審查發現，
+        /// 1.1.0 起 FillInfo 就這樣）。搬到這裡以後只有真的要重排時才配置。
+        /// </summary>
+        static LabelForm ChooseFormFor(Layer layer, List<Line> lines, float available, TMP_FontAsset font, float size) =>
+            Rules.ChooseForm(lines, available, s => MeasureWidth(layer, s, font, size));
+
+        /// <summary>長名稱換行的量法：用名稱的字級量。不寫在呼叫端本體的原因見 ChooseFormFor。</summary>
+        static List<string> WrapNameLines(Layer layer, string text, float available, TMP_FontAsset font, float size) =>
+            Rules.WrapName(text, available, s => MeasureWidth(layer, s, font, size));
 
         /// <summary>
-        /// 只有名稱一行的框（Top 的名稱框、InfoBox 時只有名稱的資訊框）。排出來只看字、顏色、名稱字級、字型（內距、框高照名稱字級，
-        /// 不量物品寬度），所以直接和上次的這幾個比，一樣就不重排、不組 Key、不配置：常駐的名稱不按鍵也每 0.25 秒對每個名稱叫一次，
-        /// 每次配置會累積成週期性的 GC 卡頓。快取的規則和 FillInfo 一樣：排之前先清掉 Key、排版成功才記下，出錯時留著 null 下一輪重排。
-        /// Key 換成別的內容（完整資訊的 Key）時這裡的欄位自動失效（只有 Key 是 SingleNameKey 時才比）。
+        /// 名稱框（名稱畫在 Top、Center）：字級照名稱文字大小，內距也照它；長名稱換行開著時可能是幾行，每一行置中（框的 pivot 也是水平置中；
+        /// 使用者選的示意圖）。資訊框裡的名稱照舊靠左（FillInfo）。
         /// </summary>
-        static void FillSingleName(Box box, Line name, LabelStyle style)
+        static void FillName(Layer layer, Box box, Line name, LabelStyle style, float itemWidth) => FillSingleName(layer, box, name, style, itemWidth, true);
+
+        /// <summary>
+        /// 只有名稱的框（Top、Center 的名稱框、InfoBox 時只有名稱的資訊框）。排出來只看字、顏色、名稱字級、字型，長名稱換行開著時再加物品寬度
+        /// （內距、框高照名稱字級），所以直接和上次的這幾個比，一樣就不重排、不量、不斷行、不組 Key、不配置：常駐的名稱不按鍵也每 0.25 秒
+        /// 對每個名稱叫一次，每次配置會累積成週期性的 GC 卡頓。換行關著時物品寬度記成 0、不看，和 1.2.0 一樣只比字、顏色、字級、字型。
+        /// 換行開著、名稱比物品寬時斷成幾行（Rules.WrapName），每一行都是名稱色、名稱字級。
+        /// 快取的規則和 FillInfo 一樣：排之前先清掉 Key、排版成功才記下，出錯時留著 null 下一輪重排。
+        /// Key 換成別的內容（完整資訊的 Key）時這裡的欄位自動失效（只有 Key 是 SingleNameKey 時才比）。
+        /// center＝每一行置中（名稱框）或靠左（資訊框）：同一個框一直是同一種（名稱框和資訊框不會互換），所以不放進快取比對。
+        /// 本體不能有 lambda（見 ChooseFormFor），離線測試擋。
+        /// </summary>
+        static void FillSingleName(Layer layer, Box box, Line name, LabelStyle style, float itemWidth, bool center)
         {
+            bool wrap = style.WrapNames;
+            int width = wrap ? WidthKey(itemWidth) : 0;
             if (ReferenceEquals(box.Key, SingleNameKey) && box.NameText == name.Text && box.NameColor == name.Color
-                && box.NameSize == style.NameSize && ReferenceEquals(box.NameFont, style.Font)) return;
+                && box.NameSize == style.NameSize && ReferenceEquals(box.NameFont, style.Font)
+                && box.NameWrap == wrap && box.NameWidth == width) return;
             box.Key = null;
             _single.Clear();
             _single.Add(name);
-            try { SetRows(box, _single, style, Rules.Padding(_single, style.InfoSize, style.NameSize)); }
+            try
+            {
+                float pad = Rules.Padding(_single, style.InfoSize, style.NameSize);
+                if (wrap && !float.IsInfinity(itemWidth))
+                {
+                    var parts = WrapNameLines(layer, name.Text, itemWidth - 2f * pad, style.Font, style.NameSize);
+                    if (layer.Measure != null) layer.Measure.text = ""; // 量完清掉，不畫出東西
+                    if (parts.Count > 1)
+                    {
+                        _single.Clear();
+                        foreach (var s in parts) _single.Add(new Line(s, name.Color));
+                    }
+                }
+                SetRows(box, _single, style, pad, center);
+            }
             finally { _single.Clear(); }
             box.NameText = name.Text;
             box.NameColor = name.Color;
             box.NameSize = style.NameSize;
             box.NameFont = style.Font;
+            box.NameWrap = wrap;
+            box.NameWidth = width;
             box.Key = SingleNameKey;
         }
+
+        /// <summary>物品寬度比對用的整數（0.01 單位四捨五入，和 Key 一樣；拿不到寬度時是 -1）：浮點數的小誤差不會每輪重排。</summary>
+        static int WidthKey(float itemWidth) => float.IsInfinity(itemWidth) ? -1 : Mathf.RoundToInt(itemWidth * 100f);
 
         /// <summary>
         /// 排字：一行一個 TMP（一行一種顏色、行高自己控制），名稱行的字級照名稱文字大小、其他照文字大小，行高都是字級的 1.15 倍。
         /// 框寬照最寬那行實際的寬度：先定框、設字，再用不帶字串的 GetPreferredValues 量（量的是繁中 mod 轉換後的字；
         /// 官方格式寫法.md「和繁中 mod 共存」）。
+        /// center：每一行在框裡水平置中（Top、Center 的名稱框，長名稱換行後的多行），不然靠左。每一行的寬都是框的內寬（加 1 的餘裕），
+        /// 置中時往左挪半個餘裕，一行時置中和靠左畫在同一個位置。
         /// </summary>
-        static void SetRows(Box box, List<Line> rows, LabelStyle style, float pad)
+        static void SetRows(Box box, List<Line> rows, LabelStyle style, float pad, bool center)
         {
             while (box.Texts.Count < rows.Count) box.Texts.Add(NewText(box.Rt));
+            var align = center ? TextAlignmentOptions.Center : TextAlignmentOptions.Left;
             float width = 0f;
             for (int i = 0; i < box.Texts.Count; i++)
             {
@@ -445,6 +534,7 @@ namespace ProbablyStolenItemQuickInfo
                 if (t.gameObject.activeSelf != used) t.gameObject.SetActive(used);
                 if (!used) continue;
                 float size = Rules.RowSize(rows[i], style.InfoSize, style.NameSize);
+                if (t.alignment != align) t.alignment = align; // 置中、靠左都是垂直置中在這一行的高度裡（NewText）
                 if (t.font != style.Font) t.font = style.Font;
                 t.fontSize = size;
                 t.color = ColorOf(rows[i].Color);
@@ -459,17 +549,17 @@ namespace ProbablyStolenItemQuickInfo
                 float h = Rules.RowSize(rows[i], style.InfoSize, style.NameSize) * Rules.LineHeightRatio;
                 var rt = box.Texts[i].rectTransform;
                 rt.sizeDelta = new Vector2(width + 1f, h);
-                rt.anchoredPosition = new Vector2(pad, y);
+                rt.anchoredPosition = new Vector2(center ? pad - 0.5f : pad, y);
                 y += h;
             }
             box.Rt.sizeDelta = new Vector2(width + 2f * pad, Rules.BoxHeight(rows, style.InfoSize, style.NameSize, pad));
         }
 
         /// <summary>
-        /// 量一行資訊字（文字大小的字級）的寬：用圖層的量字 TMP（第一次用到時建；圖層這時是啟用的，Awake 會跑），量法同 SetRows。
-        /// 字是透明的，量完由 FillInfo 清掉。
+        /// 量一行字的寬（資訊行用文字大小的字級、長名稱換行用名稱的字級）：用圖層的量字 TMP（第一次用到時建；圖層這時是啟用的，Awake 會跑），
+        /// 量法同 SetRows。字是透明的，量完由 FillInfo、FillSingleName 清掉。
         /// </summary>
-        static float MeasureWidth(Layer layer, string text, LabelStyle style)
+        static float MeasureWidth(Layer layer, string text, TMP_FontAsset font, float size)
         {
             if (layer.Measure == null)
             {
@@ -478,9 +568,9 @@ namespace ProbablyStolenItemQuickInfo
                 layer.Measure.color = new Color32(0, 0, 0, 0);
             }
             var t = layer.Measure;
-            if (t.font != style.Font) t.font = style.Font;
-            t.fontSize = style.InfoSize;
-            t.rectTransform.sizeDelta = new Vector2(10000f, style.InfoSize * Rules.LineHeightRatio);
+            if (t.font != font) t.font = font;
+            t.fontSize = size;
+            t.rectTransform.sizeDelta = new Vector2(10000f, size * Rules.LineHeightRatio);
             t.text = text;
             return t.GetPreferredValues(10000f, 0f).x;
         }
@@ -535,7 +625,8 @@ namespace ProbablyStolenItemQuickInfo
             ItemRect(layer, item, out float minX, out _, out float maxX, out _) ? maxX - minX : float.PositiveInfinity;
 
         /// <summary>
-        /// 把框擺到物品上（ItemRect）：資訊框的左下角對齊物品的左下角；名稱框的上緣中點對齊物品上緣的中點。
+        /// 把框擺到物品上（ItemRect）：資訊框的左下角對齊物品的左下角；名稱框 Top 時上緣中點對齊物品上緣的中點，
+        /// Center 時中心對齊物品的中心（旋轉過的物品也是外接矩形的中心）。名稱框的 pivot 在 Put 時已經照位置設好。
         /// </summary>
         static void Place(Layer layer, Label label)
         {
@@ -544,7 +635,10 @@ namespace ProbablyStolenItemQuickInfo
             if (label.Info != null && label.Info.Used)
                 SetPosition(label.Info, new Vector3(minX, minY, 0f), skipSame);
             if (label.Name != null && label.Name.Used)
-                SetPosition(label.Name, new Vector3((minX + maxX) * 0.5f, maxY, 0f), skipSame);
+            {
+                float y = label.Place == NamePlace.Center ? (minY + maxY) * 0.5f : maxY;
+                SetPosition(label.Name, new Vector3((minX + maxX) * 0.5f, y, 0f), skipSame);
+            }
         }
 
         /// <summary>
@@ -571,13 +665,14 @@ namespace ProbablyStolenItemQuickInfo
         };
 
         /// <summary>
-        /// 排好的內容：字級（資訊、名稱）、字型、物品寬度（影響長短、拆不拆）與每行的字（長、短、拆開的前綴與數值）、顏色。
-        /// 名稱位置不用另外記：它決定名稱行在不在這個框裡，已經在行裡了。
+        /// 排好的內容：字級（資訊、名稱）、字型、長名稱換行開關、物品寬度（影響長短、拆不拆、名稱怎麼斷）
+        /// 與每行的字（長、短、拆開的前綴與數值）、顏色。名稱位置不用另外記：它決定名稱行在不在這個框裡，已經在行裡了。
         /// </summary>
         static string Key(List<Line> lines, LabelStyle style, float itemWidth)
         {
             var sb = new System.Text.StringBuilder();
             sb.Append(style.InfoSize).Append('|').Append(style.NameSize).Append('|').Append(style.Font != null ? style.Font.GetInstanceID() : 0).Append('|');
+            sb.Append(style.WrapNames ? 'w' : '-').Append('|');
             if (float.IsInfinity(itemWidth)) sb.Append("inf");
             else sb.Append(Mathf.RoundToInt(itemWidth * 100f));
             foreach (var l in lines)

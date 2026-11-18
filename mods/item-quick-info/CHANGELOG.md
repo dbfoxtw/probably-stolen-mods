@@ -1,5 +1,25 @@
 # 版本紀錄（Changelog）
 
+## v1.3.0（2026-11-18）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
+
+- 文字大小多一級 ExtraLarge（特大），「文字大小」和「名稱文字大小」都可以選。
+- 名稱位置拆成兩個設定。「名稱位置（資訊框未顯示時）」管沒按鍵、只顯示名稱的時候（要打開「總是顯示名稱」），可以選 Top（物品上方置中）、Center（物品中間）、BottomLeft（物品左下角）；「名稱位置（資訊框顯示時）」就是原本的名稱位置。原本選 InfoBox 的，未顯示時自動設成 BottomLeft，畫面和以前一樣。
+- 新設定「長名稱換行」（一開始是關的）：打開時，比物品寬的名稱會換行，寬度不超過物品。
+- beta 分支 100-REV15：反應爐的升級樹點了 Industrial Power（工業電力）以後，能量陣列、充能器今晚會充的電照遊戲加倍顯示（+4kJ、+6kJ）。
+- 也支援 beta 分支的 VERSION 100-REV15。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
+
+- New text size ExtraLarge, for both Text size and Name text size.
+- Name position is now two settings. Name position (info box hidden) is for when only names are on screen without the key (needs Always show names): Top (centered at the top), Center (middle of the item) or BottomLeft (bottom-left corner). Name position (info box shown) is the old Name position. If you had InfoBox, the new setting starts at BottomLeft, so names stay where they were.
+- New setting Wrap long names (off at first): names wider than the item wrap onto more lines to stay within the item's width.
+- 100-REV15 beta: once a reactor's upgrade tree has Industrial Power, tonight's charge from PowerBlocs and Rechargers shows doubled (+4kJ, +6kJ), as the game does.
+- Also supports the 100-REV15 beta.
+
 ## v1.2.0（2026-11-15）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

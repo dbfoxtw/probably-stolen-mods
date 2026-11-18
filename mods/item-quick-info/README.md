@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：水量、水質、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)（訂閱就好，見下面「安裝」），或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Item Quick Info 的最新版，標記 `item-quick-info-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -27,8 +27,9 @@
   - 輸出區的成品數（進料斗、出料斗不算）。
   - 機器裡裝的水的水量與水質。
 - **任何物品**：耐久度（剩 1/4 以下變橘色）、金屬錠的純度等級、還能用幾次（用完變紅）、贓物的熱度（紅字）。
-- **名稱**：你取過名稱的箱子、背包、機器和其他物品，用淺藍色顯示在物品上方。也可以在設定改成放在資訊框的第一行。
-  - 設定打開「總是顯示名稱」，名稱就不用按鍵、一直顯示，其他資訊照舊按鍵才顯示。料斗自動編的號碼（#1、#2…）照舊只在按鍵時顯示。
+- **名稱**：你取過名稱的箱子、背包、機器和其他物品，用淺藍色顯示在物品上方置中；按鍵顯示資訊時，也可以在設定改成放在資訊框的第一行。
+  - 設定打開「總是顯示名稱」，名稱就不用按鍵、一直顯示，其他資訊照舊按鍵才顯示。料斗自動編的號碼（#1、#2…）照舊只在按鍵時顯示。只顯示名稱時的位置另外設定，可以放在物品上方置中、中間或左下角。
+  - 設定打開「長名稱換行」，比物品寬的名稱會換行，寬度不超過物品。
 - **字的大小與寫法**：文字大小、每行開頭用短的字（`水`）還是長的詞（`水量`）都可以在設定改。一格寬的物品放不下時，那個資訊框自動改用短的字，還放不下就拆成兩行。
 
 我還沒玩過所有的專精，之後會陸續加上新的資訊。新加的資訊預設都會顯示，不想看的話，可以在主選單「模組」畫面的設定裡關掉。有希望優先加的資訊，歡迎到[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)留言，我會評估。
@@ -43,14 +44,14 @@
 
 | 段落 | 設定 |
 |---|---|
-| General | 按鍵方式（Hold＝按住顯示、Toggle＝按一下切換）、每行開頭的字（Short／Long）、文字大小（Small／Medium／Large） |
-| Names | 總是顯示名稱、名稱位置（Top＝物品上方置中、InfoBox＝資訊框的第一行）、名稱文字大小、顯示箱子名稱、顯示機器名稱、顯示其他物品名稱 |
+| General | 按鍵方式（Hold＝按住顯示、Toggle＝按一下切換）、每行開頭的字（Short／Long）、文字大小（Small／Medium／Large／ExtraLarge） |
+| Names | 總是顯示名稱、名稱位置（資訊框未顯示時：Top＝物品上方置中、Center＝物品中間、BottomLeft＝物品左下角）、名稱位置（資訊框顯示時：Top＝物品上方置中、InfoBox＝資訊框的第一行）、名稱文字大小、長名稱換行、顯示箱子名稱、顯示機器名稱、顯示其他物品名稱 |
 | Water containers | 顯示水量、顯示水質、總是顯示真實水質 |
 | Batteries | 顯示電池電量、顯示今晚會充多少電 |
 | Machines | 顯示電量、顯示今晚的電力收支、顯示今晚不會運作的原因、顯示進度、顯示輸出區的成品數、顯示機器裡的水資訊 |
 | Items | 顯示贓物熱度、顯示使用次數、顯示耐久度、顯示金屬錠純度 |
 
-「總是顯示名稱」一開始是關的，其他開關一開始全部打開。下拉選單的選項只有英文（遊戲的設定視窗直接顯示選項的值），中文對照寫在每個設定的說明裡。這些設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.item-quick-info.json`。
+「總是顯示名稱」「長名稱換行」一開始是關的，其他開關一開始全部打開。下拉選單的選項只有英文（遊戲的設定視窗直接顯示選項的值），中文對照寫在每個設定的說明裡。這些設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.item-quick-info.json`。
 
 ## 語言
 
@@ -88,7 +89,7 @@
 
 - **剩幾天**照機器現在的作業速度算，假設之後每晚都會運作。模組效果（例如過載、退化）之後改了速度，天數會跟著變；中途缺料、缺水、沒電停下來的晚上也不算。
 - **原因與收支**只看機器裡現在的東西：接了進料斗的機器，材料格空著時會寫缺料、收支也不扣今晚的耗電，就算料斗晚上會補上。
-- 名稱或資訊框比物品寬時（長名稱、大字）會伸出物品外，蓋住旁邊的物品；物品在格子邊緣時，伸出去太多的部分會被裁掉。名稱在物品上方時，一格高的物品的名稱和資訊框會疊在一起。
+- 名稱或資訊框比物品寬時（長名稱、大字）會伸出物品外，蓋住旁邊的物品；物品在格子邊緣時，伸出去太多的部分會被裁掉。名稱在物品上方時，一格高的物品的名稱和資訊框會疊在一起。打開「長名稱換行」可以讓名稱不超出物品寬度。
 - 遊戲之後如果改了物品或機器的做法，要等 mod 更新。
 
 ## 相容性
@@ -101,7 +102,7 @@
 
 一般玩家請看上面的「安裝」，不需要建置。
 
-需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及正式版的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀）。
+需要 Windows、Python 3.10 以上（只用標準函式庫）、.NET SDK 8 以上，以及 beta 分支 VERSION 100-REV15 以後的遊戲（編譯時參考遊戲的 `Probably Stolen_Data\Managed`，只讀；今晚充電的計算用到 REV15 新加的方法，建好的 mod 裝在 REV13 上照樣能跑）。
 
 原始碼在合併的 repo [dbfoxtw/probably-stolen-mods](https://github.com/dbfoxtw/probably-stolen-mods) 的 `mods/item-quick-info` 資料夾：先 `git clone https://github.com/dbfoxtw/probably-stolen-mods.git`，以下的指令都在 `mods\item-quick-info` 資料夾裡執行。
 
@@ -119,7 +120,7 @@
 
 ## English
 
-A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
+A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen; release to hide. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383), or download from the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Item Quick Info, tagged `item-quick-info-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or a comment on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383).
 
@@ -140,8 +141,9 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - How many items are in its output (Intake and Outlet Hoppers don't count).
   - Volume and purity of the water inside the machine.
 - **Any item**: durability (orange at 1/4 or less), a Metal Ingot's purity grade, uses left (red when used up), and the heat of a stolen item (in red).
-- **Names**: the names you gave containers, backpacks, machines and other items, in light blue above the item. You can also put them on the first line of the info box in the settings.
-  - Turn on Always show names to keep names on screen without the key; the other info still needs the key. Hopper numbers the game assigns (#1, #2…) still show only with the key.
+- **Names**: the names you gave containers, backpacks, machines and other items, in light blue, centered at the top of the item. While the key shows the info, you can put them on the first line of the info box instead in the settings.
+  - Turn on Always show names to keep names on screen without the key; the other info still needs the key. Hopper numbers the game assigns (#1, #2…) still show only with the key. Where names go when only names are shown is a separate setting: the top, the middle or the bottom-left corner of the item.
+  - Turn on Wrap long names to wrap names wider than the item onto more lines, within the item's width.
 - **Text size and line prefixes**: change the text size, and whether each line starts with a short word (`W`) or a long one (`Vol`), in the settings. When an info box doesn't fit an item one cell wide, it switches to the short words, and splits into two lines if it still doesn't fit.
 
 I haven't played every specialization yet, so more info will be added over time. New info is shown by default; you can turn it off in the mod's settings on the Mods screen of the main menu. If there's info you'd like added first, feel free to leave a comment on the [Workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383) and I'll consider it.
@@ -155,14 +157,14 @@ The names and info boxes come from this mod, not the base game; please report pr
 
 | Section | Settings |
 |---|---|
-| General | Key mode (Hold = show while held, Toggle = press to switch), Line prefixes (Short / Long), Text size (Small / Medium / Large) |
-| Names | Always show names, Name position (Top = centered at the top of the item, InfoBox = first line of the info box), Name text size, Show container names, Show machine names, Show other item names |
+| General | Key mode (Hold = show while held, Toggle = press to switch), Line prefixes (Short / Long), Text size (Small / Medium / Large / ExtraLarge) |
+| Names | Always show names; Name position (info box hidden): Top = centered at the top of the item, Center = middle of the item, BottomLeft = bottom-left corner of the item; Name position (info box shown): Top = centered at the top of the item, InfoBox = first line of the info box; Name text size; Wrap long names; Show container names; Show machine names; Show other item names |
 | Water containers | Show water volume, Show water purity, Always show real water purity |
 | Batteries | Show battery charge, Show tonight's charge |
 | Machines | Show machine power, Show tonight's net energy, Show why a machine won't run tonight, Show machine progress, Show output count, Show water info in machines |
 | Items | Show stolen heat, Show uses left, Show durability, Show ingot purity |
 
-Always show names starts off; all the other switches start on. The settings are kept in `ModConfigs\dbfoxtw.item-quick-info.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
+Always show names and Wrap long names start off; all the other switches start on. The settings are kept in `ModConfigs\dbfoxtw.item-quick-info.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
 **Languages:** the info boxes, the key bind and the settings follow the game language: English, Simplified Chinese (Traditional Chinese with the [Traditional Chinese mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)), Russian, German, Japanese, French, Spanish or Polish, English for any other language. Section titles (General, Names…) and dropdown options in the settings window are always in English.
 
@@ -193,7 +195,7 @@ If the mod is both in your `Mods` folder and subscribed on the Workshop, the gam
 
 - **Days left** goes by the machine's current Progress Speed and assumes it runs every night. If module effects (e.g. Overcharged, Degrading) change the speed later, the days change with it; nights it stops for lack of input, water or power aren't counted either.
 - **Reasons** and **tonight's net energy** only look at what's in the machine now: a machine fed by an Intake Hopper says No input while its input slot is empty, and its net energy leaves out tonight's use, even if the hopper will fill it at night.
-- Names or info boxes wider than the item (long names, large text) stick out and cover the items next to it; on an item at the edge of a grid, what sticks out too far is cut off. With names at the top, the name and the info box of an item one cell high overlap.
+- Names or info boxes wider than the item (long names, large text) stick out and cover the items next to it; on an item at the edge of a grid, what sticks out too far is cut off. With names at the top, the name and the info box of an item one cell high overlap. Turn on Wrap long names to keep names within the item's width.
 - If a game update changes how items or machines work, wait for a mod update.
 
 **Compatibility**
@@ -202,6 +204,6 @@ If the mod is both in your `Mods` folder and subscribed on the Workshop, the gam
 - "Container & Tab Switch" on the Steam Workshop also uses Tab: if you use both, change one of them to another key (in Options → Key Binds).
 - Other mods that also draw markers on items (e.g. ones that always show water levels or battery charge) may put theirs on the same item as this mod's.
 
-**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\item-quick-info` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the installed full game, whose `Probably Stolen_Data\Managed` is referenced at build time). It installs into `Mods\dbfoxtw.item-quick-info\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many info boxes were drawn and what the first 20 items show each time the info boxes appear. `uninstall.bat` removes it (settings and key are kept). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.item-quick-info` folder, the same content as on the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
+**Build from source** (developers only): clone https://github.com/dbfoxtw/probably-stolen-mods and run `install.bat` in `mods\item-quick-info` with the game closed (requires Python 3.10+, the .NET SDK 8+ and the game on the 100-REV15 beta or later, whose `Probably Stolen_Data\Managed` is referenced at build time; tonight's charge uses a method added in REV15, and the built mod still runs on REV13). It installs into `Mods\dbfoxtw.item-quick-info\`; activate it on the Mods screen and restart the first time. Add `--game "game folder"` if the game is not in a default Steam library, and `--debug` to log, in `Player.log` in the save folder, how many info boxes were drawn and what the first 20 items show each time the info boxes appear. `uninstall.bat` removes it (settings and key are kept). `python tools/install.py package` builds the player zip (its top level is the `dbfoxtw.item-quick-info` folder, the same content as on the Steam Workshop); `dotnet run --project mod\verify` runs the offline tests.
 
 **License:** MIT for the code in this folder (`mods/item-quick-info`). The game's text, names, and assets belong to Questing Goose Studio.

@@ -12,10 +12,14 @@ cfg_item_name,Show other item names
 cfg_item_name_tip,"Show the name you gave any other item (for example a Jug of Water or a Metal Ingot), in light blue."
 cfg_always_names,Always show names
 cfg_always_names_tip,"When on, names stay on screen without the key; the other info still needs the key.\nWhich names appear still follows the three name switches below."
-cfg_name_position,Name position
-cfg_name_position_tip,Where names are shown.\nTop = centered at the top of the item\nInfoBox = first line of the info box
+cfg_idle_name_position,Name position (info box hidden)
+cfg_idle_name_position_tip,"Where names are shown when only names are on screen, without the key. Needs Always show names on.\nTop = centered at the top of the item\nCenter = middle of the item\nBottomLeft = bottom-left corner of the item"
+cfg_name_position,Name position (info box shown)
+cfg_name_position_tip,Where names are shown while the key shows the info.\nTop = centered at the top of the item\nInfoBox = first line of the info box
 cfg_name_text_size,Name text size
-cfg_name_text_size_tip,"Size of the names: Small, Medium or Large, the same sizes as Text size."
+cfg_name_text_size_tip,"Size of the names: Small, Medium, Large or ExtraLarge, the same sizes as Text size."
+cfg_wrap_names,Wrap long names
+cfg_wrap_names_tip,"When on, names wider than the item wrap onto more lines to stay within the item's width.\nWhen off, long names extend past the item."
 cfg_water_volume,Show water volume
 # {0} = the volume line with the short prefix ("W 4000ml"), {1} = with the long prefix ("Vol 4000ml")
 cfg_water_volume_tip,"Show how much water a container holds, in ml.\nShort: {0}\nLong: {1}"
@@ -60,7 +64,7 @@ cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example {0}."
 cfg_key_mode,Key mode
 cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
 cfg_text_size,Text size
-cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium or Large. One item cell is 16 units; the text is 3.5, 4.5 or 6 units tall."
+cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium, Large or ExtraLarge. One item cell is 16 units; the text is 3.5, 4.5, 6 or 8 units tall."
 cfg_prefix,Line prefixes
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
 # 3 days left, output count, stolen heat, uses left, durability. The separator (", ") is yours to choose for your language.

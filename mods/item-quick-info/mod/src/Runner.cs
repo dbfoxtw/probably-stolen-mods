@@ -174,7 +174,7 @@ namespace ProbablyStolenItemQuickInfo
                 D = Settings.ReadDisplay(),
                 RealPurity = Settings.RealPurity,
             };
-            var style = Style(font);
+            var style = Style(font, ShowState.Full);
             long t = perf ? Perf.Now() : 0;
             var items = ItemReader.VisibleItems(out int nodes);
             long find = 0, read = 0, put = 0, finish = 0;
@@ -227,14 +227,20 @@ namespace ProbablyStolenItemQuickInfo
             }
         }
 
-        /// <summary>字級（資訊、名稱）、名稱位置每輪重讀（按套用就生效）。完整資訊與常駐名稱用同一個樣式（外觀不變）。</summary>
-        static LabelStyle Style(TMPro.TMP_FontAsset font) =>
-            new LabelStyle(Rules.FontSize(Settings.TextSize), Rules.FontSize(Settings.NameTextSize), Settings.NamePosition, font);
+        /// <summary>
+        /// 字級（資訊、名稱）、名稱位置、長名稱換行每輪重讀（按套用就生效）。完整資訊與常駐名稱的外觀一樣，
+        /// 只有名稱位置照狀態分（Rules.NamePlaceOf）：完整資訊照「名稱位置（資訊框顯示時）」、只畫名稱照「名稱位置（資訊框未顯示時）」。
+        /// </summary>
+        static LabelStyle Style(TMPro.TMP_FontAsset font, ShowState state) =>
+            new LabelStyle(Rules.FontSize(Settings.TextSize), Rules.FontSize(Settings.NameTextSize),
+                Rules.NamePlaceOf(state, Settings.IdleNamePosition, Settings.NamePosition), Settings.WrapLongNames, font);
 
         /// <summary>
         /// 只畫名稱（總是顯示名稱）：照樣找畫面上的物品（ItemReader.VisibleItems），但每個物品只讀名稱（ItemReader.ReadName：
-        /// 不讀水、電、機器、熱度這些，也不碰全店清單與今晚的充電表），料斗自動編的號碼不畫。名稱開關、字級、名稱位置每輪重讀。
-        /// 標籤物件池和完整資訊共用：從完整資訊回到這裡時，同一輪就把資訊框藏起來（Top）或換成只有名稱一行（InfoBox）。
+        /// 不讀水、電、機器、熱度這些，也不碰全店清單與今晚的充電表），料斗自動編的號碼不畫。名稱開關、字級、名稱位置、長名稱換行每輪重讀；
+        /// 名稱位置看「資訊框未顯示時」（Top、Center、BottomLeft）。
+        /// 標籤物件池和完整資訊共用：從完整資訊回到這裡時，同一輪就把資訊框藏起來（Top、Center）或換成只有名稱一行（BottomLeft），
+        /// 名稱框的位置與 pivot 也在同一輪換過去（按鍵時是 Top、這裡是 Center 的情形）。
         /// 讀與畫各自包 try/catch，出錯不畫那個、LogOnce。除錯模式（perf 標記開著時不記）在常駐名稱開始出現的那一輪記一行。
         /// 字型還沒準備好（這一輪不畫）時先全部藏起來：剛放開鍵時圖層裡還是完整資訊，不能留著（整輪出錯時 Tick 也會藏）。
         /// 每個物品的行寫進同一個 _nameLines（LabelRenderer.Put 不留著傳進去的清單），名稱框內容沒變時也不重排（LabelRenderer.FillSingleName）：
@@ -249,7 +255,7 @@ namespace ProbablyStolenItemQuickInfo
                 return;
             }
             var d = Settings.ReadDisplay();
-            var style = Style(font);
+            var style = Style(font, ShowState.Names);
             var items = ItemReader.VisibleItems(out _);
             LabelRenderer.Begin();
             foreach (var el in items)
@@ -271,7 +277,7 @@ namespace ProbablyStolenItemQuickInfo
             bool log = _pinnedCount < 0 || (_pinnedCount == 0 && count > 0);
             _pinnedCount = count;
             if (log && ItemQuickInfoMod.Debug && !Perf.Cycling)
-                ItemQuickInfoMod.Log.Msg($"常駐名稱（{Settings.NamePosition}）：畫面上 {items.Count} 個物品，畫了 {count} 個名稱；設定：{Settings.Describe()}");
+                ItemQuickInfoMod.Log.Msg($"常駐名稱（{Settings.IdleNamePosition}）：畫面上 {items.Count} 個物品，畫了 {count} 個名稱；設定：{Settings.Describe()}");
         }
     }
 }

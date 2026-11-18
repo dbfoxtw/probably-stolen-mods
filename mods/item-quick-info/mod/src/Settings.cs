@@ -8,7 +8,8 @@ namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 設定（寫法照一鍵關窗的 Settings）：
-    /// - 每種資訊的開關、「一律顯示真實水質」「按鍵方式」「字級」「每行開頭的字」「總是顯示名稱」「名稱位置」「名稱文字大小」放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json，主選單模組畫面的齒輪）。
+    /// - 每種資訊的開關、「一律顯示真實水質」「按鍵方式」「字級」「每行開頭的字」「總是顯示名稱」「名稱位置」兩個（資訊框未顯示時、顯示時）、
+    ///   「名稱文字大小」「長名稱換行」放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json，主選單模組畫面的齒輪）。
     ///   每次重算標籤時才讀值，玩家按套用就生效（不標 requiresRestart）。
     /// - 顯示的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
     ///   ModData\dbfoxtw_item-quick-info\settings.json（{"key": "Tab"}，KeyCode 名稱）。不放 ModConfig：放了設定視窗會多一格同一個值的文字欄。
@@ -28,16 +29,19 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         const string SectionNames = "Names", SectionWater = "Water containers", SectionBatteries = "Batteries",
             SectionMachines = "Machines", SectionItems = "Items", SectionGeneral = "General";
-        /// <summary>名稱位置的 key（MigrateNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
+        /// <summary>名稱位置（資訊框顯示時）的 key（MigrateNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
         const string NamePositionKey = "NamePosition";
+        /// <summary>名稱位置（資訊框未顯示時）的 key（1.3.0；MigrateIdleNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
+        const string IdleNamePositionKey = "IdleNamePosition";
 
-        static ConfigEntry<bool> _alwaysNames, _containerName, _machineName, _itemName, _waterVolume, _waterPurity, _realPurity, _batteryCharge, _batteryTonightCharge,
+        static ConfigEntry<bool> _alwaysNames, _wrapNames, _containerName, _machineName, _itemName, _waterVolume, _waterPurity, _realPurity, _batteryCharge, _batteryTonightCharge,
             _machinePower, _machineTonightNet, _machineReason, _machineProgress, _machineOutput, _machineWater,
             _stolenHeat, _useCount, _durability, _ingotPurity;
         static ConfigEntry<KeyMode> _keyMode;
         static ConfigEntry<TextSize> _textSize, _nameTextSize;
         static ConfigEntry<PrefixStyle> _prefix;
         static ConfigEntry<NamePosition> _namePosition;
+        static ConfigEntry<IdleNamePosition> _idleNamePosition;
         static KeyCode _key = DefaultKey;
         /// <summary>settings.json 裡讀到的其他欄位（新版 mod 加的），寫回時保留。</summary>
         static JObject _keyJson;
@@ -92,7 +96,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 字級（預設中）。下拉選單直接顯示選項的名稱、不經過翻譯（ModConfigWindow 用 entry.Choices），存的也是名稱：
-        /// 翻成中文的話換語言就對不上，所以用英文的 Small／Medium／Large，說明裡寫中文對照。
+        /// 翻成中文的話換語言就對不上，所以用英文的 Small／Medium／Large／ExtraLarge（特大是 1.3.0 加的），說明裡寫中文對照。
         /// </summary>
         internal static TextSize TextSize => _textSize != null ? _textSize.Value : TextSize.Medium;
 
@@ -102,13 +106,26 @@ namespace ProbablyStolenItemQuickInfo
         internal static PrefixStyle Prefix => _prefix != null ? _prefix.Value : PrefixStyle.Long;
 
         /// <summary>
-        /// 名稱位置（預設 Top＝名稱自己一個框、貼在物品上緣置中；InfoBox＝資訊框的第一行）。三種名稱（箱子、機器、其他物品）都照它。
+        /// 名稱位置（資訊框顯示時；預設 Top＝名稱自己一個框、貼在物品上緣置中；InfoBox＝資訊框的第一行）：按鍵叫出資訊時用。
+        /// 三種名稱（箱子、機器、其他物品）都照它。key 照舊是 NamePosition、選項照舊兩個（1.3.0 只改了顯示的名稱）。
         /// 和字級一樣下拉選單直接顯示名稱（Top／InfoBox，Top 在前），說明裡寫中文對照。InfoBox 在 1.1.0 以前叫 Label（MigrateNamePosition）。
         /// </summary>
         internal static NamePosition NamePosition => _namePosition != null ? _namePosition.Value : NamePosition.Top;
 
-        /// <summary>名稱的字級（預設大）：三級和「文字大小」一樣（Rules.FontSize）；「文字大小」只管名稱以外的行。</summary>
+        /// <summary>
+        /// 名稱位置（資訊框未顯示時；1.3.0，預設 Top）：總是顯示名稱開著、沒按鍵時（只畫名稱）用。Top、Center、BottomLeft（下拉選單照這個順序）。
+        /// 更新前選 InfoBox 的玩家第一次讀到時自動設成 BottomLeft（MigrateIdleNamePosition）。
+        /// </summary>
+        internal static IdleNamePosition IdleNamePosition => _idleNamePosition != null ? _idleNamePosition.Value : IdleNamePosition.Top;
+
+        /// <summary>名稱的字級（預設大）：四級和「文字大小」一樣（Rules.FontSize）；「文字大小」只管名稱以外的行。</summary>
         internal static TextSize NameTextSize => _nameTextSize != null ? _nameTextSize.Value : TextSize.Large;
+
+        /// <summary>
+        /// 長名稱換行（1.3.0，預設關）：開著時比物品寬的名稱換行（Rules.WrapName），每一行不超過物品寬；關著時照舊一行、伸出去。
+        /// 每輪重算時讀。還沒讀設定時照預設（關）。
+        /// </summary>
+        internal static bool WrapLongNames => _wrapNames != null && _wrapNames.Value;
 
         /// <summary>
         /// 說明裡例子用的資訊框字串：目前語言、長前綴的那份（短的是 Short）。打開設定視窗、顯示說明時才取，換了語言也跟著換。
@@ -127,13 +144,20 @@ namespace ProbablyStolenItemQuickInfo
             _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionGeneral, () => Loc.Get("cfg_text_size"), () => Loc.Get("cfg_text_size_tip"));
             // Names 段接在 General 後面：名稱在物品上緣（Top）或資訊框的第一行（InfoBox），都在資訊的上面，
             // 所以排在資訊的段落前面，資訊的段落再照標籤由上往下的順序排。
-            // 段落裡總是顯示名稱排最前面（決定名稱什麼時候出現，比位置、大小更先要看到），接著名稱位置、名稱文字大小，
-            // 三個名稱開關在後面（2026-11-08 使用者要的；原本名稱位置、名稱文字大小接在三個開關後面）
+            // 段落裡總是顯示名稱排最前面（決定名稱什麼時候出現，比位置、大小更先要看到），接著名稱位置兩個（未顯示時、顯示時）、
+            // 名稱文字大小、長名稱換行，三個名稱開關在後面（2026-11-08 使用者要的；原本名稱位置、名稱文字大小接在三個開關後面）
             _alwaysNames = cfg.Define("AlwaysShowNames", false, SectionNames, () => Loc.Get("cfg_always_names"), () => Loc.Get("cfg_always_names_tip"));
+            // 名稱位置（資訊框未顯示時，1.3.0）：設定檔裡原本有沒有這個 key 要在 DefineEnum 之前探測（DefineEnum 之後讀到的都是值，分不出是預設還是存的）；
+            // 轉換要看「顯示時」讀完的值，所以等兩個都定義完才做（MigrateIdleNamePosition）
+            string idleRaw = ProbeRaw(cfg, IdleNamePositionKey, "名稱位置（資訊框未顯示時）不照舊設定轉換");
+            _idleNamePosition = cfg.DefineEnum("IdleNamePosition", IdleNamePosition.Top, SectionNames,
+                () => Loc.Get("cfg_idle_name_position"), () => Loc.Get("cfg_idle_name_position_tip"));
             // 選項 Label 改名 InfoBox：舊值要在 DefineEnum 讀值之前先探測，DefineEnum 之後再改（MigrateNamePosition）
             _namePosition = MigrateNamePosition(cfg, () =>
                 cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => Loc.Get("cfg_name_position"), () => Loc.Get("cfg_name_position_tip")));
+            MigrateIdleNamePosition(idleRaw);
             _nameTextSize = cfg.DefineEnum("NameTextSize", TextSize.Large, SectionNames, () => Loc.Get("cfg_name_text_size"), () => Loc.Get("cfg_name_text_size_tip"));
+            _wrapNames = cfg.Define("WrapLongNames", false, SectionNames, () => Loc.Get("cfg_wrap_names"), () => Loc.Get("cfg_wrap_names_tip"));
             _containerName = cfg.Define("ShowContainerName", true, SectionNames, () => Loc.Get("cfg_container_name"), () => Loc.Get("cfg_container_name_tip"));
             _machineName = cfg.Define("ShowMachineName", true, SectionNames, () => Loc.Get("cfg_machine_name"), () => Loc.Get("cfg_machine_name_tip"));
             // 其他物品的名稱：水桶、金屬錠這些沒有自己視窗的物品，排在箱子、機器後面
@@ -170,32 +194,12 @@ namespace ProbablyStolenItemQuickInfo
         /// 探測到 Label 就 Set(InfoBox)（遊戲會存回設定檔，下次就是 InfoBox）。轉的那一次遊戲照樣記一行 Label 讀不懂的警告，之後不會再有。
         /// ModConfig.Entries 現在是內部的 List，不是 List 時（遊戲改了）不探測、記一行（不能留下探測的設定項），存著 Label 的玩家名稱位置變回預設 Top。
         /// 探測出錯也一樣跳過，不能讓設定整個壞掉。之後不想轉的話，拿掉這個方法、Init 直接叫 define 就好。
+        /// 1.3.0 起探測和名稱位置（資訊框未顯示時）的探測共用 ProbeRaw。1.0.x 存 Label 的玩家：這裡先轉成 InfoBox，
+        /// 接著 MigrateIdleNamePosition 看到 InfoBox 再把未顯示時設成 BottomLeft。
         /// </summary>
         static ConfigEntry<NamePosition> MigrateNamePosition(ModConfig cfg, Func<ConfigEntry<NamePosition>> define)
         {
-            bool old = false;
-            try
-            {
-                if (cfg.Entries is List<ConfigEntry> list)
-                {
-                    try
-                    {
-                        var probe = cfg.Define(NamePositionKey, "", SectionNames, null);
-                        old = Rules.IsOldNamePosition(probe.Value);
-                    }
-                    finally
-                    {
-                        // 探測一定要拿掉（中途出錯也是）：DefineEnum 還沒叫，清單裡這個 key 只會是探測
-                        list.RemoveAll(e => e != null && e.Key == NamePositionKey);
-                    }
-                }
-                else ItemQuickInfoMod.Log.Warning("讀不到設定的清單（ModConfig.Entries 不是 List），名稱位置的舊值 Label 不轉成 InfoBox");
-            }
-            catch (Exception e)
-            {
-                old = false;
-                ItemQuickInfoMod.Log.Warning($"檢查名稱位置的舊值失敗（不轉換）：{e.Message}");
-            }
+            bool old = Rules.IsOldNamePosition(ProbeRaw(cfg, NamePositionKey, "名稱位置的舊值 Label 不轉成 InfoBox"));
             var entry = define();
             if (!old) return entry;
             try
@@ -205,6 +209,60 @@ namespace ProbablyStolenItemQuickInfo
             }
             catch (Exception e) { ItemQuickInfoMod.Log.Warning($"名稱位置的舊值 Label 轉成 InfoBox 失敗：{e.Message}"); }
             return entry;
+        }
+
+        /// <summary>
+        /// 1.3.0 名稱位置拆成兩個設定：更新前名稱位置選 InfoBox 的玩家，常駐名稱原本在左下角（只有名稱一行的資訊框），
+        /// 新設定「名稱位置（資訊框未顯示時）」預設 Top 會讓名稱跑到上緣，所以自動設成 BottomLeft（畫面不變）。
+        /// 條件（Rules.IdleNeedsBottomLeft）：設定檔裡還沒有 IdleNamePosition 這個 key（idleRaw 是 ""；Init 在 DefineEnum 之前用 ProbeRaw 探測），
+        /// 而且讀完（MigrateNamePosition 把 Label 轉成 InfoBox 之後）的名稱位置（資訊框顯示時）是 InfoBox。
+        /// 要在兩個 DefineEnum 都叫完之後才 Set：Set 會存檔，存檔寫出所有已定義的設定，之後設定檔就有這個 key，只轉一次。
+        /// 選 Top 的玩家本來就和預設一樣，不用轉；探測不了（idleRaw 是 null）時不轉，選 InfoBox 的玩家常駐名稱換到上緣、要自己選回 BottomLeft。
+        /// </summary>
+        static void MigrateIdleNamePosition(string idleRaw)
+        {
+            if (_idleNamePosition == null || _namePosition == null || !Rules.IdleNeedsBottomLeft(idleRaw, _namePosition.Value)) return;
+            try
+            {
+                _idleNamePosition.Set(IdleNamePosition.BottomLeft);
+                ItemQuickInfoMod.Log.Msg("名稱位置是 InfoBox：名稱位置（資訊框未顯示時）設成 BottomLeft，常駐名稱照舊在左下角（1.3.0 拆成兩個設定）");
+            }
+            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"名稱位置（資訊框未顯示時）設成 BottomLeft 失敗：{e.Message}"); }
+        }
+
+        /// <summary>
+        /// 讀設定檔裡 key 原本存的字串（DefineEnum 讀不懂的舊值、或分辨「沒有這個 key」用；MigrateNamePosition、Init 在 DefineEnum 之前叫）。
+        /// 遊戲在 Define 時只有設定檔有這個 key 才讀值（ModConfig.Register 看 rawValues），不存檔；列舉讀不懂就換成預設，有 choices 的文字型
+        /// 值不在 choices 裡也換成預設（ConfigEntry.Sanitize），所以用同一個 key 定義一個沒有 choices、預設 "" 的文字型當探測，原樣拿到存的字串
+        /// （""＝設定檔沒有這個 key）。讀完在 finally 裡從 ModConfig 的清單拿掉（設定視窗不多一列、之後的 DefineEnum 不會變成「定義兩次」）。
+        /// ModConfig.Entries 現在是內部的 List；不是 List（遊戲改了）或探測出錯時回 null（不轉換）、記一行警告，不能讓設定整個壞掉。
+        /// skipped＝探測不了時警告裡說哪個轉換不做。
+        /// </summary>
+        static string ProbeRaw(ModConfig cfg, string key, string skipped)
+        {
+            try
+            {
+                if (!(cfg.Entries is List<ConfigEntry> list))
+                {
+                    ItemQuickInfoMod.Log.Warning($"讀不到設定的清單（ModConfig.Entries 不是 List），{skipped}");
+                    return null;
+                }
+                try
+                {
+                    var probe = cfg.Define(key, "", SectionNames, null);
+                    return probe.Value ?? "";
+                }
+                finally
+                {
+                    // 探測一定要拿掉（中途出錯也是）：正式的 DefineEnum 還沒叫，清單裡這個 key 只會是探測
+                    list.RemoveAll(e => e != null && e.Key == key);
+                }
+            }
+            catch (Exception e)
+            {
+                ItemQuickInfoMod.Log.Warning($"讀設定 {key} 原本存的值失敗（{skipped}）：{e.Message}");
+                return null;
+            }
         }
 
         /// <summary>
@@ -286,7 +344,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static string Describe()
         {
             var d = ReadDisplay();
-            return $"按鍵={Key}、按鍵方式={KeyMode}、總是顯示名稱={AlwaysShowNames}、箱子名稱={d.ContainerName}、機器名稱={d.MachineName}、其他物品名稱={d.ItemName}、名稱位置={NamePosition}、名稱字級={NameTextSize}、"
+            return $"按鍵={Key}、按鍵方式={KeyMode}、總是顯示名稱={AlwaysShowNames}、箱子名稱={d.ContainerName}、機器名稱={d.MachineName}、其他物品名稱={d.ItemName}、名稱位置（未顯示時）={IdleNamePosition}、名稱位置（顯示時）={NamePosition}、名稱字級={NameTextSize}、長名稱換行={WrapLongNames}、"
                  + $"水量={d.WaterVolume}、水質={d.WaterPurity}、一律顯示真實水質={RealPurity}、電池={d.BatteryCharge}、電池今晚充電={d.BatteryTonightCharge}、"
                  + $"機器電量={d.MachinePower}、機器今晚收支={d.MachineTonightNet}、原因={d.MachineReason}、進度={d.MachineProgress}、成品數={d.MachineOutput}、機器裡的水={d.MachineWater}、"
                  + $"熱度={d.StolenHeat}、使用次數={d.UseCount}、耐久度={d.Durability}、金屬錠純度={d.IngotPurity}、字級={TextSize}、前綴={Prefix}";

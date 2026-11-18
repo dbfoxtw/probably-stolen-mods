@@ -1,6 +1,6 @@
 # Item Quick Info: texts of the settings, key bind and info boxes, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
 # Where each text appears, how much space it has and what the placeholders mean: see the comments in en.csv.
-# Dropdown values (Top, InfoBox, Small, Medium, Large, Hold, Toggle, Short, Long) stay in English. Plural groups use .one, .few and .many.
+# Dropdown values (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) stay in English. Plural groups use .one, .few and .many.
 key_show_info,Pokaż informacje o przedmiotach
 key_show_info_tip,"Przytrzymaj, aby pokazać informacje na przedmiotach widocznych na ekranie, zależnie od ustawień i rodzaju przedmiotu. Puść, aby je ukryć. Gdy „Tryb klawisza” ma wartość Toggle, naciśnij raz, aby pokazać, i jeszcze raz, aby ukryć."
 cfg_container_name,Pokazuj nazwy pojemników
@@ -11,10 +11,14 @@ cfg_item_name,Pokazuj nazwy innych przedmiotów
 cfg_item_name_tip,Pokazuje na jasnoniebiesko nazwę nadaną przez ciebie każdemu innemu przedmiotowi (np. Dzbanek wody lub Sztabka metalu).
 cfg_always_names,Zawsze pokazuj nazwy
 cfg_always_names_tip,"Po włączeniu nazwy są widoczne bez klawisza; pozostałe informacje nadal wymagają klawisza.\nO tym, które nazwy są widoczne, nadal decydują trzy przełączniki nazw poniżej."
-cfg_name_position,Położenie nazw
-cfg_name_position_tip,"Miejsce, w którym są pokazywane nazwy.\nTop = na środku u góry przedmiotu\nInfoBox = pierwszy wiersz ramki informacji"
+cfg_idle_name_position,Położenie nazw (ramka informacji ukryta)
+cfg_idle_name_position_tip,"Miejsce, w którym są pokazywane nazwy, gdy bez klawisza widać tylko nazwy. Wymaga włączenia ustawienia „Zawsze pokazuj nazwy”.\nTop = na środku u góry przedmiotu\nCenter = na środku przedmiotu\nBottomLeft = w lewym dolnym rogu przedmiotu"
+cfg_name_position,Położenie nazw (ramka informacji widoczna)
+cfg_name_position_tip,"Miejsce, w którym są pokazywane nazwy, gdy klawisz pokazuje informacje.\nTop = na środku u góry przedmiotu\nInfoBox = pierwszy wiersz ramki informacji"
 cfg_name_text_size,Rozmiar tekstu nazw
-cfg_name_text_size_tip,"Rozmiar nazw: Small, Medium lub Large, te same rozmiary co w ustawieniu „Rozmiar tekstu”."
+cfg_name_text_size_tip,"Rozmiar nazw: Small, Medium, Large lub ExtraLarge, te same rozmiary co w ustawieniu „Rozmiar tekstu”."
+cfg_wrap_names,Zawijaj długie nazwy
+cfg_wrap_names_tip,"Po włączeniu nazwy szersze niż przedmiot są zawijane do kolejnych wierszy, aby nie przekraczały jego szerokości.\nPo wyłączeniu długie nazwy wystają poza przedmiot."
 cfg_water_volume,Pokazuj objętość wody
 # {0} = the volume line with the short prefix ("W 4000ml"), {1} = with the long prefix ("Obj. 4000ml")
 cfg_water_volume_tip,"Pokazuje, ile wody jest w pojemniku, w ml.\nShort: {0}\nLong: {1}"
@@ -59,7 +63,7 @@ cfg_ingot_purity_tip,"Pokazuje stopień czystości sztabki metalu, np. „{0}”
 cfg_key_mode,Tryb klawisza
 cfg_key_mode_tip,"Wybierz, czy klawisz „Pokaż informacje o przedmiotach” trzeba przytrzymywać, czy naciskać, aby przełączać.\nHold = pokazuje, gdy jest przytrzymany, i ukrywa po puszczeniu\nToggle = naciśnij raz, aby pokazać, i jeszcze raz, aby ukryć; wyłącza się po wczytaniu zapisu lub powrocie do menu głównego"
 cfg_text_size,Rozmiar tekstu
-cfg_text_size_tip,"Rozmiar tekstu w ramkach informacji (nazwy mają osobne ustawienie „Rozmiar tekstu nazw”): Small, Medium lub Large. Jedno pole przedmiotu ma 16 jednostek, a tekst ma 3,5 / 4,5 / 6 jednostek wysokości."
+cfg_text_size_tip,"Rozmiar tekstu w ramkach informacji (nazwy mają osobne ustawienie „Rozmiar tekstu nazw”): Small, Medium, Large lub ExtraLarge. Jedno pole przedmiotu ma 16 jednostek, a tekst ma 3,5 / 4,5 / 6 / 8 jednostek wysokości."
 cfg_prefix,Etykiety wierszy
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones (water volume, water purity, machine power,
 # 3 days left, output count, stolen heat, uses left, durability), separated by ", ".

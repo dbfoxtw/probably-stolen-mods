@@ -58,12 +58,29 @@ namespace ProbablyStolenItemQuickInfo
     enum LabelForm { Normal, Short, Split }
 
     /// <summary>
-    /// 名稱放哪裡：Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；InfoBox＝資訊框的第一行（之前的樣子）。
+    /// 按鍵叫出資訊時名稱放哪裡（1.3.0 起只管資訊框顯示時）。設定的名稱是「名稱位置（資訊框顯示時）」。
+    /// Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；InfoBox＝資訊框的第一行（之前的樣子）。不給 Center（資訊框從左下角往上長，/// 會疊到中間的名稱）。只畫名稱時看 IdleNamePosition。
     /// 和 TextSize 一樣存名稱、下拉選單直接顯示名稱，改名要轉玩家設定檔裡的舊值（下一行）；宣告順序就是下拉選單的順序（Top 在前）。
     /// InfoBox 在 1.1.0 以前叫 Label：下拉選單直接顯示列舉名稱，Label 會和遊戲的標籤印表機（英文 Labeler）、提示框的 [Label] 混在一起；
     /// 玩家看得到的「標籤」1.1.0 起改叫資訊框。舊值 Label 由 Settings.MigrateNamePosition 轉成 InfoBox（判斷在 Rules.IsOldNamePosition）。
     /// </summary>
     enum NamePosition { Top, InfoBox }
+
+    /// <summary>
+    /// 只畫名稱時（總是顯示名稱開著、沒按鍵叫出資訊，ShowState.Names）名稱放哪裡（1.3.0）。設定的名稱是「名稱位置（資訊框未顯示時）」。
+    /// Top（預設）＝和按鍵時的 Top 一樣，名稱框的上緣中點對齊物品上緣的中點；Center＝名稱框的中心對齊物品的中心；
+    /// BottomLeft＝只有名稱一行的框放在物品左下角，也就是 1.1.0～1.2.0 選 InfoBox 時常駐名稱的樣子。
+    /// 那個狀態沒有資訊框，所以不叫 InfoBox。BottomLeft＋顯示時 InfoBox＝舊版選 InfoBox 的樣子（名稱留在同一個框，資訊加進來框往上長）。
+    /// 和 TextSize 一樣存名稱、下拉選單直接顯示名稱，名稱不要改；宣告順序就是下拉選單的順序。
+    /// </summary>
+    enum IdleNamePosition { Top, Center, BottomLeft }
+
+    /// <summary>
+    /// 這一輪名稱實際畫在哪（LabelRenderer 用，不存進設定；Rules.NamePlaceOf 從兩個名稱位置設定與顯示狀態換過來）：
+    /// Top＝名稱框貼物品上緣置中（pivot (0.5,1)）；Center＝名稱框的中心對齊物品中心（pivot (0.5,0.5)）；
+    /// InfoBox＝名稱是資訊框的第一行（左下角，pivot (0,0)；只畫名稱時就是只有名稱一行的資訊框，也就是 BottomLeft）。
+    /// </summary>
+    enum NamePlace { Top, Center, InfoBox }
 
     /// <summary>
     /// 名稱看哪個開關：機器（有電池槽、沒壞）照「顯示機器名稱」，有自己視窗的（箱子、背包、倉庫、沒有電池槽或壞掉的機器）
@@ -102,9 +119,10 @@ namespace ProbablyStolenItemQuickInfo
 
     /// <summary>
     /// 字級設定。存進 ModConfig 的是這幾個名稱（設定視窗的下拉選單直接顯示名稱、不經過翻譯，所以用英文，
-    /// 說明裡寫中文對照）。改名會讓玩家的設定讀不回來，不要改。
+    /// 說明裡寫中文對照）。改名會讓玩家的設定讀不回來，不要改。「文字大小」「名稱文字大小」共用。
+    /// ExtraLarge（特大）是 1.3.0 加的，加在最後：舊的三個名稱、順序都不動，下拉選單照宣告順序由小到大。
     /// </summary>
-    enum TextSize { Small, Medium, Large }
+    enum TextSize { Small, Medium, Large, ExtraLarge }
 
     /// <summary>
     /// 每行前面的字：短＝一個字、一個字母（水、質、電；W、Q、E），長（預設）＝中文用詞、英文三四個字母的縮寫
@@ -221,16 +239,19 @@ namespace ProbablyStolenItemQuickInfo
     /// <summary>
     /// 不碰 Unity、不碰遊戲的格式與規則（離線測試 mod\verify 也編這個檔）：數字格式、水量估計的分段、水質範圍的字、
     /// 掃描結果的解析、剩幾天的算法、今晚充電與電力收支的算法、標籤的行序與顏色、開關、熱度／使用次數／耐久度／金屬錠純度的行、
-    /// 一格寬放不下時的排法（ChooseForm）。分段照抄遊戲（出處寫在各方法），
+    /// 一格寬放不下時的排法（ChooseForm）、名稱畫在哪（NamePlaceOf）與長名稱換行（WrapName）。分段照抄遊戲（出處寫在各方法），
     /// 遊戲改了要跟著改。機器今晚會不會動的判斷在 MachineLogic；按鍵的開關狀態在 KeySwitch（這個檔的最後）。
     /// </summary>
     static class Rules
     {
-        /// <summary>字級（遊戲的 UI 單位，格子是 16）：小、中、大。</summary>
+        /// <summary>
+        /// 字級（遊戲的 UI 單位，格子是 16）：小、中、大、特大（1.3.0：和中→大一樣約 ×1.33，1080p 約 16 像素）。
+        /// </summary>
         internal static float FontSize(TextSize size) => size switch
         {
             TextSize.Small => 3.5f,
             TextSize.Large => 6f,
+            TextSize.ExtraLarge => 8f,
             _ => 4.5f,
         };
 
@@ -278,20 +299,160 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 名稱放哪個框：Top 時名稱行（IsName，只有第一行會是）另外一個框、回傳它，其他行放進 info；
+        /// 名稱放哪個框：Top、Center 時名稱行（IsName，只有第一行會是）另外一個框、回傳它，其他行放進 info；
         /// InfoBox 時全部放進 info（名稱是資訊框的第一行），回 null。info 先清空。
-        /// 常駐的名稱也走這裡：只有名稱一行時，Top 是名稱框、InfoBox 是只有名稱一行的資訊框；按鍵時資訊加進同一個框、名稱留在第一行。
+        /// 常駐的名稱也走這裡：只有名稱一行時，Top、Center 是名稱框、InfoBox（未顯示時選 BottomLeft）是只有名稱一行的資訊框；
+        /// 按鍵時（顯示時選 InfoBox）資訊加進同一個框、名稱留在第一行。
         /// </summary>
-        internal static Line? SplitName(IReadOnlyList<Line> lines, NamePosition position, List<Line> info)
+        internal static Line? SplitName(IReadOnlyList<Line> lines, NamePlace place, List<Line> info)
         {
             info.Clear();
             Line? name = null;
             foreach (var l in lines)
             {
-                if (position == NamePosition.Top && l.IsName && !name.HasValue) name = l;
+                if (place != NamePlace.InfoBox && l.IsName && !name.HasValue) name = l;
                 else info.Add(l);
             }
             return name;
+        }
+
+        /// <summary>
+        /// 這一輪名稱畫在哪（1.3.0 名稱位置拆成兩個設定）：按鍵叫出完整資訊（Full）照「名稱位置（資訊框顯示時）」，
+        /// 其他（只畫名稱）照「名稱位置（資訊框未顯示時）」，BottomLeft 就是只有名稱一行的資訊框（InfoBox）。
+        /// 兩個設定組合起來，按下、放開鍵時名稱可能換位置；BottomLeft＋InfoBox 不換（1.1.0～1.2.0 選 InfoBox 的樣子）。
+        /// </summary>
+        internal static NamePlace NamePlaceOf(ShowState state, IdleNamePosition idle, NamePosition shown)
+        {
+            if (state == ShowState.Full) return shown == NamePosition.InfoBox ? NamePlace.InfoBox : NamePlace.Top;
+            return idle switch
+            {
+                IdleNamePosition.Center => NamePlace.Center,
+                IdleNamePosition.BottomLeft => NamePlace.InfoBox,
+                _ => NamePlace.Top,
+            };
+        }
+
+        // ── 長名稱換行（1.3.0）──
+
+        /// <summary>
+        /// 把名稱斷成每行（加左右內距）不超過物品寬的幾行：available＝物品外框寬 − 左右內距，measure＝量一行名稱的寬
+        /// （LabelRenderer 用名稱字級的 TMP 量，量的是繁中 mod 轉換後的字；離線測試用假的）。行數不限。
+        /// - 整個名稱放得下（剛好等寬也算）、空字串、available 是無限大：照舊一行（原字不動，不量第二次）。
+        /// - 中日韓文字（漢字、假名、諺文、全形標點，IsCjk）任兩個字之間都能斷，和旁邊的拉丁文字之間也能斷；
+        ///   拉丁文字從空白斷，斷在空白的地方空白去掉（行首、行尾不留空白）。
+        /// - 一個詞（連在一起、沒有空白的拉丁文字）本身比可用寬度還寬時從字元中間斷，一行至少放一個字；不切開 surrogate pair。
+        /// 不做日文的禁則（句號不放行首這類）：名稱短，斷在哪邊都看得懂。
+        /// 每多放一段量一次（名稱只有十幾個字）；LabelRenderer 只在名稱、字級、字型、物品寬度或換行開關變了才叫，平常不量。
+        /// </summary>
+        internal static List<string> WrapName(string text, float available, Func<string, float> measure)
+        {
+            var lines = new List<string>();
+            if (string.IsNullOrEmpty(text) || float.IsInfinity(available) || Fits(measure(text), available))
+            {
+                lines.Add(text ?? "");
+                return lines;
+            }
+            var cur = new System.Text.StringBuilder();
+            string space = null; // 上一段和這一段之間的空白（這一行還有東西才接上去；換行時丟掉）
+            int i = 0;
+            while (i < text.Length)
+            {
+                int start = i;
+                if (char.IsWhiteSpace(text[i]))
+                {
+                    while (i < text.Length && char.IsWhiteSpace(text[i])) i++;
+                    if (cur.Length > 0) space = text.Substring(start, i - start);
+                    continue;
+                }
+                // 下一段：一個中日韓文字，或一串連著的其他字（拉丁文字的一個詞）
+                if (IsCjk(text, i)) i += CharLength(text, i);
+                else while (i < text.Length && !char.IsWhiteSpace(text[i]) && !IsCjk(text, i)) i += CharLength(text, i);
+                string piece = text.Substring(start, i - start);
+                if (cur.Length > 0)
+                {
+                    string joined = cur + (space ?? "") + piece;
+                    space = null;
+                    if (Fits(measure(joined), available))
+                    {
+                        cur.Clear().Append(joined);
+                        continue;
+                    }
+                    lines.Add(cur.ToString());
+                    cur.Clear();
+                }
+                space = null;
+                if (Fits(measure(piece), available))
+                {
+                    cur.Append(piece);
+                    continue;
+                }
+                // 這一段自己就比一行寬（長的詞）：從字元中間斷，放得下的先成行，剩下的留在這一行接後面的
+                int p = 0;
+                while (p < piece.Length)
+                {
+                    int n = CharLength(piece, p);
+                    if (cur.Length > 0 && !Fits(measure(cur + piece.Substring(p, n)), available))
+                    {
+                        lines.Add(cur.ToString());
+                        cur.Clear();
+                    }
+                    cur.Append(piece, p, n);
+                    p += n;
+                }
+            }
+            if (cur.Length > 0) lines.Add(cur.ToString());
+            if (lines.Count == 0) lines.Add(text); // 只有空白：照原字一行
+            return lines;
+        }
+
+        static bool Fits(float width, float available) => width <= available + FitTolerance;
+
+        /// <summary>從 i 開始的一個字佔幾個 char：surrogate pair 是 2（不切開），其他 1。</summary>
+        static int CharLength(string s, int i) =>
+            i + 1 < s.Length && char.IsHighSurrogate(s[i]) && char.IsLowSurrogate(s[i + 1]) ? 2 : 1;
+
+        /// <summary>
+        /// 從 i 開始的那個字是不是中日韓文字（任兩個字之間都能斷）：漢字（含擴充區與相容區、補充平面的漢字）、平假名、片假名（含半形）、
+        /// 注音、諺文（音節與字母）、中日韓的符號與標點（「、。」這類）、全形的字（全形標點、全形英數）。空白不算（另外當斷點）。
+        /// </summary>
+        internal static bool IsCjk(string s, int i)
+        {
+            int c = char.IsHighSurrogate(s[i]) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]) ? char.ConvertToUtf32(s[i], s[i + 1]) : s[i];
+            if (c < 0x1100 || char.IsWhiteSpace(s[i])) return false;
+            return (c >= 0x1100 && c <= 0x11FF)      // 諺文字母
+                || (c >= 0x2E80 && c <= 0x2FFF)      // 部首、康熙部首
+                || (c >= 0x3000 && c <= 0x303F)      // 中日韓的符號與標點
+                || (c >= 0x3040 && c <= 0x30FF)      // 平假名、片假名
+                || (c >= 0x3100 && c <= 0x33FF)      // 注音、諺文相容字母、圈起來的字、相容字
+                || (c >= 0x3400 && c <= 0x4DBF)      // 漢字擴充 A
+                || (c >= 0x4E00 && c <= 0x9FFF)      // 漢字
+                || (c >= 0xA960 && c <= 0xA97F)      // 諺文字母擴充 A
+                || (c >= 0xAC00 && c <= 0xD7FF)      // 諺文音節、字母擴充 B
+                || (c >= 0xF900 && c <= 0xFAFF)      // 相容漢字
+                || (c >= 0xFE30 && c <= 0xFE4F)      // 中日韓相容形式（直排標點）
+                || (c >= 0xFF00 && c <= 0xFFEF)      // 全形、半形的字（全形標點、半形片假名）
+                || (c >= 0x20000 && c <= 0x3FFFF);   // 補充平面的漢字
+        }
+
+        /// <summary>
+        /// 名稱換行後的行：rows 裡的名稱行（IsName，只有第一行會是）換成 nameLines 每一段一行（名稱色、名稱字級），其他行照舊。
+        /// nameLines 只有一段時直接回 rows（不配置）。InfoBox 時名稱的多行都在資訊框最上面。
+        /// </summary>
+        internal static List<Line> WithWrappedName(List<Line> rows, IReadOnlyList<string> nameLines)
+        {
+            if (nameLines == null || nameLines.Count <= 1) return rows;
+            var result = new List<Line>(rows.Count + nameLines.Count - 1);
+            bool done = false;
+            foreach (var r in rows)
+            {
+                if (!done && r.IsName)
+                {
+                    foreach (var s in nameLines) result.Add(new Line(s, r.Color));
+                    done = true;
+                }
+                else result.Add(r);
+            }
+            return result;
         }
 
         /// <summary>一行的字級：名稱行照「名稱文字大小」，其他照「文字大小」。行高是它的 LineHeightRatio 倍。</summary>
@@ -577,6 +738,14 @@ namespace ProbablyStolenItemQuickInfo
             raw != null && string.Equals(raw.Trim(), "Label", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
+        /// 1.3.0 名稱位置拆成兩個設定：更新前名稱位置選 InfoBox 的玩家，「名稱位置（資訊框未顯示時）」要設成 BottomLeft（畫面不變），只轉一次。
+        /// idleRaw＝探測到設定檔裡新設定原本存的字串：""＝設定檔還沒有這個 key（第一次用 1.3.0），null＝探測不了（不轉）；
+        /// shown＝讀完（含 Label→InfoBox 轉換之後）的「名稱位置（資訊框顯示時）」。設定檔已經有這個 key 的（玩家選過、或轉過一次）不轉。
+        /// </summary>
+        internal static bool IdleNeedsBottomLeft(string idleRaw, NamePosition shown) =>
+            idleRaw != null && idleRaw.Length == 0 && shown == NamePosition.InfoBox;
+
+        /// <summary>
         /// 這一幀畫什麼：
         /// - 按鍵叫出來的（KeySwitch 說要顯示：Hold 按著、Toggle 開著，而且沒被擋）→ 完整資訊。
         /// - 不然，總是顯示名稱開著、三個名稱開關至少開一個、不在過場 → 只畫名稱。打字、正在設定按鍵時 KeySwitch 被擋，
@@ -604,7 +773,7 @@ namespace ProbablyStolenItemQuickInfo
             fullEnded: prev == ShowState.Full && next != ShowState.Full);
 
         /// <summary>
-        /// 前面加名稱那一行（名稱是第一行，淡藍色；畫在哪裡由名稱位置決定，LabelRenderer 照 IsName 分開）。
+        /// 前面加名稱那一行（名稱是第一行，淡藍色；畫在哪裡由名稱位置決定、看 NamePlaceOf，LabelRenderer 照 IsName 分開）。
         /// show＝那種物品的名稱開關；沒有名稱或關掉時只回 body（null 當空的）。
         /// </summary>
         internal static List<Line> WithName(string rawName, bool show, List<Line> body)

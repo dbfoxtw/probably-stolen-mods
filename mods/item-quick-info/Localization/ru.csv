@@ -1,6 +1,6 @@
 # Item Quick Info, Russian (ru): labels and tooltips of the settings and key bind, then the info box text. Translated from en.csv with AI help, not checked by a native speaker.
 # Same keys and order as en.csv (see its comments for where each text appears, the length limits and what {0}, {1}... are). info_days_long uses .one, .few and .many.
-# Dropdown choices (Top, InfoBox, Small, Medium, Large, Hold, Toggle) and the words Short / Long stay in English. "Info box" is «плашка» here.
+# Dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle) and the words Short / Long stay in English. "Info box" is «плашка» here.
 key_show_info,Показать сведения о предметах
 key_show_info_tip,"Удерживайте, чтобы показать сведения на предметах на экране (в зависимости от настроек и типа предмета). Отпустите, чтобы скрыть. Если в настройке «Режим клавиши» выбрано Toggle, нажмите один раз, чтобы показать, и ещё раз, чтобы скрыть."
 cfg_container_name,Показывать названия контейнеров
@@ -11,10 +11,14 @@ cfg_item_name,Показывать названия других предмет�
 cfg_item_name_tip,"Показывать голубым название, которое вы дали любому другому предмету (например, «Канистра воды» или «Слиток металла»)."
 cfg_always_names,Всегда показывать названия
 cfg_always_names_tip,"Если включено, названия видны и без клавиши; остальные сведения по-прежнему только с клавишей.\nКакие названия показываются, по-прежнему зависит от трёх переключателей названий ниже."
-cfg_name_position,Положение названий
-cfg_name_position_tip,Где показываются названия.\nTop = по центру вверху предмета\nInfoBox = первой строкой плашки
+cfg_idle_name_position,Положение названий (плашка скрыта)
+cfg_idle_name_position_tip,"Где показываются названия, когда без клавиши на экране только названия. Нужно включить «Всегда показывать названия».\nTop = по центру вверху предмета\nCenter = в центре предмета\nBottomLeft = в левом нижнем углу предмета"
+cfg_name_position,Положение названий (плашка показана)
+cfg_name_position_tip,"Где показываются названия, пока клавиша показывает сведения.\nTop = по центру вверху предмета\nInfoBox = первой строкой плашки"
 cfg_name_text_size,Размер текста названий
-cfg_name_text_size_tip,"Размер названий: Small, Medium или Large — те же размеры, что и в настройке «Размер текста»."
+cfg_name_text_size_tip,"Размер названий: Small, Medium, Large или ExtraLarge — те же размеры, что и в настройке «Размер текста»."
+cfg_wrap_names,Переносить длинные названия
+cfg_wrap_names_tip,"Если включено, названия шире предмета переносятся на несколько строк и не выходят за его ширину.\nЕсли выключено, длинные названия выступают за края предмета."
 cfg_water_volume,Показывать объём воды
 # {0} = the volume line with the short prefix ("В 4000ml"), {1} = with the long prefix ("Объём 4000ml")
 cfg_water_volume_tip,"Показывать, сколько воды в контейнере (в миллилитрах).\nShort: {0}\nLong: {1}"
@@ -59,7 +63,7 @@ cfg_ingot_purity_tip,"Показывать степень чистоты сли�
 cfg_key_mode,Режим клавиши
 cfg_key_mode_tip,"Выберите, удерживать ли клавишу «Показать сведения о предметах» или переключать показ нажатием.\nHold = показывать, пока клавиша зажата, и скрывать, когда она отпущена\nToggle = нажать, чтобы показать, и ещё раз, чтобы скрыть; выключается при загрузке сохранения или выходе в главное меню"
 cfg_text_size,Размер текста
-cfg_text_size_tip,"Размер текста на плашках (для названий — «Размер текста названий»): Small, Medium или Large. Ячейка предмета — 16 единиц, высота текста — 3,5; 4,5 или 6 единиц."
+cfg_text_size_tip,"Размер текста на плашках (для названий — «Размер текста названий»): Small, Medium, Large или ExtraLarge. Ячейка предмета — 16 единиц, высота текста — 3,5; 4,5; 6 или 8 единиц."
 cfg_prefix,Подписи строк
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones (water volume, water purity, machine power, 3 days left,
 # output count, stolen heat, uses left, durability). Separated with " / " because the long ones end with a period.

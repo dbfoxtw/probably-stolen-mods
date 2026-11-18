@@ -1,6 +1,6 @@
 # Item Quick Info: Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value
 # See en.csv for where each text appears and how much space it has. Plural groups for es: .one and .other.
-# The dropdown choices (Top, InfoBox, Small, Medium, Large, Hold, Toggle, Short, Long) stay in English: the game shows the stored English value.
+# The dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) stay in English: the game shows the stored English value.
 # In tooltips, {0}, {1}... are filled in by the mod with the info box text below (for example "V 4000ml" / "Vol 4000ml"). Keep every placeholder.
 key_show_info,Mostrar información de objetos
 key_show_info_tip,"Mantén pulsada la tecla para ver información sobre los objetos en pantalla, según tus ajustes y el tipo de objeto. Suéltala para ocultarla. Con «Modo de la tecla» en Toggle, pulsa una vez para mostrarla y otra para ocultarla."
@@ -12,10 +12,14 @@ cfg_item_name,Mostrar nombres de otros objetos
 cfg_item_name_tip,"Muestra en azul claro el nombre que le hayas puesto a cualquier otro objeto (por ejemplo, una jarra de agua o un lingote de metal)."
 cfg_always_names,Mostrar siempre los nombres
 cfg_always_names_tip,"Si está activado, los nombres se quedan en pantalla sin pulsar la tecla; el resto de la información sigue necesitando la tecla.\nQué nombres aparecen sigue dependiendo de las tres opciones de nombres de abajo."
-cfg_name_position,Posición de los nombres
-cfg_name_position_tip,Dónde se muestran los nombres.\nTop = centrados en la parte superior del objeto\nInfoBox = primera línea del cuadro de información
+cfg_idle_name_position,Posición de nombres (información oculta)
+cfg_idle_name_position_tip,"Dónde se muestran los nombres cuando solo hay nombres en pantalla, sin pulsar la tecla. Requiere activar «Mostrar siempre los nombres».\nTop = centrados en la parte superior del objeto\nCenter = en el centro del objeto\nBottomLeft = en la esquina inferior izquierda del objeto"
+cfg_name_position,Posición de nombres (información visible)
+cfg_name_position_tip,Dónde se muestran los nombres mientras la tecla muestra la información.\nTop = centrados en la parte superior del objeto\nInfoBox = primera línea del cuadro de información
 cfg_name_text_size,Tamaño de los nombres
-cfg_name_text_size_tip,"Tamaño de los nombres: Small, Medium o Large, los mismos tamaños que «Tamaño del texto»."
+cfg_name_text_size_tip,"Tamaño de los nombres: Small, Medium, Large o ExtraLarge, los mismos tamaños que «Tamaño del texto»."
+cfg_wrap_names,Partir los nombres largos
+cfg_wrap_names_tip,"Si está activado, los nombres más anchos que el objeto se parten en varias líneas para no superar el ancho del objeto.\nSi está desactivado, los nombres largos sobresalen del objeto."
 cfg_water_volume,Mostrar volumen de agua
 # {0} = the volume line with the short prefix ("V 4000ml"), {1} = with the long prefix ("Vol 4000ml")
 cfg_water_volume_tip,"Muestra cuánta agua tiene un recipiente, en ml.\nShort: {0}\nLong: {1}"
@@ -60,7 +64,7 @@ cfg_ingot_purity_tip,"Muestra el grado de pureza de un lingote de metal, por eje
 cfg_key_mode,Modo de la tecla
 cfg_key_mode_tip,"Elige si hay que mantener pulsada la tecla «Mostrar información de objetos» o pulsarla para alternar.\nHold = se muestra mientras la mantienes pulsada y se oculta al soltarla\nToggle = pulsa una vez para mostrar y otra para ocultar; se desactiva al cargar una partida o volver al menú principal"
 cfg_text_size,Tamaño del texto
-cfg_text_size_tip,"Tamaño del texto de los cuadros de información (los nombres siguen «Tamaño de los nombres»): Small, Medium o Large. Una casilla de objeto mide 16 unidades; el texto mide 3.5, 4.5 o 6 unidades de alto."
+cfg_text_size_tip,"Tamaño del texto de los cuadros de información (los nombres siguen «Tamaño de los nombres»): Small, Medium, Large o ExtraLarge. Una casilla de objeto mide 16 unidades; el texto mide 3.5, 4.5, 6 u 8 unidades de alto."
 cfg_prefix,Prefijos de línea
 # {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
 # 3 days left, output count, stolen heat, uses left, durability. Separator: ", ".
