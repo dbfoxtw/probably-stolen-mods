@@ -107,6 +107,20 @@ namespace ProbablyStolenCollectAllWater
             return _s;
         }
 
+        /// <summary>
+        /// 右鍵選單現在開著嗎（2.7.0 收水快捷鍵用，HotkeyRunner）：看第一次換格子時記下的選單視窗（遊戲的 contextWindow，由攔截注入，
+        /// 不另外反射）。遊戲關選單是 Hide（視窗的 handler 設成不顯示），所以看 PixelWindow.IsVisible。還沒按過右鍵（沒記下視窗）時當作沒開。
+        /// 換場景後視窗重建、舊的 handler（MonoBehaviour）被銷毀：用 Unity 的 == 判斷，銷毀了當作沒開。
+        /// </summary>
+        internal static bool MenuVisible()
+        {
+            var s = _s;
+            var w = s != null ? s.Window : null;
+            if (w == null) return false;
+            var h = w.handler;
+            return h != null && w.IsVisible();
+        }
+
         /// <summary>只拿已經建好、而且是這個選單的狀態（上色的方法在建選單時就會被呼叫，那時還不能動它）。</summary>
         static State Existing(PixelWindow window) =>
             _s != null && window != null && ReferenceEquals(_s.Window, window) ? _s : null;

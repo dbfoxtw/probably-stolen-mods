@@ -1,9 +1,11 @@
 # Japanese (ja) text for Collect All Water: the right-click button and the settings window's labels and tooltips (Loc.Get in mod/src/Loc.cs). Translated from en.csv with AI help; not checked by a native speaker.
-# {0} = the game's own water name (already Japanese), {1} = ml. The dropdown choices and the section names (Right-click menu, Water sources, Mod water sources) stay in English, as in the code.
+# {0} = the game's own water name (already Japanese), {1} = ml; cfg_hotkey and cfg_hotkey_tip only have {0}, and their key names C, Shift+C are not translated. The dropdown choices and the section names (Right-click menu, Hotkeys, Water sources, Mod water sources) stay in English, as in the code.
 button,{0}を回収（{1}ml）
 button_no_source,{0}を回収（水源なし）
 cfg_collect,{0}を回収
 cfg_collect_tip,水入れを右クリックしたときに「{0}を回収」を表示する：水入れがいっぱいになるまで、水源から{0}を注ぐ。各容器の実際の水質で判断する。
+cfg_hotkey,ホットキー：{0}を回収
+cfg_hotkey_tip,水入れにマウスを合わせてこのキーを押すと、{0}を回収する。右クリックのボタンがオフでも使える。\n例：C、Shift+C。空欄＝使わない
 cfg_src_farm,モイスチャーファームから回収
 cfg_src_farm_tip,店内のすべてのモイスチャーファーム（箱の中のものも含む）。壊れたものは除く。
 cfg_src_purifier,浄水器から回収

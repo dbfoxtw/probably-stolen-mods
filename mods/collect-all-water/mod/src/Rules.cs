@@ -21,14 +21,19 @@ namespace ProbablyStolenCollectAllWater
             /// <summary>容器的水質（WaterHelper.GetWaterPurity，萬分比）到這個值以上才算這種水（見 PurityPure 等常數）。</summary>
             public readonly int MinPurity;
             public readonly bool DefaultOn;
+            /// <summary>
+            /// 設定（ModConfig）裡這種水的快捷鍵文字欄的 key（2.7.0）。存進玩家的設定檔，之後不要改。預設都是空的＝不使用。
+            /// </summary>
+            public readonly string HotkeyConfigKey;
 
-            public Grade(string id, string configKey, string nameKey, int minPurity, bool defaultOn)
+            public Grade(string id, string configKey, string nameKey, int minPurity, bool defaultOn, string hotkeyConfigKey)
             {
                 Id = id;
                 ConfigKey = configKey;
                 NameKey = nameKey;
                 MinPurity = minPurity;
                 DefaultOn = defaultOn;
+                HotkeyConfigKey = hotkeyConfigKey;
             }
 
             public override string ToString() => Id;
@@ -48,10 +53,10 @@ namespace ProbablyStolenCollectAllWater
         /// </summary>
         internal static readonly Grade[] Grades =
         {
-            new Grade("Ghostwater", "CollectGhostwater", "mech_condition_ghostwater", PurityGhost, true),
-            new Grade("Basewater", "CollectBasewater", "mech_condition_basewater", PurityBase, false),
-            new Grade("High Quality Water", "CollectHighQualityWater", "mech_condition_high_quality_water", PurityHighQuality, false),
-            new Grade("Pure Water", "CollectPureWater", "mech_condition_pure_water", PurityPure, false),
+            new Grade("Ghostwater", "CollectGhostwater", "mech_condition_ghostwater", PurityGhost, true, "HotkeyGhostwater"),
+            new Grade("Basewater", "CollectBasewater", "mech_condition_basewater", PurityBase, false, "HotkeyBasewater"),
+            new Grade("High Quality Water", "CollectHighQualityWater", "mech_condition_high_quality_water", PurityHighQuality, false, "HotkeyHighQualityWater"),
+            new Grade("Pure Water", "CollectPureWater", "mech_condition_pure_water", PurityPure, false, "HotkeyPureWater"),
         };
 
         /// <summary>
@@ -559,5 +564,12 @@ namespace ProbablyStolenCollectAllWater
         /// （正式版的 TransferLiquid 改用 SplitProportionally，差幾份的情形可能變少，這條照留。）
         /// </summary>
         internal static bool IsFull(long freeParts) => freeParts < PartsPerMl;
+
+        /// <summary>
+        /// 多選時收水快捷鍵要不要擋（2.7.0，HotkeyRunner；照一鍵關窗 Rules.MultiSelectBlocks）：hasSelection＝ItemMultiSelectHandler.HasSelection（不是 Idle），
+        /// mouseHeld＝多選的鍵（滑鼠左鍵）按著。拉框、準備拉框、準備拖、拖一組都要一直按著，這時擋（拖一組時遊戲的拖曳判斷 IsDraggingItem 不成立，
+        /// 擋不到）；選好、放開（Selected）時鍵沒按著，照常動作（遊戲的右鍵選單也不管選取）。
+        /// </summary>
+        internal static bool MultiSelectBlocks(bool hasSelection, bool mouseHeld) => hasSelection && mouseHeld;
     }
 }

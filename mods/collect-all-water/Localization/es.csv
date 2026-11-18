@@ -1,9 +1,11 @@
-# Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value ({0} = the game's own water name, {1} = ml; see en.csv for the details).
-# The dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better...) and the section names (Right-click menu, Water sources, Mod water sources) are fixed English in the code, so they stay English here.
+# Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value ({0} = the game's own water name, {1} = ml; cfg_hotkey and cfg_hotkey_tip only have {0}, and their key names C, Shift+C are not translated; see en.csv for the details).
+# The dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better...) and the section names (Right-click menu, Hotkeys, Water sources, Mod water sources) are fixed English in the code, so they stay English here.
 button,Recoger {0} ({1} ml)
 button_no_source,Recoger {0} (sin fuentes de agua)
 cfg_collect,Recoger {0}
 cfg_collect_tip,Muestra «Recoger {0}» al hacer clic derecho en un recipiente de agua: vierte {0} desde tus fuentes de agua hasta llenar el recipiente, según la calidad real del agua de cada recipiente.
+cfg_hotkey,Tecla rápida: Recoger {0}
+cfg_hotkey_tip,"Apunta a un recipiente de agua y pulsa esta tecla para recoger {0}, aunque su botón del clic derecho esté desactivado.\nEj.: C o Shift+C; vacío = sin usar"
 cfg_src_farm,Recoger de los extractores de humedad
 cfg_src_farm_tip,Todos los extractores de humedad de tu tienda, también los que están en cajas. Los rotos no cuentan.
 cfg_src_purifier,Recoger de los purificadores de agua

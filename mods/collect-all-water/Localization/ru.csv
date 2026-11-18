@@ -1,9 +1,11 @@
 # Russian (ru): button text and the labels and tooltips of this mod's settings window. Translated from en.csv with AI help, not checked by a native speaker. Same keys and order as en.csv (see its comments for where each text appears and what {0}/{1} are).
-# {0} is the game's own water name, so the buttons are written as "action: {0}" and the noun is never declined. Dropdown choices and the section names Right-click menu, Water sources, Mod water sources stay in English (fixed in the code).
+# {0} is the game's own water name, so the buttons are written as "action: {0}" and the noun is never declined (cfg_hotkey and cfg_hotkey_tip only have {0}; the key names C, Shift+C in cfg_hotkey_tip are not translated). Dropdown choices and the section names Right-click menu, Hotkeys, Water sources, Mod water sources stay in English (fixed in the code).
 button,Собрать: {0} ({1} мл)
 button_no_source,Собрать: {0} (нет источников воды)
 cfg_collect,Собрать: {0}
 cfg_collect_tip,Показывать «Собрать: {0}» при щелчке правой кнопкой по контейнеру для воды: кнопка переливает эту воду из источников воды, пока контейнер не наполнится; учитывается фактическое качество воды в каждом контейнере.
+cfg_hotkey,Горячая клавиша сбора: {0}
+cfg_hotkey_tip,"Наведите курсор на контейнер для воды и нажмите эту клавишу, чтобы собрать эту воду ({0}), даже если её кнопка в меню правой кнопки мыши выключена.\nНапример, C или Shift+C; пусто — не используется"
 cfg_src_farm,Собирать из конденсаторов влаги
 cfg_src_farm_tip,Все конденсаторы влаги в магазине, включая те, что лежат в ящиках. Сломанные не считаются.
 cfg_src_purifier,Собирать из очистителей воды

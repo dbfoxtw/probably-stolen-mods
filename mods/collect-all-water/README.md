@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器。裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus、水塔：淨水自動化）時，也會收水塔裡的水。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057)（訂閱就好，見下面「安裝」）、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Collect All Water 的最新版，標記 `collect-all-water-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -17,6 +17,11 @@
   - 倒水用遊戲自己手動倒水的方法，結果和手動倒的一樣（例如倒進水罐時一樣會經過濾芯），倒完播一次倒水聲。
   - 容器已經滿了、或找不到這種水時，按鈕變灰，按了不動作（和遊戲原本不能按的按鈕一樣）。
   - 快速點一下右鍵（沒有按住）不會收水：靠近畫面邊緣時選單會被推回畫面裡，滑鼠可能剛好落在按鈕上。
+- **收水快捷鍵**（2.7.0 起，設定段落「Hotkeys」，預設都沒設）：滑鼠指著水容器按設好的鍵，就收那種水，不用開右鍵選單；倒法、水源、收的順序都和右鍵選單的按鈕一樣。
+  - 四種水各一個鍵，和「Right-click menu」的開關各管各的：選單上沒打開那種水的按鈕，鍵也照樣能用。
+  - 有倒水才播倒水聲；容器滿了、沒有這種水、指的不是水容器時什麼都不會發生，想知道原因就右鍵看選單。
+  - 一按就倒，混進去的水沒辦法復原。
+  - 這些時候按了不會動作：拖著物品、右鍵選單開著、拿著工具（右鍵選單的「裝備」）、固定模式、在輸入框打字（遊戲的輸入框、簡易待辦 mod），以及游標在簡易待辦 mod 的懸浮單這類介面上。
 - **看容器裡實際的水質**（2.1.0 起）：哪個容器算哪種水，看它裡面實際裝的水，用遊戲自己判斷水質的標準（幽靈水 96% 以上、基礎水 98% 以上、優質水 99% 以上、純水 99.9% 以上），不再看水分收集器滑鼠提示上的產水品質。水分收集器每晚產的就是提示上那種水，所以平常結果和以前一樣；容器裡原本混了別的水、或換過模組時才會不同。也就是說，括號的水量會透露每個容器裡實際是什麼水。
 - **水源**（設定段落「Water sources」，八個開關與水培系統的兩個下拉，見「設定」）：
   - **水分收集器**（預設開）：店裡所有自己的水分收集器，包括放在箱子裡、沒打開的；損壞的不算；你右鍵的容器如果就放在某台水分收集器裡，那台不算。
@@ -63,7 +68,7 @@
 
 ## 設定
 
-在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有三個段落（段落標題不分語言都是英文，遊戲顯示成大寫）。改好套用，下次按右鍵就生效，不用重開遊戲。
+在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有四個段落（段落標題不分語言都是英文，遊戲顯示成大寫）。改好套用，下次按右鍵或快捷鍵就生效，不用重開遊戲。
 
 **Right-click menu**：選單上有哪幾種水。
 
@@ -75,6 +80,20 @@
 | 收集純水（`CollectPureWater`） | 關 | 顯示「收集純水」 |
 
 四個都關掉時，選單照原本的七顆。
+
+**Hotkeys**（2.7.0 起）：收水快捷鍵，每種水一個鍵（見「功能」）。
+
+| 設定 | 預設 | 內容 |
+|---|---|---|
+| 收集幽靈水的快捷鍵（`HotkeyGhostwater`） | 空白 | 滑鼠指著水容器按這個鍵就收集幽靈水 |
+| 收集基礎水的快捷鍵（`HotkeyBasewater`） | 空白 | 收集基礎水 |
+| 收集優質水的快捷鍵（`HotkeyHighQualityWater`） | 空白 | 收集優質水 |
+| 收集純水的快捷鍵（`HotkeyPureWater`） | 空白 | 收集純水 |
+
+- 寫法例如 `C`、`Shift+C`、`F6`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
+- 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：`Mouse4`、`Mouse5`（例如 `Mouse5`、`Shift+Mouse4`）。左鍵、右鍵、中鍵不行。
+- 主要的鍵（`Shift+C` 的 C）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵；別的 mod 也用到同一個鍵時一樣兩邊都會動作。
+- 兩種水設成同一個鍵時，只有水質比較低的那個有作用。
 
 **Water sources**：從哪裡收（見「功能」的「水源」）。
 
@@ -172,7 +191,7 @@ Demo 版（v1.0.1 以前，MelonLoader）在正式版不能用；這一版起只
 
 ## English
 
-A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
+A mod for *Probably Stolen*: adds "Collect Ghostwater" to the right-click menu of water containers; one click fills the container from all the Moisture Farms in your shop, and, if you switch them on in the settings, from Water Purifiers, Hydroponic Systems (for example ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower, WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3828992057), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/735) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Collect All Water, tagged `collect-all-water-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/735?tab=bugs).
 
@@ -183,6 +202,11 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - It pours the same way the game does when you pour by hand, with the same results (e.g. water poured into the Water Pitcher still goes through its filter), and you hear the pouring sound once.
   - When the container is already full, or there's none of that water, the button is greyed out and does nothing (like the game's own disabled buttons).
   - A quick right-click tap (not held) never collects: near the screen edge the menu is pushed back on screen and can open right under the cursor.
+- **Hotkeys** (from 2.7.0; "Hotkeys" section in the settings, none set by default): point at a water container and press the key you set to collect that water, without opening the right-click menu. It pours from the same sources, in the same order and the same way as the menu buttons.
+  - One key per kind of water, independent of the "Right-click menu" switches: a key works even if that water's button is off in the menu.
+  - You hear the pouring sound only when water was poured; if the container is full, there's none of that water, or you're not pointing at a water container, nothing happens. Right-click to see why in the menu.
+  - It pours as soon as you press the key; mixed-in water can't be undone.
+  - Pressing a hotkey does nothing while you're dragging an item, the right-click menu is open, you're holding a tool (Equip in the right-click menu), Pin mode is on, or you're typing (the game's text boxes, the Simple To-Do mod), or when the cursor is over an interface such as the Simple To-Do mod's floating list.
 - **Goes by the actual water quality** (from 2.1.0): which water a container counts as depends on what's actually in it, using the game's own thresholds (Ghostwater from 96%, Basewater from 98%, High-Quality Water from 99%, Pure Water from 99.9%), not the quality shown in a Moisture Farm's tooltip. Moisture Farms make the water their tooltip shows every night, so normally nothing changes; it only differs when the container already held other water or the modules were changed. This also means the numbers reveal what's really in each container.
 - **Water sources** (eight switches and the two Hydroponic System dropdowns under "Water sources" in the settings, see Settings):
   - **Moisture Farms** (on by default): every Moisture Farm you own in the shop, including ones packed in boxes. Broken Moisture Farms don't count, and neither does the one the container you right-clicked is sitting in.
@@ -227,7 +251,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
 
 The Collect buttons come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
-**Settings**: open this mod's settings on the Mods screen of the main menu. There are three sections. Apply, and the change takes effect the next time you right-click; no restart needed.
+**Settings**: open this mod's settings on the Mods screen of the main menu. There are four sections. Apply, and the change takes effect the next time you right-click or press a hotkey; no restart needed.
 
 "Right-click menu" sets which waters get a line in the menu:
 
@@ -239,6 +263,20 @@ The Collect buttons come from this mod, not the base game; please report problem
 | Collect Pure Water (`CollectPureWater`) | off | Show "Collect Pure Water" |
 
 With all four off, the menu is the usual seven buttons.
+
+"Hotkeys" (from 2.7.0) sets one key per kind of water (see "Hotkeys" under Features):
+
+| Setting | Default | What it does |
+|---|---|---|
+| Hotkey: Collect Ghostwater (`HotkeyGhostwater`) | empty | Point at a water container and press this key to collect Ghostwater |
+| Hotkey: Collect Basewater (`HotkeyBasewater`) | empty | Collect Basewater |
+| Hotkey: Collect High-Quality Water (`HotkeyHighQualityWater`) | empty | Collect High-Quality Water |
+| Hotkey: Collect Pure Water (`HotkeyPureWater`) | empty | Collect Pure Water |
+
+- Write keys like `C`, `Shift+C` or `F6`; modifiers (Ctrl, Shift, Alt) must match exactly, either the left or the right one. Empty = not used; a field with a key name that isn't recognized is not used.
+- Mouse side buttons work too, named as in the game's Key Binds: `Mouse4` and `Mouse5` (e.g. `Mouse5`, `Shift+Mouse4`). The left, right and middle buttons can't be used.
+- If the main key (the C in `Shift+C`) is also used in the game's Key Binds, that game action happens too; pick another key. The same goes for a key another mod also uses.
+- If two kinds of water get the same key, only the lower-quality one works.
 
 "Water sources" sets where to collect from (see "Water sources" under Features):
 

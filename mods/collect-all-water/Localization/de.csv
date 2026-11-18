@@ -1,9 +1,11 @@
-# Collect All Water: button text and the labels and tooltips of this mod's settings window, German. Translated from en.csv with AI help. Format: key,value
-# Dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better ...) and the section names (Right-click menu, Water sources, Mod water sources) stay English: they are fixed in the code.
+# Collect All Water: button text and the labels and tooltips of this mod's settings window, German. Translated from en.csv with AI help. Format: key,value ({0} = the game's own water name, {1} = ml; cfg_hotkey and cfg_hotkey_tip only have {0}; the key names C, Shift+C are not translated)
+# Dropdown choices (Off, Hydroreed, Pinned, All, Basewater or better ...) and the section names (Right-click menu, Hotkeys, Water sources, Mod water sources) stay English: they are fixed in the code.
 button,{0} sammeln ({1} ml)
 button_no_source,{0} sammeln (keine Wasserquellen)
 cfg_collect,{0} sammeln
 cfg_collect_tip,Zeigt „{0} sammeln“ beim Rechtsklick auf einen Wasserbehälter: füllt {0} aus deinen Wasserquellen ein, bis der Behälter voll ist; maßgeblich ist die tatsächliche Wasserqualität in jedem Behälter.
+cfg_hotkey,Tastenkürzel: {0} sammeln
+cfg_hotkey_tip,"Zeige mit der Maus auf einen Wasserbehälter und drücke diese Taste, um {0} zu sammeln, auch wenn die Schaltfläche dafür im Rechtsklickmenü aus ist.\nZ. B. C oder Shift+C; leer = nicht belegt"
 cfg_src_farm,Aus Feuchtigkeitsfarmen sammeln
 cfg_src_farm_tip,Alle Feuchtigkeitsfarmen in deinem Laden, auch die in Kisten. Kaputte zählen nicht.
 cfg_src_purifier,Aus Wasserreinigern sammeln

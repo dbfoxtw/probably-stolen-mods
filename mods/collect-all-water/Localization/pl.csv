@@ -1,9 +1,11 @@
 # Collect All Water: button text and the labels and tooltips of the settings window, Polish (AI translation from en.csv, not checked by a native speaker). Format: key,value
-# {0} in button, button_no_source, cfg_collect and cfg_collect_tip is the game's own water name: written as "action: {0}" so the noun needs no declension. Dropdown choices and section names stay in English (fixed in the code).
+# {0} in button, button_no_source, cfg_collect, cfg_collect_tip, cfg_hotkey and cfg_hotkey_tip is the game's own water name: written as "action: {0}" so the noun needs no declension. Key names in cfg_hotkey_tip (C, Shift+C) are not translated. Dropdown choices and section names (Right-click menu, Hotkeys, Water sources, Mod water sources) stay in English (fixed in the code).
 button,Zbierz: {0} ({1} ml)
 button_no_source,Zbierz: {0} (brak źródeł wody)
 cfg_collect,Zbierz: {0}
 cfg_collect_tip,Po kliknięciu pojemnika na wodę prawym przyciskiem myszy pokazuje „Zbierz: {0}”: przelewa tę wodę ({0}) ze źródeł wody, aż pojemnik będzie pełny. Liczy się rzeczywista jakość wody w każdym pojemniku.
+cfg_hotkey,Skrót do zbierania: {0}
+cfg_hotkey_tip,"Wskaż kursorem pojemnik na wodę i naciśnij ten klawisz, aby zebrać tę wodę ({0}), nawet gdy jej przycisk w menu prawego przycisku myszy jest wyłączony.\nNp. C albo Shift+C; puste = nieużywane"
 cfg_src_farm,Zbieraj z farm wilgoci
 cfg_src_farm_tip,Każda farma wilgoci w sklepie, także te w skrzynkach. Zepsute się nie liczą.
 cfg_src_purifier,Zbieraj z uzdatniaczy wody

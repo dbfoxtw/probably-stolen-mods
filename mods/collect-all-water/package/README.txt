@@ -4,7 +4,7 @@ Probably Stolen 一鍵收水 mod（Collect All Water） v{version}
 水容器的右鍵選單多一行「收集幽靈水」，按一下就從店裡所有的水分收集器把水倒過來，倒滿為止；
 也可以在設定裡打開淨水器、水培系統（例如種著水培蘆葦的）、蒸發器、自動售水機、冰箱，以及物品欄、展示櫃、垃圾桶裡的容器；
 裝了 Steam 工作坊上的水塔 mod（Water Tower、WaterTowerPlus、水塔：淨水自動化）時，也會收水塔裡的水。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/735?tab=bugs
@@ -35,6 +35,10 @@ ModConfigs\dbfoxtw.collect-all-water.json。
   括號是這些地方的幽靈水加起來還有多少（毫升）；打開的水源一個都找不到時寫「(沒有水源)」。
   倒水用遊戲自己手動倒水的方法，結果和手動倒的一樣（例如倒進水罐時一樣會經過濾芯），倒完播一次倒水聲。
   容器滿了、或找不到這種水時，按鈕變灰。快速點一下右鍵（沒有按住）不會收水。
+- 收水快捷鍵（2.7.0 起，設定段落 Hotkeys，預設都沒設）：滑鼠指著水容器按設好的鍵，就收那種水，不用開右鍵選單；
+  倒法、水源、收的順序和右鍵選單的按鈕一樣。四種水各一個鍵，和 Right-click menu 的開關各管各的。
+  有倒水才播倒水聲；容器滿了、沒有這種水時什麼都不會發生。一按就倒，混進去的水沒辦法復原。
+  拖著物品、右鍵選單開著、拿著工具、固定模式、在輸入框打字、游標在簡易待辦 mod 的懸浮單這類介面上時，按了不會動作。
 - 看容器裡實際的水質（2.1.0 起）：哪個容器算哪種水，看它裡面實際裝的水（遊戲自己的標準：幽靈水 96% 以上、
   基礎水 98%、優質水 99%、純水 99.9%），不再看水分收集器滑鼠提示上的產水品質。水分收集器每晚產的就是提示上
   那種水，平常結果和以前一樣。括號的水量會透露每個容器裡實際是什麼水。
@@ -72,8 +76,12 @@ ModConfigs\dbfoxtw.collect-all-water.json。
 選單上的收水按鈕是這個 mod 加的，不是遊戲本身的功能；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-在主選單的「Mods」（模組）畫面打開這個 mod 的設定，改好套用，下次按右鍵就生效，不用重開遊戲：
+在主選單的「Mods」（模組）畫面打開這個 mod 的設定，改好套用，下次按右鍵或快捷鍵就生效，不用重開遊戲：
 - Right-click menu：收集幽靈水（預設開）、收集基礎水、收集優質水、收集純水（預設關）。
+- Hotkeys（2.7.0 起）：收集幽靈水的快捷鍵、收集基礎水的快捷鍵、收集優質水的快捷鍵、收集純水的快捷鍵（預設空白）。
+  寫法例如 C、Shift+C、F6，修飾鍵（Ctrl、Shift、Alt）要完全一樣才算；滑鼠側鍵寫 Mouse4、Mouse5（遊戲「按鍵綁定」的名稱）。
+  留空＝不使用；寫錯的那一欄不使用；兩種水設成同一個鍵時只有水質比較低的那個有作用。
+  主要的鍵（Shift+C 的 C）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵。
 - Water sources：收水分收集器（預設開）、收淨水器、收水培系統的水（2.3.0 起，下拉，預設 Off）、
   水培的最低水質（2.3.0 起，下拉，預設 Basewater or better；選項是英文：Basewater or better＝基礎水以上、
   High-Quality Water or better＝優質水以上、Pure Water＝純水）、收蒸發器（2.3.0 起）、收自動售水機、收冰箱、收物品欄裡的容器、收展示櫃裡的容器、收垃圾桶裡的容器（預設關）。
@@ -108,7 +116,7 @@ from all the Moisture Farms in your shop, and, if you switch them on in the sett
 Hydroponic Systems (e.g. ones growing Hydroreed), Evaporators, the Vending Fountain, Fridges, and containers
 in the inventory, the Display Case and the Trash Can. With the water tower mods from the Steam Workshop (Water Tower,
 WaterTowerPlus, Water Tower: Purification Automation) installed, it also collects from the towers.
-Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -149,6 +157,14 @@ Features
   into the Water Pitcher still goes through its filter), with one pouring sound. When the container
   is full or there's none of that water, the button is greyed out. A quick right-click tap (not held)
   never collects.
+- Hotkeys (from 2.7.0; "Hotkeys" section in the settings, none set by default): point at a water container
+  and press the key you set to collect that water, without opening the right-click menu. Same sources, order
+  and pouring as the menu buttons. One key per kind of water, independent of the "Right-click menu" switches.
+  You hear the pouring sound only when water was poured; if the container is full or there's none of that
+  water, nothing happens. It pours as soon as you press the key; mixed-in water can't be undone.
+  Hotkeys do nothing while you're dragging an item, the right-click menu is open, you're holding a tool,
+  Pin mode is on, or you're typing, or when the cursor is over an interface such as the Simple To-Do mod's
+  floating list.
 - Goes by the actual water quality (from 2.1.0): which water a container counts as depends on what's actually
   in it (the game's own thresholds: Ghostwater from 96%, Basewater 98%, High-Quality Water 99%, Pure Water 99.9%),
   not the quality shown in a Moisture Farm's tooltip. Moisture Farms make the water their tooltip shows every
@@ -207,9 +223,15 @@ not to the game developers.
 
 Settings
 Open this mod's settings on the Mods screen of the main menu; apply, and the change takes effect the next
-time you right-click (no restart needed):
+time you right-click or press a hotkey (no restart needed):
 - Right-click menu: Collect Ghostwater (default on), Collect Basewater, Collect High-Quality Water,
   Collect Pure Water (default off).
+- Hotkeys (from 2.7.0): Hotkey: Collect Ghostwater, Basewater, High-Quality Water, Pure Water (default empty).
+  Write them like C, Shift+C or F6; modifiers (Ctrl, Shift, Alt) must match exactly; mouse side buttons are
+  Mouse4 and Mouse5 (as named in the game's Key Binds). Empty = not used; a key name that isn't recognized
+  is not used; if two kinds of water get the same key, only the lower-quality one works.
+  If the main key (the C in Shift+C) is also used in the game's Key Binds, that game action happens too;
+  pick another key.
 - Water sources: Collect from Moisture Farms (default on), from Water Purifiers, from Hydroponic Systems
   (from 2.3.0; a dropdown, default Off), Hydroponics minimum quality (from 2.3.0; a dropdown, default Basewater
   or better), from Evaporators (from 2.3.0), from the Vending Fountain, from Fridges,

@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ProbablyStolenCollectAllWater.Verify
 {
     /// <summary>
     /// 離線測試（不用開遊戲）：四種水的設定與水質門檻、水源開關（含水塔 mod、淨水塔 mod 的、蒸發器的）、水培系統的兩個下拉（種類與最低水質）、水容器歸哪一層與水源總數、按鈕文字、能不能收、
     /// 收的順序，
-    /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）、介面字串挑語言（LocPick，2.6.0 起）。
+    /// 以及 mod 的 Localization\en.csv、zh.csv（用和遊戲一樣的解析規則讀）、介面字串挑語言（LocPick，2.6.0 起）、
+    /// 收水快捷鍵的鍵名解析、撞鍵時留水質低的、四個設定的 key、多選時擋不擋（Hotkey、GradeKeys、Rules.MultiSelectBlocks，2.7.0 起）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -39,6 +41,9 @@ namespace ProbablyStolenCollectAllWater.Verify
             Order();
             Localization();
             LocPickTest();
+            HotkeyTest();
+            GradeKeysTest();
+            MultiSelectTest();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
             return _fail == 0 ? 0 : 1;
         }
@@ -101,6 +106,162 @@ namespace ProbablyStolenCollectAllWater.Verify
             Check(Rules.Grades.All(g => g.ConfigKey.All(char.IsLetter)), "設定的鍵只有英文字母");
             Check(Rules.Grades.All(g => g.NameKey.StartsWith("mech_condition_")), "水名都用遊戲字串表的 mech_condition_*");
             Check(Rules.Grades.All(g => !g.Id.Contains("Gutterflow") && !g.Id.Contains("Rustwater")), "沒有溝渠水、鐵鏽水");
+            // 收水快捷鍵（2.7.0）：四種水各一欄，照右鍵選單的順序；key 存進玩家的設定檔，之後不能改
+            Eq(string.Join("|", Rules.Grades.Select(g => g.HotkeyConfigKey)), "HotkeyGhostwater|HotkeyBasewater|HotkeyHighQualityWater|HotkeyPureWater",
+                "快捷鍵的 key 與順序（幽靈水、基礎水、優質水、純水）");
+            Check(Rules.Grades.All(g => g.HotkeyConfigKey.All(char.IsLetter)), "快捷鍵的 key 只有英文字母");
+            var allKeys = Rules.Grades.Select(g => g.ConfigKey).Concat(Rules.Grades.Select(g => g.HotkeyConfigKey))
+                .Concat(Rules.AllSwitches.Select(s => s.ConfigKey)).Concat(new[] { Rules.HydroponicKindConfigKey, Rules.HydroponicQualityConfigKey }).ToList();
+            Eq(allKeys.Distinct().Count(), allKeys.Count, "快捷鍵的 key 不和其他設定的 key 重複");
+        }
+
+        // ── 收水快捷鍵（2.7.0） ──
+
+        /// <summary>
+        /// 模擬 mod 裡的 Settings.Resolve（那邊用 Unity 的 KeyCode 列舉）：認得的 KeyCode 名稱（大小寫不拘）回傳正式的寫法，
+        /// 修飾鍵本身、滑鼠鍵、不存在的回傳 null（照視窗分頁的離線測試）。滑鼠側鍵由 Hotkey.Parse 自己處理、不經過這裡。
+        /// </summary>
+        static readonly string[] KnownKeys = Enumerable.Range(0, 10).Select(i => "Alpha" + i)
+            .Concat(Enumerable.Range(0, 10).Select(i => "Keypad" + i))
+            .Concat(Enumerable.Range(1, 15).Select(i => "F" + i))
+            .Concat(Enumerable.Range('A', 26).Select(c => ((char)c).ToString()))
+            .Concat(new[] { "Tab", "Backspace", "BackQuote", "Insert", "Home", "PageUp", "PageDown", "Delete", "Escape", "Space" })
+            .ToArray();
+
+        static string Resolve(string name) => KnownKeys.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>故意放水的 resolve：連 Unity 的滑鼠名稱 Mouse0～Mouse6 也收，確認 Hotkey.Parse 不把玩家寫的「Mouse＋數字」交給它。</summary>
+        static string LeakyResolve(string name)
+        {
+            for (int i = 0; i <= 6; i++)
+                if (string.Equals(name, "Mouse" + i, StringComparison.OrdinalIgnoreCase)) return "Mouse" + i;
+            return Resolve(name);
+        }
+
+        static Hotkey P(string s, out string error) => Hotkey.Parse(s, Resolve, out error);
+
+        /// <summary>鍵名解析：說明的例子 C、Shift+C，組合鍵、修飾鍵完全相同才算、滑鼠側鍵 Mouse4～Mouse7、不收的滑鼠鍵、空字串、亂寫。</summary>
+        static void HotkeyTest()
+        {
+            var h = P("C", out var err);
+            Check(h != null && err == null && !h.Ctrl && !h.Shift && !h.Alt && h.Key == "C", "C（說明的例子）讀得懂、沒有修飾鍵");
+            Eq(h?.Display(), "C", "C 給玩家看的寫法");
+            h = P("Shift+C", out err);
+            Check(h != null && err == null && !h.Ctrl && h.Shift && !h.Alt && h.Key == "C", "Shift+C（說明的例子）只有 Shift、主要的鍵是 C");
+            Eq(h?.Display(), "Shift+C", "Shift+C 給玩家看的寫法");
+            Eq(P("c", out _)?.Key, "C", "大小寫不拘：c 是 C");
+            Eq(P("shift + c", out _)?.ToString(), "Shift+C", "加號旁可以有空白、大小寫不拘");
+            h = P("Ctrl+Alt+F6", out err);
+            Check(h != null && err == null && h.Ctrl && !h.Shift && h.Alt && h.Key == "F6", "Ctrl+Alt+F6：兩個修飾鍵加 F6");
+            Eq(P("Alt+Ctrl+F6", out _)?.ToString(), P("Ctrl+Alt+F6", out _)?.ToString(), "修飾鍵的順序不拘，正式寫法相同");
+            Check(P("control+shift+alt+pagedown", out err) is Hotkey all && all.Ctrl && all.Shift && all.Alt && all.Key == "PageDown",
+                "三個修飾鍵都加、control 也算 Ctrl、KeyCode 名稱照正式寫法");
+            Eq(P("Strg+C", out _)?.ToString(), "Ctrl+C", "Strg（德文鍵盤的 Ctrl）也算 Ctrl，正式寫法是 Ctrl");
+            Eq(P("3", out _)?.Key, "Alpha3", "單一個數字是上排的數字鍵");
+            Eq(P("Num3", out _)?.Display(), "Num3", "Num3 是小鍵盤、照原樣顯示");
+            Eq(P("Num3", out _)?.Key, "Keypad3", "Num3 是 Unity 的 Keypad3");
+
+            // 修飾鍵要完全相同才算
+            var c = P("C", out _);
+            var sc = P("Shift+C", out _);
+            Check(c.ModifiersMatch(false, false, false), "單按 C 時 C 成立");
+            Check(!c.ModifiersMatch(false, true, false), "按著 Shift 時 C 不成立");
+            Check(!c.ModifiersMatch(true, false, false), "按著 Ctrl 時 C 不成立");
+            Check(sc.ModifiersMatch(false, true, false), "按著 Shift 時 Shift+C 成立");
+            Check(!sc.ModifiersMatch(false, false, false), "單按 C 時 Shift+C 不成立");
+            Check(!sc.ModifiersMatch(true, true, false), "按著 Ctrl+Shift 時 Shift+C 不成立");
+            Check(!sc.ModifiersMatch(false, true, true), "多按了 Alt 時 Shift+C 不成立");
+
+            // 空字串＝不使用、不警告；亂寫＝不使用、警告
+            Check(P("", out err) == null && err == null, "空的＝不使用，不警告");
+            Check(P("   ", out err) == null && err == null, "只有空白＝不使用，不警告");
+            Check(P(null, out err) == null && err == null, "null＝不使用，不警告");
+            foreach (var bad in new[] { "Shift+", "Shift", "Win+C", "Ctrl+Cc", "C+Shift", "LeftControl", "Ctrl+LeftShift", "收水", "+", "Ctrl++C" })
+                Check(P(bad, out err) == null && err != null, $"「{bad}」寫錯：不使用、有警告");
+
+            // 滑鼠側鍵：遊戲按鍵綁定的名稱 Mouse4～Mouse7＝Unity 的 Mouse3～Mouse6
+            for (int n = 4; n <= 7; n++)
+            {
+                var m = P("Mouse" + n, out var e);
+                Check(m != null && e == null, $"Mouse{n} 收下");
+                Eq(m?.Key, "Mouse" + (n - 1), $"Mouse{n} 對到 Unity 的 KeyCode.Mouse{n - 1}");
+                Eq(m?.Display(), "Mouse" + n, $"Mouse{n} 給玩家看的是遊戲的名稱");
+            }
+            Eq(P("mouse 5", out _)?.Key, "Mouse4", "大小寫與空白不拘：mouse 5");
+            var cm = P("Ctrl+Mouse5", out err);
+            Check(cm != null && err == null && cm.Ctrl && cm.Key == "Mouse4", "Ctrl+Mouse5：Ctrl 加 Unity 的 Mouse4");
+            Eq(cm?.Display(), "Ctrl+Mouse5", "Ctrl+Mouse5 給玩家看的是遊戲的名稱");
+            Check(!P("Mouse5", out _).ModifiersMatch(true, false, false), "按著 Ctrl 時單獨的 Mouse5 不成立");
+            // 左鍵、右鍵、中鍵與更後面的編號不收（右鍵是遊戲的選單鍵、左鍵是拿東西）
+            foreach (var bad in new[] { "Mouse0", "Mouse1", "Mouse2", "Mouse3", "Mouse8", "mouse 3", "Shift+Mouse1", "Mouse99999999999" })
+            {
+                Check(P(bad, out err) == null && err != null, $"{bad} 不收、有警告");
+                Check(err != null && err.Contains("只收側鍵") && err.Contains("Mouse4～Mouse7"), $"{bad} 的警告寫明只收側鍵 Mouse4～Mouse7");
+            }
+            Check(Hotkey.Parse("Mouse3", LeakyResolve, out err) == null && err != null, "Mouse3（遊戲的中鍵）不會被當成 Unity 的 KeyCode.Mouse3 收下");
+            Check(Hotkey.Parse("Mouse1", LeakyResolve, out err) == null && err != null, "Mouse1 不會被當成 Unity 的右鍵收下");
+            Eq(Hotkey.Parse("Mouse4", LeakyResolve, out _)?.Key, "Mouse3", "Mouse4 照遊戲的名稱換算，不是 Unity 的 Mouse4");
+            Check(P("MouseLeft", out err) == null && err != null && !err.Contains("只收側鍵"), "MouseLeft 不是遊戲的名稱：一般的「不是可以用的按鍵」");
+        }
+
+        static GradeKeys G(params string[] raws) => GradeKeys.Build(Rules.Grades, raws, Resolve);
+
+        /// <summary>
+        /// 四個設定讀成按鍵（Settings.RefreshHotkeys 用的 GradeKeys.Build）：預設全空、寫錯的那一欄不使用並警告、
+        /// 兩種水設成同一個鍵（鍵與修飾鍵都一樣）時只留水質低的（Claude 決定的），修飾鍵不同不算重複。
+        /// </summary>
+        static void GradeKeysTest()
+        {
+            var k = G("", "", "", "");
+            Check(k.Keys.Length == 4 && k.Keys.All(x => x == null) && k.Warnings.Count == 0, "預設四個都空：都不使用、不警告");
+            k = G();
+            Check(k.Keys.Length == 4 && k.Keys.All(x => x == null) && k.Warnings.Count == 0, "沒有值（null 或少給）當作空的");
+            k = G("C", "V", "Shift+C", "Mouse5");
+            Eq(string.Join("|", k.Keys.Select(x => x?.ToString())), "C|V|Shift+C|Mouse4", "四個都設、不同的鍵：都有效");
+            Eq(k.Warnings.Count, 0, "四個都設、不同的鍵：不警告");
+            k = G("C", "", "", "");
+            Check(k.Keys[0]?.ToString() == "C" && k.Keys.Skip(1).All(x => x == null) && k.Warnings.Count == 0, "只設幽靈水：其他不使用、不警告");
+
+            // 寫錯的那一欄當作不使用，警告寫出是哪一欄
+            k = G("C", "Ctrl+Nope", "", "Mouse1");
+            Check(k.Keys[0] != null && k.Keys[1] == null && k.Keys[3] == null, "寫錯的兩欄不使用，寫對的照用");
+            Eq(k.Warnings.Count, 2, "寫錯的兩欄各警告一次");
+            Check(k.Warnings.Any(w => w.StartsWith("HotkeyBasewater")) && k.Warnings.Any(w => w.StartsWith("HotkeyPureWater")), "警告寫出是哪一欄（設定的 key）");
+
+            // 撞鍵：只留水質比較低的
+            k = G("C", "C", "", "");
+            Check(k.Keys[0]?.ToString() == "C" && k.Keys[1] == null, "幽靈水與基礎水都設 C：只有幽靈水有效");
+            Check(k.Warnings.Count == 1 && k.Warnings[0].StartsWith("HotkeyBasewater") && k.Warnings[0].Contains("HotkeyGhostwater"),
+                "撞鍵警告一次，寫在水質高的那欄、說明和哪一欄撞");
+            k = G("", "Shift+C", "shift+c", "SHIFT + C");
+            Check(k.Keys[0] == null && k.Keys[1]?.ToString() == "Shift+C" && k.Keys[2] == null && k.Keys[3] == null,
+                "基礎水、優質水、純水都是 Shift+C（寫法不同）：只有基礎水有效");
+            Eq(k.Warnings.Count, 2, "三欄撞鍵：水質高的兩欄各警告一次");
+            Check(k.Warnings.All(w => w.Contains("HotkeyBasewater")), "兩個警告都說和基礎水撞");
+            k = G("", "", "Mouse4", "mouse 4");
+            Check(k.Keys[2]?.Key == "Mouse3" && k.Keys[3] == null && k.Warnings.Count == 1, "Mouse4 和 mouse 4 算同一個鍵：只有優質水有效");
+            k = G("C", "Shift+C", "Ctrl+C", "Ctrl+Shift+C");
+            Check(k.Keys.All(x => x != null) && k.Warnings.Count == 0, "同一個 C、修飾鍵不同：不算重複，四個都有效");
+            k = G("Nope", "C", "C", "");
+            Check(k.Keys[0] == null && k.Keys[1]?.ToString() == "C" && k.Keys[2] == null && k.Warnings.Count == 2,
+                "幽靈水寫錯不算數：基礎水與優質水撞，留基礎水");
+            k = G("", "", "F6", "F6");
+            Check(k.Keys[2] != null && k.Keys[3] == null, "優質水與純水撞：留優質水");
+
+            // 照水質門檻挑、不靠傳進來的順序：反過來給（純水在前）也是留水質低的
+            var reversed = Rules.Grades.Reverse().ToArray();
+            k = GradeKeys.Build(reversed, new[] { "C", "", "", "C" }, Resolve); // 純水、優質水、基礎水、幽靈水
+            Check(k.Keys[0] == null && k.Keys[3]?.ToString() == "C", "順序反過來給：純水與幽靈水撞，留幽靈水（看門檻、不看位置）");
+            Check(k.Warnings.Count == 1 && k.Warnings[0].StartsWith("HotkeyPureWater"), "順序反過來給：警告寫在純水那欄");
+        }
+
+        /// <summary>多選時擋不擋（Rules.MultiSelectBlocks，照一鍵關窗）：拉框、準備拖、拖一組都要按著多選的鍵，那時擋；選好、放開以後照常。</summary>
+        static void MultiSelectTest()
+        {
+            Check(Rules.MultiSelectBlocks(true, true), "有選取、按著多選的鍵（拉框、拖一組）：擋");
+            Check(!Rules.MultiSelectBlocks(true, false), "選好、放開了：照常");
+            Check(!Rules.MultiSelectBlocks(false, true), "沒有選取（一般的左鍵按著）：照常");
+            Check(!Rules.MultiSelectBlocks(false, false), "什麼都沒有：照常");
         }
 
         /// <summary>
@@ -783,7 +944,8 @@ namespace ProbablyStolenCollectAllWater.Verify
                         $"en.csv 和 {name} 的 key 一樣");
             // 每個 key 要的佔位符：{0} 水名、{1} 毫升；水源開關的名稱與說明沒有佔位符（GetLocalized 不帶參數，不代入）；
             // mod 水源開關沒偵測到 mod 時的樣板（_missing）只有 {0}（原本的名稱）
-            var withName = new[] { "button", "button_no_source", "cfg_collect", "cfg_collect_tip" };
+            // 2.7.0 起收水快捷鍵的 cfg_hotkey、cfg_hotkey_tip 也是（四種水共用一組，代入水名）
+            var withName = new[] { "button", "button_no_source", "cfg_collect", "cfg_collect_tip", "cfg_hotkey", "cfg_hotkey_tip" };
             var plain = Rules.AllSwitches.SelectMany(s => new[] { s.LabelKey, s.TipKey })
                 .Concat(new[] { Rules.HydroponicKindLabelKey, Rules.HydroponicKindTipKey, Rules.HydroponicQualityLabelKey, Rules.HydroponicQualityTipKey }).ToArray();
             var missing = Rules.AllSwitches.Where(s => s.ModIds != null).Select(s => s.MissingKey).ToArray();
@@ -846,6 +1008,36 @@ namespace ProbablyStolenCollectAllWater.Verify
                 Eq(en.TryGetValue(key, out var e) ? e : null, enText, $"en.csv 的 {key}");
                 Eq(zh.TryGetValue(key, out var z) ? z : null, zhText, $"zh.csv 的 {key}");
             }
+            // 收水快捷鍵的字：英文、簡中照定稿一字不差；說明解析後兩行、第二行是例子，鍵名 C、Shift+C 每種語言都不翻
+            var hotkeyTexts = new (string key, string en, string zh)[]
+            {
+                ("cfg_hotkey", "Hotkey: Collect {0}", "收集{0}的快捷键"),
+                ("cfg_hotkey_tip",
+                    "Point at a water container and press this key to collect {0}, even if its right-click button is off.\nE.g. C or Shift+C; empty = not used",
+                    "鼠标指着水容器按这个键就收集{0}，右键的按钮关着也能用。\n例如 C 或 Shift+C；留空＝不使用"),
+            };
+            foreach (var (key, enText, zhText) in hotkeyTexts)
+            {
+                Eq(en.TryGetValue(key, out var e) ? e : null, enText, $"en.csv 的 {key}");
+                Eq(zh.TryGetValue(key, out var z) ? z : null, zhText, $"zh.csv 的 {key}");
+            }
+            foreach (var (name, table) in tables)
+            {
+                if (table.TryGetValue("cfg_hotkey_tip", out var ht))
+                {
+                    var lines = ht.Split('\n');
+                    Check(lines.Length == 2 && !ht.Contains("\\n"), $"{name} 的 cfg_hotkey_tip 解析後是兩行");
+                    Check(lines.Length == 2 && Regex.IsMatch(lines[1], @"(?<![A-Za-z+])C(?![A-Za-z+])") && lines[1].Contains("Shift+C") && !lines[1].Contains("{0}"),
+                        $"{name} 的 cfg_hotkey_tip 第二行是例子，鍵名 C、Shift+C 照原樣");
+                    Check(lines.Length == 2 && lines[0].Contains("{0}"), $"{name} 的 cfg_hotkey_tip 第一行有水名");
+                }
+                if (table.TryGetValue("cfg_hotkey", out var hl))
+                    Check(!hl.Contains("\n"), $"{name} 的 cfg_hotkey 是一行");
+            }
+            // 俄文、波蘭文的水名放在冒號後面那種不用變格的位置
+            foreach (var lang in new[] { "ru.csv", "pl.csv" })
+                foreach (var (name, table) in tables.Where(t => t.name == lang))
+                    if (table.TryGetValue("cfg_hotkey", out var v)) Check(v.EndsWith(": {0}"), $"{name} 的 cfg_hotkey 寫成「…: {{0}}」");
             // 淨水塔的說明分兩行（CSV 的 \n 解析成換行）；翻譯也照兩行
             foreach (var (name, table) in tables)
                 if (table.TryGetValue("cfg_src_purifytower_tip", out var pt))

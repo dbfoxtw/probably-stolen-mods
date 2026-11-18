@@ -13,6 +13,7 @@ namespace ProbablyStolenCollectAllWater
     /// 水培系統的水格裡的容器另有兩個下拉：收哪些水培系統（預設 Off＝不收）與最低水質（預設基礎水以上）；
     /// 照層級順序收：水分收集器 → 淨水器 → mod 水源（水塔、淨水塔整組，不分 mod、水多的先）→ 水培系統 → 蒸發器 → 垃圾桶 → 物品欄 → 冰箱 →
     /// 自動售水機 → 展示櫃。
+    /// 2.7.0 起另有收水快捷鍵：滑鼠指著水容器按設定的鍵，收那種水進去，和右鍵選單的按鈕同一個方法（HotkeyRunner）。
     /// 用遊戲自己手動倒水的方法；不讀寫存檔，倒過來的水和手動倒的一樣，睡覺時由遊戲存下來。
     /// 官方格式的 mod（manifest.xml 與 IMod，照繁中 mod）：遊戲的 mod 載入器先用 id「mod.＋ID」的 Harmony PatchAll（攔截都用屬性，
     /// 見 CollectMenu），再呼叫 Init、OnEnable。設定用官方的 ModConfig、文字放 mod 的 Localization\*.csv，不宣告任何權限。
@@ -33,9 +34,25 @@ namespace ProbablyStolenCollectAllWater
             Log($"{Settings.Describe()}；掛上 {CountPatches()} 個攔截");
         }
 
-        public void OnEnable() { }
+        /// <summary>
+        /// 收水快捷鍵（2.7.0）要每幀讀鍵，官方的 IMod 沒有每幀的回呼：在這裡建一個不隨場景銷毀的物件（HotkeyRunner，照一鍵關窗），
+        /// 已經有了就不再建。
+        /// </summary>
+        public void OnEnable()
+        {
+            try { HotkeyRunner.Start(); }
+            catch (Exception e) { Warning($"建收水快捷鍵的元件失敗（快捷鍵不能用，右鍵選單照常）：{e.Message}"); }
+        }
 
-        public void OnDisable() { }
+        /// <summary>
+        /// 遊戲結束時（ModLoader.OnApplicationQuit），以及信任清單封鎖或暫停這個 mod 時（StopRunningMod）呼叫：拿掉每幀的物件。
+        /// 沒呼叫 OnDisable 就停掉 mod 時（Steam 的檢查），遊戲自己會刪掉 mod 的元件（DestroyBehavioursOf），只留一個空的物件，沒有害處。
+        /// </summary>
+        public void OnDisable()
+        {
+            try { HotkeyRunner.Stop(); }
+            catch (Exception e) { Warning($"拿掉收水快捷鍵的元件失敗：{e.Message}"); }
+        }
 
         /// <summary>
         /// PatchAll 是遊戲做的，這裡數一下實際掛上的方法並寫進 log：預期 5 個，都是 ItemContextHandler 的

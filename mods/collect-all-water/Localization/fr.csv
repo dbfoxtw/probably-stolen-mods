@@ -1,9 +1,11 @@
 # Collect All Water : texte des boutons, libellés et infobulles de la fenêtre de réglages de ce mod (Loc.Get, puis ModHelper.GetLocalized). Format : key,value
-# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, {0} = nom de l'eau, {1} = ml). Les choix des listes déroulantes et les noms de sections restent en anglais.
+# Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, {0} = nom de l'eau, {1} = ml ; cfg_hotkey et cfg_hotkey_tip n'ont que {0}, et les noms de touches C, Shift+C ne se traduisent pas). Les choix des listes déroulantes et les noms de sections (Right-click menu, Hotkeys, Water sources, Mod water sources) restent en anglais.
 button,Collecter : {0} ({1} ml)
 button_no_source,Collecter : {0} (aucune source d'eau)
 cfg_collect,Collecter : {0}
 cfg_collect_tip,Affiche « Collecter : {0} » quand vous faites un clic droit sur un récipient d'eau : y verse cette eau depuis vos sources d'eau jusqu'à ce qu'il soit plein, d'après la qualité réelle de l'eau de chaque récipient.
+cfg_hotkey,Raccourci pour collecter : {0}
+cfg_hotkey_tip,"Pointez un récipient d'eau et appuyez sur cette touche pour y verser cette eau ({0}), même si son bouton du clic droit est désactivé.\nEx. : C ou Shift+C ; vide = désactivé"
 cfg_src_farm,Collecter dans les récupérateurs hydriques
 cfg_src_farm_tip,Tous les récupérateurs hydriques de votre boutique, y compris ceux rangés dans des conteneurs. Ceux qui sont cassés ne comptent pas.
 cfg_src_purifier,Collecter dans les purificateurs d'eau

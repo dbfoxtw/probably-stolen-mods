@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.7.0（2026-11-18）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）
+
+- **收水快捷鍵**：滑鼠指著水容器按鍵就收那種水，不用開右鍵選單。在設定新的段落「Hotkeys」替每種水設一個鍵（例如 `C`、`Shift+C`、`Mouse5`），預設都沒設。倒法、水源、收的順序和右鍵選單的按鈕一樣，和「Right-click menu」的開關各管各的。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV15 beta)
+
+- **Hotkeys**: point at a water container and press a key to collect that water, without the right-click menu. Set one key per kind of water in the new "Hotkeys" section of the settings (e.g. `C`, `Shift+C`, `Mouse5`); none are set by default. Same sources, order and pouring as the menu buttons, independent of the "Right-click menu" switches.
+
 ## v2.6.0（2026-11-14）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
