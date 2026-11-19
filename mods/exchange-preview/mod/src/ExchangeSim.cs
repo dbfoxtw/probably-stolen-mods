@@ -12,8 +12,10 @@ namespace ProbablyStolenExchangePreview
         /// <summary>危險廢棄物：清潔服務不會清掉它（PlayerStore.ClearTrash 跳過 GeneralHelper.IsHazardousWaste）。</summary>
         public bool Hazardous;
         /// <summary>
-        /// 走私者暗格（改進）（smuggler_bay_mod）本身，或直接放在它裡面的東西：清潔服務也不會清掉
-        /// （遊戲 2026-10-31 的更新，PlayerStore.ClearTrash 跳過 IsKeptInTrash）。
+        /// 遊戲的 PlayerStore.IsKeptInTrash 為真的（ExchangeReader.KeptInTrash）：清潔服務也不會清掉
+        /// （遊戲 2026-10-31 的更新，PlayerStore.ClearTrash 跳過 IsKeptInTrash）。哪些算看遊戲版本：
+        /// - Rev15 以前：走私者暗格（改進）（smuggler_bay_mod）本身，與直接放在它裡面的東西。
+        /// - Rev16 起：再加上放在暗格裡任何一層的（暗格裡的容器裡的東西），與裡面任何一層裝著暗格的容器。
         /// 交易所照樣可能收走它們（GetRequiredItems 看整個垃圾桶，包含暗格裡面）。
         /// </summary>
         public bool Kept;
@@ -76,7 +78,7 @@ namespace ProbablyStolenExchangePreview
         public readonly List<SimPartial> Partial = new List<SimPartial>();
         /// <summary>
         /// 今晚會沒掉的（照垃圾桶的順序，包含多放的）：
-        /// - 沒被收走的，用清潔服務的話會被清掉；危險廢棄物、走私者暗格（改進）與直接放在裡面的東西不清，
+        /// - 沒被收走的，用清潔服務的話會被清掉；危險廢棄物與 Kept 的（走私者暗格（改進）那類）不清，
         ///   但只限每一層上層也都是不清的（例如背包裡的危險廢棄物跟著背包被清掉）。
         /// - 被收走的容器裡面沒被收走的東西，危險廢棄物也一樣，都跟著容器離開垃圾桶。
         /// </summary>
@@ -95,7 +97,7 @@ namespace ProbablyStolenExchangePreview
     ///   Rev8 另外把裡面的東西一一銷毀，結果一樣）：後面的交換看不到、清潔服務也碰不到，今晚就沒了，
     ///   所以危險廢棄物也算會沒掉。
     ///   同一筆交換之內不受影響：GetRequiredItems 在銷毀前一次挑完，可以同時挑到容器和裡面的東西（例如一包營養果種子和包裡的種子）。
-    /// - 剩下的都會被清潔服務清掉，除了危險廢棄物、走私者暗格（改進）與直接放在裡面的東西，而且要連上層一起看：
+    /// - 剩下的都會被清潔服務清掉，除了危險廢棄物與 Kept 的（走私者暗格（改進）那類，見 SimItem.Kept），而且要連上層一起看：
     ///   上層被清掉的話，裡面不清的東西也跟著不見（見 StaysInTrash）。
     /// - 會沒掉的東西裡，符合某筆成交的條件、又不是差一點那筆配到的，是「多放的」；跟著收走的容器不見的，
     ///   只看帶走它的那筆：多放的是「每晚只換一次才沒換到」的東西，別筆再換幾次也拿不到容器裡的（見 Run 最後）。
@@ -290,7 +292,9 @@ namespace ProbablyStolenExchangePreview
         /// 被銷毀時，裡面的東西跟著離開垃圾桶（GameItemElement.Destroy 把容器 Expel 掉、整個子樹斷開；Rev8 另外 DestroyContentWindow），
         /// 所以危險廢棄物放在會被清掉的容器裡也一樣沒了。
         /// 只用在還在垃圾桶裡的東西：它的上層一定也還在（上層被收走的話，它早就跟著容器不見），所以只看 Parent 鏈就好。
-        /// Kept 的上層實際上只會是直接放在垃圾桶裡的暗格（改進），結果和只看自己一樣。
+        /// Rev16 起 Kept 的東西每一層上層也一定 Kept（上層裡面裝著那個暗格，或上層本身、更上層就是暗格），對 Kept 的來說和只看自己一樣；
+        /// Rev15 以前不一定（例如暗格（改進）放在會被清掉的容器裡，暗格跟著容器不見；這只是理論上，正常玩暗格（改進）放不進
+        /// 會出現在垃圾桶裡的容器，見 ExchangeReader.KeptInTrash）。照 Parent 鏈算兩版都對，不用分版本。
         /// </summary>
         static bool StaysInTrash(SimItem item) =>
             (item.Hazardous || item.Kept) && (item.Parent == null || StaysInTrash(item.Parent));

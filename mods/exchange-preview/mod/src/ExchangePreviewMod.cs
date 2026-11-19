@@ -59,6 +59,8 @@ namespace ProbablyStolenExchangePreview
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             LogPatches();
+            // 清潔服務不清的東西照哪套規則（遊戲的 IsKeptInTrash 或照抄的舊規則）：載入時就記一行，實機測試看 Player.log；查找本身吞例外
+            ExchangeReader.InitKeptRule();
             Log.Msg($"資料：{DataFolder}\\slot_<N>.json；設定（ModConfigs\\{ModId}.json）：{Settings.Describe()}");
             Ready = true;
         }
@@ -159,7 +161,7 @@ namespace ProbablyStolenExchangePreview
 
         /// <summary>
         /// 垃圾桶標示的「待收貨」：交易所換來、還在垃圾桶裡、沒拿出來過，而且清潔服務會清掉的東西。
-        /// 清潔服務不清的（交易所送來的走私者暗格（改進）、直接放進暗格裡的）不拿出來也不會不見，算進來的話，
+        /// 清潔服務不清的（交易所送來的走私者暗格（改進）、放進暗格裡的；哪些算照 ExchangeReader.KeptInTrash）不拿出來也不會不見，算進來的話，
         /// 玩家把暗格留在垃圾桶多久，標示就卡在待收貨多久（待收貨優先，可交易、多放了都看不到）。
         /// 追蹤照舊：從暗格拿出來、放在垃圾桶裡的話又會算。
         /// </summary>

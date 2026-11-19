@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：讓「地下交易所」不再是黑箱。滑鼠移到店裡的垃圾桶，就看得到今晚會換成什麼、哪些東西會被清掉。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Exchange Preview 的最新版，標記 `exchange-preview-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -24,7 +24,7 @@
 - **垃圾桶標示**：店裡的垃圾桶上貼一張紙條（也可以改用蓋子上的燈）：無交易、可交易、多放了、待收貨（交易所換來的東西還沒拿出來）、禁止交易。紙條可以貼在正面、蓋子上（順著蓋子斜貼），或掛在垃圾桶上方的櫃檯邊。
 - **夜間報告**：清潔服務換成功時，早上的報告多一行紫色，寫出交易所在垃圾桶裡留下了什麼。
 - **結束一天的提醒**：交易所換來的東西還在垃圾桶裡、或多放的東西今晚會被清掉時，在清潔服務那一列下面提醒。只提醒和交易所有關的，自己另外丟進垃圾桶的東西不會提醒。
-- **走私者暗格（改進）**：暗格和直接放在裡面的東西，清潔服務不會清掉（遊戲 VERSION 100-REV5 起），所以不算在會被清掉的東西裡，交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
+- **走私者暗格（改進）**：暗格和直接放在裡面的東西，清潔服務不會清掉（遊戲 VERSION 100-REV5 起；100-REV16 起放在暗格裡的容器裡的東西也不會），所以不算在會被清掉的東西裡，交易所送來的暗格留在垃圾桶，紙條也不會顯示待收貨；暗格裡的東西照樣可能被交易所收走。
 - **被禁止使用時**：黑市聲望太低、被禁止使用地下交易所時，提示和交易所清單右下角用紅字寫出目前的聲望和門檻。
 - 交易所還沒解鎖（清道夫還沒介紹）時什麼都不顯示，不會爆雷。
 
@@ -115,7 +115,7 @@ Demo 版（v1.0.2 以前，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV14 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
+A mod for *Probably Stolen* that takes the guesswork out of the Underground Exchange: hover over the trash can in your shop to see what the Exchange will take and leave tonight, and what the Janitorial Service will clear. Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV16 beta branch is also supported). Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829028450), or download from [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/509) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Exchange Preview, tagged `exchange-preview-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/509?tab=bugs).
 
@@ -133,7 +133,7 @@ The Underground Exchange (leave items in the shop's trash can, pay for the Janit
 - **Trash can indicator**: a sticky note on the trash can (or the light on its lid): No deal, Ready, Too many, Pick up (items from the Exchange are still in the trash can), Banned. The note can go on the front, on the lid (slanted along it), or hang from the counter above the trash can.
 - **Night report**: when the Exchange made a trade, the morning report gets a purple line listing what it left in the trash can.
 - **End of day reminder**: under the Janitorial Service row, a reminder when items from the Exchange are still in the trash can, or extra items will be cleared tonight. It only covers the Exchange; other things you threw in the trash can aren't mentioned.
-- **Smuggler's Bay (Modified)**: the bay and items placed directly inside it are not cleared by the Janitorial Service (since game VERSION 100-REV5), so they are not counted as cleared, and a bay from the Exchange left in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
+- **Smuggler's Bay (Modified)**: the bay and items placed directly inside it are not cleared by the Janitorial Service (since game VERSION 100-REV5; since 100-REV16, items in containers inside the bay aren't either), so they are not counted as cleared, and a bay from the Exchange left in the trash can doesn't make the note show Pick up. The Exchange can still take items from inside the bay.
 - **When you're banned**: if your Blackmarket Reputation is too low to use the Exchange, the tooltip and the bottom-right of the Exchange Directive show your reputation and the threshold in red.
 - Nothing is shown until the Exchange is unlocked (introduced by the janitor), so there are no spoilers.
 

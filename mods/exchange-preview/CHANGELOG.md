@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.4.1（2026-11-19）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 遊戲 VERSION 100-REV16 起，清潔服務也不會清掉走私者暗格（改進）裡的容器裡的東西，提示、垃圾桶紙條和結束一天的提醒都照遊戲的規則算，舊版遊戲照舊。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; the 100-REV16 beta branch is also supported)
+
+- Since game VERSION 100-REV16, the Janitorial Service also leaves items in containers inside a Smuggler's Bay (Modified); the tooltip, the trash can note and the end of day reminder now follow that, and older game versions work as before.
+
 ## v2.4.0（2026-11-15）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 
 namespace ProbablyStolenExchangePreview
 {
@@ -99,7 +100,7 @@ namespace ProbablyStolenExchangePreview
             }
             foreach (var item in trash)
             {
-                // 往上找到第一層 GameItem 就停（和 KeptInTrash 一樣）；直接放在垃圾桶裡的找到垃圾桶本身，不在清單裡 → null
+                // 往上找到第一層 GameItem 就停（要的是直接裝著它的那件）；直接放在垃圾桶裡的找到垃圾桶本身，不在清單裡 → null
                 var parent = GraphUtils.FindParentType<GameItem>(item, null, null);
                 if (parent != null && byItem.TryGetValue(parent, out var p)) byItem[item].Parent = p;
             }
@@ -122,16 +123,93 @@ namespace ProbablyStolenExchangePreview
             Handle = item,
         };
 
+        /// <summary>遊戲的 PlayerStore.IsKeptInTrash 包成的委派；找不到時是 null（一律走 KeptInTrashCopied）。</summary>
+        static Func<GameItem, bool> _gameKept;
+        /// <summary>找過遊戲的方法了沒（不管找到沒有都只找一次）。</summary>
+        static bool _keptRuleChecked;
+        /// <summary>呼叫遊戲的方法出錯過：只用來讓警告只記一次，不停用遊戲的方法。</summary>
+        static bool _keptCallFailed;
+
         /// <summary>
-        /// 清潔服務不清的：走私者暗格（改進）本身，或直接放在它裡面的東西（照遊戲 2026-10-31 更新加的 PlayerStore.IsKeptInTrash，那是 private 只能照抄）。
-        /// FindParentType 往上找到第一層 GameItem 就停，所以放在暗格裡的容器會留著、容器裡的東西照樣被清掉，和遊戲一樣。
+        /// 找遊戲的 PlayerStore.IsKeptInTrash（只找一次），在 log 記一行走哪條路：mod 載入時（ExchangePreviewMod.Init）呼叫，
+        /// 實機測試看 Player.log 就知道這一版遊戲用的是哪套規則；KeptInTrash 第一次用到時還沒找過也會自己找（防呆）。
+        /// 用 AccessTools.Method 帶參數型別（遊戲以後加多載時不會丟 AmbiguousMatchException），確認是 static、回傳 bool 才包成委派：
+        /// 滑鼠提示每次刷新都要對垃圾桶裡每件東西呼叫，委派比每次 MethodInfo.Invoke 省。
+        /// 不用 AccessTools.MethodDelegate&lt;T&gt;：泛型引數 Func&lt;…&gt; 是外部型別，官方掃描可能把它算成 reflection-external；
+        /// typeof 指向遊戲自己型別的 AccessTools.Method 掃描直接放行（繁中 mod 的 MissingTranslations 也這樣用）。
+        /// 全部在 Unity 主執行緒，不用鎖；出錯一律吞掉當成找不到，不讓 mod 載入失敗。
+        /// </summary>
+        internal static void InitKeptRule()
+        {
+            if (_keptRuleChecked) return;
+            _keptRuleChecked = true;
+            string why = "";
+            try
+            {
+                var m = AccessTools.Method(typeof(PlayerStore), "IsKeptInTrash", new[] { typeof(GameItem) });
+                if (m == null) why = "沒有這個方法";
+                else if (!m.IsStatic || m.ReturnType != typeof(bool)) why = $"簽名變了（static={m.IsStatic}，回傳 {m.ReturnType.Name}）";
+                else _gameKept = (Func<GameItem, bool>)Delegate.CreateDelegate(typeof(Func<GameItem, bool>), m);
+            }
+            catch (Exception e)
+            {
+                _gameKept = null;
+                why = $"{e.GetType().Name}：{e.Message}";
+            }
+            try
+            {
+                if (_gameKept != null) ExchangePreviewMod.Log.Msg("清潔服務不清的東西：照遊戲的 PlayerStore.IsKeptInTrash");
+                else ExchangePreviewMod.Log.Warning($"找不到遊戲的 PlayerStore.IsKeptInTrash（{why}），清潔服務不清的東西照 mod 照抄的舊規則（Rev15 以前：走私者暗格（改進）本身與直接放在裡面的東西）");
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 清潔服務不清的（危險廢棄物以外）：照遊戲的 PlayerStore.IsKeptInTrash（private，用反射呼叫，見 InitKeptRule；
+        /// 對 Assembly-CSharp 的反射不算 reflection-external），所以哪一版遊戲都照它自己的規則，以後再改也自動跟上：
+        /// - Rev15 以前：走私者暗格（改進）（smuggler_bay_mod）本身，或直接放在它裡面的東西（FindParentType 往上找到第一層 GameItem 就停，
+        ///   放在暗格裡的容器留著、容器裡的東西照樣被清掉）。
+        /// - Rev16 起：暗格本身；往上任何一層是暗格的（暗格裡的容器裡的東西也算）；裡面任何一層裝著暗格的
+        ///   （某個容器裡裝著暗格：那個容器本身留著，容器裡其他東西照樣被清掉）。最後這條正常玩幾乎碰不到：
+        ///   暗格（改進）放不進背包、物資箱、儲藏區這類會出現在垃圾桶裡的容器（各自的放入檢查都拒收它），
+        ///   只有除錯用的 box_dispenser 輸出格收得下；真正有影響的是「往上任何一層是暗格」那條。
+        /// 找不到方法、或這次呼叫丟例外時，這次退回 KeptInTrashCopied（照抄的 Rev15 以前的規則）。方法名是字串，
+        /// 遊戲改名時會默默退回舊規則，要看 log 那一行（InitKeptRule）。呼叫失敗不永久停用：例外可能只跟某件東西有關。
+        ///
+        /// 模擬的 Kept 是白天（滑鼠提示時、交換之前）算的，遊戲是在交換之後的 ClearTrash 才算，結果還是一樣：
+        /// 往上找的兩條不受交換影響（上層被收走的話，它早就跟著容器離開垃圾桶，ExchangeSim 另外處理）；
+        /// 只有「裡面裝著暗格」這條可能因為交換收走了裡面的暗格而變，但正常玩不會發生：沒有任何一筆交換的條件收 smuggler_bay_mod
+        /// （它的標籤是 CONTAINER_TAG、ITEM_HIDDEN_TAG、SYSTEM_TAG、SYSTEM_TAG_UTILITY、IMPORTANT_TAG，類型 STORAGE，條件的 id 與標籤都對不上），
+        /// 會被收走的容器也裝不了它（走私者暗格 smuggler_bay 由 ContainerHelper.InitSmugglerBay 拒收、一包營養果種子只收 SEED、
+        /// 彈藥盒 ammo_box 只收 AMMUNITION）。所以 ExchangeSim.Run 與 StaysInTrash 不用分版本。
+        /// </summary>
+        static bool KeptInTrash(GameItem item)
+        {
+            if (!_keptRuleChecked) InitKeptRule();
+            var game = _gameKept;
+            if (game == null) return KeptInTrashCopied(item);
+            try { return game(item); }
+            catch (Exception e)
+            {
+                if (!_keptCallFailed)
+                {
+                    _keptCallFailed = true;
+                    ExchangePreviewMod.Log.Warning($"呼叫遊戲的 PlayerStore.IsKeptInTrash 出錯，這次照 mod 照抄的舊規則（只記這一次）：{e.GetType().Name}：{e.Message}");
+                }
+                return KeptInTrashCopied(item);
+            }
+        }
+
+        /// <summary>
+        /// KeptInTrash 的退路：照抄遊戲 2026-10-31 更新加的 IsKeptInTrash（Rev6～Rev15 的規則）：走私者暗格（改進）本身，或直接放在它裡面的東西。
+        /// FindParentType 往上找到第一層 GameItem 就停，所以放在暗格裡的容器會留著、容器裡的東西照樣被清掉，和當時的遊戲一樣。
         /// 遊戲用 IsID（identifier.Equals），這裡用 == 比對，identifier 是 null 時不會丟例外。
         /// </summary>
-        static bool KeptInTrash(GameItem item) =>
+        static bool KeptInTrashCopied(GameItem item) =>
             item.identifier == SmugglerBayModId
             || GraphUtils.FindParentType<GameItem>(item, p => p.identifier == SmugglerBayModId, null) != null;
 
-        /// <summary>清潔服務不清的（危險廢棄物、走私者暗格（改進）與直接放在裡面的東西），和模擬的 Hazardous、Kept 同一套判斷。</summary>
+        /// <summary>清潔服務不清的（危險廢棄物，與 KeptInTrash 為真的走私者暗格（改進）那類），和模擬的 Hazardous、Kept 同一套判斷。</summary>
         internal static bool NotCleared(GameItem item) => GeneralHelper.IsHazardousWaste(item) || KeptInTrash(item);
 
         /// <summary>

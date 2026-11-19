@@ -84,7 +84,9 @@ namespace ProbablyStolenExchangePreview.Verify
         // ── 模擬用的小工具 ──
 
         /// <summary>
-        /// kept：走私者暗格（改進）本身或直接放在它裡面的東西（遊戲裡由 ExchangeReader 判定）。
+        /// kept：遊戲的 IsKeptInTrash 為真的（遊戲裡由 ExchangeReader.KeptInTrash 呼叫遊戲的方法判定；這裡照情境手動給，註明照的是哪一版的規則）。
+        /// Rev15 以前：走私者暗格（改進）本身與直接放在它裡面的東西；Rev16 起再加上放在暗格裡任何一層的、裡面任何一層裝著暗格的。
+        /// 暗格本身與直接放在暗格裡的兩版都算，只用到這些的測試不分版本。
         /// parent：直接裝著它的容器（遊戲裡由 ExchangeReader.ToSims 接上）；清單順序照遊戲的廣度優先，容器排在裡面的東西前面。
         /// </summary>
         static SimItem I(string id, string name = null, bool hazard = false, double purity = 0, bool kept = false, SimItem parent = null) =>
@@ -188,7 +190,7 @@ namespace ProbablyStolenExchangePreview.Verify
             r = ExchangeSim.Run(new List<SimItem>(), new[] { Bullet(), Filter() });
             Check(r.Accepted.Count == 0 && r.Partial.Count == 0 && r.Cleared.Count == 0, "空的垃圾桶：什麼都沒有");
 
-            // 12. 走私者暗格（改進）（遊戲 2026-10-31 的更新）：暗格本身和直接放在裡面的東西留在垃圾桶，不會被清掉；交易所照樣收得走。
+            // 12. 走私者暗格（改進）（遊戲 2026-10-31 的更新）：暗格本身和直接放在裡面的東西留在垃圾桶（Rev15 以前與 Rev16 都是），不會被清掉；交易所照樣收得走。
             // 遊戲的垃圾桶順序是一層一層往下（FindAllChildrenType 是廣度優先），暗格裡的東西排在垃圾桶直接放的後面
             r = ExchangeSim.Run(new[] { I("newspaper"), I("smuggler_bay_mod", kept: true), I("bottle", kept: true) }, new[] { Bullet() });
             Eq(string.Join(",", r.Cleared.Select(x => x.Id)), "newspaper", "走私者暗格（改進）與裡面的東西不算在會被清掉裡");
@@ -480,19 +482,103 @@ namespace ProbablyStolenExchangePreview.Verify
             Eq(Names(r.Cleared), "暗格,注射器1,注射器2,注射器3,暗格裡的廢棄物", "沒成交的暗格被清掉：裡面的危險廢棄物跟著不見，外面的照舊留著");
             Eq(r.Surplus().Count, 0, "沒成交的暗格：沒有多放的");
 
-            // 走私者暗格（改進）（Kept，直接放在垃圾桶）裡的危險廢棄物、Kept 的東西：上層也是不清的，照舊留著
+            // 走私者暗格（改進）（Kept，直接放在垃圾桶）裡的危險廢棄物、Kept 的東西：上層也是不清的，照舊留著（直接放在暗格裡，兩版都 Kept）
             mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
             items = new List<SimItem> { I("newspaper", "報紙"), mod, I("toxic", "暗格（改進）裡的廢棄物", hazard: true, kept: true, parent: mod),
                 I("bottle", "空瓶", kept: true, parent: mod) };
             r = ExchangeSim.Run(items, new[] { Bullet() });
             Eq(Names(r.Cleared), "報紙", "暗格（改進）裡的危險廢棄物與東西照舊留著");
 
-            // 暗格（改進）裡的背包裡的危險廢棄物：背包本身 Kept（直接放在暗格（改進）裡），每一層都不清，照舊留著；背包裡的報紙不 Kept，照樣被清掉
+            // Rev15 以前：暗格（改進）裡的背包裡的危險廢棄物：背包本身 Kept（直接放在暗格（改進）裡），每一層都不清，照舊留著；
+            // 背包裡的報紙不 Kept（往上只找到背包就停），照樣被清掉。
+            // 遊戲裡做不到（暗格（改進）不收背包，ContainerHelper.InitSmugglerBay 拒收 BACKPACK_TAG），這裡和下面的 Rev16 對照只測規則
             mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
             bag = I("backpack", "背包", kept: true, parent: mod);
             items = new List<SimItem> { mod, bag, I("toxic", "背包裡的廢棄物", hazard: true, parent: bag), I("newspaper", "背包裡的報紙", parent: bag) };
             r = ExchangeSim.Run(items, new[] { Bullet() });
-            Eq(Names(r.Cleared), "背包裡的報紙", "暗格（改進）裡的背包：危險廢棄物留著、報紙被清掉");
+            Eq(Names(r.Cleared), "背包裡的報紙", "Rev15 以前：暗格（改進）裡的背包：危險廢棄物留著、報紙被清掉");
+            // Rev16 對照：往上任何一層是暗格就 Kept，背包裡的東西也都留著
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            bag = I("backpack", "背包", kept: true, parent: mod);
+            items = new List<SimItem> { mod, bag, I("toxic", "背包裡的廢棄物", hazard: true, kept: true, parent: bag), I("newspaper", "背包裡的報紙", kept: true, parent: bag) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(r.Cleared.Count, 0, "Rev16：暗格（改進）裡的背包：危險廢棄物與報紙都留著");
+
+            // Rev16：暗格（改進）裡的物資箱裡的東西都 Kept，只清外面的報紙
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            var crate = I("sec_box", "物資箱", kept: true, parent: mod);
+            items = new List<SimItem> { I("newspaper", "外面的報紙"), mod, crate, I("newspaper", "箱子裡的報紙", kept: true, parent: crate),
+                I("toxic", "箱子裡的廢棄物", hazard: true, kept: true, parent: crate) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "外面的報紙", "Rev16：暗格（改進）裡的物資箱：箱子裡的東西都留著");
+            // Rev15 以前對照：物資箱直接放在暗格裡（Kept），箱子裡的報紙不 Kept 被清掉；危險廢棄物的上層（箱子、暗格）都留著，所以也留著
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            crate = I("sec_box", "物資箱", kept: true, parent: mod);
+            items = new List<SimItem> { I("newspaper", "外面的報紙"), mod, crate, I("newspaper", "箱子裡的報紙", parent: crate),
+                I("toxic", "箱子裡的廢棄物", hazard: true, parent: crate) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "外面的報紙,箱子裡的報紙", "Rev15 以前：暗格（改進）裡的物資箱：箱子裡的報紙被清、危險廢棄物留著");
+
+            // Rev16：裝著暗格（改進）的背包本身 Kept（留著），暗格與暗格裡的東西也留著；背包裡其他東西不 Kept，照樣被清掉。
+            // 遊戲裡做不到（背包不收暗格（改進）：ContainerHelper.InitContainerItem 拒收帶 CONTAINER_TAG、又沒有可巢狀標籤的東西），
+            // 這裡和下面的 Rev15 以前對照、背包裡的彈藥只測規則（Rev16 的「裡面任何一層裝著暗格」那條）。
+            // 背包裡的危險廢棄物因為背包留著，也留著。清單照廣度優先：背包、背包裡的（暗格、報紙、廢棄物）、暗格裡的
+            bag = I("backpack", "背包", kept: true);
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true, parent: bag);
+            items = new List<SimItem> { bag, mod, I("newspaper", "背包裡的報紙", parent: bag), I("toxic", "背包裡的廢棄物", hazard: true, parent: bag),
+                I("bottle", "暗格裡的空瓶", kept: true, parent: mod) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "背包裡的報紙", "Rev16：裝著暗格（改進）的背包：只清背包裡的報紙");
+            // Rev15 以前對照：背包不 Kept 被清掉，裡面的暗格（改進）、暗格裡的東西與危險廢棄物跟著不見
+            bag = I("backpack", "背包");
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true, parent: bag);
+            items = new List<SimItem> { bag, mod, I("newspaper", "背包裡的報紙", parent: bag), I("toxic", "背包裡的廢棄物", hazard: true, parent: bag),
+                I("bottle", "暗格裡的空瓶", kept: true, parent: mod) };
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Cleared), "背包,暗格（改進）,背包裡的報紙,背包裡的廢棄物,暗格裡的空瓶", "Rev15 以前：裝著暗格（改進）的背包被清掉，裡面全部跟著不見");
+
+            // Rev16：暗格（改進）裡的物資箱裡的彈藥 Kept：交易所照樣收走 2 發，收剩的留著，不會被清掉、不算多放
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            crate = I("sec_box", "物資箱", kept: true, parent: mod);
+            items = new List<SimItem> { I("newspaper", "報紙"), mod, crate };
+            items.AddRange(In(crate, "ammo_10mm", "彈藥", 3).Select(x => { x.Kept = true; return x; }));
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Accepted[0].Taken), "彈藥1,彈藥2", "Rev16：暗格（改進）裡的物資箱裡的彈藥照樣被收走");
+            Eq(Names(r.Cleared), "報紙", "Rev16：暗格（改進）裡的物資箱：收剩的彈藥留著");
+            Eq(r.Surplus().Count, 0, "Rev16：暗格（改進）裡的物資箱：收剩的彈藥不算多放");
+            // Rev15 以前對照：箱子裡的彈藥不 Kept，收剩的被清掉、是多放的
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            crate = I("sec_box", "物資箱", kept: true, parent: mod);
+            items = new List<SimItem> { I("newspaper", "報紙"), mod, crate };
+            items.AddRange(In(crate, "ammo_10mm", "彈藥", 3));
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Accepted[0].Taken), "彈藥1,彈藥2", "Rev15 以前：暗格（改進）裡的物資箱裡的彈藥照樣被收走");
+            Eq(Names(r.Cleared), "報紙,彈藥3", "Rev15 以前：暗格（改進）裡的物資箱：收剩的彈藥被清掉");
+            Eq(Names(r.Surplus()), "彈藥3", "Rev15 以前：暗格（改進）裡的物資箱：收剩的彈藥是多放的");
+
+            // Rev16：裝著暗格（改進）的背包裡的彈藥不 Kept：交易所收走 2 發，收剩的被清掉、是多放的；背包和暗格留著
+            // （遊戲裡做不到，背包不收暗格（改進），見上面；這裡只測規則）
+            bag = I("backpack", "背包", kept: true);
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true, parent: bag);
+            items = new List<SimItem> { bag, mod };
+            items.AddRange(In(bag, "ammo_10mm", "彈藥", 3));
+            r = ExchangeSim.Run(items, new[] { Bullet() });
+            Eq(Names(r.Accepted[0].Taken), "彈藥1,彈藥2", "Rev16：裝著暗格（改進）的背包裡的彈藥照樣被收走");
+            Eq(Names(r.Cleared), "彈藥3", "Rev16：裝著暗格（改進）的背包：背包和暗格留著，收剩的彈藥被清掉");
+            Eq(Names(r.Surplus()), "彈藥3", "Rev16：裝著暗格（改進）的背包：收剩的彈藥是多放的");
+
+            // Rev16：暗格（改進）裡的一包營養果種子（包本身也有 SEED 標籤，算一顆）裡 9 顆，包和種子都 Kept（往上一層是暗格）。
+            // 種子那筆收走包＋前 4 顆；剩下 5 顆雖然 Kept，但跟著被收走的包離開垃圾桶，會沒掉，而且是種子那筆多放的
+            // （跟著容器不見的不看 Kept，見 ExchangeSim.Run）；暗格本身照舊留著
+            mod = I("smuggler_bay_mod", "暗格（改進）", kept: true);
+            pack = I("seed_packet", "種子包", kept: true, parent: mod);
+            items = new List<SimItem> { mod, pack };
+            items.AddRange(In(pack, "seed_nutrifruit", "種子", 9).Select(x => { x.Kept = true; return x; }));
+            r = ExchangeSim.Run(items, new[] { Seed() });
+            Eq(string.Join(",", Ids(r.Accepted)), "seed_barter", "Rev16：暗格（改進）裡的種子包裡 9 顆：成交");
+            Eq(Names(r.Accepted[0].Taken), "種子包,種子1,種子2,種子3,種子4", "Rev16：暗格（改進）裡的種子包裡 9 顆：收走包＋前 4 顆");
+            Eq(Names(r.Cleared), "種子5,種子6,種子7,種子8,種子9", "Rev16：暗格（改進）裡的種子包裡 9 顆：剩下 5 顆 Kept 也跟著包不見，暗格本身留著");
+            Eq(Names(r.Accepted[0].Surplus), "種子5,種子6,種子7,種子8,種子9", "Rev16：暗格（改進）裡的種子包裡 9 顆：剩下 5 顆是種子那筆多放的");
 
             // 17. 跟著容器不見的，只算帶走它的那筆多放的：暗格裡 8 支注射器＋2 發彈藥、外面 2 發彈藥，走私者暗格與彈藥兩筆都成交。
             // 暗格裡的 2 發跟著暗格不見，但彈藥那筆一晚換兩次也拿不到它們，不是多放的
@@ -587,6 +673,57 @@ namespace ProbablyStolenExchangePreview.Verify
                 new[] { Bullet() });
             lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
             Eq(lines.Last().Text, "垃圾桶裡的\u00A01\u00A0件會被清掉", "提示：差一點的東西在暗格裡，不算在會被清掉裡");
+            // Rev16：暗格（改進）裡的物資箱裡的彈藥 Kept：收剩的留著，沒有多放那行，其餘只算外面的報紙
+            var tBay = I("smuggler_bay_mod", "走私者暗格（改進）", kept: true);
+            var tCrate = I("sec_box", "治安部物資箱", kept: true, parent: tBay);
+            r = ExchangeSim.Run(new[] { I("newspaper", "報紙"), tBay, tCrate, I("ammo_a", "10毫米彈藥", kept: true, parent: tCrate),
+                I("ammo_b", "10毫米彈藥", kept: true, parent: tCrate), I("ammo_c", "10毫米彈藥", kept: true, parent: tCrate) }, new[] { Bullet() });
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|其餘\u00A01\u00A0件會被清掉",
+                "提示（Rev16）：暗格（改進）裡的物資箱裡收剩的彈藥不算多放、不算在會被清掉裡");
+            // 裝著暗格（改進）的背包：Rev16 背包本身留著，只清外面的報紙和背包裡的報紙；Rev15 以前背包被清掉，裡面全部跟著不見。
+            // 遊戲裡做不到（背包不收暗格（改進）：ContainerHelper.InitContainerItem 拒收帶 CONTAINER_TAG、又沒有可巢狀標籤的東西），這裡只測規則。
+            // 清單照廣度優先：報紙、背包、背包裡的（暗格、報紙）、暗格裡的空瓶
+            List<SimItem> BagWithBay(bool rev16)
+            {
+                var b = I("backpack", "背包", kept: rev16);
+                var m = I("smuggler_bay_mod", "走私者暗格（改進）", kept: true, parent: b);
+                return new List<SimItem> { I("newspaper", "報紙"), b, m, I("newspaper", "報紙", parent: b), I("bottle", "空瓶", kept: true, parent: m) };
+            }
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = ExchangeSim.Run(BagWithBay(true), new[] { Bullet() }) });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的|垃圾桶裡的\u00A02\u00A0件會被清掉", "提示（Rev16）：裝著暗格（改進）的背包留著，只算 2 件");
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = ExchangeSim.Run(BagWithBay(false), new[] { Bullet() }) });
+            Eq(string.Join("|", lines.Select(l => l.Text)), "地下交易所・今晚|沒有可換的|垃圾桶裡的\u00A05\u00A0件會被清掉", "提示（Rev15 以前）：裝著暗格（改進）的背包被清掉，裡面全部算進去");
+
+            // Rev16：實機測試布置的情境（本週促銷清空，只有常駐的）。清單照廣度優先，同一層照放進去的順序
+            // （物品欄拖進垃圾桶時先暗格、再外面那包）：暗格（改進）、外面的種子包；暗格裡的物資箱、暗格裡的種子包；外面包裡的 2 顆；
+            // 物資箱裡的彈藥 3 發、奧克西莫注射器 2 支；暗格裡那包的 3 顆。暗格以下全部 Kept，外面那包和包裡的不 Kept。
+            // 彈藥那筆收走箱子裡 2 發，收剩的 1 發留著、不算多放；走私者暗格那筆差一點，配到的注射器留著，所以那行後面沒有「含差一點的」；
+            // 會被清掉的只有外面那包和包裡 2 顆。
+            var kBay = I("smuggler_bay_mod", "走私者暗格（改進）", kept: true);
+            var kOutPack = I("seed_packet", "一包營養果種子");
+            var kCrate = I("sec_box", "治安部物資箱", kept: true, parent: kBay);
+            var kInPack = I("seed_packet", "一包營養果種子", kept: true, parent: kBay);
+            var kItems = new List<SimItem> { kBay, kOutPack, kCrate, kInPack };
+            kItems.AddRange(Enumerable.Range(0, 2).Select(_ => I("seed_nutrifruit", "營養果種子", parent: kOutPack)));
+            kItems.AddRange(Enumerable.Range(0, 3).Select(_ => I("ammo_10mm", "10毫米彈藥", kept: true, parent: kCrate)));
+            kItems.AddRange(Enumerable.Range(0, 2).Select(_ => I("pink_injector", "奧克西莫注射器", kept: true, parent: kCrate)));
+            kItems.AddRange(Enumerable.Range(0, 3).Select(_ => I("seed_nutrifruit", "營養果種子", kept: true, parent: kInPack)));
+            var kSm = Smuggler();
+            kSm.Conditions[0].Label = "走私者暗格";
+            foreach (var c in kSm.Conditions.Skip(1)) c.Label = "奧克西莫注射器";
+            r = ExchangeSim.Run(kItems, new[] { Bullet(), kSm });
+            Eq(string.Join(",", Ids(r.Accepted)), "bullet_barter", "Rev16 實機情境：只有彈藥那筆成交");
+            Eq(r.Accepted[0].Taken.Count, 2, "Rev16 實機情境：彈藥那筆收走箱子裡 2 發");
+            Eq(string.Join(",", r.Partial.Select(p => p.Barter.Id)), "smuggler_barter", "Rev16 實機情境：走私者暗格那筆差一點");
+            Eq(r.Partial[0].Matched.Count(m => m), 2, "Rev16 實機情境：走私者暗格那筆配到 2 支注射器（暗格 0/1）");
+            Check(r.Cleared.SequenceEqual(new[] { kOutPack, kItems[4], kItems[5] }), "Rev16 實機情境：只清外面那包和包裡 2 顆");
+            Eq(r.Surplus().Count, 0, "Rev16 實機情境：沒有多放的");
+            lines = PreviewText.Tooltip(s, new PreviewInput { JanitorialOn = true, Result = r });
+            Eq(string.Join("|", lines.Select(l => l.Text)),
+                "地下交易所・今晚|10毫米彈藥\u00A0×2\u00A0→\u00A0隨機食物|走私者暗格\u00A00/1、奧克西莫注射器\u00A02/8（還差\u00A07\u00A0個\u00A0→\u00A0走私者暗格（改進）＋隨機附贈）|其餘\u00A03\u00A0件會被清掉",
+                "提示（Rev16 實機情境）：其餘只算外面那包 3 件，沒有多放的，差一點那行不附註");
+            Eq(string.Join(",", lines.Select(l => l.Tone)), "Header,Good,Partial,Warn", "提示（Rev16 實機情境）的顏色");
 
             // 今晚沒用清潔服務：照樣預覽，灰色，不說會被清掉
             r = ExchangeSim.Run(new[] { I("ammo_a", "10毫米彈藥"), I("ammo_b", "10毫米彈藥"), I("newspaper", "報紙") }, new[] { Bullet() });
