@@ -6,7 +6,7 @@
 
 - ★：繁中和簡中不只差在字形（台灣用語，或特意改過的譯名）。
 - 說明：只有特意選過的名稱才寫為什麼這樣譯；說明是 AI（Claude）整理、作者審過的。
-- 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）；mod 版本 2.13.1。
+- 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）；mod 版本 2.14.0。
 - 共 970 條，★ 154 條。
 
 分類：[水的種類](#水的種類)（6）、[貨幣與數值](#貨幣與數值)（8）、[違禁品](#違禁品)（5）、[組織](#組織)（2）、[玩法用語](#玩法用語)（15）、[地區](#地區)（4）、[物品](#物品)（457）、[顧客與角色](#顧客與角色)（158）、[派系](#派系)（6）、[公司](#公司)（23）、[難度](#難度)（4）、[初始專精](#初始專精)（14）、[初始特性](#初始特性)（51）、[聲望特性](#聲望特性)（46）、[王爾德的人脈網路](#王爾德的人脈網路)（54）、[作物特性](#作物特性)（23）、[機器模組](#機器模組)（10）、[委託](#委託)（27）、[夜間事件](#夜間事件)（7）、[書與手冊](#書與手冊)（11）、[導師筆記](#導師筆記)（18）、[介面](#介面)（14）、[其他](#其他)（7）
@@ -119,10 +119,10 @@
 | 動物糞便 | Animal Feces | 动物粪便 |  |
 | 動物糞便（大） | Animal Feces (Large) | 动物粪便（大） |  |
 | 動物糞便（小） | Animal Feces (Small) | 动物粪便（小） |  |
-| 鑑定委員會認證證書 | Appraisal Board Certificate | 鉴定委员会认证证书 |  |
-| 鑑定委員會初級證書 | Appraisal Board Junior Certificate | 鉴定委员会初级证书 |  |
-| 鑑定委員會大師認證證書 | Appraisal Board Master Certificate | 鉴定委员会大师认证证书 |  |
-| 鑑定委員會高級認證證書 | Appraisal Board Senior Certificate | 鉴定委员会高级认证证书 |  |
+| 鑑定委員會認證證書 | Appraiser Board Certificate | 鉴定委员会认证证书 |  |
+| 鑑定委員會初級證書 | Appraiser Board Junior Certificate | 鉴定委员会初级证书 |  |
+| 鑑定委員會大師認證證書 | Appraiser Board Master Certificate | 鉴定委员会大师认证证书 |  |
+| 鑑定委員會高級認證證書 | Appraiser Board Senior Certificate | 鉴定委员会高级认证证书 |  |
 | 水質掃描器 ★ | AquaScan | 水质扫描仪 |  |
 | 已啟用的塑性炸藥 ★ | Armed Plastic Explosive | 已激活的塑性炸药 |  |
 | 外接式加長槍管 | Attachable Extended Barrel | 外接式加长枪管 |  |
@@ -890,6 +890,8 @@
 | 豁免權 | Clemency | 豁免权 |  |
 | 商用級供電單元 | Commercial Grade Power Supply Unit | 商用级供电单元 |  |
 | 罪犯人脈 | Criminal Networking | 罪犯人脉 |  |
+| 展示櫃擴建 I | Display Case Expansion I | 展示柜扩建 I |  |
+| 展示櫃擴建 II | Display Case Expansion II | 展示柜扩建 II |  |
 | 清除證據 | Evidence Removal | 清除证据 |  |
 | GP採礦合作社 | GP Mining Coop | GP采矿合作社 |  |
 | 溝渠水直供 | Gutterflow On Tap | 沟渠水直供 |  |
@@ -918,8 +920,6 @@
 | 廢棄機器拆解 | Ruined Machine Scrapping | 废弃机器拆解 |  |
 | 鐵鏽水直供 | Rustwater On Tap | 铁锈水直供 |  |
 | 賣家推薦服務 | Seller Referral Service | 卖家推荐服务 |  |
-| 展示櫃擴建 I | Showcase Expansion I | 展示柜扩建 I |  |
-| 展示櫃擴建 II | Showcase Expansion II | 展示柜扩建 II |  |
 | 店鋪翻新 I | Store Renovation I | 店铺翻新 I |  |
 | 店鋪翻新 II | Store Renovation II | 店铺翻新 II |  |
 | 店鋪翻新 III | Store Renovation III | 店铺翻新 III |  |

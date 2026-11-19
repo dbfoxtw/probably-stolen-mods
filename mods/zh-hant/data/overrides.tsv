@@ -1190,7 +1190,8 @@ NetworkUpgrade	network_COMMERCIAL_POWER_desc	1322ae123f6be682	7	9		11	11	，
 NetworkUpgrade	network_HYPERTECH_SMUGGLER_desc	c5e05b4d040b3ac9	13	14	販	35	36	準
 NetworkUpgrade	network_JACKSON_SPECIAL_STOCK_title	e7294c38025ecf31	3	4	選
 NetworkUpgrade	network_PLANT_DNA_desc	e5ca4640d605de56	30	31	碟
-NetworkUpgrade	network_VENDING_MACHINE_desc	a3a30cb365ad62ca	21	21	販	22	23	
+NetworkUpgrade	network_VENDING_MACHINE_desc	a3a30cb365ad62ca	4	5	門口	21	21	販	22	23	
+NetworkUpgrade	network_VENDING_FOUNTAIN_desc	3e1439ddba6c8626	4	5	門口
 NetworkUpgrade	network_WILD_FIXER2_desc	60bbe5b22a519852	4	6		7	8		16	16	給你
 NetworkUpgrade	network_WILD_FIXER3_desc	6b3ba0f40e5beede	21	23	失憶
 NetworkUpgrade	network_BREWER_SHAREHOLDER_desc	fb81417a494aaa05	16	18	送貨	24	26	折扣

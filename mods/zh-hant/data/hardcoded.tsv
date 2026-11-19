@@ -83,6 +83,11 @@ Disposable:	(?<=<color=#b8855a>)Disposable:(?: |</color>\n<color=#b8855a>)cannot
 # （PlayerStore.Repo：物品名稱，加上 PaperUIManager.OpenGeneralSlipUI 設成單據標題的 SLIP_TITLE）。名稱會出現在物品提示的標題、
 # 視窗標題、議價畫面、選取物品的提示、夜間報告等很多地方（前後常緊接中文），所以不錨定格式，只比對前後不是英文字母的完整名稱；單字之間接受提示框斷行的標籤
 # （標題是白色 #c4c4b0 粗體，選取物品的提示是粗體底線、不包顏色）
+# 水培系統：100-Rev16（2026-11-19）起新開局的名稱走字串表（GetLocalizedMechanicOrDefault 的 mech_item_decrepit_hydroponic），
+# 舊存檔裡的名稱照舊是寫死的英文，所以規則還要留著；譯名跟官方（使用者 2026-11-19 決定，原本譯「破舊水培系統」），用參照。
+# 參照只在字串表有這條時生效（Rev16 起）；Rev13～15 的字串表沒有，參照那條被略過，由下一條照舊譯「破舊水培系統」
+#（官方的名稱是連續 9 個中文字，公開的檔案不放，不能直接寫）。Rev16 進了預設分支以後下一條就用不到
+Decrepit	(?<![A-Za-z])Decrepit(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Hydroponic(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)System(?![A-Za-z])	=Mechanic/mech_item_decrepit_hydroponic
 Decrepit	(?<![A-Za-z])Decrepit(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Hydroponic(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)System(?![A-Za-z])	破舊水培系統
 Repo	(?<![A-Za-z])Repo(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(?:<[bu]>)*)Slip(?![A-Za-z])	扣押清單
 
@@ -113,12 +118,13 @@ Cannot	(?<=<color=#be514c>)Cannot(?: |</color>\n<color=#be514c>)activate(?: |</c
 
 # 模組畫面字串表沒有的英文（2026-11-10 查 100-Rev14 beta）：程式用 LocHelper.GetLocalizedUIOrDefault，key 不在任何語言的字串表，
 # 遊戲顯示寫死的英文預設值。Rev14 程式裡這種 key 有 5 個：window 的說明與最後一條停用原因是 Rev14 新加的，其他三條 Rev13 就沒進字串表（當時漏看）。
-# 官方補進字串表以後這幾條就用不到（不刪也不會換錯）。
+# 官方補進簡中字串表以後這幾條就用不到（不刪也不會換錯）。Rev16（2026-11-19）起英文表有了其中幾句、簡中還沒有，遊戲照舊顯示英文；
+# 公開的檔案不放剛好等於一條遊戲字串的欄位，所以整句的規則前後加「不是英文字母」的條件（行為和只比對整句相同）。
 # 權限的說明（ModCapability.DisplayName）：啟用確認視窗一行一個「- 說明」（ModEnablePromptUI.FormatCapabilities，包顏色標籤）、
 # 拒絕啟用的對話框一行一個「- 說明」（ModCapability.FormatList）、模組詳細資料的「權限：說明, 說明」、下面那條警告的括號裡，
 # 前後的格式都不同，所以不錨定、只比對整句。譯法照字串表裡其他權限的說明（ui_mods_cap_*）
-Move and resize the game window	Move and resize the game window on your monitors	在你的螢幕上移動遊戲視窗並調整大小
-Keep running code in the background	Keep running code in the background, even after the game switches the mod off	在背景持續執行程式碼，即使遊戲已停用此模組
+Move and resize the game window	(?<![A-Za-z])Move and resize the game window on your monitors(?![A-Za-z])	在你的螢幕上移動遊戲視窗並調整大小
+Keep running code in the background	(?<![A-Za-z])Keep running code in the background, even after the game switches the mod off(?![A-Za-z])	在背景持續執行程式碼，即使遊戲已停用此模組
 # 模組清單那一列的警告（ModUIManager 的 ui_mods_issue_deprecated_capability，Rev13 起；Rev13 第一次啟動看到的紅三角）。
 # 括號裡是用「, 」接起來的權限說明（字串表有的已經是中文，沒有的由上面兩條換）；譯法照其他警告（ui_mods_issue_*）
 Uses capabilities the next game update refuses	Uses capabilities the next game update refuses \((.*?)\)\. The mod author needs to update it\.	使用了下次遊戲更新會拒絕的權限（$1）。模組作者需要更新它。
@@ -128,7 +134,7 @@ Uses capabilities the next game update refuses	Uses capabilities the next game u
 Details are in the console (mod-scan).	The mod author needs to update it\. Details are in the console \(mod-scan\)\.	模組作者需要更新它。詳情請查看主控台中的mod-scan記錄。
 # 模組被遊戲停掉的原因（ModLoader.OnSteamGuardTripped 的 ui_mods_note_stopped_console，Rev14 新加）：代入字串表的
 # ui_mods_trust_stopped 與 ui_mods_enable_stopped 的 {0}／{1}；譯法照 ui_mods_note_stopped_process
-developer console commands	it tried to run developer console commands from its own code, which mods are never allowed to do	它試圖從自己的程式碼執行開發者主控台指令，而模組絕不允許這樣做
+developer console commands	(?<![A-Za-z])it tried to run developer console commands from its own code, which mods are never allowed to do(?![A-Za-z])	它試圖從自己的程式碼執行開發者主控台指令，而模組絕不允許這樣做
 
 # 100-Rev15 beta（buildid 26711633，2026-11-18 查）新加、字串表沒有的英文：程式用 LocHelper.GetLocalized*OrDefault，key 不在任何語言的字串表，
 # 遊戲顯示寫死的英文預設值（參數已代入）。官方補進字串表以後這些規則就用不到（不刪也不會換錯；缺貨牌的名稱與說明例外，見下面）。
@@ -144,28 +150,31 @@ Stock	(?<![A-Za-z])Out(?: |(?:</[bu]>)*(?:</color>)?\n(?:<color=#[0-9a-f]{6}>)?(
 # 每個空格接受斷行的標籤，斷行記進 br 群組；譯文照遊戲斷中文的方式（沒有空格，逐字每 26 個字斷一行）在固定的位置插回 ${br}。
 # 不在提示框裡（沒有顏色標籤、沒有斷行，例如別的 mod 顯示說明）時 br 是空的，譯文就是不斷行的一整句，不會留下不成對的標籤
 configured	(?<=^|\n|<color=#c4c4b0>)Can(?: |(?<br></color>\n<color=#c4c4b0>))be(?: |(?<br></color>\n<color=#c4c4b0>))configured(?: |(?<br></color>\n<color=#c4c4b0>))to(?: |(?<br></color>\n<color=#c4c4b0>))keep(?: |(?<br></color>\n<color=#c4c4b0>))certain(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))from(?: |(?<br></color>\n<color=#c4c4b0>))visiting\.(?: |(?<br></color>\n<color=#c4c4b0>))It(?: |(?<br></color>\n<color=#c4c4b0>))must(?: |(?<br></color>\n<color=#c4c4b0>))be(?: |(?<br></color>\n<color=#c4c4b0>))in(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))Display(?: |(?<br></color>\n<color=#c4c4b0>))Case(?: |(?<br></color>\n<color=#c4c4b0>))before(?: |(?<br></color>\n<color=#c4c4b0>))the(?: |(?<br></color>\n<color=#c4c4b0>))Shutter(?: |(?<br></color>\n<color=#c4c4b0>))Door(?: |(?<br></color>\n<color=#c4c4b0>))is(?: |(?<br></color>\n<color=#c4c4b0>))opened(?: |(?<br></color>\n<color=#c4c4b0>))to(?: |(?<br></color>\n<color=#c4c4b0>))work\.(?: |(?<br></color>\n<color=#c4c4b0>))Unique(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))and(?: |(?<br></color>\n<color=#c4c4b0>))customers(?: |(?<br></color>\n<color=#c4c4b0>))from(?: |(?<br></color>\n<color=#c4c4b0>))event(?: |(?<br></color>\n<color=#c4c4b0>))ignore(?: |(?<br></color>\n<color=#c4c4b0>))this(?: |(?<br></color>\n<color=#c4c4b0>))sign\.(?=</color>|\n|$)	可設定不讓某些顧客上門。必須在打開鐵捲門之前放進展示${br}櫃才有效。特殊人物和活動帶來的顧客不受這塊牌子影響。
-# 設定視窗（OpenWindow）：段落標題包粗體（AddSectionTitle 的 AddLabel("<b>" + 標題 + "</b>")），其他都是單獨一個文字物件的 AddLabel、AddToggle
-Retired Merchants:	(?<=^<b>)Retired Merchants:(?=</b>$)	退休商人：
+# 設定視窗（OpenWindow）：段落標題包粗體（AddSectionTitle 的 AddLabel("<b>" + 標題 + "</b>")），其他都是單獨一個文字物件的 AddLabel、AddToggle。
+# Rev16 起英文表有了這個視窗的字（簡中還沒有，遊戲照舊顯示英文）：剛好等於英文字串的觸發字串只取一部分（公開的檔案不放剛好等於一條遊戲字串的欄位；
+# 匯出的檢查只看 12 字以上、有空格的英文，「Buyers:」這類短的不算，照留）
+Merchants:	(?<=^<b>)Retired Merchants:(?=</b>$)	退休商人：
 Buyers:	(?<=^<b>)Buyers:(?=</b>$)	買家：
 Sellers:	(?<=^<b>)Sellers:(?=</b>$)	賣家：
 Special:	(?<=^<b>)Special:(?=</b>$)	特殊：
 No retired merchant	^No retired merchant visits your store yet\.$	還沒有退休商人光顧你的店鋪。
 # 每一列右邊的開關：退休商人代入字串表的星期（mech_calendar_*，中文模式時是「星期一」等），隨機來的顧客是 at random；
 # at random 那條排在前面。星期只認字串表的七個，玩家打的「Visits: …」不換
-Visits: at random	^Visits: at random$	來訪：隨機
+at random	^Visits: at random$	來訪：隨機
 Visits: 	^Visits: (星期[一二三四五六日])$	來訪：$1
 # 每一列左邊的名稱（RandomGroups 與 InspectableSellerName）。食物買家和顧客名稱 ClientName/name_food_buyer 同字，
-# 用參照（公開的檔案不放剛好等於一條遊戲字串的欄位）
-General scavenger	^General scavenger$	一般拾荒者
-Bulk food scavenger	^Bulk food scavenger$	整箱食物拾荒者
-Water sellers	^Water sellers$	水賣家
-Material sellers	^Material sellers$	材料賣家
-Medical sellers	^Medical sellers$	醫療用品賣家
-Barter customers	^Barter customers$	以物易物的顧客
-Food buyers	^Food buyers$	=ClientName/name_food_buyer
-Weapon buyers	^Weapon buyers$	武器買家
-Household goods buyers	^Household goods buyers$	日用品買家
-Inspectable item seller	^Inspectable item seller$	可檢驗物品賣家
+# 用參照（公開的檔案不放剛好等於一條遊戲字串的欄位）。Rev16 起英文表有這些名稱，觸發字串只取最後一個字。
+# Inspectable 照導師筆記「外觀檢查」的「可以用放大鏡檢查」「可檢查的物品」譯「可檢查」（2.13.0 是「可檢驗」，使用者 2026-11-19 定）
+scavenger	^General scavenger$	一般拾荒者
+scavenger	^Bulk food scavenger$	整箱食物拾荒者
+sellers	^Water sellers$	水賣家
+sellers	^Material sellers$	材料賣家
+sellers	^Medical sellers$	醫療用品賣家
+customers	^Barter customers$	以物易物的顧客
+buyers	^Food buyers$	=ClientName/name_food_buyer
+buyers	^Weapon buyers$	武器買家
+buyers	^Household goods buyers$	日用品買家
+seller	^Inspectable item seller$	可檢查物品賣家
 
 # 反應爐（ReactorHelper、ReactorUpgradeGraph、ReactorUpgradeWindow）。
 # 物品說明（ReactorHelper.Description，建立時和每次讀檔都重設）：只在物品提示框，寫法照上面缺貨牌的說明。參數固定是 25、60、30、5，
@@ -181,7 +190,8 @@ gain per	(?<=  ·  |<color=#42a2aa>)Stored(?: |</color>\n<color=#42a2aa>)charge(
 Maximum integrity	(?<=<color=#42a2aa>)Maximum(?: |</color>\n<color=#42a2aa>)integrity(?: |</color>\n<color=#42a2aa>)lost(?: |</color>\n<color=#42a2aa>)per(?: |</color>\n<color=#42a2aa>)junk(?: |</color>\n<color=#42a2aa>)repair:(?: |</color>\n<color=#42a2aa>)(\d+)(?=</color>)	每次垃圾修復降低完整度上限：$1
 # 工業電力的效果（ReactorUpgradeGraph.PowerOutputText）：物品提示框淺青色一行（會斷行），也是升級節點的提示（見下面）
 PowerBloc	(?<=^|\n|<color=#42a2aa>)The(?: |</color>\n<color=#42a2aa>)Recharger(?: |</color>\n<color=#42a2aa>)and(?: |</color>\n<color=#42a2aa>)PowerBloc(?: |</color>\n<color=#42a2aa>)charge(?: |</color>\n<color=#42a2aa>)(\d+)%(?: |</color>\n<color=#42a2aa>)quicker\.(?=</color>|\n|$)	充能器和能量陣列的充電速度加快$1%。
-# 升級視窗：解鎖規則是單獨一個 AddLabel，也接在還沒解鎖的節點提示後面（Describe(node) + "\n" + 規則；CustomUI 的提示是純文字）
+# 升級視窗：解鎖規則是單獨一個 AddLabel，也接在還沒解鎖的節點提示後面（Describe(node) + "\n" + 規則；CustomUI 的提示是純文字）。
+# Rev16 拿掉了這兩處（ReactorUpgradeWindow.UnlockRuleText），Rev15 還用得到，留著（不會換錯）
 A node unlocks	(?<=^|\n)A node unlocks once a connected node is fully upgraded\.$	相連的節點升到滿級後，這個節點才會解鎖。
 # 升級節點的提示（ReactorUpgradeGraph.Describe）：整段開頭，後面可能接「\n解鎖規則」
 Each level lowers the integrity loss	^Each level lowers the integrity loss per night by (\d+)\.(?=\n|$)	每升一級，每晚損失的完整度減少$1。
@@ -193,14 +203,15 @@ Integrity 	^Integrity (I{1,3}|IV)(?=  \d+/\d+$)	完整度 $1
 Charge 	^Charge (I{1,3}|IV)(?=  \d+/\d+$)	充能 $1
 Generation 	^Generation (I{1,3}|IV)(?=  \d+/\d+$)	發電 $1
 Junk Repair	^Junk Repair(?=  \d+/\d+$)	垃圾修復
-Industrial Power	^Industrial Power(?=  \d+/\d+$)	工業電力
+Industrial	^Industrial Power(?=  \d+/\d+$)	工業電力
 # 夜間報告（CurrentConverterHelper.DrawReactorEnergyForNight 的 AddNightLog，沒有顏色）：StartOfDayUIManager 每筆一個文字物件、前面加「-」
 Your reactor supplied	(?<=^-)Your reactor supplied (\d+) kJ of stored charge to your Current Converters\.$	反應爐為電流轉換器供應了$1千焦的儲存電量。
 
 # 機器工作中可以取消（MachineHelper.SetupCancelAction）：物品選單的啟用按鈕（ItemContextHandler，RichTextElement.SetText，純文字）、
-# 確認視窗的內文（GenericConfirmationUIManager.OpenPanel；3D 印表機 MachinePrinter 傳自己的確認文字）。都是單獨一個文字物件，錨定整段
+# 確認視窗的內文（GenericConfirmationUIManager.OpenPanel；3D 印表機 MachinePrinter 傳自己的確認文字）。都是單獨一個文字物件，錨定整段。
+# Rev16 起英文表有「Are you sure you want to cancel?」，觸發字串只取一部分
 The materials used for this print	^Are you sure you want to cancel\? The materials used for this print are lost\.$	確定要取消嗎？這次列印用掉的材料會損失。
-Are you sure you want to cancel?	^Are you sure you want to cancel\?$	確定要取消嗎？
+want to cancel	^Are you sure you want to cancel\?$	確定要取消嗎？
 Cancel	^Cancel$	取消
 
 # 高利貸收債人的玩家選項「提前還清」（StoreClientList.CreateLoanSharkCollect 的 Dialogue.SetText("PLAYER", …)，{0} 是整數）：
@@ -212,7 +223,8 @@ Pinned items are not sold	^Pinned items are not sold\. Unpin it to offer it\.$	�
 Pinned	^Pinned$	已固定
 
 # 啟用要權限的模組時的確認視窗（ModEnablePromptUI.AddUploaderLine）：上傳者那行是單獨一個 AddLabel，顏色用 SetTextColor（不是標籤）。
-# 建立日期那句在風險最高時整句包 <b>（Emphasis）；{0} 是 createdUtc.ToString("d")（格式看系統的地區設定），{1} 是字串表的「N天前」等，
+# 建立日期那句在風險最高時整句包 <b>（Emphasis）；{0} 是日期（Rev16 起是 LocHelper.FormatShortDate，中文語系 yyyy/M/d；
+# Rev15 以前是 createdUtc.ToString("d")，格式看系統的地區設定。兩種都不含換行，規則照樣比得到），{1} 是字串表的「N天前」等，
 # 帳號不到一天時是寫死的 today：換好整句以後只換括號裡的 today
 Checking the mod uploader	^Checking the mod uploader's Steam account\.\.\.$	正在查詢模組上傳者的Steam帳號……
 Steam profile is private	^The mod uploader's Steam profile is private\.$	模組上傳者的Steam個人檔案不公開。
@@ -226,6 +238,25 @@ could not be checked	^The mod uploader's Steam account could not be checked\.$	�
 # 測試版的說明（BetaNotice：遊戲資料夾有 beta.txt 才在主選單出現）：標題 AddHeader、內文 AddLabel，各是單獨一個文字物件
 Beta Branch	^Beta Branch$	測試版分支
 beta branch version	^You are playing a beta branch version of the game\. The translation of some text may not be available yet, or may not be final\.$	你正在遊玩本遊戲的測試版分支。部分文字可能還沒有翻譯，或譯文尚未定稿。
+
+# 100-Rev16 beta（buildid 26772488，2026-11-19 查）新加、簡中字串表沒有的英文：寫法照上面「100-Rev15 beta」那節。
+# Rev16 的英文表有其中 3 條（夜間報告、缺貨牌的段落標題與提示），簡中還沒有，遊戲照舊顯示程式裡的英文（LocHelper.HasEntry 看的是目前語言的表）；
+# 公開的檔案不放剛好等於一條遊戲字串的欄位，所以觸發字串只取一部分、整句寫成正規表示式（句點跳脫）。
+
+# 房東的販賣機提議（StoreClientList）多了永久拒絕：玩家選項（Dialogue.SetText("PLAYER", …)）與房東的回答。
+# 對話也可能出現在錄音機的「名字: 台詞」裡，和上面的台詞一樣不錨定整行；譯法照同一組的 dialog_landlord_vending_*（「[暫時拒絕]」等）
+Decline for good	\[Decline for good\]	[永久拒絕]
+bring it up again	Your loss\. I will not bring it up again\.	那是你的損失。我不會再提這件事了。
+# 夜間報告（NightLog.BurglaryGrace：竊盜寬限期的最後一晚，AddNightLog 包顏色 #cc7755）：StartOfDayUIManager 每筆一個文字物件、前面加「-」。
+# 譯法照同一組的 mech_nightlog_burglary_grace（「新開張的店鋪…保護期還剩{0}晚」）
+grace period is over	(?<=^-<color=#cc7755>)Burglars left your new shop alone one last time: the grace period is over\.(?=</color>$)	小偷最後一次放過你新開張的店鋪，保護期結束了。
+# 議價平板的翻頁（NegociationUIManager.BuildStockPageSelector：賣家帶的貨比櫃台放得下還多時），單獨一個文字物件。
+# 譯法照同一個平板的「選擇報價：{0}/{1}」（ui_nego_choose_offer）與頁碼的「第{0}/{1}頁」（ui_page_indicator）
+Stock page: 	^Stock page: (\d+) / (\d+)$	商品：第$1/$2頁
+# 缺貨牌設定視窗的「可檢查物品」段落（OutOfStockSignHelper.AddSectionTitle）：標題包粗體、單獨一個文字物件，後面另一個文字物件是 info 圖示；
+# 滑鼠移到圖示上的提示是 CustomUI 的提示框（CustomUIManager.ShowTooltip，純文字、遊戲不插斷行）。標題照上面列名稱的「可檢查物品賣家」
+Items:	(?<=^<b>)Inspectable Items:(?=</b>$)	可檢查物品：
+random seller	^An item that is not allowed is no longer brought by any random seller\. A seller who only sells that item stops visiting\.$	不允許的物品，隨機來的賣家都不會再帶來。只賣這種物品的賣家不會再上門。
 
 # 彩券說明頁（PaperUIManager.OpenLotteryInfo 打開的 _LotteryInfographic，level1 場景裡序列化好的文字，2026-10-31 實機看到）：
 # 獎品表右欄的獎金寫死成「1000000 Credits」等五個（字型設成全大寫，畫面上是 CREDITS），左欄「中6個」等走字串表。
