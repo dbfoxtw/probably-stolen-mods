@@ -19,6 +19,13 @@ namespace ProbablyStolenZhHant
         readonly Dictionary<string, string> _exact = new Dictionary<string, string>(StringComparer.Ordinal);
         readonly Dictionary<string, string> _exactTrim = new Dictionary<string, string>(StringComparer.Ordinal); // 去掉前後空白的版本
         readonly HashSet<string> _keyPrefixes = new HashSet<string>(StringComparer.Ordinal);
+        // 樣板第一個佔位符前的字不到 PrefixLen 個時的那幾個字（「房东将于{2}…」的「房东将于」）：畫面上那裡已經代入了數字，
+        // 取前 PrefixLen 字查 _keyPrefixes 查不到，斷行的句子就不拼接（2026-11-21 離線驗證發現），另外用這個認開頭，見 CouldStartKey
+        readonly HashSet<string> _keyHeads = new HashSet<string>(StringComparer.Ordinal);
+        // 本身有空格的整句去掉空格後的樣子（去掉後和別句相同、譯文不同的不收），與字面有空格、前後都有固定文字的樣板：
+        // 遊戲在空格斷行時拿掉那個空格，拼起來對不上，拼接比對時忽略空格再查一次，見 LookupJoined
+        readonly Dictionary<string, string> _exactNoSpace = new Dictionary<string, string>(StringComparer.Ordinal);
+        readonly List<Template> _spacedTemplates = new List<Template>();
         readonly List<Template> _templates = new List<Template>();
         readonly List<Template> _plainTemplates = new List<Template>(); // 字面沒有簡體專用字的樣板，見 ConvertCore
         // 上面每個樣板最長的一段固定字（去重）：不用轉的帶標籤文字含有其中一段才逐段處理，見 ConvertSimplified
@@ -232,6 +239,7 @@ namespace ProbablyStolenZhHant
                     if (seen.Contains(k)) c.SkippedTriggerTerms.Add($"{k}（出現在譯文裡）");
             }
 
+            var noSpaceClash = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kv in c._exact)
             {
                 var k = kv.Key.Trim();
@@ -242,7 +250,16 @@ namespace ProbablyStolenZhHant
                 int end = k.IndexOf('{', a);
                 if (end < 0) end = k.Length;
                 for (int n = 1; n <= PrefixLen && a + n <= end; n++) c._keyPrefixes.Add(k.Substring(a, n));
+                if (end < k.Length && end > a && end - a < PrefixLen) c._keyHeads.Add(k.Substring(a, end - a));
+                if (k.IndexOf(' ') >= 0 && k.IndexOf('{') < 0)
+                {
+                    var ns = k.Replace(" ", "");
+                    var v = kv.Value.Trim();
+                    if (c._exactNoSpace.TryGetValue(ns, out var old) && old != v) noSpaceClash.Add(ns);
+                    else c._exactNoSpace[ns] = v;
+                }
             }
+            foreach (var ns in noSpaceClash) c._exactNoSpace.Remove(ns);
             c.BuildMultiline();
             // 短詞（名稱、狀態等）：整句查不到時用來分詞，處理遊戲自己拼接的字串。照三個開關都開時的內容建（見上面 zhExact）
             foreach (var kv in zhExact)
@@ -299,6 +316,8 @@ namespace ProbablyStolenZhHant
                     c._templates.Add(t);
             // 字面部分越長的樣板越具體，先比對（避免「…{0}…」把別的樣板的字面也吃進佔位符）
             c._templates.Sort((a, b) => b.LiteralLength.CompareTo(a.LiteralLength));
+            foreach (var t in c._templates)
+                if (t.Anchored && t.Literal.IndexOf(' ') >= 0) c._spacedTemplates.Add(t);
             // 字面沒有簡體專用字、套用後字面卻會變的樣板（例如含「下周」「槽位」，套用後變成「下週」「欄位」）另外列出，
             // 不用轉的字串也要比對。只收字面會變的，所以單邊的樣板套上去也只是換掉那個詞，不怕寬鬆。
             // 只看簡體專用字、不看詞觸發：「你的{0}已被治愈！」的「治愈」是詞觸發，但佔位符填的是繁體（玩家取的名字）時
@@ -558,6 +577,7 @@ namespace ProbablyStolenZhHant
         {
             // 切成「標記／換行」與「文字片段」；說明框的長句會被遊戲按字數斷行，而且每行各包一組 <color>，
             // 所以連續幾個文字片段（跨標記、跨換行）拼起來查整句，查到就依各片段原本的長度分配回去。
+            // 拼起來的字串沒有換行，樣板的「佔位符不跨行」（Template.Apply）管不到，所以樣板從最短的拼法試起，見下面
             var tokens = new List<string>();
             var isText = new List<bool>();
             var parts = Markup.Split(s);
@@ -599,27 +619,44 @@ namespace ProbablyStolenZhHant
                 int joinedTo = -1;
                 foreach (bool templates in new[] { false, true })
                 {
-                    for (int v = last; v > u && joinedTo < 0; v--)
+                    // 樣板那一輪：這一段自己就是完整的一句（整句或前後都有固定文字的樣板）時不往下拼，交給下面的 ConvertLine。
+                    // 不然一行就是一句的「热量储备：{0}/{1}千卡」會往下拼，佔位符把下一行「肉类（{0}）：{1}千卡」吞進去，下一行改走
+                    // 後備轉換、換行照原長錯位（2026-11-21 審查：_keyHeads 讓這種行也能當開頭以後才冒出來）。整句那一輪照舊先試
+                    if (templates && (LookupFlexible(tokens[units[u]], templates: false)
+                                      ?? LookupFlexible(tokens[units[u]], templates: true, anchored: true)) != null) break;
+                    // 整句對照從最長的拼法試起，樣板從最短的試起：佔位符什麼都吃，從長的試起時，結尾相同的下一句會整段被這一句的
+                    // 佔位符吞掉。模組的兩個效果「側邊掛載」「頂部掛載」的說明都是「…获得{0}%的临时属性加成。」，第一句的 {0} 吃到
+                    // 第二個效果的「…获得20」，第二句沒套到逐條修正，譯文又照原文長度分配，換行與粗體錯位（2026-11-21 實機截圖）
+                    for (int step = 0; step < last - u && joinedTo < 0; step++)
                     {
+                        int v = templates ? u + 1 + step : last - step;
                         // 拼接不結束在只有空白的片段（例如 RichTextBuilder.AddEmptyLine 的「<size=14px> </size>」）：LookupFlexible 去掉頭尾空白
                         // 也查得到，但照長度分配時，譯文比原文長就把多出來的字分進空白片段（2.3.0 的「點兩下以打開」），短就分走它的空格。
                         // 少接這段查到的是同一句，空白原樣留著
                         if (string.IsNullOrWhiteSpace(tokens[units[v]])) continue;
                         var sb = new StringBuilder();
                         for (int k = u; k <= v; k++) sb.Append(tokens[units[k]]);
-                        var r = LookupFlexible(sb.ToString(), templates, anchored: true);
+                        var r = LookupJoined(sb.ToString(), templates);
                         if (r == null) continue;
                         int pos = 0;
                         for (int k = u; k <= v; k++)
                         {
-                            int len = k == v ? r.Length - pos : Math.Min(tokens[units[k]].Length, r.Length - pos);
-                            tokens[units[k]] = r.Substring(pos, len);
+                            var orig = tokens[units[k]];
+                            int len = k == v ? r.Length - pos : Math.Min(orig.Length, r.Length - pos);
+                            var piece = r.Substring(pos, len);
                             pos += len;
+                            int br = -1; // 和前一段之間的換行
+                            if (k > u)
+                                for (int t = units[k] - 1; t > units[k - 1]; t--)
+                                    if (tokens[t] == "\n") { br = t; break; }
+                            // 遊戲在空格斷行時拿掉那個空格（FindBestSlice），譯文照原長分配後，空格落在換行後的開頭就拿掉
+                            // （「采用.45 AFP弹药」斷在空格，第二行變成「 AFP彈藥…」，2026-11-21 審查）。同一行裡的段落邊界不動
+                            if (br >= 0 && piece.Length > 0 && piece[0] == ' ' && orig.Length > 0 && !char.IsWhiteSpace(orig[0]))
+                                piece = piece.Substring(1);
+                            tokens[units[k]] = piece;
                             // 譯文比原文短時，最後幾段分不到字：遊戲斷行時插的換行跟著拿掉，不然畫面上多一行空白
                             // （2.3.0 垃圾桶的說明原文斷成兩行，譯文一行放得下，說明和「點兩下以打開」中間空了一行）
-                            if (len == 0 && k > u)
-                                for (int t = units[k] - 1; t > units[k - 1]; t--)
-                                    if (tokens[t] == "\n") { tokens[t] = ""; break; }
+                            if (piece.Length == 0 && br >= 0) tokens[br] = "";
                         }
                         joinedTo = v;
                     }
@@ -653,7 +690,33 @@ namespace ProbablyStolenZhHant
             while (a < t.Length && (char.IsWhiteSpace(t[a]) || "-•·*[(（【「".IndexOf(t[a]) >= 0)) a++;
             if (a >= t.Length) return false;
             var p = t.Substring(a, Math.Min(PrefixLen, t.Length - a));
-            return _keyPrefixes.Contains(p) || _keyPrefixes.Contains(t.Substring(0, Math.Min(PrefixLen, t.Length)));
+            if (_keyPrefixes.Contains(p) || _keyPrefixes.Contains(t.Substring(0, Math.Min(PrefixLen, t.Length)))) return true;
+            // 樣板第一個佔位符前不到 PrefixLen 個字：後面接的是代入的數字，看前面那幾個字（_keyHeads）
+            for (int n = 1; n < PrefixLen && n < t.Length - a; n++)
+                if (_keyHeads.Contains(t.Substring(a, n))) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 拼接比對：整句或前後都有固定文字的樣板，查不到再忽略原文的空格查一次。遊戲在空格斷行時拿掉那個空格（RichTextBuilder.Build
+        /// 的 FindBestSlice），拼起來的「…汲取20kJ」對不上「…汲取{0} kJ」（超科技電池的充能速度，2026-11-21 離線驗證發現）。
+        /// 只看本身有空格的整句與字面有空格的樣板（_exactNoSpace、_spacedTemplates）
+        /// </summary>
+        string LookupJoined(string s, bool templates)
+        {
+            var r = LookupFlexible(s, templates, anchored: true);
+            if (r != null) return r;
+            if (templates)
+                return _spacedTemplates.Count == 0 ? null : LookupFlexible(s, x =>
+                {
+                    foreach (var t in _spacedTemplates)
+                        if (t.ApplyLoose(x, Convert) is string v) return v;
+                    return null;
+                });
+            // 頭尾有空白的不在這裡查：Replace 會連縮排一起拿掉，查到的譯文也沒有縮排；LookupFlexible 去掉頭尾空白那一層再查、把縮排接回去
+            return _exactNoSpace.Count == 0 ? null : LookupFlexible(s, x =>
+                x.Length > 0 && !char.IsWhiteSpace(x[0]) && !char.IsWhiteSpace(x[x.Length - 1])
+                && _exactNoSpace.TryGetValue(x.Replace(" ", ""), out var v) ? v : null);
         }
 
         // 由淺到深：只去空白 → 再去項目符號 → 再去「*」（原文本身可能就是「*動作描述*」）
@@ -1109,6 +1172,7 @@ namespace ProbablyStolenZhHant
         sealed class Template
         {
             readonly Regex _re;
+            readonly Regex _loose; // 字面的空格可有可無（字面沒有空格時是 null），見 ApplyLoose
             readonly string _prefix, _suffix;
             readonly string[] _names;   // 原文中各佔位符的文字，例如 "{0}"
             readonly string _target;
@@ -1132,9 +1196,9 @@ namespace ProbablyStolenZhHant
             }
             public bool Anchored => _prefix.Length > 0 && _suffix.Length > 0;
 
-            Template(Regex re, string prefix, string suffix, string[] names, string target, string source, string literal)
+            Template(Regex re, Regex loose, string prefix, string suffix, string[] names, string target, string source, string literal)
             {
-                _re = re; _prefix = prefix; _suffix = suffix; _names = names; _target = target;
+                _re = re; _loose = loose; _prefix = prefix; _suffix = suffix; _names = names; _target = target;
                 Source = source; Literal = literal;
                 var parts = Markup.Split(source);
                 LongestText = "";
@@ -1148,23 +1212,40 @@ namespace ProbablyStolenZhHant
                 var parts = Markup.Split(src);
                 var names = new List<string>();
                 var pattern = new StringBuilder("^");
+                var loose = new StringBuilder("^");
                 var literal = new StringBuilder();
                 for (int i = 0; i < parts.Length; i++)
                 {
                     if (i % 2 == 0 || parts[i][0] != '{')
                     {
                         pattern.Append(Regex.Escape(parts[i]));
+                        // Regex.Escape 把空格寫成「\ 」，後面加「?」就是可有可無
+                        loose.Append(Regex.Escape(parts[i]).Replace("\\ ", "\\ ?"));
                         literal.Append(parts[i]);
                         continue;
                     }
-                    if (names.Contains(parts[i])) return false; // 同一佔位符出現兩次，略過
+                    int seen = names.IndexOf(parts[i]);
+                    if (seen >= 0)
+                    {
+                        // 同一佔位符出現兩次（超科技電池的充能速度「每周期{0}…汲取{0} kJ」，2026-11-21 以前整句略過、走後備轉換）：
+                        // 第二次要和第一次代入的相同（反向參照）。寫成 (?:\n)：後面接數字時不會被讀成別的組號，
+                        // 又是 Unity 的 Mono 和 .NET 都支援的寫法（\k<數字> 只在離線的 .NET 驗過，2026-11-21 審查）
+                        var back = $"(?:\\{seen + 1})";
+                        pattern.Append(back);
+                        loose.Append(back);
+                        continue;
+                    }
                     names.Add(parts[i]);
                     pattern.Append("(.*?)");
+                    loose.Append("(.*?)");
                 }
                 if (names.Count == 0) return false;
                 pattern.Append('$');
+                loose.Append('$');
                 string prefix = parts[0], suffix = parts[parts.Length - 1];
-                t = new Template(new Regex(pattern.ToString(), RegexOptions.Singleline | RegexOptions.CultureInvariant),
+                const RegexOptions opt = RegexOptions.Singleline | RegexOptions.CultureInvariant;
+                t = new Template(new Regex(pattern.ToString(), opt),
+                                 literal.ToString().IndexOf(' ') >= 0 ? new Regex(loose.ToString(), opt) : null,
                                  prefix, suffix, names.ToArray(), dst, src, literal.ToString());
                 return true;
             }
@@ -1180,7 +1261,21 @@ namespace ProbablyStolenZhHant
             public string Apply(string s, Func<string, string> convert, bool numbersOnly = false)
             {
                 if (!s.StartsWith(_prefix, StringComparison.Ordinal) || !s.EndsWith(_suffix, StringComparison.Ordinal)) return null;
-                var m = _re.Match(s);
+                return Fill(_re.Match(s), convert, numbersOnly);
+            }
+
+            /// <summary>字面的空格可有可無（拼接比對用，見 TextConverter.LookupJoined）；字面沒有空格的樣板傳回 null。</summary>
+            public string ApplyLoose(string s, Func<string, string> convert)
+            {
+                if (_loose == null || s.Length == 0) return null;
+                // 和 Apply 的開頭、結尾檢查一樣先擋掉大部分（拼接時每種拼法都會試）：固定文字的頭尾不是空格時，那個字一定要對上
+                if (_prefix.Length > 0 && _prefix[0] != ' ' && s[0] != _prefix[0]) return null;
+                if (_suffix.Length > 0 && _suffix[_suffix.Length - 1] != ' ' && s[s.Length - 1] != _suffix[_suffix.Length - 1]) return null;
+                return Fill(_loose.Match(s), convert, false);
+            }
+
+            string Fill(Match m, Func<string, string> convert, bool numbersOnly)
+            {
                 if (!m.Success) return null;
                 // 佔位符是名字、數字等，不會跨行；跨行代表把別段拼接的文字也吃進來了
                 bool numbers = NumbersOnly || numbersOnly;
