@@ -87,10 +87,12 @@ namespace ProbablyStolenWindowTabs
         /// 2.4.0 起收的滑鼠側鍵不經過這裡：Hotkey.Parse 先把「Mouse＋數字」照遊戲按鍵綁定的名稱換成 Unity 的名稱（Mouse4 → Mouse3），
         /// 這裡照舊擋掉所有 Unity 的滑鼠名稱，當第二道關：玩家寫的 Mouse3 是遊戲的中鍵，不能被當成 Unity 的 KeyCode.Mouse3（側鍵）收下。
         /// 和視窗群組不一樣了（視窗群組不收滑鼠鍵，先不改）。
+        /// 含逗號的也擋（2.6.0，照一鍵收水 2.7.0 審查提出的）：Enum.TryParse 把「A,B」當成旗標的組合（97|98＝99＝KeyCode.C），
+        /// IsDefined 也成立，會默默變成別的鍵。名稱的樣子先看 Hotkey.KeyNameShapeOk（不碰 Unity，離線測試測得到）。
         /// </summary>
         static string Resolve(string name)
         {
-            if (string.IsNullOrEmpty(name) || char.IsDigit(name[0]) || name[0] == '-') return null;
+            if (!Hotkey.KeyNameShapeOk(name)) return null;
             if (!Enum.TryParse(name, true, out KeyCode k) || !Enum.IsDefined(typeof(KeyCode), k)) return null;
             if (k == KeyCode.None || (k >= KeyCode.Mouse0 && k <= KeyCode.Mouse6) || k >= KeyCode.JoystickButton0) return null;
             switch (k)

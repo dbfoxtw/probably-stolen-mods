@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ProbablyStolenWindowTabs
 {
-    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁、鎖住整組時擋什麼（2.6.0 起）。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>拖著物品停在分頁上多久切過去（秒）。</summary>
@@ -214,8 +214,10 @@ namespace ProbablyStolenWindowTabs
         /// <summary>
         /// 拖到分頁條的第 row 排、橫向位置 x 時，插在第幾個分頁前面（0～Count，Count＝最後）：
         /// 這一排第一個中線在 x 右邊的分頁前面；都在左邊就插在這一排最後一個的後面。row 超出範圍時夾回去。
+        /// lead：排在最前面、不是分頁的格數（鎖住時的鏈條小分頁，2.6.0 起）。slots 含這幾格，
+        /// 回傳的是分頁的位置（不算它們）：拖到鏈條小分頁左半邊也是插在第一個分頁前面，組員的位置不會因為它位移。
         /// </summary>
-        internal static int InsertIndex(IList<Slot> slots, int row, float x)
+        internal static int InsertIndex(IList<Slot> slots, int row, float x, int lead = 0)
         {
             if (slots.Count == 0) return 0;
             int rows = RowCount(slots);
@@ -224,10 +226,10 @@ namespace ProbablyStolenWindowTabs
             for (int i = 0; i < slots.Count; i++)
             {
                 if (slots[i].Row != row) continue;
-                if (x < slots[i].X + slots[i].Width / 2) return i;
+                if (x < slots[i].X + slots[i].Width / 2) return Math.Max(0, i - lead);
                 lastInRow = i;
             }
-            return lastInRow + 1;
+            return Math.Max(0, lastInRow + 1 - lead);
         }
 
         /// <summary>
@@ -235,8 +237,10 @@ namespace ProbablyStolenWindowTabs
         /// 插在「拿掉被拖那頁之後」的第幾個前面（0～widths.Count−1）。排法用拿掉它之後的（Layout，含拉長）：
         /// 被拖的那頁畫在哪裡都不影響算出來的位置，不會像用畫出來的排法那樣互相影響、每幀來回跳。
         /// widths 照分頁順序（被拖的那頁在第 lifted 個）。
+        /// lead：widths 最前面不是分頁的格數（鎖住時的鏈條小分頁）。它們照樣一起排（佔位置、影響換行），lifted 是含它們的位置，
+        /// 回傳的是分頁的位置（不算它們，0～分頁數−1）。
         /// </summary>
-        internal static int LiftedInsertIndex(IList<float> widths, int lifted, float maxWidth, float overlap, int row, float x)
+        internal static int LiftedInsertIndex(IList<float> widths, int lifted, float maxWidth, float overlap, int row, float x, int lead = 0)
         {
             var rest = new List<float>();
             for (int i = 0; i < widths.Count; i++)
@@ -244,9 +248,127 @@ namespace ProbablyStolenWindowTabs
             var slots = Layout(rest, maxWidth, overlap);
             // 高於剩下那些分頁的最上排（自己的分頁條多算一排的容忍範圍，InStripArea）＝放最後：
             // 被拖的那頁移到最後時常常自己佔一排，滑鼠跟著它往上移也還是放最後
-            if (row >= RowCount(slots)) return rest.Count;
-            return InsertIndex(slots, row, x);
+            if (row >= RowCount(slots)) return Math.Max(0, rest.Count - lead);
+            return InsertIndex(slots, row, x, lead);
         }
+
+        /// <summary>
+        /// 鎖住的組的分頁拖不出自己的分頁條：滑鼠（分頁條的本地座標，從左下量起）夾回分頁條的範圍裡，
+        /// 影子的中心照夾過的點放，所以滑鼠拖到外面時影子停在分頁條的邊上（插入位置另外用 ClampForInsert 的點算）。
+        /// 範圍照不受拖曳中畫法影響的排法 baseSlots（含鏈條小分頁），右緣是最寬那排的右緣、上緣是最上排的上緣（rows×step＋overlap）；
+        /// halfW、halfH 是影子的一半大小：影子整個留在範圍裡（範圍比影子窄時放正中間）。
+        /// </summary>
+        internal static void ClampToStrip(IList<Slot> baseSlots, float step, float overlap, float halfW, float halfH, float x, float y, out float cx, out float cy)
+        {
+            float right = 0;
+            foreach (var s in baseSlots) right = Math.Max(right, s.X + s.Width);
+            float top = RowCount(baseSlots) * step + overlap;
+            cx = Clamp(x, halfW, right - halfW);
+            cy = Clamp(y, halfH, top - halfH);
+        }
+
+        /// <summary>
+        /// 同上，但給算插入位置用：只夾回分頁條、不往內縮影子的大小。x 夾到 0～最寬那排的右緣，
+        /// y 夾到 0～最上排的上緣再低一點點（rows×step−0.01，換算成排數一定落在最上排以內）。
+        /// 影子用 ClampToStrip 內縮過的點；插入位置用內縮過的點的話，影子中心最左只到被拖那頁的半寬，
+        /// 寬的分頁永遠插不到第 0 個（審查發現）。
+        /// </summary>
+        internal static void ClampForInsert(IList<Slot> baseSlots, float step, float x, float y, out float cx, out float cy)
+        {
+            float right = 0;
+            foreach (var s in baseSlots) right = Math.Max(right, s.X + s.Width);
+            cx = Math.Max(0f, Math.Min(right, x));
+            cy = Math.Max(0f, Math.Min(RowCount(baseSlots) * step - 0.01f, y));
+        }
+
+        /// <summary>v 夾到 lo～hi；hi 比 lo 小（範圍比影子窄）時放正中間。</summary>
+        static float Clamp(float v, float lo, float hi) => hi < lo ? (lo + hi) / 2f : Math.Max(lo, Math.Min(hi, v));
+
+        // ---------------- 鎖住整組（2.6.0 起） ----------------
+
+        /// <summary>
+        /// 鏈條小分頁的圖示（13×5 單位；lock_mockup.py 的 CHAIN）：兩個環中間串一段。# 是畫、. 是透明，由上往下。
+        /// 放在這裡（不碰 Unity）讓離線測試核對大小；TabStrip 照它做貼圖。
+        /// </summary>
+        internal static readonly string[] ChainIcon =
+        {
+            ".###.....###.",
+            "#...#...#...#",
+            "#..#######..#",
+            "#...#...#...#",
+            ".###.....###.",
+        };
+
+        /// <summary>鏈條小分頁的寬度：圖示寬 13＋左右各留 3。高度和其他分頁一樣。</summary>
+        internal const float ChainTabWidth = 13f + 3f * 2;
+
+        /// <summary>拖分頁放開時，滑鼠在哪裡（Tabs.FindTarget 找到的）。</summary>
+        internal enum TabDropSpot
+        {
+            /// <summary>沒有目標（空處、別的視窗的內容區）。</summary>
+            None,
+            /// <summary>自己的分頁條（含容忍範圍）。</summary>
+            OwnStrip,
+            /// <summary>自己的標題列。</summary>
+            OwnTitle,
+            /// <summary>別的視窗（沒鎖的組或獨立的視窗）的標題列或分頁條。</summary>
+            Other,
+            /// <summary>鎖住的組的標題列或分頁條。</summary>
+            LockedOther,
+        }
+
+        /// <summary>放開分頁的結果。</summary>
+        internal enum TabDropAction { Detach, Reorder, Move, Cancel }
+
+        /// <summary>
+        /// 放開拖著的分頁要做什麼。sourceLocked＝被拖的分頁所在的組鎖住了。
+        /// - 鎖住的組的分頁：一律照重排的位置放（拖不出自己的分頁條，影子與插入位置都夾在分頁條裡）；
+        ///   不會拆出來、不會移到別組。
+        /// - 沒鎖的組的分頁：自己的分頁條＝重排、自己的標題列＝取消、別的視窗＝移過去、空處＝拆出來；
+        ///   拖到鎖住的組上＝取消、回到原本那組的原位（不是拆出來）。
+        /// </summary>
+        internal static TabDropAction TabDrop(bool sourceLocked, TabDropSpot spot)
+        {
+            if (sourceLocked) return TabDropAction.Reorder;
+            switch (spot)
+            {
+                case TabDropSpot.OwnStrip: return TabDropAction.Reorder;
+                case TabDropSpot.OwnTitle: return TabDropAction.Cancel;
+                case TabDropSpot.Other: return TabDropAction.Move;
+                case TabDropSpot.LockedOther: return TabDropAction.Cancel;
+                default: return TabDropAction.Detach;
+            }
+        }
+
+        /// <summary>
+        /// 鎖現在算不算數（審查後改）：存的 locked 而且活著的組員至少兩個；aliveCount 是 −1＝不知道（店裡的物品清單抓不到），照存的旗標算。
+        /// 組員的物品賣掉、丟掉只是不顯示，組不會解散；只剩一頁活著時那個視窗沒有分頁條、看不到鏈條，照存的旗標擋的話
+        /// 別人併不進來、拖它不找目標，又沒有分頁條可以右鍵解鎖，永遠卡住（單一個視窗看不到鏈條，會以為壞了）。
+        /// 存的旗標不動：帶出門的組員帶回來、又有兩頁活著時鎖照舊。
+        /// </summary>
+        internal static bool LockHolds(bool locked, int aliveCount) => locked && (aliveCount < 0 || aliveCount >= 2);
+
+        /// <summary>
+        /// 拖視窗時找不找合併的目標：只有從標題列開始拖的才找；被拖的視窗所在的組鎖住了就不找，只是移動
+        /// （鎖住的組不會併到別人身上，拖它多半只是挪位置；什麼都不顯示）。
+        /// </summary>
+        internal static bool WindowDragSeeksTarget(bool fromTitle, bool draggedLocked) => fromTitle && !draggedLocked;
+
+        /// <summary>
+        /// 滑鼠底下最上面的視窗能不能當合併的目標（拖視窗、拖別組的分頁都一樣）：它所在的組鎖住了就不能。
+        /// 不能的時候和拖到內容區一樣沒有目標，不出預告、不顯示被擋；它蓋在最上面，也不往下找別的視窗。
+        /// </summary>
+        internal static bool AcceptsMerge(bool targetLocked) => !targetLocked;
+
+        /// <summary>
+        /// 右鍵點分頁要不要切換鎖住（與「Claude 定的細節」）：剛按下右鍵、滑鼠底下第一個打到的是分頁或鏈條小分頁、
+        /// 能動作（呼叫的人先看 GameWindows.CanAct：外出、暫停選單、選項、拖面板、拉框）、滑鼠在閒著的狀態（不是拖視窗、拖分頁、
+        /// 拖物品或一組物品的途中）、沒按著左鍵、沒在打字、選項沒在設定按鍵（條件照切頁鍵）。
+        /// gameRightClickMode：這一幀或上一幀遊戲在「右鍵退出」的模式裡（圖釘模式、放大鏡、儲物協調器與漏斗的選取；審查後加）。
+        /// 遊戲在 Update 就用右鍵退出了，我們 LateUpdate 時已經看不到那個模式，所以也看上一幀的：不然退出那一下游標剛好在分頁上會順便切換鎖住。
+        /// </summary>
+        internal static bool LockToggleAllowed(bool rightDown, bool onTab, bool idle, bool leftHeld, bool typing, bool suppressHotkeys, bool gameRightClickMode) =>
+            rightDown && onTab && idle && !leftHeld && !typing && !suppressHotkeys && !gameRightClickMode;
 
         /// <summary>
         /// 滑鼠（分頁條的本地座標，從左下量起）在不在分頁條的範圍裡，照不受拖曳中畫法影響的排法 baseSlots 算。

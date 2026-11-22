@@ -12,7 +12,8 @@ namespace ProbablyStolenWindowTabs.Verify
     /// 分頁條的排法（多排時下排拉長）與插入位置、打開時用不用這組的位置、
     /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字（2.5.0 起在 Localization\*.csv）、
     /// 介面字串挑語言（LocPick：最長字串模式、中文時用不用 zh-Hant）、讀檔後失效的編號、
-    /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）。
+    /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）、
+    /// 鎖住整組（2.6.0 起，：各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -44,11 +45,16 @@ namespace ProbablyStolenWindowTabs.Verify
             PositionTest();
             MultiSelectTest();
             HotkeyTest();
+            CommaKeyTest();
             SwitchOrderTest();
+            LockRulesTest();
+            LockRecordTest();
+            ChainLayoutTest();
             StringsTest();
             LocPickTest();
             StaleTest();
             StoreTest();
+            LockStoreTest();
             DemoFileTest();
             DateStringTest();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
@@ -940,6 +946,287 @@ namespace ProbablyStolenWindowTabs.Verify
                 d[key] = v.Replace("\\n", "\n");
             }
             return d;
+        }
+
+        // ── 鍵名含逗號（2.6.0，照一鍵收水 2.7.0 審查提出的） ──
+
+        /// <summary>
+        /// 代替 Unity 的 KeyCode：數值照 Unity（A＝97、B＝98、C＝99），用來重現 Enum.TryParse 把「A,B」當成旗標組合（97|98＝99＝C）的問題。
+        /// 沒有 [Flags]，TryParse 照樣收逗號分隔的寫法。
+        /// </summary>
+        enum FakeKeyCode { None = 0, Tab = 9, A = 97, B = 98, C = 99 }
+
+        /// <summary>照 mod 的 Settings.Resolve 寫的（Unity 的 KeyCode 換成 FakeKeyCode）：先看 Hotkey.KeyNameShapeOk，再交給 Enum.TryParse＋IsDefined。</summary>
+        static string EnumResolve(string name)
+        {
+            if (!Hotkey.KeyNameShapeOk(name)) return null;
+            if (!Enum.TryParse(name, true, out FakeKeyCode k) || !Enum.IsDefined(typeof(FakeKeyCode), k) || k == FakeKeyCode.None) return null;
+            return k.ToString();
+        }
+
+        static void CommaKeyTest()
+        {
+            // 對照：沒有逗號的檢查時，TryParse 真的會把「A,B」讀成 C、IsDefined 也成立（問題是真的）
+            Check(Enum.TryParse("A,B", true, out FakeKeyCode raw) && raw == FakeKeyCode.C && Enum.IsDefined(typeof(FakeKeyCode), raw),
+                "（對照）Enum.TryParse 把 A,B 讀成 C");
+            Check(!Hotkey.KeyNameShapeOk("A,B"), "名稱含逗號：樣子不對");
+            Check(!Hotkey.KeyNameShapeOk("Tab,"), "結尾有逗號：樣子不對");
+            Check(!Hotkey.KeyNameShapeOk("12345") && !Hotkey.KeyNameShapeOk("-1") && !Hotkey.KeyNameShapeOk("") && !Hotkey.KeyNameShapeOk(null),
+                "數字開頭、負號開頭、空的：樣子不對（原本的檢查照舊）");
+            Check(Hotkey.KeyNameShapeOk("Tab") && Hotkey.KeyNameShapeOk("A"), "一般的鍵名：樣子對");
+            Eq(EnumResolve("A,B"), null, "A,B 不收（不會默默變成 C）");
+            Eq(EnumResolve("a"), "A", "A 照收");
+            Check(Hotkey.Parse("A,B", EnumResolve, out var err) == null && err != null, "A,B：不使用、有警告");
+            Check(Hotkey.Parse("Ctrl+A,B", EnumResolve, out err) == null && err != null, "Ctrl+A,B：不使用、有警告");
+            var keys = SwitchKeys.Build("NextTab", "A,B", "PreviousTab", "Ctrl+Tab", EnumResolve);
+            Check(keys.Next == null && keys.Prev?.ToString() == "Ctrl+Tab" && keys.Warnings.Count == 1 && keys.Warnings[0].StartsWith("NextTab"),
+                "下一頁寫 A,B：那一欄照「寫錯的鍵」不使用、警告一次，上一頁照用");
+        }
+
+        // ── 鎖住整組（2.6.0） ──
+
+        /// <summary>各種拖法遇到鎖的結果（Rules 裡不碰 Unity 的判斷）。</summary>
+        static void LockRulesTest()
+        {
+            // 放開分頁：沒鎖的組的分頁
+            Eq(Rules.TabDrop(false, Rules.TabDropSpot.OwnStrip), Rules.TabDropAction.Reorder, "沒鎖：自己的分頁條＝重排");
+            Eq(Rules.TabDrop(false, Rules.TabDropSpot.OwnTitle), Rules.TabDropAction.Cancel, "沒鎖：自己的標題列＝取消");
+            Eq(Rules.TabDrop(false, Rules.TabDropSpot.Other), Rules.TabDropAction.Move, "沒鎖：沒鎖的別組或獨立視窗＝移過去");
+            Eq(Rules.TabDrop(false, Rules.TabDropSpot.None), Rules.TabDropAction.Detach, "沒鎖：空處＝拆出來");
+            Eq(Rules.TabDrop(false, Rules.TabDropSpot.LockedOther), Rules.TabDropAction.Cancel, "決定 68：別組的分頁放在鎖住的組上＝取消、回原位（不是拆出來）");
+            // 鎖住的組的分頁：拖不出自己的分頁條，放開一律照重排的位置放
+            foreach (Rules.TabDropSpot spot in Enum.GetValues(typeof(Rules.TabDropSpot)))
+                Eq(Rules.TabDrop(true, spot), Rules.TabDropAction.Reorder, $"決定 57～59：鎖住的組的分頁放在 {spot}＝照重排的位置放");
+
+            // 拖視窗（抓標題列拖整組或單一視窗）
+            Check(Rules.WindowDragSeeksTarget(true, false), "沒鎖、從標題列拖：找目標");
+            Check(!Rules.WindowDragSeeksTarget(true, true), "決定 60：鎖住的組抓標題列拖：不找目標，只是移動");
+            Check(!Rules.WindowDragSeeksTarget(false, false), "決定 35：從內容區拖：不找目標");
+            Check(!Rules.WindowDragSeeksTarget(false, true), "鎖住的組從內容區拖：不找目標");
+            Check(!Rules.AcceptsMerge(true), "決定 51、67：鎖住的組不算合併的目標（不出預告、放開只是移動）");
+            Check(Rules.AcceptsMerge(false), "沒鎖的組照常是目標");
+
+            // 右鍵切換鎖住的條件（照切頁鍵）
+            Check(Rules.LockToggleAllowed(true, true, true, false, false, false, false), "右鍵剛按下、在分頁上、閒著：切換");
+            Check(!Rules.LockToggleAllowed(false, true, true, false, false, false, false), "不是剛按下：不切換");
+            Check(!Rules.LockToggleAllowed(true, false, true, false, false, false, false), "不在分頁上（被蓋住、點在別處）：不切換");
+            Check(!Rules.LockToggleAllowed(true, true, false, false, false, false, false), "拖視窗、拖分頁、拖物品的途中：不切換");
+            Check(!Rules.LockToggleAllowed(true, true, true, true, false, false, false), "按著左鍵：不切換");
+            Check(!Rules.LockToggleAllowed(true, true, true, false, true, false, false), "打字中：不切換");
+            Check(!Rules.LockToggleAllowed(true, true, true, false, false, true, false), "選項正在設定按鍵：不切換");
+            Check(!Rules.LockToggleAllowed(true, true, true, false, false, false, true), "遊戲剛用右鍵退出圖釘模式、放大鏡、協調器或漏斗的選取：不切換");
+
+            // 鎖有不有效（審查後改）：存的旗標＋活著的組員至少兩個；不知道（−1）照旗標
+            Check(Rules.LockHolds(true, 2) && Rules.LockHolds(true, 5), "鎖住、活著兩頁以上：有效");
+            Check(!Rules.LockHolds(true, 1) && !Rules.LockHolds(true, 0), "鎖住、只剩一頁活著（其他賣掉、丟掉）：不算數");
+            Check(Rules.LockHolds(true, -1), "鎖住、店裡的物品清單抓不到（不知道）：照樣算");
+            Check(!Rules.LockHolds(false, 3) && !Rules.LockHolds(false, -1), "沒鎖：不算");
+        }
+
+        /// <summary>TabRecord 守住鎖：合併、拆開擋住，重排照常；鎖跟著組，解散時消失。</summary>
+        static void LockRecordTest()
+        {
+            var r = Rec(new[] { 1, 2 }, new[] { 3, 4 });
+            r.Groups[0].Locked = true;
+            Check(r.Merge(new[] { 5 }, 5, 1, null, 0, 0, out var src) == null && src.Count == 0, "單一視窗併進鎖住的組：不動作");
+            Check(r.Merge(new[] { 3, 4 }, 3, 2, null, 0, 0, out _) == null, "沒鎖的整組併進鎖住的組：不動作");
+            Check(r.Merge(new[] { 3 }, 3, 1, 2, 0, 0, out _) == null, "別組的分頁移進鎖住的組：不動作");
+            Check(r.Merge(new[] { 1, 2 }, 1, 3, null, 0, 0, out _) == null, "鎖住的組整組併到別組：不動作");
+            Check(r.Merge(new[] { 1 }, 1, 3, null, 0, 0, out _) == null, "鎖住的組的分頁移到別組：不動作");
+            Check(r.Merge(new[] { 2 }, 2, 9, null, 0, 0, out _) == null && r.Find(9) == null, "鎖住的組的分頁拖到獨立視窗上：不動作、不開新組");
+            Check(r.Detach(1) == null, "鎖住的組的分頁拆出來：不動作");
+            Seq(r.Groups[0].Members, new[] { 1, 2 }, "被擋之後鎖住的組沒變");
+            Seq(r.Groups[1].Members, new[] { 3, 4 }, "被擋之後別組沒變");
+            Eq(r.Groups.Count, 2, "被擋之後沒有多出新的組");
+            Check(r.Reorder(2, 1), "決定 58：鎖住的組裡重排照常");
+            Seq(r.Groups[0].Members, new[] { 2, 1 }, "重排後的順序");
+            Check(r.Groups[0].Locked, "重排後還是鎖住");
+            Check(r.Merge(new[] { 4 }, 4, 9, null, 0, 0, out _) != null, "（對照）沒鎖的組照常移到獨立視窗");
+
+            // 鎖住的兩頁組其中一頁不活著（賣掉、丟掉只是不顯示，組不會解散）：鎖不算數，不擋（審查後改）
+            r = Rec(new[] { 1, 2 }, new[] { 3, 4 });
+            r.Groups[0].Locked = true;
+            Func<int, bool> allAlive = _ => true, twoGone = id => id != 2;
+            Check(!TabRecord.LockHolds(r.Groups[0], twoGone) && TabRecord.LockHolds(r.Groups[0], allAlive) && TabRecord.LockHolds(r.Groups[0], null),
+                "LockHolds：一頁不活著不算數、兩頁活著算、不知道算");
+            Check(r.Merge(new[] { 5 }, 5, 1, null, 0, 0, out _, allAlive) == null, "兩頁都活著：單一視窗併不進來");
+            Check(r.Merge(new[] { 5 }, 5, 1, null, 0, 0, out _, null) == null, "清單抓不到（不知道）：照樣擋");
+            var lone = r.Merge(new[] { 5 }, 5, 1, null, 0, 0, out _, twoGone);
+            Check(lone != null && lone.Members.Contains(5) && lone.Locked, "只剩一頁活著：別的視窗併得進來（存的鎖旗標不動）");
+            r = Rec(new[] { 1, 2 }, new[] { 3, 4 });
+            r.Groups[0].Locked = true;
+            Check(r.Merge(new[] { 1 }, 1, 3, null, 0, 0, out _, allAlive) == null, "兩頁都活著：組員移不到別組");
+            Check(r.Merge(new[] { 1 }, 1, 3, null, 0, 0, out _, twoGone) != null && r.Find(1) == r.Find(3), "只剩一頁活著：抓它的標題列拖得進別組");
+            r = Rec(new[] { 1, 2 });
+            r.Groups[0].Locked = true;
+            Check(r.Detach(1, allAlive) == null, "兩頁都活著：拆不出來");
+            Check(r.Detach(1, twoGone) != null, "只剩一頁活著：不再擋（資料一致）");
+
+            // 鎖跟著組：少一頁鎖還在；剩一頁、解散時鎖跟著消失，之後再併成組是沒鎖的
+            r = Rec(new[] { 1, 2, 3 });
+            r.Groups[0].Locked = true;
+            r.PruneStale(2); // 3 不見了
+            Check(r.Groups.Count == 1 && r.Groups[0].Locked, "少一頁：鎖還在");
+            r.PruneStale(1); // 2 也不見了，只剩一頁
+            Eq(r.Groups.Count, 0, "只剩一頁：組解散、鎖跟著消失");
+            var g = r.Merge(new[] { 5 }, 5, 1, null, 0, 0, out _);
+            Check(g != null && !g.Locked, "之後再併成組：沒鎖");
+        }
+
+        /// <summary>
+        /// 鏈條小分頁：13×5 的圖示、寬 19；在分頁條的第一格，和其他分頁一起排（換行、多排拉長），
+        /// 多排時在貼著視窗那排的最左邊；插入位置、重排的索引換算跳過它（lead）；鎖住的組的分頁拖曳中夾在分頁條裡。
+        /// </summary>
+        static void ChainLayoutTest()
+        {
+            Eq(Rules.ChainIcon.Length, 5, "鏈條圖示 5 列");
+            Check(Rules.ChainIcon.All(row => row.Length == 13 && row.All(c => c == '#' || c == '.')), "鏈條圖示每列 13 格、只有 # 與 .");
+            Eq(Rules.ChainTabWidth, 19f, "鏈條小分頁寬 19（圖示 13＋左右各 3）");
+
+            float c = Rules.ChainTabWidth;
+            // 一排：鏈條小分頁在最左邊，後面的分頁照常接上（相鄰重疊 1）
+            var s = Rules.Layout(new[] { c, 40f, 40f }, 100, 1);
+            Check(s[0].Row == 0 && s[0].X == 0 && s[0].Width == 19, "鏈條小分頁是第一格（第 0 排最左邊、寬 19）");
+            Check(s[1].X == 18 && s[2].X == 57 && s.All(x => x.Row == 0), "後面的分頁接在它後面：18、57");
+            // 它佔位置：沒鎖時放得下的，鎖住後換行
+            Eq(Rules.RowCount(Rules.Layout(new[] { 50f, 50f }, 100, 1)), 1, "沒鎖：50＋50 一排放得下");
+            s = Rules.Layout(new[] { c, 50f, 50f }, 100, 1);
+            Check(Rules.RowCount(s) == 2 && s[0].Row == 0 && s[1].Row == 0 && s[2].Row == 1, "鎖住：多了 19 寬，最後一個換到上面一排");
+            // 多排拉長：和其他分頁一起照比例拉長，還在第 0 排最左邊
+            s = Rules.Layout(new[] { c, 60f, 110f }, 120, 0);
+            Check(s[0].Row == 0 && s[0].X == 0 && s[0].Width == 26 && s[1].X == 26 && s[1].Width == 84 && s[2].Row == 1,
+                $"多排時第 0 排拉長到 110：鏈條小分頁 26、第一頁 84（{s[0].Width},{s[1].Width}）");
+
+            // 插入位置跳過它：分頁 [50, 50]，第 0 排是 鏈條(0～19)＋第一頁(18～68)，第 1 排是第二頁(0～50)
+            s = Rules.Layout(new[] { c, 50f, 50f }, 100, 1);
+            Eq(Rules.InsertIndex(s, 0, 5, 1), 0, "拖到鏈條小分頁的左半邊：插在第一頁前面");
+            Eq(Rules.InsertIndex(s, 0, 15, 1), 0, "拖到鏈條小分頁的右半邊：還是第一頁前面");
+            Eq(Rules.InsertIndex(s, 0, 30, 1), 0, "第一頁的左半邊：第一頁前面");
+            Eq(Rules.InsertIndex(s, 0, 60, 1), 1, "第一頁的右半邊：第二頁前面");
+            Eq(Rules.InsertIndex(s, 1, 10, 1), 1, "第 1 排左半邊：第二頁前面");
+            Eq(Rules.InsertIndex(s, 1, 40, 1), 2, "第 1 排右半邊：最後（分頁數 2，不算鏈條小分頁）");
+            Eq(Rules.InsertIndex(s, 0, 5, 0), 0, "（對照）lead 0 時照原本的算法");
+
+            // 重排（拿掉被拖那頁之後的位置）也跳過它：鏈條＋[40,40,40,30]，寬 100、重疊 2，拖第 1 頁（widths 的第 2 個）
+            var widths = new[] { c, 40f, 40f, 40f, 30f };
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 5, 1), 0, "重排：鏈條小分頁上＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 30, 1), 0, "重排：第一頁左半邊＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 50, 1), 1, "重排：拖回原位附近＝拿掉之後的第 1 個前面");
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 99, 1), 2, "重排：第 0 排最右邊");
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 1, 99, 1), 3, "重排：最後（剩下 3 頁）");
+            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 5, 5, 1), 3, "重排：高於剩下的最上排＝放最後（不算鏈條小分頁）");
+            // 換算成 Reorder：組員的位置不因為鏈條小分頁位移（它不在 ids 裡）
+            var ids = new[] { 10, 20, 30, 40 };
+            int at = Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 5, 1);
+            Check(Rules.ReorderPlan(ids, 20, 1, at, out var before) && before == 10, "拖到鏈條小分頁上放開：插在第一頁（10）前面");
+            DragCase("鎖住的組：拖到最前面", ids, 20, at, new[] { 20, 10, 30, 40 }, true);
+            at = Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 50, 1);
+            Check(!Rules.ReorderPlan(ids, 20, 1, at, out _), "鎖住的組：拖回原位不重排");
+
+            // 鎖住的組的分頁拖不出分頁條：滑鼠夾回分頁條的範圍，影子（半寬 20、半高 8）整個留在裡面
+            var b = Rules.Layout(new[] { c, 40f, 40f }, 100, 1); // 右緣 97、一排（上緣 16）
+            Rules.ClampToStrip(b, 15, 1, 20, 8, 50, 8, out var cx, out var cy);
+            Check(cx == 50 && cy == 8, "在分頁條裡：不動");
+            Rules.ClampToStrip(b, 15, 1, 20, 8, -30, 50, out cx, out cy);
+            Check(cx == 20 && cy == 8, $"拖到左上外面：停在左邊（{cx},{cy}）");
+            Rules.ClampToStrip(b, 15, 1, 20, 8, 500, -40, out cx, out cy);
+            Check(cx == 77 && cy == 8, $"拖到右下外面（視窗內容區）：停在右邊（{cx},{cy}）");
+            Eq(Rules.LiftedInsertIndex(new[] { c, 40f, 40f }, 1, 100, 1, (int)Math.Floor(cy / 15), cx, 1), 1, "夾在右邊放開：放最後");
+            b = Rules.Layout(new[] { c, 50f, 50f }, 100, 1); // 兩排：上緣 31
+            Rules.ClampToStrip(b, 15, 1, 25, 8, 30, 200, out cx, out cy);
+            Check(cy == 23 && (int)Math.Floor(cy / 15) == 1, $"兩排、拖到上面外面：停在最上排（y {cy}）");
+            Rules.ClampToStrip(b, 15, 1, 25, 8, 30, -200, out cx, out cy);
+            Check(cy == 8 && (int)Math.Floor(cy / 15) == 0, "兩排、拖到下面外面：停在貼著視窗那排");
+            Rules.ClampToStrip(Rules.Layout(new[] { 30f }, 100, 1), 15, 1, 20, 8, 99, 8, out cx, out _);
+            Eq(cx, 15f, "範圍比影子窄：放正中間");
+
+            // 插入位置用只夾、不內縮的點（審查後改）：寬的分頁拖得到最前面
+            var wideW = new[] { c, 30f, 100f };
+            b = Rules.Layout(wideW, 200, 1); // 一排：鏈條 0～19、30 在 18～48、100 在 47～147
+            Rules.ClampToStrip(b, 15, 1, 50, 8, -40, 8, out cx, out cy);
+            Eq(Rules.LiftedInsertIndex(wideW, 2, 200, 1, 0, cx, 1), 1, "（對照）用影子內縮過的點：100 寬的那頁插不到第 0 個");
+            Rules.ClampForInsert(b, 15, -40, 8, out var ix, out var iy);
+            Check(ix == 0 && iy == 8, $"插入用的點：x 夾到 0（{ix},{iy}）");
+            Eq(Rules.LiftedInsertIndex(wideW, 2, 200, 1, (int)Math.Floor(iy / 15), ix, 1), 0, "寬的分頁拖到最左邊放開＝第 0 個");
+            Rules.ClampForInsert(b, 15, 999, 999, out ix, out iy);
+            Check(ix == 147 && iy < 15 && iy > 14.9f, $"插入用的點：右上夾到最寬那排的右緣、最上排以內（{ix},{iy}）");
+            Eq(Rules.LiftedInsertIndex(wideW, 1, 200, 1, (int)Math.Floor(iy / 15), ix, 1), 1, "拖到右邊外面放開＝最後");
+            Rules.ClampForInsert(Rules.Layout(new[] { c, 50f, 50f }, 100, 1), 15, 30, 500, out _, out iy);
+            Eq((int)Math.Floor(iy / 15), 1, "兩排：拖到上面外面＝最上排");
+            Rules.ClampForInsert(Rules.Layout(new[] { c, 50f, 50f }, 100, 1), 15, 30, -500, out _, out iy);
+            Eq(iy, 0f, "拖到下面外面＝貼著視窗那排");
+
+            // 鏈條自己佔第 0 排（窄視窗、第一頁寬到擠不下）：Layout([19,120],100,1) 第 0 排只有鏈條（被拉到 100）、第 1 排是那頁
+            s = Rules.Layout(new[] { c, 120f }, 100, 1);
+            Check(s[0].Row == 0 && s[0].Width == 100 && s[1].Row == 1, $"鏈條自己在第 0 排、被拉長到 100（{s[0].Width}）");
+            Eq(Rules.InsertIndex(s, 0, 10, 1), 0, "鏈條自己一排：第 0 排左邊＝第一頁前面");
+            Eq(Rules.InsertIndex(s, 0, 90, 1), 0, "鏈條自己一排：第 0 排右邊也是第一頁前面");
+            Eq(Rules.InsertIndex(s, 1, 10, 1), 0, "第 1 排左半邊＝第一頁前面");
+            Eq(Rules.InsertIndex(s, 1, 90, 1), 1, "第 1 排右半邊＝最後");
+            var loneW = new[] { c, 120f, 40f };
+            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 0, 50, 1), 0, "重排（拖 40 那頁、剩下鏈條自己一排）：第 0 排＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 1, 10, 1), 0, "重排：第 1 排左半邊＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 1, 90, 1), 1, "重排：第 1 排右半邊＝最後");
+            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 2, 10, 1), 1, "重排：高於剩下的最上排＝最後");
+            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 5, 1), 0, "重排（拖 120 那頁、剩下一排）：鏈條上＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 50, 1), 1, "重排（拖 120 那頁）：40 那頁的右半邊＝最後");
+        }
+
+        /// <summary>資料檔的 locked（與「Claude 定的細節」）：沒鎖不寫、舊檔沒有這欄讀成沒鎖、不認得的欄位照舊保留、不到兩頁的組連鎖一起拿掉。</summary>
+        static void LockStoreTest()
+        {
+            var warnings = new List<string>();
+            var files = new MemoryFiles();
+            var store = NewStore(files, warnings);
+            var path = TabStore.FileName(4);
+
+            var r = store.Load(4, "run-l");
+            r.Groups.Add(new TabGroup { Members = new List<int> { 4, 5 }, Active = 4, Locked = true });
+            r.Groups.Add(new TabGroup { Members = new List<int> { 6, 7 }, Active = 6 });
+            store.Save(r);
+            var text = files.Files[path];
+            Check(text.Contains("\"locked\": true"), "鎖住的組寫 \"locked\": true");
+            Eq(text.Split("\"locked\"").Length - 1, 1, "沒鎖的組不寫 locked（只有一個）");
+            var back = store.Load(4, "run-l");
+            Check(back.Groups.Count == 2 && back.Groups[0].Locked && !back.Groups[1].Locked, "讀回來：第一組鎖住、第二組沒鎖");
+
+            // 舊檔沒有這欄：讀成沒鎖，寫回去也不多這欄
+            files.Files[path] = "{\"version\":1,\"slot\":4,\"runId\":\"run-l\",\"groups\":[{\"members\":[4,5],\"active\":4,\"x\":1,\"y\":2}]}";
+            back = store.Load(4, "run-l");
+            Check(back.Groups.Count == 1 && !back.Groups[0].Locked, "舊檔沒有 locked：讀成沒鎖");
+            store.Save(back);
+            Check(!files.Files[path].Contains("locked"), "沒鎖時不寫 locked");
+            files.Files[path] = "{\"version\":1,\"slot\":4,\"runId\":\"run-l\",\"groups\":[{\"members\":[4,5],\"active\":4,\"locked\":false}]}";
+            back = store.Load(4, "run-l");
+            store.Save(back);
+            Check(!back.Groups[0].Locked && !files.Files[path].Contains("locked"), "寫著 locked: false 的讀成沒鎖、寫回去拿掉");
+
+            // 不認得的欄位照舊保留（和 locked 並存）
+            files.Files[path] = "{\"version\":1,\"slot\":4,\"runId\":\"run-l\",\"future\":1,\"groups\":[{\"members\":[4,5],\"active\":4,\"locked\":true,\"color\":\"red\"}]}";
+            back = store.Load(4, "run-l");
+            Check(back.Groups[0].Locked && back.Groups[0].Extra != null && back.Groups[0].Extra.ContainsKey("color") && !back.Groups[0].Extra.ContainsKey("locked"),
+                "locked 讀成欄位、不認得的 color 留在 Extra");
+            store.Save(back);
+            text = files.Files[path];
+            Check(text.Contains("\"locked\": true") && text.Contains("\"color\": \"red\"") && text.Contains("\"future\""), "寫回去：locked 與不認得的欄位都在");
+
+            // 不到兩頁的組讀檔時拿掉，鎖跟著消失
+            files.Files[path] = "{\"version\":1,\"slot\":4,\"runId\":\"run-l\",\"groups\":[{\"members\":[7],\"active\":7,\"locked\":true},{\"members\":[8,9],\"active\":8}]}";
+            back = store.Load(4, "run-l");
+            Check(back.Groups.Count == 1 && back.Groups[0].Members.SequenceEqual(new[] { 8, 9 }) && !back.Groups[0].Locked, "只有一頁的鎖住的組讀檔時拿掉");
+            store.Save(back);
+            Check(!files.Files[path].Contains("locked"), "拿掉後寫回去沒有 locked");
+
+            // 舊版 mod（沒有 locked 這欄）讀新檔：當成不認得的欄位原樣留著，寫回去新版讀到還是鎖住
+            r = store.Load(4, "run-l");
+            r.Groups[0].Locked = true;
+            store.Save(r);
+            var opts = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+            var old = System.Text.Json.JsonSerializer.Deserialize<OldRecord>(files.Files[path], opts);
+            Check(old != null && old.Groups.Count == 1 && old.Groups[0].Extra != null && old.Groups[0].Extra.ContainsKey("locked"), "舊版讀新檔：locked 留在不認得的欄位");
+            files.Files[path] = System.Text.Json.JsonSerializer.Serialize(old, opts);
+            back = store.Load(4, "run-l");
+            Check(back.Groups.Count == 1 && back.Groups[0].Locked, "舊版寫回去，新版讀到的還是鎖住");
         }
 
         static void StaleTest()

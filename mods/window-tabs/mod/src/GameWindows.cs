@@ -294,6 +294,34 @@ namespace ProbablyStolenWindowTabs
             return true;
         }
 
+        /// <summary>
+        /// 遊戲正在用右鍵（secondary_click）退出的模式裡（2.6.0 起，只給右鍵切換鎖住用，CanAct 不看）：圖釘模式（ItemPinHelper.IsPinMode）、
+        /// 放大鏡（StoreUIManager.isMagnifyingMode）、儲物協調器的選取（MachineStorageCoordinator.IsBusy）、漏斗的選取（HopperHelper.IsBusy）。
+        /// 這幾個都在 Update 看到右鍵就退出，我們 LateUpdate 時已經不在那個模式了；Tabs 每幀結束時記下來，下一幀遇到右鍵就不切換鎖住。
+        /// 判斷出錯當作不在（照常切換）。
+        /// </summary>
+        internal static bool InRightClickMode(out string reason)
+        {
+            reason = null;
+            try
+            {
+                if (ItemPinHelper.IsPinMode) { reason = "圖釘模式"; return true; }
+                var ui = StoreUIManager.Instance;
+                if (ui != null && ui.isMagnifyingMode) { reason = "放大鏡"; return true; }
+                if (MachineStorageCoordinator.IsBusy) { reason = "儲物協調器正在選"; return true; }
+                if (HopperHelper.IsBusy) { reason = "漏斗正在選"; return true; }
+            }
+            catch (Exception e)
+            {
+                // 每幀都問：出錯只記一次
+                if (!_rightClickModeErrorLogged) WindowTabsMod.DebugLog($"判斷遊戲的右鍵模式時出錯（當作不在，之後不再記）：{e.Message}");
+                _rightClickModeErrorLogged = true;
+            }
+            return false;
+        }
+
+        static bool _rightClickModeErrorLogged;
+
         /// <summary>外出中（地圖、拾荒、夜市）：場景不變，遊戲把店裡的視窗都關掉了（不動作）。</summary>
         internal static bool Outside()
         {

@@ -10,7 +10,7 @@ namespace ProbablyStolenWindowTabs
     /// 分頁的主邏輯：每幀（WindowTabsRunner.LateUpdate，遊戲與別的 mod 都開關完視窗之後）
     /// 1. 整理：一組只留一個開著的視窗、新打開的擺到這組的位置；
     /// 2. 滑鼠：點分頁切頁、拖分頁重排／移到別組／拖出來、拖視窗到別的標題列合併、拖著物品停在分頁上切頁；
-    ///    只有從自己的標題列開始拖的視窗才合併。接著看切頁鍵：切滑鼠底下那組（Settings）；
+    ///    只有從自己的標題列開始拖的視窗才合併。右鍵點分頁切換鎖住整組（2.6.0 起，：成員固定，///    別的併不進來、組員拖不出去）。接著看切頁鍵：切滑鼠底下那組（Settings）；
     /// 3. 畫分頁條（TabStrip）。
     /// 沒有攔遊戲的任何方法：開關視窗都用遊戲自己的方法（GameWindows），判斷都看視窗清單與滑鼠位置。
     /// 分頁組記在 mod 自己的檔案（TabStore），不碰存檔。
@@ -33,7 +33,8 @@ namespace ProbablyStolenWindowTabs
         static bool _dirty;
         static readonly HashSet<string> _errorsLogged = new HashSet<string>();
 
-        enum Mode { Idle, PressTab, DragTab, PressWindow, DragWindow, DragItem }
+        /// <summary>PressChain：左鍵按在鎖住時的鏈條小分頁上（2.6.0 起）：只把視窗拉到最上面，按住拖它什麼都不做，放開回 Idle。</summary>
+        enum Mode { Idle, PressTab, DragTab, PressWindow, DragWindow, DragItem, PressChain }
         static Mode _mode;
         /// <summary>
         /// 上一幀滑鼠左鍵按著沒有：「剛按下」自己用 GetMouseButton 比對，不用 GetMouseButtonDown
@@ -41,6 +42,16 @@ namespace ProbablyStolenWindowTabs
         /// GetMouseButton 沒人攔，所以自己和上一幀比）。
         /// </summary>
         static bool _wasHeld;
+        /// <summary>上一幀滑鼠右鍵按著沒有（右鍵點分頁切換鎖住，2.6.0 起）：「剛按下」和左鍵一樣自己比，理由同 _wasHeld。</summary>
+        static bool _wasRightHeld;
+        /// <summary>
+        /// 上一幀結束時遊戲在「右鍵退出」的模式裡（圖釘模式、放大鏡、儲物協調器與漏斗的選取；GameWindows.InRightClickMode）與是哪一種。
+        /// 遊戲在 Update 看到右鍵就退出了，這一幀 LateUpdate 已經看不到，所以看上一幀的：退出那一下不順便切換鎖住（審查後加）。
+        /// </summary>
+        static bool _rightModePrev;
+        static string _rightModePrevWhy;
+        /// <summary>遊戲按鈕的點擊聲（MachineryButton.onClickAudio 的預設值）：右鍵切換鎖住時播，鎖住、解鎖同一聲（和一鍵關窗的鎖頭一樣）。</summary>
+        const string ClickAudio = "interface_click";
         static Vector2 _pressMouse;
         static TabStrip _pressStrip;
         static int _pressId;
@@ -53,6 +64,11 @@ namespace ProbablyStolenWindowTabs
         /// （Reconcile 靠它讓這組的位置跟著視窗改，不然之後切頁會開回舊位置），只是不找目標、不畫預告、放開不合併。
         /// </summary>
         static bool _pressOnTitle;
+        /// <summary>
+        /// 這次拖視窗要不要找合併的目標（Rules.WindowDragSeeksTarget）：從標題列開始、而且被拖的視窗所在的組沒鎖。
+        /// 不找的時候照樣走 DragWindow（這組的位置要跟著視窗改），只是不找目標、不畫預告、放開不合併。
+        /// </summary>
+        static bool _seekTarget;
         static PixelWindow _dragWindow;
         /// <summary>這次拖曳時店裡自己的物品（只有店裡的箱子能組分頁，照視窗群組只存店裡的）。</summary>
         static HashSet<GameItem> _own;
@@ -72,6 +88,11 @@ namespace ProbablyStolenWindowTabs
             public bool OnStrip;
         }
         static Target _target;
+        /// <summary>
+        /// FindTarget 找到的最上面那個視窗所在的組鎖住了（2.6.0 起）：沒有目標、不顯示什麼，
+        /// 拖別組的分頁時放開＝取消、回到原位，不是拆出來。不是被鎖擋住時是 null。
+        /// </summary>
+        static TabGroup _blockedBy;
         /// <summary>除錯 log 用：FindTarget 找不到目標的原因、上一次記下的狀態（變了才記）。</summary>
         static string _why, _lastWhy;
         static string _dragLabel;
@@ -113,6 +134,8 @@ namespace ProbablyStolenWindowTabs
             _hoverId = 0;
             _hoverFrozen = false;
             _wasHeld = false;
+            _wasRightHeld = false;
+            _rightModePrev = false;
         }
 
         /// <summary>
@@ -239,12 +262,13 @@ namespace ProbablyStolenWindowTabs
         internal static void Tick()
         {
             bool held = Input.GetMouseButton(0);
+            bool rightHeld = Input.GetMouseButton(1);
             try
             {
                 // 拖曳中遊戲失去焦點（Alt+Tab）：Unity 失去焦點時滑鼠按鍵的狀態可能歸零，下一幀會被當成放開、把分頁拖出來。
                 // 取消就好，不放下。拖物品（DragItem）不管：那是遊戲自己的拖曳，我們只看它停在哪個分頁上；
                 // 取消了下一幀又會因為遊戲還在拖而回到 DragItem，每幀反覆
-                if ((_mode == Mode.PressTab || _mode == Mode.DragTab || _mode == Mode.PressWindow || _mode == Mode.DragWindow)
+                if ((_mode == Mode.PressTab || _mode == Mode.DragTab || _mode == Mode.PressWindow || _mode == Mode.DragWindow || _mode == Mode.PressChain)
                     && !Application.isFocused)
                 {
                     WindowTabsMod.DebugLog("遊戲失去焦點，取消拖曳");
@@ -261,6 +285,8 @@ namespace ProbablyStolenWindowTabs
                 if (GameWindows.CanAct(out var why))
                 {
                     HandleInput(r, windows, held);
+                    // 右鍵點分頁切換鎖住：放在左鍵之後，這一幀左鍵開始按分頁、拖視窗了就不算（_mode 不是 Idle）
+                    HandleLockClick(r, rightHeld && !_wasRightHeld, held);
                     windows = Scan(out byId); // 這一幀的動作可能開關了視窗：用動作後的狀態畫，免得分頁條閃一下
                     // 切頁鍵放在滑鼠之後：這一幀滑鼠開始拖視窗或分頁了就不動作；切了頁同樣用切完的狀態畫
                     if (HandleSwitchKeys(r)) Scan(out byId);
@@ -280,6 +306,8 @@ namespace ProbablyStolenWindowTabs
             finally
             {
                 _wasHeld = held;
+                _wasRightHeld = rightHeld;
+                _rightModePrev = GameWindows.InRightClickMode(out _rightModePrevWhy);
                 // 拖分頁的擋板留著會擋掉遊戲所有的滑鼠操作：不是在拖分頁卻還有影子（不管哪條路漏掉），這一幀就收掉
                 if (_ghost != null && _mode != Mode.DragTab) DestroyGhost();
             }
@@ -393,6 +421,14 @@ namespace ProbablyStolenWindowTabs
                     _hoverFrozen = false;
                     if (!down) break;
                     var (strip, index) = RaycastTab(mouse, false);
+                    if (strip != null && index == TabStrip.ChainIndex)
+                    {
+                        // 鏈條小分頁：只把視窗拉到最上面（和按在分頁上一樣，它也吃掉了按下的事件），不切頁、不解鎖；
+                        // 按住拖它什麼都不做（不出影子、不重排），放開回 Idle
+                        _mode = Mode.PressChain;
+                        strip.Window.ToFront(false);
+                        break;
+                    }
                     if (strip != null && strip.Spec != null && index >= 0 && index < strip.Spec.Ids.Count)
                     {
                         _mode = Mode.PressTab;
@@ -420,20 +456,35 @@ namespace ProbablyStolenWindowTabs
                     else if ((mouse - _pressMouse).magnitude > Rules.DragThresholdPixels) StartTabDrag(mouse);
                     break;
                 case Mode.DragTab:
-                    if (!_pressStrip.Alive || !_pressStrip.Window.IsVisible() || r.Find(_pressId) == null) { EndDrag(); break; }
-                    _ghost?.Move(mouse);
-                    _target = FindTarget(windows, mouse, _pressStrip.Window, true);
+                {
+                    var gDrag = r.Find(_pressId);
+                    if (!_pressStrip.Alive || !_pressStrip.Window.IsVisible() || gDrag == null) { EndDrag(); break; }
+                    // 鎖住的組的分頁拖不出自己的分頁條：滑鼠位置夾回分頁條的範圍，影子停在邊上，
+                    // 目標一律是自己的分頁條（重排），不找別的視窗。插入位置與放開用只夾、不內縮的點（ClampToOwn 的 insertAt）
+                    bool srcLocked = LockHolds(gDrag, OwnerId(_pressStrip.Window));
+                    var at = mouse;
+                    var ghostAt = srcLocked ? _pressStrip.ClampToOwn(mouse, _pressId, out at) : mouse;
+                    _ghost?.Move(ghostAt);
+                    _target = srcLocked ? OwnStripTarget(at) : FindTarget(r, windows, mouse, _pressStrip.Window, true);
                     UpdatePreviewLabel(r);
+                    if (WindowTabsMod.Debug)
+                    {
+                        // 被鎖擋住：狀態變了才記，不每幀洗版
+                        string now = _blockedBy != null ? $"停在鎖住的組上（被擋，放開會取消）：{Describe(_blockedBy)}" : null;
+                        if (now != _lastWhy) { if (now != null) WindowTabsMod.DebugLog($"拖分頁 {Name(_pressId)}：{now}"); _lastWhy = now; }
+                    }
                     // 滑鼠在分頁條上（自己的分頁條含容忍範圍，或別組的分頁條）時影子只剩虛線外框，看得到底下的分頁與要放的位置
                     // （變淡的那頁或虛線預告）；離開分頁條就變回實心：拖出來、在自己的標題列（取消），或在別的視窗的標題列上
-                    // （預告畫在它的分頁條上，可能跑到畫面外或被上層視窗蓋住）。原本在分頁條上完全不畫，實測覺得不知道拖到哪（2026-10-21）
+                    // （預告畫在它的分頁條上，可能跑到畫面外或被上層視窗蓋住）。原本在分頁條上完全不畫，實測覺得不知道拖到哪（2026-10-21）。
+                    // 停在鎖住的組上時沒有目標，照「沒有目標」畫成實心（不顯示被擋）
                     _ghost?.SetOnStrip(_target != null && _target.OnStrip);
                     if (!held)
                     {
-                        try { DropTab(r, mouse); }
+                        try { DropTab(r, at, srcLocked); }
                         finally { EndDrag(); }
                     }
                     break;
+                }
                 case Mode.PressWindow:
                     if (!held) { EndDrag(); break; }
                     if (draggingItem) { EndDrag(); _mode = Mode.DragItem; break; } // 按在物品上、拖起來了（遊戲拖物品是按住拖）
@@ -442,14 +493,20 @@ namespace ProbablyStolenWindowTabs
                     _dragWindow = _pressWindow;
                     _mode = Mode.DragWindow;
                     _lastWhy = null;
-                    if (!_pressOnTitle)
+                    // 從標題列抓的先重抓店裡的物品：鎖有不有效要看活著的組員（LockHolds），用最新的；抓內容區的照舊不重抓
+                    if (_pressOnTitle) RefreshForDrag();
+                    var lockedGroup = LockedGroupOf(r, _dragWindow);
+                    _seekTarget = Rules.WindowDragSeeksTarget(_pressOnTitle, lockedGroup != null);
+                    if (!_seekTarget)
                     {
-                        // 抓內容區：只是遊戲自己的移動。不重抓店裡的物品（_own 只有找目標用得到）
+                        // 抓內容區：只是遊戲自己的移動。不重抓店裡的物品（_own 只有找目標用得到）。
+                        // 抓鎖住的組的標題列也一樣：鎖住的組不會併到別人身上，完全不找目標、什麼都不顯示
                         if (WindowTabsMod.Debug)
-                            WindowTabsMod.DebugLog($"開始拖視窗「{GameWindows.Title(_dragWindow)}」：從內容區抓，只移動");
+                            WindowTabsMod.DebugLog(_pressOnTitle
+                                ? $"開始拖視窗「{GameWindows.Title(_dragWindow)}」：它那組鎖住了，只移動（不找目標）：{Describe(lockedGroup)}"
+                                : $"開始拖視窗「{GameWindows.Title(_dragWindow)}」：從內容區抓，只移動");
                         break;
                     }
-                    RefreshForDrag();
                     var di = GameWindows.OwnerItem(_dragWindow);
                     _dragLabel = di != null ? SafeName(di) : GameWindows.Title(_dragWindow);
                     // _own 可能是 null（PlayerStore 還沒好、FindAllItem 丟例外）：字串只在除錯模式算，算的時候也不能丟例外
@@ -459,13 +516,13 @@ namespace ProbablyStolenWindowTabs
                     break;
                 case Mode.DragWindow:
                     if (_dragWindow == null || !_dragWindow.IsVisible()) { WindowTabsMod.DebugLog("拖著的視窗不見了，取消"); EndDrag(); break; }
-                    if (!_pressOnTitle)
+                    if (!_seekTarget)
                     {
-                        // 從內容區抓的：不找目標、不畫預告分頁、放開不合併。這組的位置照樣由 Reconcile 跟著視窗改
+                        // 從內容區抓的、鎖住的組：不找目標、不畫預告分頁、放開不合併。這組的位置照樣由 Reconcile 跟著視窗改
                         if (!held) EndDrag();
                         break;
                     }
-                    _target = FindTarget(windows, mouse, _dragWindow, false);
+                    _target = FindTarget(r, windows, mouse, _dragWindow, false);
                     UpdatePreviewLabel(r);
                     if (WindowTabsMod.Debug)
                     {
@@ -475,7 +532,7 @@ namespace ProbablyStolenWindowTabs
                     if (!held)
                     {
                         if (WindowTabsMod.Debug)
-                            WindowTabsMod.DebugLog($"放開視窗：{(_target != null ? $"併到「{GameWindows.Title(_target.Window)}」" : "沒有目標，不合併")}");
+                            WindowTabsMod.DebugLog($"放開視窗：{(_target != null ? $"併到「{GameWindows.Title(_target.Window)}」" : _blockedBy != null ? $"停在鎖住的組上（被擋），只移動：{Describe(_blockedBy)}" : "沒有目標，不合併")}");
                         try { DropWindow(r); }
                         finally { EndDrag(); }
                     }
@@ -484,7 +541,103 @@ namespace ProbablyStolenWindowTabs
                     if (!draggingItem) { _hoverId = 0; _hoverFrozen = false; _mode = Mode.Idle; break; }
                     HoverWhileDraggingItem(r, mouse);
                     break;
+                case Mode.PressChain:
+                    // 按在鏈條小分頁上：拖它什麼都不做，等放開
+                    if (!held) EndDrag();
+                    break;
             }
+        }
+
+        /// <summary>
+        /// 視窗的所屬物品所在的組「鎖有效」就回傳那組（2.6.0 起，LockHolds）；沒有編號、不在組裡、沒鎖、
+        /// 鎖住但活著的組員不到兩個都是 null。
+        /// </summary>
+        static TabGroup LockedGroupOf(TabRecord r, PixelWindow w)
+        {
+            int id = OwnerId(w);
+            var g = id != 0 ? r.Find(id) : null;
+            return LockHolds(g, id) ? g : null;
+        }
+
+        /// <summary>視窗的所屬物品的編號（沒有所屬物品或還沒發編號是 0）。</summary>
+        static int OwnerId(PixelWindow w)
+        {
+            var item = w != null ? GameWindows.OwnerItem(w) : null;
+            return item != null ? item.uniqueId : 0;
+        }
+
+        /// <summary>
+        /// 這組的鎖現在算不算數（審查後改）：存的 Locked 而且活著的組員至少兩個（TabRecord.LockHolds）。
+        /// 活著＝和畫分頁條同一個條件：開著的那頁（openId，視窗開著就一定在），或店裡找得到（_items）。
+        /// 組員的物品賣掉、丟掉只是不顯示，資料裡還在、組不會解散；只剩一頁活著時那個視窗沒有分頁條、看不到鏈條，
+        /// 照存的旗標擋的話別人併不進來、拖它不找目標，又沒有分頁條可以右鍵解鎖，會以為壞了、而且永遠卡住。
+        /// 存的旗標不動：帶出門的組員帶回來時鎖照舊。店裡的物品清單從沒抓到過（_items 是 null）時當成不知道，鎖照舊算。
+        /// </summary>
+        static bool LockHolds(TabGroup g, int openId) => TabRecord.LockHolds(g, AliveOrNull(openId));
+
+        /// <summary>
+        /// 給 TabRecord 判斷鎖用的「活著」：open 裡的（開著的視窗、正被拖的與目標的所屬物品）或店裡找得到的。
+        /// 店裡的物品清單從沒抓到過時回傳 null（不知道，鎖照存的旗標算）。抓失敗時 Items 沿用上一份，那份照樣用。
+        /// </summary>
+        static Func<int, bool> AliveOrNull(params int[] open)
+        {
+            var items = _items;
+            if (items == null) return null;
+            return id => (id != 0 && Array.IndexOf(open, id) >= 0) || items.ContainsKey(id);
+        }
+
+        /// <summary>
+        /// 鎖住的組的分頁被拖著時的目標：一律是自己的分頁條（重排），插入位置照夾回分頁條裡的位置算（TabStrip.ClampToOwn）。
+        /// 影子一律只剩虛線外框（它一直在分頁條上）。
+        /// </summary>
+        static Target OwnStripTarget(Vector2 clamped)
+        {
+            _blockedBy = null;
+            _why = null;
+            return new Target { Window = _pressStrip.Window, Own = true, OnStrip = true, At = _pressStrip.InsertIndexAt(clamped, _pressId) };
+        }
+
+        /// <summary>
+        /// 右鍵點分頁（任何一頁，包括鏈條小分頁）切換這組鎖住／解鎖：沒有選單；單一個視窗沒有分頁條，不能鎖。
+        /// 判斷照左鍵點分頁的同一套：滑鼠底下第一個打到的要是分頁（RaycastTab，被別的視窗蓋住不算）。只在能動作的時候算，條件照切頁鍵
+        /// （Rules.LockToggleAllowed；外出、暫停選單、選項、拖面板、拉框由 Tick 的 CanAct 擋在前面）；
+        /// 這一幀或上一幀遊戲在用右鍵退出的模式裡（_rightModePrev）也不切換。
+        /// 切換時播遊戲按鈕的點擊聲、寫檔；分頁條由接下來的 UpdateStrips 照新的狀態重畫（StripSpec.Locked 在 Signature 裡）。
+        /// 右鍵點在分頁以外的地方是遊戲的事（物品的右鍵選單），不記 log。
+        /// </summary>
+        static void HandleLockClick(TabRecord r, bool rightDown, bool held)
+        {
+            if (!rightDown) return;
+            try
+            {
+                var (strip, index) = RaycastTab((Vector2)Input.mousePosition, false);
+                bool onTab = strip != null && strip.Spec != null && strip.Spec.Ids.Count > 0 &&
+                             (index == TabStrip.ChainIndex || (index >= 0 && index < strip.Spec.Ids.Count));
+                if (!onTab) return;
+                bool idle = _mode == Mode.Idle && !GameWindows.DraggingItem() && !GameWindows.GroupDragging();
+                bool typing = StoreUIManager.IsAnyTyping();
+                bool suppress = KeyBindHelper.SuppressHotkeys;
+                bool modeNow = GameWindows.InRightClickMode(out var modeWhy);
+                bool gameMode = _rightModePrev || modeNow;
+                if (!Rules.LockToggleAllowed(true, onTab, idle, held, typing, suppress, gameMode))
+                {
+                    WindowTabsMod.DebugLog($"右鍵點分頁：不切換鎖住（{(gameMode ? $"遊戲用右鍵退出{(modeNow ? modeWhy : _rightModePrevWhy)}" : suppress ? "選項正在設定按鍵" : typing ? "打字中" : held ? "按著左鍵" : _mode != Mode.Idle ? $"拖曳途中（{_mode}）" : "拖著物品")}）");
+                    return;
+                }
+                int id = index == TabStrip.ChainIndex ? strip.Spec.Ids[0] : strip.Spec.Ids[index];
+                var g = r.Find(id);
+                if (g == null) { WindowTabsMod.DebugLog($"右鍵點分頁：{Name(id)} 不在任何一組，不切換"); return; }
+                g.Locked = !g.Locked;
+                try
+                {
+                    var audio = AudioManager.Instance;
+                    if (audio != null) audio.Play(ClickAudio);
+                }
+                catch (Exception e) { LogOnce("播點擊聲", e); }
+                Persist(r);
+                WindowTabsMod.DebugLog($"{(g.Locked ? "鎖住" : "解鎖")}（右鍵點{(index == TabStrip.ChainIndex ? "鏈條小分頁" : $"分頁 {Name(id)}")}）：{Describe(g)}");
+            }
+            catch (Exception e) { LogOnce("右鍵切換鎖住", e); }
         }
 
         /// <summary>滑鼠底下最上面（focusStamp 最大）的分頁視窗；沒有回傳 null。</summary>
@@ -521,7 +674,12 @@ namespace ProbablyStolenWindowTabs
                 _ghost?.SetOnStrip(true);
             }
             catch (Exception e) { LogOnce("做分頁的影子", e); }
-            WindowTabsMod.DebugLog($"開始拖分頁 {Name(_pressId)}");
+            _lastWhy = null;
+            if (WindowTabsMod.Debug)
+            {
+                var g = _rec != null ? _rec.Find(_pressId) : null;
+                WindowTabsMod.DebugLog($"開始拖分頁 {Name(_pressId)}{(LockHolds(g, OwnerId(_pressStrip.Window)) ? "（那組鎖住了，只能在自己的分頁條裡重排）" : "")}");
+            }
         }
 
         /// <summary>放掉拖曳的狀態、影子、預告分頁。</summary>
@@ -532,8 +690,10 @@ namespace ProbablyStolenWindowTabs
             _pressId = 0;
             _pressWindow = null;
             _pressOnTitle = false;
+            _seekTarget = false;
             _dragWindow = null;
             _target = null;
+            _blockedBy = null;
             _own = null;
             _dragLabel = null;
             _previewLabel = null;
@@ -742,10 +902,12 @@ namespace ProbablyStolenWindowTabs
         /// 拖到哪裡：照上下順序（focusStamp 大的在上面）找滑鼠底下的視窗，跳過被拖的那個；
         /// 最上面那個的分頁條或標題列在滑鼠底下就是目標，滑鼠在它的內容區就什麼都不是（被它擋住了）。
         /// 只有店裡自己的箱子能組（_own）。tabDrag：拖分頁時，自己這組的分頁條＝重排，自己的標題列＝取消。
+        /// 最上面那個所在的組鎖住了（2.6.0 起，Rules.AcceptsMerge）：沒有目標、記在 _blockedBy（不出預告、不顯示被擋；/// 拖分頁時放開＝取消）。它蓋在最上面，和內容區一樣不往下找。
         /// </summary>
-        static Target FindTarget(List<PixelWindow> windows, Vector2 mouse, PixelWindow dragged, bool tabDrag)
+        static Target FindTarget(TabRecord r, List<PixelWindow> windows, Vector2 mouse, PixelWindow dragged, bool tabDrag)
         {
             _why = null;
+            _blockedBy = null;
             // 店裡物品的清單（開始拖時抓的）是 null（FindAllItem 失敗）時：拖視窗、移到別組都沒有目標；
             // 在自己的分頁條裡重排不需要它（組裡的本來就是店裡的），照樣算，不然放開會變成拖出來
             if (_own == null && !tabDrag) { _why = "沒有店裡物品的清單"; return null; }
@@ -781,6 +943,15 @@ namespace ProbablyStolenWindowTabs
                     if (!overStrip) { _why = "自己的標題列"; return null; } // 自己的標題列：取消，不拖出來
                     // 插在「拿掉被拖那頁之後」的第幾個前面，照拿掉它之後的排法算：被拖的那頁畫在哪裡都不影響
                     return new Target { Window = w, Own = true, OnStrip = true, At = strip.InsertIndexAt(mouse, _pressId) };
+                }
+                // 鎖住的組不算目標，先看這個：店裡物品的清單抓不到時也要認得出來，
+                // 不然拖別組的分頁停在鎖住的組上放開會變成拆出來（要的是取消）
+                var lockedT = LockedGroupOf(r, w);
+                if (!Rules.AcceptsMerge(lockedT != null))
+                {
+                    _blockedBy = lockedT;
+                    if (WindowTabsMod.Debug) _why = $"「{GameWindows.Title(w)}」那組鎖住了，不合併（被擋）";
+                    return null;
                 }
                 if (_own == null) { _why = "沒有店裡物品的清單"; return null; }
                 var item = GameWindows.OwnerItem(w);
@@ -904,7 +1075,7 @@ namespace ProbablyStolenWindowTabs
             var gT = r.Find(idT);
             var tPos = gT != null ? new Vector2(gT.X, gT.Y) : GameWindows.Position(t.Window);
             var arrivals = r.Arrivals(moving, idT);
-            var g = r.Merge(moving, idD, idT, InsertBefore(r, t, idT), tPos.x, tPos.y, out _);
+            var g = r.Merge(moving, idD, idT, InsertBefore(r, t, idT), tPos.x, tPos.y, out _, AliveOrNull(idD, idT));
             if (g == null) return;
             RenumberMerged(g, arrivals, (idD, itemD), (idT, itemT));
             GameWindows.Place(wd, new Vector2(g.X, g.Y));
@@ -919,15 +1090,30 @@ namespace ProbablyStolenWindowTabs
         /// 放開拖著的分頁：自己的分頁條上＝重排；別的視窗的標題列或分頁條上＝移過去、變成那邊的目前那頁；
         /// 其他地方＝拖出來，在放開的位置變回獨立的視窗。拖走的是目前那頁時，原本那組改顯示旁邊那頁。
         /// 拖的分頁打不開（上鎖的容器）時什麼都不改。
+        /// 鎖住整組（2.6.0 起，Rules.TabDrop）：鎖住的組的分頁一律照重排的位置放（mouse 是夾回分頁條裡的位置）；
+        /// 別組的分頁放在鎖住的組上＝取消、回到原位。
         /// </summary>
-        static void DropTab(TabRecord r, Vector2 mouse)
+        static void DropTab(TabRecord r, Vector2 mouse, bool srcLocked)
         {
             var t = _target;
             var srcWin = _pressStrip.Window;
             var gS = r.Find(_pressId);
             if (gS == null) { CancelDrop("它已經不在任何一組"); return; }
-            if (t != null && t.Own)
+            var spot = t != null ? (t.Own ? Rules.TabDropSpot.OwnStrip : Rules.TabDropSpot.Other)
+                : _blockedBy != null ? Rules.TabDropSpot.LockedOther
+                : GameWindows.IsOverTitle(srcWin, mouse) ? Rules.TabDropSpot.OwnTitle
+                : Rules.TabDropSpot.None;
+            var action = Rules.TabDrop(srcLocked, spot);
+            if (action == Rules.TabDropAction.Cancel)
             {
+                if (WindowTabsMod.Debug)
+                    CancelDrop(spot == Rules.TabDropSpot.LockedOther ? $"停在鎖住的組上，被擋，回到原位：{Describe(_blockedBy)}" : "放在自己的標題列");
+                return;
+            }
+            if (action == Rules.TabDropAction.Reorder)
+            {
+                // 鎖住的組的分頁目標一律是自己的分頁條（OwnStripTarget），不會沒有目標；萬一沒有，保險起見什麼都不改（不拆出來）
+                if (t == null || !t.Own) { CancelDrop("那組鎖住了，又不在自己的分頁條上"); return; }
                 // t.At 是拿掉被拖那頁之後的位置；換成下一個分頁的編號，放開後的順序就是拖曳中畫出來的那樣。
                 // Spec 是上一幀畫的（被拖的那頁可能已經移了位置），拿掉它之後的順序都一樣
                 var spec = _pressStrip.Spec;
@@ -945,7 +1131,6 @@ namespace ProbablyStolenWindowTabs
                 else CancelDrop("順序沒變");
                 return;
             }
-            if (t == null && GameWindows.IsOverTitle(srcWin, mouse)) { CancelDrop("放在自己的標題列"); return; }
 
             var items = Items(true);
             if (!items.TryGetValue(_pressId, out var item))
@@ -971,7 +1156,7 @@ namespace ProbablyStolenWindowTabs
                 var tPos = gT != null ? new Vector2(gT.X, gT.Y) : GameWindows.Position(t.Window);
                 var moving = new List<int> { _pressId };
                 arrivals = r.Arrivals(moving, idT);
-                var g = r.Merge(moving, _pressId, idT, InsertBefore(r, t, idT), tPos.x, tPos.y, out var sources);
+                var g = r.Merge(moving, _pressId, idT, InsertBefore(r, t, idT), tPos.x, tPos.y, out var sources, AliveOrNull(_pressId, idT));
                 if (g == null)
                 {
                     if (WindowTabsMod.Debug) CancelDrop($"合併不成立（{Name(_pressId)} → {Name(idT)}）");
@@ -992,7 +1177,7 @@ namespace ProbablyStolenWindowTabs
             else
             {
                 var dropPos = DropPosition(srcWin, mouse);
-                var c = r.Detach(_pressId); // 拆出來的分頁，編號資料跟著拿掉
+                var c = r.Detach(_pressId, AliveOrNull(_pressId)); // 拆出來的分頁，編號資料跟著拿掉
                 if (c == null) { CancelDrop("拖出來時它已經不在組裡"); return; }
                 if (wasActive)
                 {
@@ -1086,6 +1271,7 @@ namespace ProbablyStolenWindowTabs
                 // 編號照這組存的（Items 重抓名稱時分配）；存的編號是在別的名字下拿到的（剛改名、還沒重抓）就先不顯示
                 spec.Labels = Rules.Labels(names, spec.Ids.Select((id, i) => g.NumberOf(id, names[i])).ToList());
                 spec.Active = spec.Ids.IndexOf(visibleId);
+                spec.Locked = g.Locked; // 鎖住時分頁條的第一格多一個鏈條小分頁
                 ApplyDragState(spec, w);
                 if (spec.Ids.Count < 2 && spec.PreviewAt < 0) continue; // 只剩一頁：不畫
                 ShowStrip(r, g, w, spec);

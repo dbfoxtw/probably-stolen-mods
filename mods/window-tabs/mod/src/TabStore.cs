@@ -24,6 +24,12 @@ namespace ProbablyStolenWindowTabs
         /// 全組都沒有時是 null（不寫進檔案）。舊版 mod 的檔案沒有這欄，第一次分配照分頁順序補，結果和舊版照位置編的一樣。
         /// </summary>
         [JsonProperty("numbers")] public Dictionary<int, TabNumber> Numbers { get; set; }
+        /// <summary>
+        /// 鎖住整組（2.6.0 起）：成員固定，別的併不進來、組員拖不出去（組裡重排照常）。
+        /// 沒鎖不寫進檔案（DefaultValueHandling.Ignore）：舊檔沒有這欄＝沒鎖，舊版 mod 讀到新檔當成不認得的欄位原樣留著。
+        /// 鎖跟著組：組解散（不到兩頁，TabRecord.Take、讀檔的 Normalize）時整個 TabGroup 拿掉，鎖跟著消失。
+        /// </summary>
+        [JsonProperty("locked", DefaultValueHandling = DefaultValueHandling.Ignore)] public bool Locked { get; set; }
         [JsonExtensionData] public IDictionary<string, JToken> Extra { get; set; }
 
         public bool Contains(int id) => Members.Contains(id);
@@ -117,14 +123,24 @@ namespace ProbablyStolenWindowTabs
         /// insertBefore＝插在這個分頁前面（拖到分頁條中間），null 或找不到＝加在最後（拖到標題列）。
         /// 合併後 movingActive 變成目前那頁。moving 原本所在的組各自收拾，結果放在 sources。
         /// moving 裡有 targetId、或 moving 是空的時不動作，回傳 null。
+        /// 鎖住的組：目標那組的鎖有效、要有新成員加進去，或 moving 裡有別的鎖有效的組的組員要被拿走，也不動作、回傳 null。
+        /// 鎖有不有效看 LockHolds（alive：組員活著沒有，null＝不知道）。
+        /// Tabs 找目標時就擋了（鎖住的組不算目標、鎖住的組被拖時不找目標），這裡再守一次，資料不會因為漏掉的路被改。
         /// </summary>
-        public TabGroup Merge(IList<int> moving, int movingActive, int targetId, int? insertBefore, float x, float y, out List<SourceChange> sources)
+        public TabGroup Merge(IList<int> moving, int movingActive, int targetId, int? insertBefore, float x, float y, out List<SourceChange> sources,
+                              Func<int, bool> alive = null)
         {
             sources = new List<SourceChange>();
             var ids = Distinct(moving);
             if (ids.Count == 0 || targetId == 0 || ids.Contains(targetId) || !ids.Contains(movingActive)) return null;
 
             var target = Find(targetId);
+            if (target != null && LockHolds(target, alive) && ids.Any(id => !target.Contains(id))) return null;
+            foreach (var id in ids)
+            {
+                var from = Find(id);
+                if (from != null && from != target && LockHolds(from, alive)) return null;
+            }
             if (target == null)
             {
                 target = new TabGroup { Members = new List<int> { targetId }, Active = targetId, X = x, Y = y };
@@ -191,13 +207,21 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 把一個分頁拖出分頁條、放在空的地方：從它的組拿掉，變回獨立的視窗。
-        /// 不在任何一組時回傳 null。
+        /// 不在任何一組、或那組的鎖有效（LockHolds；：組員拖不出去；Tabs 拖鎖住的組的分頁時一律照重排放，這裡再守一次）時回傳 null。
         /// </summary>
-        public SourceChange Detach(int id)
+        public SourceChange Detach(int id, Func<int, bool> alive = null)
         {
             var g = Find(id);
-            return g == null ? null : Take(g, new List<int> { id });
+            return g == null || LockHolds(g, alive) ? null : Take(g, new List<int> { id });
         }
+
+        /// <summary>
+        /// 這組的鎖現在算不算數（審查後改）：存的 Locked 而且活著的組員至少兩個（Rules.LockHolds）。
+        /// alive：組員活著沒有（和畫分頁條同一個條件：開著，或店裡找得到）；null＝不知道（店裡的物品清單抓不到），鎖照存的旗標算。
+        /// 只剩一頁活著時那個視窗沒有分頁條、看不到鏈條，照存的旗標擋會卡住（又不能右鍵解鎖）；存的旗標不動，帶出門的組員回來時鎖照舊。
+        /// </summary>
+        public static bool LockHolds(TabGroup g, Func<int, bool> alive) =>
+            g != null && Rules.LockHolds(g.Locked, alive == null ? -1 : g.Members.Count(alive));
 
         /// <summary>
         /// 在同一組的分頁條裡重排：把 id 移到 insertBefore 前面（null＝最後）。目前那頁不變。
@@ -350,7 +374,7 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 手改壞或舊版留下的資料整理成合理的樣子：去掉 0 與重複的編號、同一個編號只留在第一組、
-        /// 目前那頁不在組裡時改成第一頁、不到兩頁的組拿掉；分頁名稱的編號只留組裡有的、編號是正數而且有名字的
+        /// 目前那頁不在組裡時改成第一頁、不到兩頁的組拿掉（鎖住的組也一樣，鎖跟著消失）；分頁名稱的編號只留組裡有的、編號是正數而且有名字的
         /// （舊版 mod 讀到新檔時把 numbers 當成不認得的欄位原樣留著，但分頁可能已經被它移到別組）。
         /// 同名同號的重複留給 Renumber 處理。
         /// </summary>

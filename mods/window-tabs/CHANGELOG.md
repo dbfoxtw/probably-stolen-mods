@@ -1,5 +1,19 @@
 # 版本紀錄（Changelog）
 
+## v2.6.0（2026-11-22）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 新增「鎖住整組」：右鍵點任一個分頁就鎖住或解鎖那一組，鎖住時分頁條最左邊有一個鏈條小分頁。別的視窗和分頁併不進鎖住的組，組裡的分頁也不能拆出來或移到別組，只能重排。
+- 「下一個分頁」「上一個分頁」寫了含逗號的鍵名（例如 A,B）時，改成不使用並在 log 寫警告；以前會被當成別的鍵。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- New: Lock a tab set. Right-click any tab to lock or unlock its set; a locked set shows a small chain tab at the left end of its tab strip. Other windows and tabs can't join a locked set, and its tabs can't be split off or moved to another set; you can still reorder them.
+- A Next tab or Previous tab key name with a comma (like A,B) is now ignored, with a warning in the log; before, it was read as a different key.
+
 ## v2.5.0（2026-11-14）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

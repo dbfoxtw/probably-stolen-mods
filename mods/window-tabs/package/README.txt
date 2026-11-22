@@ -3,7 +3,7 @@ Probably Stolen 視窗分頁 mod（Window Tabs） v{version}
 
 把店裡的箱子、機器視窗疊成一個有分頁的視窗：抓著一個視窗的標題列拖到另一個視窗的標題列上
 就合併成分頁，點分頁切換，把分頁拖出來就拆開。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs
@@ -34,6 +34,9 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 - 切換：點分頁，位置不變。沒在看的分頁其實是關著的視窗，一整組只算一個視窗。
 - 重排：在分頁條裡拖分頁。拆開：把分頁拖到空的地方。移到別組：拖到別的視窗的標題列或分頁條上。
   只剩一頁時分頁條消失。
+- 鎖住整組：右鍵點任一個分頁就鎖住整組，分頁條最左邊會多一個鏈條小分頁；再右鍵點一次分頁就解鎖。
+  別的視窗和分頁併不進鎖住的組；抓著鎖住的組的標題列拖，只會移動。組裡的分頁照樣可以重排，
+  但不能拆出來，也不能移到別組。
 - 分頁寫物品的名稱（用藍色標籤印表機改過名字的就用改的名字），同一組裡同名的加編號（儲藏區 1、儲藏區 2），
   編號跟著箱子走。一排放不下就換行成好幾排。目前那頁和深灰的標題列接成一塊，其他頁比較暗。
 - 拖著物品（或框選的一組物品）停在分頁上約半秒就切到那頁（停著時字變黃）。
@@ -43,7 +46,7 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 - 可以組的：店裡的箱子、機器、背包，以及垃圾桶、檔案箱、卡帶播放器（紙張面板、客人的箱子不行）。
 - 賣掉、丟掉或帶出門的分頁先不顯示，帶回店裡又會出現。不在店裡時不動作。
 - 遊戲的儲藏區擴建套件在儲藏區視窗裡加的分頁（「分頁1」「分頁2」…）是同一個儲藏區的幾頁，
-  這個 mod 的分頁是把不同的視窗疊在一起，兩個可以一起用：擴建過的儲藏區也能當一頁，
+  這個 mod 的分頁是把不同的視窗疊在一起，兩個可以一起用：裝了擴建套件的儲藏區也能當一頁，
   切走再切回來，它選的分頁會保持。
 分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
 
@@ -71,8 +74,8 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
   （用遊戲的儲物協調器把來源視窗關掉再打開也是這樣）。
 - 相容性：
   繁中 mod（https://www.nexusmods.com/probablystolen/mods/280）：分頁的名稱是繁中。
-  一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720）：每一頁各自鎖；鎖住的那頁被切走後，
-  換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉整組。
+  一鍵關窗（https://www.nexusmods.com/probablystolen/mods/720）：每一頁各自有鎖頭；
+  從被一鍵關窗 mod 鎖住的那頁切到別頁時，換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉整組。
   視窗群組（https://www.nexusmods.com/probablystolen/mods/804）：存群組時只存得到目前那頁，叫出時那頁開在群組存的位置
   （視窗群組 2.1.0 起）、分頁條照樣出現。
   其他 mod 做的舊樣式（橘色標題列）箱子：分頁照舊用橘色，左上角的圓角補成直角。
@@ -91,7 +94,7 @@ Probably Stolen Window Tabs mod v{version}
 
 Stack your shop's container and machine windows into one window with tabs: drag a window by its title bar
 onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off.
-Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -129,6 +132,9 @@ Features
   so a whole set counts as one window.
 - Reorder: drag a tab along the tab strip. Split off: drop a tab on an empty spot. Move: drop it on another
   window's title bar or tab strip. With one tab left, the tab strip disappears.
+- Lock a tab set: right-click any tab to lock the set; a small chain tab appears at the left end of the tab
+  strip. Right-click a tab again to unlock. Other windows and tabs can't join a locked set, and dragging it by
+  its title bar just moves it. Its tabs can still be reordered, but not split off or moved to another set.
 - Tabs show the item's name (or the name you gave it with the Blue Labeler), numbered when names repeat
   in a set (Storage Bay 1, Storage Bay 2); a number stays with its container. Tabs wrap into more rows.
   The current tab joins the dark gray title bar; the others are darker.
@@ -144,7 +150,7 @@ Features
   Nothing happens away from the shop.
 - The tabs the game's Storage Bay Expansion Kit adds inside a Storage Bay's window (Tab 1, Tab 2...) are
   pages of one Storage Bay; this mod's tabs stack different windows together. The two work together:
-  an expanded Storage Bay can be a tab too, and the tab it's on stays the same when you switch away and back.
+  a Storage Bay with the Expansion Kit can be a tab too, and the tab it's on stays the same when you switch away and back.
 The tab strips come from this mod, not the base game; please report problems to this mod, not to the game
 developers.
 
@@ -176,7 +182,8 @@ Notes
 - Compatibility:
   Traditional Chinese mod (https://www.nexusmods.com/probablystolen/mods/280): tab names in Traditional Chinese.
   Close All Windows (https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock; after you
-  switch away from a locked tab, Esc and Close All Windows close the set unless the new tab is locked too.
+  switch away from a tab locked by the Close All Windows mod, Esc and Close All Windows close the set unless
+  the new tab is locked too.
   Window Groups (https://www.nexusmods.com/probablystolen/mods/804): a group only saves the current tab;
   recalling it opens that tab at the group's position (Window Groups 2.1.0 or later) and brings back the tab strip.
   Old-style containers (orange title bar) from other mods: tabs keep the orange colors, and the window's

@@ -2,7 +2,7 @@
 
 *Probably Stolen* 的 mod：把店裡的箱子、機器視窗疊成一個有分頁的視窗。抓著一個視窗的標題列拖到另一個視窗的標題列上就合併成分頁，點分頁切換，把分頁拖出來就拆開。
 
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
 下載：[Steam 工作坊](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155)、[Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061)，或 GitHub 的 [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases)（找標題是 Window Tabs 的最新版，標記 `window-tabs-v…`）。版本紀錄見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -19,6 +19,11 @@
 - **切換**：點分頁就換成那個箱子，位置不變。沒在看的分頁其實是關著的視窗，所以一整組只算一個視窗。
 - **重排**：在分頁條裡把分頁拖到想要的位置；拖的時候有一個分頁的影子跟著滑鼠。
 - **拆開、移到別組**：把分頁拖到空的地方放開，它就在那裡變回獨立的視窗；拖到別的視窗的標題列或分頁條上，就移到那一組。只剩一頁時分頁條消失。分頁上沒有 ×。
+- **鎖住整組**：右鍵點組裡任何一個分頁，整組就鎖住，分頁條最左邊多一個鏈條小分頁；再右鍵點任一頁（或鏈條小分頁）就解鎖。鎖住、解鎖時會「喀」一聲，右鍵不會切頁。
+  - 別的視窗、整組或別組的分頁都併不進鎖住的組，拖過去也不出現預告分頁：視窗放開只是移到那裡，分頁放開會回到原本的位置。
+  - 鎖住的組的分頁拖不出分頁條，只能在裡面左右重排；抓標題列拖只會移動，不會併到別人身上。
+  - 左鍵點鏈條小分頁只會把視窗拉到最上面。
+  - 鎖會記住，關掉再打開、讀檔都還在。組裡只剩一頁在店裡時（其他的賣掉、丟掉或帶出門），那個視窗可以照常併到別組。
 - **分頁的名稱**：物品的名稱（用藍色標籤印表機改過名字的就用改的名字）。同一組裡同名的加編號（儲藏區 1、儲藏區 2），編號跟著箱子走，重排或別的分頁進出都不會變。
   - 目前那頁和深灰的標題列同色、接成一塊；沒在看的比較暗、字比較淡。
   - 一排放不下就換行成好幾排，名稱全部看得到；點上排的分頁只會變成目前那頁的顏色，不和標題列接起來。
@@ -31,7 +36,7 @@
 - **關掉與打開**：視窗的 ×、ESC 會關掉整組（畫面上本來就只開著目前那頁）。之後在店裡雙擊組裡任何一個箱子，整組在上次的位置打開，雙擊的那個是目前那頁。整組開著時雙擊組裡另一個＝切到它，位置不動。
 - **可以組的**：店裡的箱子、機器、背包，以及垃圾桶、檔案箱、卡帶播放器。日曆、平板、文件這類紙張面板，客人的箱子，和店裡固定不能移動的格子都不行。
 - **賣掉、丟掉或帶出門的**：它的分頁先不顯示，但留在組裡，帶回店裡又會出現。暫時打不開的（例如上鎖的）切不過去，也拖不出來。
-- **和儲藏區的分頁不同**：遊戲的儲藏區擴建套件會在儲藏區的視窗裡面加分頁（「分頁1」「分頁2」…），那是同一個儲藏區裡的幾頁格子；這個 mod 的分頁是把不同的視窗疊在一起。兩個可以一起用：擴建過的儲藏區也能當這個 mod 的一頁，切走再切回來，它選的那個分頁會保持。
+- **和儲藏區的分頁不同**：遊戲的儲藏區擴建套件會在儲藏區的視窗裡面加分頁（「分頁1」「分頁2」…），那是同一個儲藏區裡的幾頁格子；這個 mod 的分頁是把不同的視窗疊在一起。兩個可以一起用：裝了擴建套件的儲藏區也能當這個 mod 的一頁，切走再切回來，它選的那個分頁會保持。
 - **什麼時候不動作**：不在店裡（出門時分頁條藏起來）、暫停選單或選項開著、拖著面板、拉框選取物品時。選好一組物品、放開滑鼠以後照常。
 
 分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
@@ -93,7 +98,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 ## 相容性
 
 - [繁中 mod](https://www.nexusmods.com/probablystolen/mods/280)：分頁的名稱和視窗標題一樣是繁中。
-- [一鍵關窗（Close All Windows）](https://www.nexusmods.com/probablystolen/mods/720)：每一頁各自鎖（鎖頭在標題列上，看到的是目前那頁的）。鎖住的那頁被切走後，換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉它（也就是整組）。
+- [一鍵關窗（Close All Windows）](https://www.nexusmods.com/probablystolen/mods/720)：每一頁各自有鎖頭（鎖頭在標題列上，看到的是目前那頁的）。從被一鍵關窗 mod 鎖住的那頁切到別頁時，換上來的那頁沒鎖的話，ESC 和一鍵關窗照樣會關掉它（也就是整組）。
 - [視窗群組（Window Groups）](https://www.nexusmods.com/probablystolen/mods/804)：存群組時只存得到目前那頁；叫出時那頁開在群組存的位置（視窗群組 2.1.0 起）、分頁條照樣出現。同一組分頁有兩頁都存在同一個群組裡時，叫出後只留最後打開的那頁，這組再按一次叫出的鍵也不會關掉（重新儲存這組就好）。
 - 其他 mod 做的舊樣式箱子（標題列是橘色的那種）：分頁照舊用 Demo 版的橘色，視窗左上角的圓角補成直角好讓分頁條接上；補的顏色照遊戲原本的視窗，改了視窗配色的 mod 會讓這一角的顏色對不上。
 - 其他會移動、縮放視窗或改視窗樣式的 mod 沒有測試過。
@@ -124,7 +129,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 
 ## English
 
-A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window by its title bar onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
+A mod for *Probably Stolen*: stack your container and machine windows into one window with tabs. Drag a window by its title bar onto another window's title bar to merge them, click a tab to switch, drag a tab out to split it off. Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta). Get it from the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829640155), [Nexus Mods](https://www.nexusmods.com/probablystolen/mods/1061) or the GitHub [Releases](https://github.com/dbfoxtw/probably-stolen-mods/releases) (look for the latest release titled Window Tabs, tagged `window-tabs-v…`).
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author. Bug reports are welcome, via [Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues) or the Bugs tab on the [Nexus page](https://www.nexusmods.com/probablystolen/mods/1061?tab=bugs).
 
@@ -137,6 +142,11 @@ The code was written by AI (Claude); the feature design and in-game testing were
 - **Switch**: click a tab to show that container in the same spot. Tabs you aren't looking at are really closed windows, so a whole set counts as one window.
 - **Reorder**: drag a tab along the tab strip; a ghost tab follows the mouse.
 - **Split off or move**: drop a tab on an empty spot and it becomes a window of its own right there; drop it on another window's title bar or tab strip to move it to that set. When only one tab is left, the tab strip disappears. Tabs have no ×.
+- **Lock a tab set**: right-click any tab in a set to lock it; a small chain tab appears at the left end of the tab strip. Right-click any tab (or the chain tab) again to unlock. Locking and unlocking make a click sound; right-clicking doesn't switch tabs.
+  - Other windows, tab sets and tabs from other sets can't join a locked set, and no preview tab shows: a window you drop there just moves, and a tab goes back where it was.
+  - A locked set's tabs can't be dragged out of its tab strip; you can only reorder them. Dragging the set by its title bar just moves it.
+  - Left-clicking the chain tab only brings the window to the front.
+  - The lock stays when you close and reopen the set or load the save. When only one of its tabs is left in your shop (the rest sold, thrown away or taken out), that window can merge as usual.
 - **Tab names**: the item's name (or the name you gave it with the Blue Labeler). Items with the same name in one set get numbers (Storage Bay 1, Storage Bay 2); a number stays with its container, so reordering or tabs coming and going never change it.
   - The current tab is the same dark gray as the title bar and joins it; the others are darker, with dimmer text.
   - Tabs that don't fit in one row wrap into more rows, so every name shows; clicking a tab in an upper row gives it the current tab's color but doesn't join it to the title bar.
@@ -149,7 +159,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
 - **Close and open**: the window's ×, or Esc, closes the whole set (only the current tab is really open). Double-click any container of the set in your shop to open the set where it was, with that container as the current tab. While the set is open, double-clicking another container of it switches to that tab in place.
 - **What can be tabbed**: your shop's containers, machines and backpacks, and the Trash Can, the Dossier and the Cassette Player. Paper panels (the calendar, tablet, documents), a customer's box, and the shop's fixed storage that can't be moved can't.
 - **Sold, thrown away or taken out**: its tab is hidden but stays in the set, and comes back once the container is in the shop again. A container that can't be opened right now (e.g. locked) can't be switched to or dragged out.
-- **Not the Storage Bay's tabs**: the game's Storage Bay Expansion Kit adds tabs inside a Storage Bay's window (Tab 1, Tab 2…), pages of the same Storage Bay; this mod's tabs stack different windows together. The two work together: an expanded Storage Bay can be a tab of this mod too, and the tab it's on stays the same when you switch away and back.
+- **Not the Storage Bay's tabs**: the game's Storage Bay Expansion Kit adds tabs inside a Storage Bay's window (Tab 1, Tab 2…), pages of the same Storage Bay; this mod's tabs stack different windows together. The two work together: a Storage Bay with the Expansion Kit can be a tab of this mod too, and the tab it's on stays the same when you switch away and back.
 - **When it does nothing**: away from the shop (the tab strips are hidden), with the pause menu or options open, while dragging a panel, or while drawing a selection box around items. With a group of items selected (after you release the mouse), it works as usual.
 
 The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
@@ -197,7 +207,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-tabs` folder, and
 **Compatibility**
 
 - [Traditional Chinese mod](https://www.nexusmods.com/probablystolen/mods/280): tab names are in Traditional Chinese, like the window titles.
-- [Close All Windows](https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock (the one on the title bar belongs to the current tab). After you switch away from a locked tab, Esc and Close All Windows close the tab you switched to (and so the whole set) unless it's locked too.
+- [Close All Windows](https://www.nexusmods.com/probablystolen/mods/720): each tab has its own padlock (the one on the title bar belongs to the current tab). After you switch away from a tab locked by the Close All Windows mod, Esc and Close All Windows close the tab you switched to (and so the whole set) unless it's locked too.
 - [Window Groups](https://www.nexusmods.com/probablystolen/mods/804): a group only saves the current tab of a set; recalling opens it at the group's position (Window Groups 2.1.0 or later) with its tab strip. If two tabs of one set are saved in the same group, only the one opened last stays open, and pressing the group's key again won't close it (just save the group again).
 - Old-style containers from other mods (the kind with an orange title bar): tabs keep the Demo's orange colors, and the window's rounded top-left corner is squared off so the tab strip fits; the patch uses the game's own window colors, so mods that recolor windows will show a mismatched corner.
 - Other mods that move, resize or restyle windows haven't been tested.

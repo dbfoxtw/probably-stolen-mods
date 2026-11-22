@@ -96,6 +96,14 @@ namespace ProbablyStolenWindowTabs
             return k;
         }
 
+        /// <summary>
+        /// 交給 Enum.TryParse（Settings.Resolve）之前，名稱的樣子對不對：空的、數字或負號開頭（TryParse 會把「12345」這種沒定義的值也收下）、
+        /// 含逗號（TryParse 把「A,B」當成旗標的組合 97|98＝99＝KeyCode.C，IsDefined 也成立，會默默變成別的鍵；2.6.0 起擋）的都不行。
+        /// 放在這裡是因為不碰 Unity，離線測試可以直接測。
+        /// </summary>
+        public static bool KeyNameShapeOk(string name) =>
+            !string.IsNullOrEmpty(name) && !char.IsDigit(name[0]) && name[0] != '-' && name.IndexOf(',') < 0;
+
         /// <summary>修飾鍵要完全相同才算（Ctrl+Shift+Tab 不會觸發 Ctrl+Tab）。主要的鍵有沒有按下由呼叫的人查。</summary>
         public bool ModifiersMatch(bool ctrl, bool shift, bool alt) => Ctrl == ctrl && Shift == shift && Alt == alt;
 

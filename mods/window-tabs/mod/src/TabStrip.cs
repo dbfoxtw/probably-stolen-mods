@@ -28,6 +28,11 @@ namespace ProbablyStolenWindowTabs
         /// 這裡記它原本在第幾個，分頁條用來推回原本的順序（判斷滑鼠在不在分頁條上、算插入位置都照原本的）。-1＝不是。
         /// </summary>
         public int LiftedFrom = -1;
+        /// <summary>
+        /// 這組鎖住了（2.6.0 起）：分頁條的第一格多一個鏈條小分頁。它不是分頁，不在 Ids 裡；
+        /// 上面這些位置（Active、PreviewAt、Hover、Dim、LiftedFrom）都照 Ids 算，不算它。
+        /// </summary>
+        public bool Locked;
     }
 
     /// <summary>
@@ -49,6 +54,8 @@ namespace ProbablyStolenWindowTabs
         public Color HoverEdge, HoverFill, HoverTop, HoverText;
         /// <summary>預告分頁的底色與虛線、字的顏色；拖分頁的影子只剩外框時的虛線也用 PreviewLine。</summary>
         public Color PreviewFill, PreviewLine;
+        /// <summary>鎖住時鏈條小分頁的圖示顏色（2.6.0 起）：分頁字的白，不跟著小分頁變暗。</summary>
+        public Color Chain;
 
         TabPalette(string name, bool bevel)
         {
@@ -71,6 +78,7 @@ namespace ProbablyStolenWindowTabs
             HoverText = new Color32(240, 228, 205, 255),
             PreviewFill = new Color32(178, 107, 79, 110),  // 半透明的橘
             PreviewLine = new Color32(255, 236, 170, 255), // 淡黃
+            Chain = new Color32(240, 228, 205, 255),       // 分頁的米白字色（目前那頁的字）
         };
 
         /// <summary>
@@ -94,6 +102,7 @@ namespace ProbablyStolenWindowTabs
             HoverText = MachineryStyle.TAB_TEXT_HOVER,     // #fff09b，遊戲的標籤頁滑過時的黃色
             PreviewFill = Hex(0x424242, 150),
             PreviewLine = Hex(0xfff09b),
+            Chain = Hex(0xd9d9d9),                         // 分頁字的白（的 C1，示意圖 lock_mockup4.py 的 NEUTRAL）
         };
 
         internal static TabPalette For(PixelWindow w) => w.style == WindowStyle.Machinery ? Machinery : Demo;
@@ -110,6 +119,7 @@ namespace ProbablyStolenWindowTabs
     /// 是視窗 handler 底下的物件（照一鍵關窗的鎖頭）：跟著視窗移動、跟著視窗藏起來、上下順序和視窗一樣。
     /// 單位是視窗的像素單位（× 按鈕是 16×16）。點擊與拖曳由 Tabs 用滑鼠位置判斷；每個分頁掛一個遊戲自己的 TreeNodeRender
     /// 擋住滑鼠（AddEventSink），不然遊戲會看穿分頁、去拿底下的物品。
+    /// 2.6.0 起，鎖住的組在第一格多畫一個鏈條小分頁（StripSpec.Locked），它不是分頁，插入位置的換算跳過它。
     /// </summary>
     sealed class TabStrip
     {
@@ -136,8 +146,14 @@ namespace ProbablyStolenWindowTabs
             public int Id;
         }
 
-        /// <summary>分頁的 GameObject（UGUI 射線打到的那個，用 GetInstanceID 當鍵）→ 哪個分頁條的第幾個分頁。</summary>
+        /// <summary>
+        /// 分頁的 GameObject（UGUI 射線打到的那個，用 GetInstanceID 當鍵）→ 哪個分頁條的第幾個分頁。
+        /// 鎖住時的鏈條小分頁記成 ChainIndex（不是分頁：左鍵只把視窗拉到最上面、右鍵解鎖，Tabs 另外判斷）。
+        /// </summary>
         internal static readonly Dictionary<int, (TabStrip strip, int index)> ByGameObject = new Dictionary<int, (TabStrip, int)>();
+
+        /// <summary>ByGameObject 裡鏈條小分頁的位置（2.6.0 起）。負的：只認分頁（index ≥ 0）的地方自然不會把它當成分頁；−1 是 Tabs 的「沒打到」。</summary>
+        internal const int ChainIndex = -2;
 
         /// <summary>這條分頁條所屬的視窗（PixelWindow 是一般的 C# 類別，比參考就好）。</summary>
         internal readonly PixelWindow Window;
@@ -145,6 +161,16 @@ namespace ProbablyStolenWindowTabs
         readonly RectTransform _rootRt;
         readonly List<View> _views = new List<View>();
         View _preview;
+        /// <summary>鎖住時分頁條第一格的鏈條小分頁（第一次鎖住時才建）與它的圖示。</summary>
+        View _chain;
+        Image _chainIcon;
+        /// <summary>
+        /// 排法最前面不是分頁的格數：鎖住時 1（鏈條小分頁），沒鎖 0。_slots、_baseSlots、_baseWidths 都含這幾格（一起排、一起拉長），
+        /// _baseIds 不含；算插入位置時扣掉（Rules.InsertIndex 的 lead），組員的位置不會因為它位移。
+        /// </summary>
+        int _lead;
+        /// <summary>預告分頁在 _slots 裡的位置（−1＝沒有）。</summary>
+        int _previewSlot = -1;
         string _signature;
         TabPalette _palette;
         List<Rules.Slot> _slots = new List<Rules.Slot>();
@@ -305,6 +331,7 @@ namespace ProbablyStolenWindowTabs
         internal void Destroy()
         {
             foreach (var v in _views) ByGameObject.Remove(v.Id);
+            if (_chain != null) ByGameObject.Remove(_chain.Id);
             if (_root != null) Object.Destroy(_root);
         }
 
@@ -326,7 +353,29 @@ namespace ProbablyStolenWindowTabs
             if (parentT != null && _rootRt.GetSiblingIndex() != parentT.childCount - 1)
                 _rootRt.SetAsLastSibling(); // 蓋在視窗的外框上面（目前那頁要接住標題列）
             if (sig == _signature) return;
+            // 同一份內容上次畫到一半出錯（建部件丟例外）：隔一秒才重試，不每幀重建、每幀丟例外
+            if (sig == _failedSignature && Time.unscaledTime < _retryAt) return;
+            // 畫完才記簽名：建物件（NewView、NewChain）丟例外時簽名留著舊的，之後會重試，不會因為「內容一樣」就再也不畫
+            _signature = null;
+            try { Draw(spec, h, fontSize, maxWidth, palette); }
+            catch
+            {
+                _failedSignature = sig;
+                _retryAt = Time.unscaledTime + RetrySeconds;
+                throw; // Tabs.ShowStrip 的 LogOnce 記一次
+            }
             _signature = sig;
+            _failedSignature = null;
+        }
+
+        /// <summary>畫失敗的那份內容（Show 的簽名）與下次重試的時間。</summary>
+        string _failedSignature;
+        float _retryAt;
+        const float RetrySeconds = 1f;
+
+        /// <summary>Show 的後半：內容變了才重畫。</summary>
+        void Draw(StripSpec spec, float h, float fontSize, float maxWidth, TabPalette palette)
+        {
             _palette = palette;
             _h = h;
             _step = h - Overlap;
@@ -336,12 +385,21 @@ namespace ProbablyStolenWindowTabs
             int n = spec.Ids.Count;
             while (_views.Count < n) _views.Add(NewView(_rootRt, true));
             if (spec.PreviewAt >= 0 && _preview == null) _preview = NewView(_rootRt, false);
+            if (spec.Locked && _chain == null) NewChain();
+            _lead = spec.Locked ? 1 : 0;
 
-            // 寬度：名稱的自然寬度加左右留白；預告分頁插在它的位置一起排
+            // 寬度：名稱的自然寬度加左右留白；預告分頁插在它的位置一起排。
+            // 鎖住時鏈條小分頁是第一格：和其他分頁一起排（換行、多排拉長），多排時在貼著視窗那排的最左邊
             var widths = new List<float>();
             var tabWidths = new List<float>();
             _slotOfTab.Clear();
             int slotIndex = 0;
+            _previewSlot = -1;
+            if (spec.Locked)
+            {
+                widths.Add(Rules.ChainTabWidth);
+                slotIndex++;
+            }
             float previewWidth = 0;
             for (int i = 0; i <= n; i++)
             {
@@ -349,7 +407,7 @@ namespace ProbablyStolenWindowTabs
                 {
                     previewWidth = Measure(_preview, font, fontSize, spec.PreviewLabel ?? "", h);
                     widths.Add(previewWidth);
-                    slotIndex++;
+                    _previewSlot = slotIndex++;
                 }
                 if (i == n) break;
                 float w = Measure(_views[i], font, fontSize, spec.Labels[i], h);
@@ -359,10 +417,13 @@ namespace ProbablyStolenWindowTabs
             }
             _slots = Rules.Layout(widths, maxWidth, Overlap);
             _maxWidth = maxWidth;
-            // 原本的順序：自己的分頁條裡重排時，把畫在 Dim 的被拖那頁放回 LiftedFrom（_baseSlots 的說明）
+            // 原本的順序：自己的分頁條裡重排時，把畫在 Dim 的被拖那頁放回 LiftedFrom（_baseSlots 的說明）。
+            // 鏈條小分頁照樣放在最前面（_lead 的說明）
             bool lifted = spec.LiftedFrom >= 0 && spec.Dim >= 0 && spec.Dim < n;
             _baseIds = lifted ? Rules.MoveTo(spec.Ids, spec.Dim, spec.LiftedFrom) : new List<int>(spec.Ids);
-            _baseWidths = lifted ? Rules.MoveTo(tabWidths, spec.Dim, spec.LiftedFrom) : tabWidths;
+            _baseWidths = new List<float>();
+            if (spec.Locked) _baseWidths.Add(Rules.ChainTabWidth);
+            _baseWidths.AddRange(lifted ? Rules.MoveTo(tabWidths, spec.Dim, spec.LiftedFrom) : tabWidths);
             _baseSlots = spec.PreviewAt >= 0 || lifted ? Rules.Layout(_baseWidths, maxWidth, Overlap) : _slots;
             int rows = Rules.RowCount(_slots);
             float right = 0;
@@ -382,16 +443,35 @@ namespace ProbablyStolenWindowTabs
                 if (!v.Go.activeSelf) v.Go.SetActive(true);
                 ByGameObject[v.Id] = (this, i);
             }
+            if (_chain != null)
+            {
+                if (spec.Locked)
+                {
+                    // 照「沒在看的分頁」畫、不接標題列；圖示在分頁裡面上下置中，不跟著拉長變形
+                    var s = _slots[0];
+                    PlaceView(_chain, s, false);
+                    Style(_chain, palette, TabLook.Inactive, false, s.Row == 0);
+                    _chain.Group.alpha = 1f;
+                    PlaceChainIcon(s.Width, palette);
+                    if (!_chain.Go.activeSelf) _chain.Go.SetActive(true);
+                    ByGameObject[_chain.Id] = (this, ChainIndex);
+                }
+                else
+                {
+                    if (_chain.Go.activeSelf) _chain.Go.SetActive(false);
+                    ByGameObject.Remove(_chain.Id);
+                }
+            }
             // 目前那頁最後畫，蓋住左右鄰居的外框線；補圓角的那塊最先畫，最左邊那頁接住標題列時被它蓋住
             if (spec.Active >= 0 && spec.Active < n) _views[spec.Active].Rt.SetAsLastSibling();
             if (_corner != null) _corner.rectTransform.SetAsFirstSibling();
 
             if (_preview != null)
             {
-                bool show = spec.PreviewAt >= 0;
+                bool show = spec.PreviewAt >= 0 && _previewSlot >= 0;
                 if (show)
                 {
-                    var s = _slots[spec.PreviewAt];
+                    var s = _slots[_previewSlot];
                     PlaceView(_preview, s, false);
                     StylePreview(_preview, palette, s.Width, s.Row == 0);
                     _preview.Rt.SetAsLastSibling();
@@ -423,7 +503,7 @@ namespace ProbablyStolenWindowTabs
         }
 
         static string Signature(StripSpec s, float h, float fontSize, float maxWidth, TabPalette palette) =>
-            $"{string.Join("\u0001", s.Labels)}|{s.Active}|{s.PreviewAt}|{s.PreviewLabel}|{s.Hover}|{s.Dim}|{s.LiftedFrom}|{h:0.##}|{fontSize:0.##}|{maxWidth:0.#}|{palette.Name}";
+            $"{string.Join("\u0001", s.Labels)}|{s.Active}|{s.PreviewAt}|{s.PreviewLabel}|{s.Hover}|{s.Dim}|{s.LiftedFrom}|{s.Locked}|{h:0.##}|{fontSize:0.##}|{maxWidth:0.#}|{palette.Name}";
 
         float Measure(View v, TMP_FontAsset font, float fontSize, string label, float h)
         {
@@ -648,6 +728,85 @@ namespace ProbablyStolenWindowTabs
         }
 
         /// <summary>
+        /// 鎖住時的鏈條小分頁（2.6.0 起）：和分頁同一套部件（NewView），所以一樣接射線、一樣掛 TreeNodeRender
+        /// 擋住遊戲（點它不會拿到底下的物品、右鍵不會跳出遊戲的選單）；名稱是空的，另外放一張鏈條的圖。
+        /// </summary>
+        void NewChain()
+        {
+            var v = NewView(_rootRt, true);
+            try
+            {
+                v.Go.name = "Chain";
+                // 沒有名稱：字關掉（沒設字型的 TMP 不用畫），名稱框照樣留著給 Style 排版
+                v.Text.text = "";
+                v.Text.enabled = false;
+                _chainIcon = NewImage("ChainIcon", v.Rt, Color.white, false);
+                _chainIcon.sprite = ChainSprite;
+                _chainIcon.type = Image.Type.Simple;
+                var rt = _chainIcon.rectTransform;
+                rt.anchorMin = rt.anchorMax = Vector2.zero;
+                rt.pivot = Vector2.zero;
+                rt.sizeDelta = new Vector2(ChainIconWidth, ChainIconHeight);
+                _chain = v;
+            }
+            catch
+            {
+                // 做到一半的小分頁沒人拿得到（根物件的圖接射線）：收掉；Show 沒記下簽名，隔一秒（RetrySeconds）再建
+                Object.Destroy(v.Go);
+                _chainIcon = null;
+                throw;
+            }
+        }
+
+        static int ChainIconWidth => Rules.ChainIcon[0].Length;
+        static int ChainIconHeight => Rules.ChainIcon.Length;
+
+        /// <summary>
+        /// 鏈條的位置與顏色：左右置中（取整數，像素不糊；小分頁被多排拉長時也在正中間）、在分頁 15 單位高的內側（扣掉最上面那條外框）上下置中，
+        /// 照示意圖 lock_mockup4.py 的 ICON_Y（上面空 5、下面空 5）。
+        /// </summary>
+        void PlaceChainIcon(float width, TabPalette palette)
+        {
+            if (_chainIcon == null) return;
+            _chainIcon.color = palette.Chain;
+            float inner = _h - 1f;
+            float top = 1f + Mathf.Floor((inner - ChainIconHeight) / 2f); // 從分頁上緣往下量
+            float x = Mathf.Floor((width - ChainIconWidth) / 2f);
+            _chainIcon.rectTransform.anchoredPosition = new Vector2(x, _h - top - ChainIconHeight);
+        }
+
+        static Sprite _chainSprite;
+
+        /// <summary>
+        /// 鏈條的圖（照 Rules.ChainIcon 畫，寫法照一鍵關窗的 LockIcon）：畫的地方白色、其他透明，顏色交給 Image.color（兩種樣式各一色）。
+        /// point filter：像素風，放大不要糊。換場景時不要被 Resources.UnloadUnusedAssets 卸掉。
+        /// </summary>
+        static Sprite ChainSprite
+        {
+            get
+            {
+                if (_chainSprite != null) return _chainSprite;
+                int w = ChainIconWidth, h = ChainIconHeight;
+                var px = new Color32[w * h];
+                var clear = new Color32(255, 255, 255, 0); // 透明的像素也填白：縮放取樣時邊緣不會混進黑色
+                for (int i = 0; i < px.Length; i++) px[i] = clear;
+                for (int r = 0; r < h; r++)
+                    for (int c = 0; c < w; c++)
+                        if (Rules.ChainIcon[r][c] == '#') px[(h - 1 - r) * w + c] = new Color32(255, 255, 255, 255); // 貼圖的原點在左下，畫的時候翻過來
+                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Point;
+                tex.wrapMode = TextureWrapMode.Clamp;
+                tex.SetPixels32(px);
+                tex.Apply(false, true);
+                tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+                sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
+                _chainSprite = sprite;
+                return sprite;
+            }
+        }
+
+        /// <summary>
         /// 擋住滑鼠：掛一個遊戲自己的 TreeNodeRender。
         /// - 遊戲找滑鼠底下的物品（RenderHandler.RaycastFindParentElement：拿起物品、右鍵選單；雙擊也類似）時，
         ///   跳過沒有 TreeNodeRender 的物件、停在第一個有的；這個的 window／element／parent 都是空的，所以遊戲看到「什麼都沒有」，
@@ -719,6 +878,7 @@ namespace ProbablyStolenWindowTabs
         /// 拖到分頁條上時插在第幾個分頁前面：換算成分頁條裡的排與橫向位置。照不受拖曳中畫法影響的排法（_baseSlots 的說明）。
         /// - lifted＝0：拖到別的分頁條（預告分頁不算），回傳 Ids 的位置 0～Count（Rules.InsertIndex）。
         /// - lifted＝被拖那頁的編號：在自己的分頁條裡重排，回傳「拿掉它之後」的位置 0～Count−1（Rules.LiftedInsertIndex）。
+        /// 鎖住時的鏈條小分頁（_lead）一起排、但不算位置：回傳的都是分頁的位置（2.6.0 起）。
         /// </summary>
         internal int InsertIndexAt(Vector2 screen, int lifted = 0)
         {
@@ -726,8 +886,32 @@ namespace ProbablyStolenWindowTabs
                 return Spec?.Ids.Count ?? 0;
             int row = (int)Math.Floor(local.y / _step);
             int k = lifted != 0 ? _baseIds.IndexOf(lifted) : -1;
-            if (k >= 0 && k < _baseWidths.Count) return Rules.LiftedInsertIndex(_baseWidths, k, _maxWidth, Overlap, row, local.x);
-            return Rules.InsertIndex(_baseSlots, row, local.x);
+            if (k >= 0 && k + _lead < _baseWidths.Count)
+                return Rules.LiftedInsertIndex(_baseWidths, k + _lead, _maxWidth, Overlap, row, local.x, _lead);
+            return Rules.InsertIndex(_baseSlots, row, local.x, _lead);
+        }
+
+        /// <summary>
+        /// 鎖住的組的分頁拖不出自己的分頁條：螢幕上的滑鼠位置夾回這條分頁條（原本的排法 _baseSlots，含鏈條小分頁）的範圍裡，
+        /// 回傳影子中心的螢幕位置：影子整個留在範圍裡，邊界往內縮被拖那頁的一半寬、一半高（Rules.ClampToStrip），
+        /// 滑鼠拖到外面時影子停在分頁條的邊上。
+        /// insertAt 是算插入位置（InsertIndexAt）用的螢幕位置：只夾回分頁條、不內縮（Rules.ClampForInsert）。
+        /// 用內縮過的點算的話，影子中心最左只到被拖那頁的半寬，寬的分頁永遠插不到第 0 個（審查發現：寬度 [鏈條 19, 30, 100] 拖 100 那頁）。
+        /// 放開也照 insertAt 的位置重排。換算不了（分頁條沒在顯示）時兩個都照原本的位置。
+        /// </summary>
+        internal Vector2 ClampToOwn(Vector2 screen, int lifted, out Vector2 insertAt)
+        {
+            insertAt = screen;
+            if (Spec == null || !Visible) return screen;
+            var cam = CameraOf(_rootRt);
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRt, screen, cam, out var local)) return screen;
+            int k = _baseIds.IndexOf(lifted);
+            float halfW = k >= 0 && k + _lead < _baseSlots.Count ? _baseSlots[k + _lead].Width / 2f : 0f;
+            Rules.ClampToStrip(_baseSlots, _step, Overlap, halfW, _h / 2f, local.x, local.y, out var cx, out var cy);
+            Rules.ClampForInsert(_baseSlots, _step, local.x, local.y, out var ix, out var iy);
+            // 樞紐在左下角：本地座標從左下量起，TransformPoint 換回世界座標再換成螢幕位置
+            insertAt = RectTransformUtility.WorldToScreenPoint(cam, _rootRt.TransformPoint(new Vector3(ix, iy, 0f)));
+            return RectTransformUtility.WorldToScreenPoint(cam, _rootRt.TransformPoint(new Vector3(cx, cy, 0f)));
         }
 
         /// <summary>
