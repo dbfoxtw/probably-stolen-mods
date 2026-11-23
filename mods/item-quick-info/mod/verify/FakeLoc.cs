@@ -31,6 +31,9 @@ namespace ProbablyStolenItemQuickInfo
         static string _code = "en";
         static bool _zhHantMod;
 
+        /// <summary>現在的遊戲語系代碼（zh-Hant 時是 zh：遊戲本身只有簡中）；假的遊戲字串表（FakeGameText）照它挑語言。</summary>
+        internal static string Code => _code;
+
         /// <summary>切語言：zh-Hant＝遊戲是 zh、繁中 mod 有跑。</summary>
         internal static void Use(string lang)
         {

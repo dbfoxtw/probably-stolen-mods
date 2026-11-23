@@ -1,8 +1,13 @@
 # Item Quick Info, Russian (ru): labels and tooltips of the settings and key bind, then the info box text. Translated from en.csv with AI help, not checked by a native speaker.
 # Same keys and order as en.csv (see its comments for where each text appears, the length limits and what {0}, {1}... are). info_days_long uses .one, .few and .many.
-# Dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle) and the words Short / Long stay in English. "Info box" is «плашка» here.
+# Dropdown choices are translated (the opt_ keys, new in 1.4.0) and the tooltips use the same words; the saved values stay English names in the code. "Info box" is «плашка» here.
 key_show_info,Показать сведения о предметах
-key_show_info_tip,"Удерживайте, чтобы показать сведения на предметах на экране (в зависимости от настроек и типа предмета). Отпустите, чтобы скрыть. Если в настройке «Режим клавиши» выбрано Toggle, нажмите один раз, чтобы показать, и ещё раз, чтобы скрыть."
+key_show_info_tip,"Удерживайте, чтобы показать сведения на предметах на экране (в зависимости от настроек и типа предмета). Отпустите, чтобы скрыть. Если в настройке «Режим клавиши» выбрано «Переключать», нажмите один раз, чтобы показать, и ещё раз, чтобы скрыть."
+# Options > Key Binds (new in 1.4.0).
+key_open_settings,Открыть настройки «Быстрые сведения о предметах»
+key_open_settings_tip,"Открывает окно настроек в магазине. Его также можно открыть кнопкой «Быстрые сведения о предметах» на экране, пока показаны сведения."
+key_button_position,Кнопка настроек
+key_button_position_tip,"Где на экране находится кнопка «Быстрые сведения о предметах», пока в магазине показаны сведения. Нажмите её, чтобы открыть настройки. Если выбрано «Не показывать», открывайте их клавишей «Открыть настройки „Быстрые сведения о предметах“» (по умолчанию не назначена)."
 cfg_container_name,Показывать названия контейнеров
 cfg_container_name_tip,"Показывать голубым название, которое вы дали ящику, рюкзаку, шкафу или другому предмету со своим окном."
 cfg_machine_name,Показывать названия устройств
@@ -12,78 +17,151 @@ cfg_item_name_tip,"Показывать голубым название, кот�
 cfg_always_names,Всегда показывать названия
 cfg_always_names_tip,"Если включено, названия видны и без клавиши; остальные сведения по-прежнему только с клавишей.\nКакие названия показываются, по-прежнему зависит от трёх переключателей названий ниже."
 cfg_idle_name_position,Положение названий (плашка скрыта)
-cfg_idle_name_position_tip,"Где показываются названия, когда без клавиши на экране только названия. Нужно включить «Всегда показывать названия».\nTop = по центру вверху предмета\nCenter = в центре предмета\nBottomLeft = в левом нижнем углу предмета"
+cfg_idle_name_position_tip,"Где показываются названия, когда без клавиши на экране только названия. Нужно включить «Всегда показывать названия».\nСверху = по центру вверху предмета\nПо центру = в центре предмета\nСлева внизу = в левом нижнем углу предмета"
 cfg_name_position,Положение названий (плашка показана)
-cfg_name_position_tip,"Где показываются названия, пока клавиша показывает сведения.\nTop = по центру вверху предмета\nInfoBox = первой строкой плашки"
+cfg_name_position_tip,"Где показываются названия, пока клавиша показывает сведения.\nСверху = по центру вверху предмета\nВ плашке = первой строкой плашки"
 cfg_name_text_size,Размер текста названий
-cfg_name_text_size_tip,"Размер названий: Small, Medium, Large или ExtraLarge — те же размеры, что и в настройке «Размер текста»."
+cfg_name_text_size_tip,"Размер названий: Мелкий, Средний, Крупный или Очень крупный — те же размеры, что и в настройке «Размер текста»."
 cfg_wrap_names,Переносить длинные названия
 cfg_wrap_names_tip,"Если включено, названия шире предмета переносятся на несколько строк и не выходят за его ширину.\nЕсли выключено, длинные названия выступают за края предмета."
-cfg_water_volume,Показывать объём воды
-# {0} = the volume line with the short prefix ("В 4000ml"), {1} = with the long prefix ("Объём 4000ml")
-cfg_water_volume_tip,"Показывать, сколько воды в контейнере (в миллилитрах).\nShort: {0}\nLong: {1}"
-cfg_water_purity,Показывать чистоту воды
-# {0} = the purity line with the short prefix ("Ч 98.52%"), {1} = with the long prefix ("Чист. 98.52%")
-cfg_water_purity_tip,Показывать чистоту воды в контейнере (кроме пустых).\nShort: {0}\nLong: {1}
-cfg_real_purity,Всегда показывать реальную чистоту воды
-cfg_real_purity_tip,"Выкл: у отсканированной воды точный %, у остальной — «?».\nВкл: у каждого контейнера видна реальная чистота, проверять не нужно (видно и когда клиент обманывает).\nНужно включить «Показывать чистоту воды»."
+cfg_water_volume,Показывать объём жидкости
+# {0} = the volume line as drawn on the info box ("250ml"; an invisible zero-width space sits between the number and ml)
+cfg_water_volume_tip,"Показывать, сколько жидкости в контейнере, например {0}."
+cfg_water_purity,Показывать чистоту
+# {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
+cfg_water_purity_tip,"Показывать, какую долю жидкости составляет её основной компонент. Для воды это чистота воды. Для пустых контейнеров не показывается.\nНе показывать = без строки чистоты\nЦелое число = {0} (чистую воду не отличить)\nДо десятых = {1}\nДо сотых = {2}"
+cfg_machine_water,Показывать жидкость в устройствах
+cfg_machine_water_tip,Показывать жидкость внутри устройства. Эти две строки также зависят от «Показывать объём жидкости» и «Показывать чистоту».
 cfg_battery_charge,Показывать заряд батарей
-cfg_battery_charge_tip,"Показывать, сколько энергии осталось в батарее, например 8kJ."
+cfg_battery_charge_tip,"Показывать, сколько энергии осталось в батарее, например 8kJ. На заряднике также показывать заряд каждой батареи внутри."
 cfg_battery_tonight_charge,Показывать ночную зарядку
 cfg_battery_tonight_charge_tip,"Показывать зелёным, на сколько батарея зарядится этой ночью, например +4kJ. Скрыто, если она полная или заряжаться не будет."
 cfg_machine_power,Показывать энергию устройств
-# {0} = the power line with the short prefix ("Э 87kJ"), {1} = with the long prefix ("Энерг. 87kJ")
-cfg_machine_power_tip,"Показывать, сколько энергии осталось в батарее устройства. Строка становится красной, если на эту ночь энергии не хватит.\nShort: {0}\nLong: {1}"
+# {0} = a machine's battery line as drawn on the info box ("41kJ"; the power line has no prefix), {1} = with a Current Converter, tonight's bill ("-6" and the credit icon), {2} = the price of one use ("-6/8/14" and the credit icon)
+cfg_machine_power_tip,"Показывать, сколько энергии осталось в батарее устройства, например {0}. Строка становится красной, если на эту ночь энергии не хватит. С преобразователем тока вместо этого показывается плата за электричество: для устройств, работающих ночью, — счёт за эту ночь, например {1}, а для устройств, которыми пользуются днём, — цена одного использования, например {2}."
 cfg_machine_tonight_net,Показывать баланс энергии за ночь
-cfg_machine_tonight_net_tip,"Показывать под строкой энергии, насколько изменится заряд батареи устройства этой ночью (зарядка минус расход).\nРост: зелёным, например +4kJ\nСпад: оранжевым, например -8kJ\nСкрыто, если заряд не изменится или строка энергии красная."
+cfg_machine_tonight_net_tip,"Показывать под строкой энергии, насколько изменится заряд батареи устройства этой ночью (зарядка минус расход).\nРост: зелёным, например +4kJ\nСпад: оранжевым, например -8kJ (10д), где число в скобках показывает, на сколько дней хватит батареи при таком расходе\nСкрыто, если заряд не изменится или строка энергии красная."
 cfg_machine_reason,Показывать причину простоя ночью
 # {0}, {1}, {2} = three of the reasons below (info_reason_no_input, info_reason_no_power, info_reason_output_full)
 cfg_machine_reason_tip,"Если устройство не будет работать этой ночью, показывать оранжевым краткую причину, например «{0}», «{1}» или «{2}»."
 cfg_machine_progress,Показывать прогресс устройств
 # {0} = 3 days left in the short form ("3д"), {1} = in the long form ("3 дня")
-cfg_machine_progress_tip,"Показывать, сколько дней ещё нужно устройству при текущей скорости процесса. Последующие изменения от эффектов модулей вроде «Перезаряженный» или «Деградирующий» не предсказываются. Скрыто, если устройство не будет работать этой ночью.\nShort: {0}\nLong: {1}"
+cfg_machine_progress_tip,"Показывать, сколько дней ещё нужно устройству при текущей скорости процесса. Последующие изменения от эффектов модулей вроде «Перезаряженный» или «Деградирующий» не предсказываются. Скрыто, если устройство не будет работать этой ночью.\nКороткие: {0}\nДлинные: {1}"
 cfg_machine_output,Показывать число предметов на выходе
 # {0} = the output line with the short prefix ("Вых. 7"), {1} = with the long prefix ("Выход 7")
-cfg_machine_output_tip,"Показывать, сколько предметов на выходе устройства (приёмный и выпускной бункеры не считаются).\nShort: {0}\nLong: {1}"
-cfg_machine_water,Показывать воду в устройствах
-# {0} / {1} = the short volume and purity prefixes, {2} / {3} = the long ones
-cfg_machine_water_tip,Показывать объём и чистоту воды внутри устройства. Эти две строки также зависят от «Показывать объём воды» и «Показывать чистоту воды».\nShort: {0} / {1}\nLong: {2} / {3}
+cfg_machine_output_tip,"Показывать, сколько предметов на выходе устройства (приёмный и выпускной бункеры не считаются).\nКороткие: {0}\nДлинные: {1}"
+# Makeshift reactor (new in 1.4.0). {0} = the red line at the top of its info box when it will explode tonight (info_reactor_explodes)
+cfg_reactor,Показывать реактор
+cfg_reactor_tip,"Показывать работоспособность реактора и накопленный заряд. Если он взорвётся этой ночью, пишет «{0}» и показывает предупреждающий знак."
+# Status icons (new in 1.4.0).
+cfg_status_icons,Значки состояния
+cfg_status_icons_tip,"Маленькие значки в углу устройства: предупреждающий знак, если оно застряло и нужно вмешаться, Zz, если для работы нужно что-то добавить, и галочка, если есть что забрать. Кувшин для воды тоже получает предупреждающий знак, если его фильтр израсходован.\nНе показывать = значки не рисуются\nПо клавише = показывать вместе с плашками по клавише «Показать сведения о предметах»\nВсегда = показывать и без клавиши"
+cfg_status_icon_position,Положение значков
+cfg_status_icon_position_tip,В каком углу предмета показывать значки состояния.
+cfg_status_icon_background,Фон значков
+cfg_status_icon_background_tip,"Подложка под значками состояния: тёмная или светлая. Насколько она прозрачна, задаёт «Непрозрачность фона значков»."
+cfg_status_icon_opacity,Непрозрачность фона значков
+cfg_status_icon_opacity_tip,Насколько плотная подложка под значками состояния. Сами значки всегда остаются непрозрачными.\n0 = без подложки\n100 = полностью непрозрачная
+cfg_warning_icon,Показывать значок предупреждения
+# {0} = one of the reasons below (info_reason_no_power)
+cfg_warning_icon_tip,"Показывать предупреждающий знак, если у устройства есть работа, но оно застряло (например, «{0}»), или фильтр в кувшине для воды израсходован."
+cfg_idle_icon,Показывать значок простоя
+# {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
+cfg_idle_icon_tip,"Показывать Zz, если устройство не будет работать этой ночью, пока вы что-нибудь не добавите, например «{0}» или «{1}».\nНе показывать = не показывать Zz\nКроме пустых = не показывать, когда входные ячейки устройства пусты (например, нет контейнера или пустой Холодильник)\nВсе = показывать, даже когда входные ячейки пусты"
+cfg_done_icon,Показывать значок готовности
+cfg_done_icon_tip,"Показывать галочку, если у устройства есть что забрать, например предметы на выходе (приёмный и выпускной бункеры не считаются) или вода, которую оно собрало или закончило очищать."
+# Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
+cfg_mineral_warning,Предупреждение о диапазоне минералов (гидропоника)
+cfg_mineral_warning_tip,"Если минералы в воде гидропонной системы вне оптимального диапазона питательных веществ семени, показывать предупреждающий знак, а в плашке писать «{0}» или «{1}»."
+cfg_container_icons,Значки на контейнерах
+cfg_container_icons_tip,"Показывать значки состояния на контейнере (например, Хранилище для устройств) для устройств внутри него. Если подходят и предупреждающий знак, и Zz, показывается только предупреждающий знак; галочка добавляется, если хотя бы у одного устройства есть что забрать.\nНе показывать = значки на контейнере не рисуются\nТолько предупреждение = только предупреждающий знак\nПредупреждение и простой = предупреждающий знак или Zz\nВсе = и галочка тоже"
 cfg_stolen_heat,Показывать палево краденого
 # {0} = the heat line with the short prefix ("К 45%"), {1} = with the long prefix ("Палево 45%")
-cfg_stolen_heat_tip,Показывать красным палево краденого предмета.\nShort: {0}\nLong: {1}
+cfg_stolen_heat_tip,Показывать красным палево краденого предмета.\nКороткие: {0}\nДлинные: {1}
 cfg_use_count,Показывать остаток использований
 # {0} = the uses line with the short prefix ("О 3"), {1} = with the long prefix ("Ост. 3")
-cfg_use_count_tip,"Показывать, сколько использований осталось у предмета. Красным, когда они закончились.\nShort: {0}\nLong: {1}"
+cfg_use_count_tip,"Показывать, сколько использований осталось у предмета. Красным, когда они закончились.\nКороткие: {0}\nДлинные: {1}"
 cfg_durability,Показывать прочность
-# {0} = the durability line with the short prefix ("П 320"), {1} = with the long prefix ("Проч. 320")
-cfg_durability_tip,Показывать прочность предмета. Оранжевым при 1/4 и меньше.\nShort: {0}\nLong: {1}
+# {0} = the durability line with the short prefix ("П 320"), {1} = with the long prefix ("Проч. 320"), {2} = the filter line with the long prefix ("Фильтр 400")
+cfg_durability_tip,"Показывать прочность предмета. Оранжевым при 1/4 и меньше. Вещи с фильтрами вместо этого показывают фильтры внутри, в сумме, например {2}.\nКороткие: {0}\nДлинные: {1}"
 cfg_ingot_purity,Показывать чистоту слитков
 # {0} = one of the purity grades below (info_ingot_high, «Высокая»)
 cfg_ingot_purity_tip,"Показывать степень чистоты слитка металла, например «{0}»."
+# Drug purity (new in 1.4.0). {0} = the info box line ("88%")
+cfg_drug_purity,Показывать чистоту препаратов
+cfg_drug_purity_tip,"Показывать чистоту препаратов, например {0}."
 cfg_key_mode,Режим клавиши
-cfg_key_mode_tip,"Выберите, удерживать ли клавишу «Показать сведения о предметах» или переключать показ нажатием.\nHold = показывать, пока клавиша зажата, и скрывать, когда она отпущена\nToggle = нажать, чтобы показать, и ещё раз, чтобы скрыть; выключается при загрузке сохранения или выходе в главное меню"
+cfg_key_mode_tip,"Выберите, удерживать ли клавишу «Показать сведения о предметах» или переключать показ нажатием.\nУдерживать = показывать, пока клавиша зажата, и скрывать, когда она отпущена\nПереключать = нажать, чтобы показать, и ещё раз, чтобы скрыть; выключается при загрузке сохранения или выходе в главное меню"
 cfg_text_size,Размер текста
-cfg_text_size_tip,"Размер текста на плашках (для названий — «Размер текста названий»): Small, Medium, Large или ExtraLarge. Ячейка предмета — 16 единиц, высота текста — 3,5; 4,5; 6 или 8 единиц."
+cfg_text_size_tip,"Размер текста на плашках (для названий — «Размер текста названий»): Мелкий, Средний, Крупный или Очень крупный. Ячейка предмета — 16 единиц, высота текста — 3,5; 4,5; 6 или 8 единиц."
 cfg_prefix,Подписи строк
-# {0} to {7} = the short prefixes, {8} to {15} = the long ones (water volume, water purity, machine power, 3 days left,
-# output count, stolen heat, uses left, durability). Separated with " / " because the long ones end with a period.
-cfg_prefix_tip,"Короткие или длинные подписи в начале строк. Если с Long плашка не помещается по ширине предмета, она использует короткие.\nShort: {0} / {1} / {2} / {3} / {4} / {5} / {6} / {7}\nLong: {8} / {9} / {10} / {11} / {12} / {13} / {14} / {15}"
+# {0} to {5} = the short prefixes, {6} to {11} = the long ones, in this order:
+# 3 days left, output count, stolen heat, uses left, durability, filter. Separated with " / ".
+cfg_prefix_tip,"Короткие или длинные подписи в начале строк. Если с «Длинные» плашка не помещается по ширине предмета, она использует короткие.\nКороткие: {0} / {1} / {2} / {3} / {4} / {5}\nДлинные: {6} / {7} / {8} / {9} / {10} / {11}"
+cfg_info_box_opacity,Непрозрачность плашек
+cfg_info_box_opacity_tip,Насколько плотный тёмный фон под плашками и названиями. Сам текст всегда остаётся непрозрачным.\n0 = без фона\n100 = полностью непрозрачный
+
+# ---- Dropdown choices and On / Off of the settings window (new in 1.4.0; see en.csv) ----
+opt_on,Вкл.
+opt_off,Выкл.
+opt_hold,Удерживать
+opt_toggle,Переключать
+opt_short,Короткие
+opt_long,Длинные
+opt_small,Мелкий
+opt_medium,Средний
+opt_large,Крупный
+opt_extra_large,Очень крупный
+opt_top,Сверху
+opt_center,По центру
+opt_bottom_left,Слева внизу
+opt_info_box,В плашке
+opt_icons_off,Не показывать
+opt_icons_with_key,По клавише
+opt_icons_always,Всегда
+opt_top_right,Справа вверху
+opt_bottom_right,Справа внизу
+opt_top_left,Слева вверху
+opt_hidden,Не показывать
+opt_dark,Тёмная
+opt_light,Светлая
+opt_warning_only,Только предупреждение
+opt_warning_and_idle,Предупреждение и простой
+opt_all,Все
+opt_except_empty,Кроме пустых
+opt_dont_show,Не показывать
+opt_whole_number,Целое число
+opt_one_decimal,До десятых
+opt_two_decimals,До сотых
+
+# ---- Settings window in the store (new in 1.4.0; see en.csv for {0} and {1} in ui_hint) ----
+ui_title,Быстрые сведения о предметах: настройки
+ui_tab_general,Общие
+ui_tab_names,Названия
+ui_tab_water,Жидкости
+ui_tab_batteries,Батареи
+ui_tab_machines,Устройства
+ui_tab_icons,Значки состояния
+ui_tab_items,Предметы
+ui_reset,Сбросить вкладку
+ui_reset_sure,Точно?
+ui_reset_tip,"Вернуть все настройки на этой вкладке к значениям по умолчанию. Нажмите ещё раз, чтобы подтвердить."
+ui_button,Быстрые сведения о предметах
+ui_button_tip,Открыть настройки «Быстрые сведения о предметах»
+ui_hint,"Настройки «Быстрые сведения о предметах» открываются в магазине: нажмите {0}, чтобы показать сведения, а затем кнопку «Быстрые сведения о предметах» в углу экрана ({1})."
+ui_hint_ok,Понятно
+ui_hint_top_right,справа вверху
+ui_hint_top_left,слева вверху
+ui_hint_bottom_right,справа внизу
+ui_hint_bottom_left,слева внизу
+ui_percent,{0} %
 
 # ---- Info box (плашка): the text drawn on the items while the key is held ----
 # Very narrow: a 1-cell item fits only about 6 to 8 letters per line. Keep every entry as short as you can.
 
 # Line prefixes: the word before the value, followed by a space and the number. _short = one letter, _long = 3 to 6 letters.
-# The short letters are all different: В (вода), Ч (чистота), Э (энергия), Вых. (выход), К (краденое, for heat:
-# П is already durability), О (осталось), П (прочность).
-# Water volume of a container or machine ("Объём 4000ml")
-info_prefix_water_short,В
-info_prefix_water_long,Объём
-# Water purity ("Чист. 98.52%")
-info_prefix_purity_short,Ч
-info_prefix_purity_long,Чист.
-# Energy left in a machine's battery ("Энерг. 87kJ")
-info_prefix_power_short,Э
-info_prefix_power_long,Энерг.
+# The short ones are all different: Вых. (выход), К (краденое, for heat:
+# П is already durability), О (осталось), П (прочность), Ф (фильтр), Раб. (работоспособность).
 # Number of items in a machine's output ("Выход 7"). Short is up to 3 letters here, long up to 6.
 info_prefix_output_short,Вых.
 info_prefix_output_long,Выход
@@ -96,6 +174,12 @@ info_prefix_uses_long,Ост.
 # Durability; the game calls it «Прочность» ("Проч. 320")
 info_prefix_durability_short,П
 info_prefix_durability_long,Проч.
+# Filters in a Кувшин для воды or a Система замкнутого цикла, added up ("Фильтр 400"). Ф = фильтр (not used by the other short prefixes).
+info_prefix_filter_short,Ф
+info_prefix_filter_long,Фильтр
+# Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
+info_prefix_integrity_short,Раб.
+info_prefix_integrity_long,Работоспособность
 
 # Machine progress: how many days until the machine finishes. No prefix: this is the whole line. {0} = number of days.
 # info_days_short: shortest form, the same for every number ("3д"). info_days_long: 1 день, 3 дня, 5 дней (21 день, 22 дня, 11 дней).
@@ -104,10 +188,7 @@ info_days_long.one,{0} день
 info_days_long.few,{0} дня
 info_days_long.many,{0} дней
 
-# Machine power line when the battery slot holds a power source without its own charge (it runs on outside power): "Энерг. внеш."
-info_power_external,внеш.
-
-# Water volume estimate, shown instead of ml when the container has no scale ("Объём Почти полный"). From full to empty.
+# Liquid volume estimate, shown instead of ml when the container has no scale ("Почти полный"). No prefix. From full to empty.
 info_estimate_full,Полный
 info_estimate_almost_full,Почти полный
 info_estimate_over_half,Более ½
@@ -140,6 +221,13 @@ info_reason_no_module,Нет модуля
 info_reason_blocked,Не запускается
 # Not enough energy for tonight
 info_reason_no_power,Мало энергии
+# Кувшин для воды or система замкнутого цикла with no filter in it: an orange line of its own instead of the filter line, no prefix.
+info_reason_no_filter,Нет фильтра
+# Гидропонная система whose water has too few or too many minerals for its seed: an orange line of its own, no prefix.
+info_mineral_low,Мало минералов
+info_mineral_high,Много минералов
+# Makeshift reactor that will explode tonight: a red line of its own at the top, no prefix. 1 to 3 short words.
+info_reactor_explodes,Взорвётся ночью
 
 # Metal Ingot purity grades, from best to worst. Only the grade, without the word «чистота»: the info box sits on the ingot,
 # and a short line is less often cut off by the inventory edge. The game's grade names (mech_condition_*_purity),

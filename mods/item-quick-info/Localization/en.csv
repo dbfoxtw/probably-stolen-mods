@@ -1,9 +1,14 @@
 # Text of this mod (ModHelper.GetLocalized). Format: key,value
 # Two parts: the labels and tooltips of the settings and key bind (key_, cfg_), then the info box text drawn on the items (info_, at the end).
 # In tooltips, {0}, {1}... are examples the mod fills in with the info box text below for the current language
-# (for example "W 4000ml" / "Vol 4000ml"), so the tooltip always shows exactly what the info box shows. Keep every placeholder.
+# (for example "Out 7" / "Output 7"), so the tooltip always shows exactly what the info box shows. Keep every placeholder.
 key_show_info,Show item info
 key_show_info_tip,"Hold to show item info on the items on screen, based on your settings and the item type. Release to hide. With Key mode set to Toggle, press once to show and again to hide."
+# Game's Options > Key Binds (new in 1.4.0): the key that opens the settings window, and where the settings button goes.
+key_open_settings,Open Item Quick Info settings
+key_open_settings_tip,Opens the settings window in the store. You can also click the Item Quick Info button on screen while the info is shown.
+key_button_position,Settings button
+key_button_position_tip,"Where the Item Quick Info button goes on screen while the info is shown in the store. Click it to open the settings. With Hidden, use the Open Item Quick Info settings key instead (not bound by default)."
 cfg_container_name,Show container names
 cfg_container_name_tip,"Show the name you gave a box, backpack, storage bay or other item that opens its own window, in light blue."
 cfg_machine_name,Show machine names
@@ -13,30 +18,30 @@ cfg_item_name_tip,"Show the name you gave any other item (for example a Jug of W
 cfg_always_names,Always show names
 cfg_always_names_tip,"When on, names stay on screen without the key; the other info still needs the key.\nWhich names appear still follows the three name switches below."
 cfg_idle_name_position,Name position (info box hidden)
-cfg_idle_name_position_tip,"Where names are shown when only names are on screen, without the key. Needs Always show names on.\nTop = centered at the top of the item\nCenter = middle of the item\nBottomLeft = bottom-left corner of the item"
+cfg_idle_name_position_tip,"Where names are shown when only names are on screen, without the key. Needs Always show names on.\nTop = centered at the top of the item\nCenter = middle of the item\nBottom left = bottom-left corner of the item"
 cfg_name_position,Name position (info box shown)
-cfg_name_position_tip,Where names are shown while the key shows the info.\nTop = centered at the top of the item\nInfoBox = first line of the info box
+cfg_name_position_tip,Where names are shown while the key shows the info.\nTop = centered at the top of the item\nInfo box = first line of the info box
 cfg_name_text_size,Name text size
-cfg_name_text_size_tip,"Size of the names: Small, Medium, Large or ExtraLarge, the same sizes as Text size."
+cfg_name_text_size_tip,"Size of the names: Small, Medium, Large or Extra large, the same sizes as Text size."
 cfg_wrap_names,Wrap long names
 cfg_wrap_names_tip,"When on, names wider than the item wrap onto more lines to stay within the item's width.\nWhen off, long names extend past the item."
-cfg_water_volume,Show water volume
-# {0} = the volume line with the short prefix ("W 4000ml"), {1} = with the long prefix ("Vol 4000ml")
-cfg_water_volume_tip,"Show how much water a container holds, in ml.\nShort: {0}\nLong: {1}"
-cfg_water_purity,Show water purity
-# {0} = the purity line with the short prefix ("Q 98.52%"), {1} = with the long prefix ("Pur 98.52%")
-cfg_water_purity_tip,"Show the purity of the water in a container (not for empty ones).\nShort: {0}\nLong: {1}"
-cfg_real_purity,Always show real water purity
-cfg_real_purity_tip,"Off: scanned water shows the exact %, other water shows ?.\nOn: every container shows its real purity, no testing needed (you can also tell when a client lies).\nNeeds Show water purity on."
+cfg_water_volume,Show liquid volume
+# {0} = the volume line as drawn on the info box ("250ml"; an invisible zero-width space sits between the number and ml)
+cfg_water_volume_tip,"Show how much liquid a container holds, for example {0}."
+cfg_water_purity,Show purity
+# {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
+cfg_water_purity_tip,"Show how much of the liquid is its main component. For water, it's the water purity. Not shown for empty containers.\nOff = don't show\nWhole number = {0} (can't spot Pure Water)\n1 decimal = {1}\n2 decimals = {2}"
+cfg_machine_water,Show liquid in machines
+cfg_machine_water_tip,Show the liquid inside a machine. The two lines also follow Show liquid volume and Show purity.
 cfg_battery_charge,Show battery charge
-cfg_battery_charge_tip,"Show how much energy a battery has left, for example 8kJ."
+cfg_battery_charge_tip,"Show how much energy a battery has left, for example 8kJ. A Recharger also shows the charge of each battery inside it."
 cfg_battery_tonight_charge,Show tonight's charge
 cfg_battery_tonight_charge_tip,"Show in green how much a battery will be charged tonight, for example +4kJ. Hidden when it is full or won't be charged."
 cfg_machine_power,Show machine power
-# {0} = the power line with the short prefix ("E 87kJ"), {1} = with the long prefix ("Pwr 87kJ")
-cfg_machine_power_tip,"Show the energy left in a machine's battery. The line turns red when it is not enough for tonight.\nShort: {0}\nLong: {1}"
+# {0} = a machine's battery line as drawn on the info box ("41kJ"; the power line has no prefix), {1} = with a Current Converter, tonight's bill ("-6" and the credit icon), {2} = the price of one use ("-6/8/14" and the credit icon)
+cfg_machine_power_tip,"Show the energy left in a machine's battery, for example {0}. It turns red when it's not enough for tonight. With a Current Converter, it shows the power cost instead: tonight's bill for machines that run at night, for example {1}, or the price of one use for machines used during the day, for example {2}."
 cfg_machine_tonight_net,Show tonight's net energy
-cfg_machine_tonight_net_tip,"Show how much a machine's battery will change tonight (charged minus used), under the power line.\nUp: green, for example +4kJ\nDown: orange, for example -8kJ\nHidden when it won't change or the power line is red."
+cfg_machine_tonight_net_tip,"Show how much a machine's battery will change tonight (charged minus used), under the power line.\nUp: green, for example +4kJ\nDown: orange, for example -8kJ (10d), where the number in brackets is how many days the battery lasts at this rate\nHidden when it won't change or the power line is red."
 cfg_machine_reason,Show why a machine won't run tonight
 # {0}, {1}, {2} = three of the reasons below (info_reason_no_input, info_reason_no_power, info_reason_output_full)
 cfg_machine_reason_tip,"Show a short reason in orange when a machine won't run tonight, for example {0}, {1} or {2}."
@@ -46,9 +51,33 @@ cfg_machine_progress_tip,"Show how many days a machine still needs, at its curre
 cfg_machine_output,Show output count
 # {0} = the output line with the short prefix ("Out 7"), {1} = with the long prefix ("Output 7")
 cfg_machine_output_tip,Show how many items are in a machine's output (Intake and Outlet Hoppers don't count).\nShort: {0}\nLong: {1}
-cfg_machine_water,Show water info in machines
-# {0} / {1} = the short volume and purity prefixes ("W" / "Q"), {2} / {3} = the long ones ("Vol" / "Pur")
-cfg_machine_water_tip,Show the volume and purity of the water inside a machine. The two lines also follow Show water volume and Show water purity.\nShort: {0} / {1}\nLong: {2} / {3}
+# Makeshift reactor (new in 1.4.0). {0} = the red line at the top of its info box when it will explode tonight (info_reactor_explodes)
+cfg_reactor,Show reactor
+cfg_reactor_tip,"Show the reactor's integrity and stored charge. If it will explode tonight, it says {0} and shows the warning sign."
+# Status icons (new in 1.4.0).
+cfg_status_icons,Status icons
+cfg_status_icons_tip,"Small icons in a corner of a machine: a warning sign when it is stuck and needs fixing, Zz when it needs something added before it can run, and a check mark when there is something to collect. A Water Pitcher gets the warning sign when its filter is used up.\nOff = don't show\nWith key = show with the info boxes, using the Show item info key\nAlways = always show"
+cfg_status_icon_position,Icon position
+cfg_status_icon_position_tip,Which corner of the item the status icons go in.
+cfg_status_icon_background,Icon background
+cfg_status_icon_background_tip,The box behind the status icons: dark or light. Icon background opacity sets how see-through it is.
+# Opacity sliders (new in 1.4.0): 0 to 100 in steps of 5; the number is shown right of the slider (ui_percent).
+cfg_status_icon_opacity,Icon background opacity
+cfg_status_icon_opacity_tip,How solid the box behind the status icons is. The icons themselves always stay solid.\n0 = no box\n100 = fully solid
+cfg_warning_icon,Show warning icon
+# {0} = one of the reasons below (info_reason_no_power)
+cfg_warning_icon_tip,"Show the warning sign when a machine has work to do but is stuck (for example {0}), or a Water Pitcher's filter is used up."
+cfg_idle_icon,Show idle icon
+# {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
+cfg_idle_icon_tip,"Show Zz when a machine won't run tonight until you add something, for example {0} or {1}.\nOff = don't show\nExcept empty = not when the machine's inputs are empty (such as no container, or an empty Fridge)\nAll = even when the inputs are empty"
+cfg_done_icon,Show done icon
+cfg_done_icon_tip,"Show a check mark when a machine has something to collect, such as items in its output (Intake and Outlet Hoppers don't count) or water it has collected or finished purifying."
+# Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
+cfg_mineral_warning,Hydroponic mineral range warning
+cfg_mineral_warning_tip,"When the minerals in a Hydroponic System's water are outside the seed's Optimal Nutriment Range, show the warning sign, and the info box says {0} or {1}."
+# Icons on containers (new in 1.4.0): the Off choice reuses opt_icons_off; the other three are opt_warning_only, opt_warning_and_idle, opt_all.
+cfg_container_icons,Icons on containers
+cfg_container_icons_tip,"Show status icons on a container (such as a Machine Bay) for the machines inside it. When both the warning sign and Zz apply, only the warning sign shows; the check mark is added if any machine has something to collect.\nOff = don't show\nWarning only = only the warning sign\nWarning and idle = the warning sign or Zz\nAll = the check mark too"
 cfg_stolen_heat,Show stolen heat
 # {0} = the heat line with the short prefix ("H 45%"), {1} = with the long prefix ("Heat 45%")
 cfg_stolen_heat_tip,"Show the heat of a stolen item in red.\nShort: {0}\nLong: {1}"
@@ -56,19 +85,87 @@ cfg_use_count,Show uses left
 # {0} = the uses line with the short prefix ("U 3"), {1} = with the long prefix ("Uses 3")
 cfg_use_count_tip,"Show how many uses an item has left. Red when used up.\nShort: {0}\nLong: {1}"
 cfg_durability,Show durability
-# {0} = the durability line with the short prefix ("D 320"), {1} = with the long prefix ("Dur 320")
-cfg_durability_tip,"Show an item's durability. Orange at 1/4 or less.\nShort: {0}\nLong: {1}"
+# {0} = the durability line with the short prefix ("D 320"), {1} = with the long prefix ("Dur 320"), {2} = the filter line with the long prefix ("Filter 400")
+cfg_durability_tip,"Show an item's durability. Orange at 1/4 or less. Things that hold filters show the filters inside instead, added up, for example {2}.\nShort: {0}\nLong: {1}"
 cfg_ingot_purity,Show ingot purity
 # {0} = one of the purity grades below (info_ingot_high, "High")
 cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example {0}."
+# Drug purity (new in 1.4.0). {0} = the info box line ("88%")
+cfg_drug_purity,Show drug purity
+cfg_drug_purity_tip,"Show the purity of drugs, for example {0}."
 cfg_key_mode,Key mode
 cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
 cfg_text_size,Text size
-cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium, Large or ExtraLarge. One item cell is 16 units; the text is 3.5, 4.5, 6 or 8 units tall."
+cfg_text_size_tip,"Size of the info box text (names follow Name text size): Small, Medium, Large or Extra large. One item cell is 16 units; the text is 3.5, 4.5, 6 or 8 units tall."
 cfg_prefix,Line prefixes
-# {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
-# 3 days left, output count, stolen heat, uses left, durability. The separator (", ") is yours to choose for your language.
-cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that info box uses short words.\nShort: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\nLong: {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}"
+# {0} to {5} = the short prefixes, {6} to {11} = the long ones, in this order:
+# 3 days left, output count, stolen heat, uses left, durability, filter. The separator (", ") is yours to choose for your language.
+cfg_prefix_tip,"Choose short or long words at the start of each line. When Long doesn't fit the item's width, that info box uses short words.\nShort: {0}, {1}, {2}, {3}, {4}, {5}\nLong: {6}, {7}, {8}, {9}, {10}, {11}"
+# Opacity slider (new in 1.4.0) for the dark box of the info boxes and the names: 0 to 100 in steps of 5.
+cfg_info_box_opacity,Info box opacity
+cfg_info_box_opacity_tip,How solid the dark box behind the info boxes and names is. The text itself always stays solid.\n0 = no box\n100 = fully solid
+
+# ---- Dropdown choices and the On / Off switch of the settings window (new in 1.4.0) ----
+# What the player sees; the saved values stay the English names in the code. The tooltips above use the same words.
+# Keep them short: they sit in a narrow dropdown or button.
+opt_on,On
+opt_off,Off
+opt_hold,Hold
+opt_toggle,Toggle
+opt_short,Short
+opt_long,Long
+opt_small,Small
+opt_medium,Medium
+opt_large,Large
+opt_extra_large,Extra large
+opt_top,Top
+opt_center,Center
+opt_bottom_left,Bottom left
+opt_info_box,Info box
+opt_icons_off,Off
+opt_icons_with_key,With key
+opt_icons_always,Always
+opt_top_right,Top right
+opt_bottom_right,Bottom right
+opt_top_left,Top left
+opt_hidden,Hidden
+opt_dark,Dark
+opt_light,Light
+opt_warning_only,Warning only
+opt_warning_and_idle,Warning and idle
+opt_all,All
+opt_except_empty,Except empty
+opt_dont_show,Off
+opt_whole_number,Whole number
+opt_one_decimal,1 decimal
+opt_two_decimals,2 decimals
+
+# ---- Settings window in the store (new in 1.4.0) ----
+# ui_tab_* = the 7 tabs in one row (arrows appear when they don't fit). ui_reset = bottom-right button; one click turns it into ui_reset_sure,
+# a second click within a few seconds resets the tab. ui_button = the button on screen that opens the window (a gear is drawn before it):
+# use the mod's name in your language. ui_hint = shown in the store until ui_hint_ok is clicked: {0} = the key bound to Show item info
+# (the game's key name), {1} = one of ui_hint_top_right ... (the corner the button is in).
+ui_title,Item Quick Info Settings
+ui_tab_general,General
+ui_tab_names,Names
+ui_tab_water,Liquids
+ui_tab_batteries,Batteries
+ui_tab_machines,Machines
+ui_tab_icons,Status icons
+ui_tab_items,Items
+ui_reset,Reset tab
+ui_reset_sure,Sure?
+ui_reset_tip,Set every setting on this tab back to its default. Click again to confirm.
+ui_button,Item Quick Info
+ui_button_tip,Open the Item Quick Info settings
+ui_hint,"Item Quick Info settings open in the store: press {0} to show the info, then click the Item Quick Info button in the {1} corner."
+ui_hint_ok,Got it
+ui_hint_top_right,top-right
+ui_hint_top_left,top-left
+ui_hint_bottom_right,bottom-right
+ui_hint_bottom_left,bottom-left
+# ui_percent = the number right of the opacity sliders, {0} = 0 to 100. Put a space before % if your language does (French: 90 %).
+ui_percent,{0}%
 
 # ---- Info box: the text drawn on the items while the key is held ----
 # The info box sits on the item's lower-left corner and is very narrow: one item cell is 16 units wide and the text is
@@ -76,17 +173,9 @@ cfg_prefix_tip,"Choose short or long words at the start of each line. When Long 
 # When a line with the long prefix doesn't fit, the whole box switches to the short prefixes; if that still doesn't fit,
 # "prefix value" is split into two lines. Lines without a prefix (reasons, purity grades) just stick out.
 
-# Line prefixes: the word before the value, followed by a space and the number ("W 4000ml").
-# _short = one letter (Japanese and Chinese: one character). _long = a 3 to 5 letter abbreviation or short word, like Vol, Pur, Pwr.
-# Water volume of a container or machine ("Vol 4000ml")
-info_prefix_water_short,W
-info_prefix_water_long,Vol
-# Water purity ("Pur 98.52%")
-info_prefix_purity_short,Q
-info_prefix_purity_long,Pur
-# Energy left in a machine's battery ("Pwr 87kJ")
-info_prefix_power_short,E
-info_prefix_power_long,Pwr
+# Line prefixes: the word before the value, followed by a space and the number ("Output 7").
+# _short = one letter (Japanese and Chinese: one character). _long = a 3 to 5 letter abbreviation or short word, like Dur, Heat.
+# The machine power line and the reactor's stored charge have no prefix ("41kJ", "120/250kJ"): kJ and the credit icon say what they are.
 # Number of items in a machine's output ("Output 7"). Short is up to 3 letters here, long up to 6.
 info_prefix_output_short,Out
 info_prefix_output_long,Output
@@ -99,20 +188,24 @@ info_prefix_uses_long,Uses
 # Durability ("Dur 320")
 info_prefix_durability_short,D
 info_prefix_durability_long,Dur
+# Filters in a Water Pitcher or a Recirculating Aquaculture System, added up ("Filter 400"). Shown under the water lines.
+info_prefix_filter_short,F
+info_prefix_filter_long,Filter
+# Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
+info_prefix_integrity_short,Int
+info_prefix_integrity_long,Integrity
 
 # Machine progress: how many days until the machine finishes. No prefix: this is the whole line. {0} = number of days.
 # info_days_short: shortest form, the same for every number ("3d").
+# info_days_short is also used in brackets after a negative tonight's net energy ("-8kJ (10d)"), where {0} can be "99+".
+# cfg_machine_tonight_net_tip shows that example, so if you change info_days_short, change the example there too.
 # info_days_long: written out, with the singular/plural forms your language needs (.one, .other; Russian and Polish .one, .few, .many;
 # Japanese and Chinese only .other). Always write {0}, never the number itself.
 info_days_short,{0}d
 info_days_long.one,{0} day
 info_days_long.other,{0} days
 
-# Machine power line when the battery slot holds a power source without its own charge (it runs on outside power): "Pwr ext".
-# 3 to 5 letters.
-info_power_external,ext
-
-# Water volume estimate, shown instead of ml when the container has no scale ("Vol Almost full"). From full to empty. Short words.
+# Liquid volume estimate, shown instead of ml when the container has no scale ("Almost full"). No prefix. From full to empty. Short words.
 info_estimate_full,Full
 info_estimate_almost_full,Almost full
 info_estimate_over_half,Over half
@@ -145,6 +238,13 @@ info_reason_no_module,No module
 info_reason_blocked,Blocked
 # Not enough energy for tonight
 info_reason_no_power,No power
+# Water Pitcher or Recirculating Aquaculture System with no filter in it: an orange line of its own instead of the filter line, no prefix.
+info_reason_no_filter,No filter
+# Hydroponic System whose water has too few or too many minerals for its seed: an orange line of its own, no prefix. Keep each one to 1 to 3 short words.
+info_mineral_low,Low minerals
+info_mineral_high,High minerals
+# Makeshift reactor that will explode tonight: a red line of its own at the top, no prefix. 1 to 3 short words.
+info_reactor_explodes,Explodes tonight
 
 # Metal Ingot purity grades, from best to worst. Only the grade, without the word "purity":
 # the info box sits on the ingot, and a short line is less often cut off by the inventory edge

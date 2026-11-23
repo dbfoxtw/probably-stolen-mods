@@ -1,5 +1,43 @@
 # 版本紀錄（Changelog）
 
+## v1.4.0（未發布）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 機器的狀態圖示：⚠ 是卡住了、Zz 是要補東西才會運作、✓ 是有東西可以收。新設定：狀態圖示（不顯示／按鍵時／一直顯示）、圖示位置、圖示底色、圖示底色不透明度、顯示警告圖示、顯示閒置圖示（不顯示／空機器除外／全部）、顯示完成圖示。
+- 新設定「箱子上的圖示」：機器收在箱子裡時，箱子上也看得到它的圖示。
+- 設定搬進店裡：按住 Tab，點「物品速覽」設定鈕，或替「打開物品速覽設定」綁一個鍵；改了馬上生效。按鍵與設定鈕的位置在「選項 → 按鍵綁定」的「物品速覽」一區。主選單模組畫面的齒輪變成灰色；1.3.0 的設定會自動搬過來。
+- 液體：每種液體都寫液量和量最多的那種液體的比例（例如 98.5%），不只是水。設定改名成「顯示液體量」「顯示純度」「顯示機器裡的液體」。「顯示純度」可以選小數位數（不顯示／整數／小數一位／小數兩位），從 1.3.0 搬過來的照舊兩位。拿掉「總是顯示真實水質」：純度一律是真實的值。
+- 充能器：每顆電池的電量一行。
+- 機器：今晚不會運作的原因移到最上面。今晚的電力收支是負數時，接著寫電池還撐幾天，例如 `-8kJ (10天)`。接電流轉換器時，電那行改寫今晚的電費（白天按一下用一次的機器寫用一次的價錢）。
+- 新設定「水培礦物質範圍警告」：水培系統的水不在種子的範圍內時，寫「礦物質太少」或「礦物質太多」，並顯示 ⚠。
+- 新設定「顯示反應爐」：簡易微型核反應爐顯示完好度、存的電，今晚會爆炸時寫「今晚爆炸」並顯示 ⚠。
+- 「顯示耐久度」也管濾材：水罐、循環水養殖系統顯示濾材的耐久。
+- 新設定「顯示藥品純度」：藥品顯示純度，例如 `88%`。
+- 名稱會閃開狀態圖示，不被蓋住。新設定「資訊框不透明度」。
+- 「長名稱換行」改成一開始就打開（新玩家、按「恢復預設」時）；從 1.3.0 搬過來的設定照舊。
+- 效能：全店的資訊（今晚的充電、箱子裡的機器）存起來，有變動時才重算，不再每 0.25 秒全部重讀。
+- 也支援 beta 分支的 VERSION 100-REV16。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- Status icons on machines: ⚠ when it's stuck, Zz when it needs something before it can run, ✓ when there's something to collect. New settings: Status icons (Off, With key, Always), Icon position, Icon background, Icon background opacity, Show warning icon, Show idle icon (Off, Except empty, All) and Show done icon.
+- New setting Icons on containers: machines stored in a container show their icons on the container too.
+- Settings moved into the shop: hold Tab and click the Item Quick Info button, or bind a key to Open Item Quick Info settings. Changes apply right away. The keys and where the button goes are in Options → Key Binds, in the Item Quick Info section. The gear on the Mods screen is now gray; your settings from 1.3.0 carry over.
+- Liquids now show the volume and the main liquid's share (e.g. 98.5%) for any liquid, not just water. The settings are now Show liquid volume, Show purity and Show liquid in machines. Show purity now lets you pick the decimals (Off, Whole number, 1 decimal, 2 decimals); settings carried over from 1.3.0 keep 2 decimals. Always show real water purity is removed: purity is always the real value.
+- Rechargers: each battery's energy on its own line.
+- Machines: why it won't run tonight is now at the top. When tonight's net energy is negative, it also shows how many days the battery lasts, e.g. -8kJ (10d). With a Current Converter, the power line shows tonight's cost (or the price of one use, for machines you use during the day).
+- New setting Hydroponic mineral range warning: a Hydroponic System shows Low minerals or High minerals, with ⚠, when the water is outside the seed's range.
+- New setting Show reactor: the Makeshift Micro Nuclear Reactor shows its integrity, stored charge, and Explodes tonight with ⚠.
+- Show durability now also covers filters, on Water Pitchers and the Recirculating Aquaculture System.
+- New setting Show drug purity: drugs show their purity, e.g. 88%.
+- Names move aside so status icons don't cover them. New setting Info box opacity.
+- Wrap long names now starts on for new players (and after Reset tab); settings carried over from 1.3.0 keep what you had.
+- Performance: the shop-wide info (tonight's charge, the machines in containers) is kept and only rebuilt when items move, instead of being re-read every quarter second.
+- Also supports the 100-REV16 beta.
+
 ## v1.3.0（2026-11-18）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV15）

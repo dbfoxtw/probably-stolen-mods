@@ -10,9 +10,12 @@ namespace ProbablyStolenItemQuickInfo
     /// <summary>
     /// 效能量測：只在除錯模式，mod 資料夾有 debug 或 perf 標記時才量。
     /// 以期間為單位：「顯示中」（完整資訊開始顯示到結束）、「沒顯示」（完整資訊結束到下次開始），只在期間的邊界寫 Player.log，不每幀寫。
-    /// 這裡的「顯示」一律指按鍵的完整資訊：總是顯示名稱開著時，常駐的名稱不算顯示中，成本算在「沒顯示」的期間裡。
-    /// perf 標記開著時，每次開始顯示換一種對照組模式（PerfCycle），用來量 mod 自己計時量不到的成本（改了 UI 位置後 Unity 重建畫布、標籤本身的繪製）。
-    /// 每次放開鍵時另外核對找節點的新找法和舊找法找到的一樣（CheckFind）。
+    /// 這裡的「顯示」一律指按鍵的完整資訊：總是顯示名稱開著、狀態圖示 Always 時，常駐的名稱與圖示不算顯示中，算在「沒顯示」的期間裡：
+    /// 常駐的重算（IdleRecomputeDone，和完整資訊一樣分四段）與擺位置另外量，寫在「沒按」那一行。
+    /// 兩條路的重算都記這一輪有沒有重建全店快照（StoreSnapshot：全店清單、今晚會跑的機器、今晚的充電表、全店機器的狀態、箱子）、五個部分各花多久。
+    /// perf 標記開著時，每次開始顯示換一種對照組模式（PerfCycle），用來量 mod 自己計時量不到的成本（改了 UI 位置後 Unity 重建畫布、標籤本身的繪製）；
+    /// 五種對照組只套用在完整資訊。常駐另外每放開一次在正常和「位置沒變不重設」之間換（量最重的店常駐時多出來的 0.4 ms 是不是擺位置造成的）。
+    /// 每次放開鍵時另外核對找節點的新找法和舊找法找到的一樣（CheckFind），和全店資料重新算一份、和現在的全店快照比（CheckStore）。
     /// 沒有標記時 On 是 false：Runner、LabelRenderer 每個量測點只多一個 bool 判斷，這裡什麼都不做、不配置。
     /// 玩家的版本要和沒有量測時完全一樣，連萬一型別載入出錯都不能有影響：所以靜態欄位一律沒有初始值（沒有靜態建構式），
     /// 物件與陣列都在 Init（第一次要量）才建；ProfilerRecorder 放在另一個類別 PerfRecorders，這裡的欄位不含 Unity.Profiling 的型別。
@@ -52,16 +55,18 @@ namespace ProbablyStolenItemQuickInfo
         static float _frameMs;
         static double _posMs;
         static long _allocRecorder, _allocMono;
-        static int _nodes, _items, _labels;
+        static int _nodes, _items, _labels, _names, _iconGroups;
 
         /// <summary>現在的對照組模式（還沒開始量、沒有 perf 標記時永遠是正常）。</summary>
         internal static PerfMode Mode => _cycle != null ? _cycle.Current : PerfMode.Normal;
 
         /// <summary>
-        /// 擺位置時位置沒變就不設（對照組「位置沒變不重設」）。只在完整資訊的期間（_showing）：放開鍵後模式還留著，
-        /// 常駐的名稱（總是顯示名稱）不套用對照組。
+        /// 擺位置時位置沒變就不設（對照組「位置沒變不重設」）。完整資訊的期間（_showing）看五種模式輪到的那種；放開鍵後那個模式還留著，
+        /// 所以常駐（沒顯示的期間）另外看 IdleMode：perf 標記時每放開一次在正常與位置沒變不重設之間換，只有 debug 時一律正常。
+        /// LabelRenderer 擺位置時看它（Place、PlaceIcons；重算時與每幀的 UpdatePositions 都是），兩條路共用。
         /// </summary>
-        internal static bool SkipSamePosition => On && _showing && _cycle != null && PerfModes.SkipsSamePosition(_cycle.Current);
+        internal static bool SkipSamePosition =>
+            On && _cycle != null && PerfModes.SkipsSamePosition(_showing ? _cycle.Current : _cycle.IdleMode);
 
         internal static long Now() => Stopwatch.GetTimestamp();
 
@@ -93,14 +98,17 @@ namespace ProbablyStolenItemQuickInfo
             _startFrame = false;
         }
 
-        /// <summary>完整資訊開始（Runner.Tick；從不畫或只畫名稱進來都算）：寫剛結束的「沒顯示」，換這次的模式，開始一段「顯示中」。</summary>
+        /// <summary>
+        /// 完整資訊開始（Runner.Tick；從不畫或只畫名稱進來都算）：寫剛結束的「沒顯示」，換這次的模式，開始一段「顯示中」。
+        /// perf 標記時「沒按」那一行寫剛結束那一段常駐的模式（IdleMode 在 StopShowing 才換，這時還是那一段的）；只有 debug 時和以前逐字相同。
+        /// </summary>
         internal static void StartShowing()
         {
             if (!_ready || _showing) return;
             if (_period.TotalFrames >= MinIdleFrames)
             {
                 Summarize();
-                ItemQuickInfoMod.Log.Msg(PerfLog.Idle(_summary));
+                ItemQuickInfoMod.Log.Msg(PerfLog.Idle(_summary, Cycling ? _cycle.IdleMode : (PerfMode?)null));
             }
             var mode = _cycle.Start(Cycling);
             _showing = true;
@@ -111,7 +119,10 @@ namespace ProbablyStolenItemQuickInfo
             BeginPeriod();
         }
 
-        /// <summary>完整資訊結束（Runner.Tick；變成不畫或只畫名稱都算）：寫「按下」與剛結束的「顯示中」，開始一段「沒顯示」。</summary>
+        /// <summary>
+        /// 完整資訊結束（Runner.Tick；變成不畫或只畫名稱都算）：寫「按下」與剛結束的「顯示中」，開始一段「沒顯示」。
+        /// 常駐的模式在這裡換（perf 標記時每放開一次換一種）：放開那一幀接著就跑常駐的當幀重算，從那一輪起就照新的模式擺位置。
+        /// </summary>
         internal static void StopShowing()
         {
             if (!_ready || !_showing) return;
@@ -119,6 +130,8 @@ namespace ProbablyStolenItemQuickInfo
             if (_pressReady) ItemQuickInfoMod.Log.Msg(PerfLog.Press(_press));
             ItemQuickInfoMod.Log.Msg(PerfLog.Held(_summary, _cycle.Current));
             CheckFind();
+            CheckStore();
+            _cycle.StartIdle(Cycling);
             _showing = false;
             _pressPending = _pressReady = false;
             BeginPeriod();
@@ -135,14 +148,24 @@ namespace ProbablyStolenItemQuickInfo
             catch (Exception e) { ItemQuickInfoMod.LogOnce("找節點核對", e); }
         }
 
-        /// <summary>換場景（Runner.Reset）：丟掉沒寫完的期間（不寫 log），重新開始一段「沒顯示」，模式回到正常。</summary>
+        /// <summary>
+        /// 全店核對（StoreScan.Check）：重新算一份全店資料與全店每台機器的狀態圖示（計時），和現在的全店快照比，寫一行（不碰快照）。
+        /// 放在找節點核對之後、開始下一段之前，理由和找節點核對一樣：時間與配置不算進任何一段。出錯只記一次，不影響量測。
+        /// </summary>
+        static void CheckStore()
+        {
+            try { ItemQuickInfoMod.Log.Msg(StoreScan.Check()); }
+            catch (Exception e) { ItemQuickInfoMod.LogOnce("全店核對", e); }
+        }
+
+        /// <summary>換場景（Runner.Reset）：丟掉沒寫完的期間（不寫 log），重新開始一段「沒顯示」，模式（完整資訊與常駐的）回到正常。</summary>
         internal static void Reset()
         {
             if (!_ready) return;
             _showing = false;
             _startFrame = _pressPending = _pressReady = false;
             _posMs = double.NaN;
-            _nodes = _items = _labels = 0;
+            _nodes = _items = _labels = _names = _iconGroups = 0;
             _cycle.Reset();
             BeginPeriod();
         }
@@ -156,14 +179,16 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 一次重算跑完（時間戳的差）：開始顯示那一次記在「按下」那一行，其他的加進這段「顯示中」。數量（節點、物品、標籤）留最後一次的。
+        /// 完整資訊的一次重算跑完（時間戳的差）：開始顯示那一次記在「按下」那一行（全店那一塊也記在那裡，不進期間的累計），
+        /// 其他的加進這段「顯示中」。數量（節點、物品、標籤）留最後一次的。scan：這一輪重建的全店快照（ReadContext.Rebuilt；沒重建是 null）。
         /// </summary>
-        internal static void RecomputeDone(bool started, long total, long find, long read, long put, long finish, int nodes, int items, int labels)
+        internal static void RecomputeDone(bool started, long total, long find, long read, long put, long finish, int nodes, int items, int labels, StoreScan scan)
         {
             if (!_ready) return;
             _nodes = nodes;
             _items = items;
             _labels = labels;
+            var st = TimesOf(scan);
             if (started && _startFrame)
             {
                 _press.HasRecompute = true;
@@ -172,11 +197,50 @@ namespace ProbablyStolenItemQuickInfo
                 _press.ReadMs = Ms(read);
                 _press.PutMs = Ms(put);
                 _press.FinishMs = Ms(finish);
+                _press.HasScan = st.Built;
+                _press.ScanMs = st.TotalMs;
                 _press.Nodes = nodes;
                 _press.Items = items;
                 _press.Labels = labels;
             }
-            else if (_showing) _period.AddRecompute(Ms(total), Ms(find), Ms(read), Ms(put), Ms(finish));
+            else if (_showing) _period.AddRecompute(Ms(total), Ms(find), Ms(read), Ms(put), Ms(finish), st);
+        }
+
+        /// <summary>
+        /// 常駐（總是顯示名稱、狀態圖示 Always）的一次重算跑完（時間戳的差，四段和完整資訊一樣）：加進這段「沒顯示」。
+        /// 放開鍵的那一幀先 StopShowing 才重算常駐，所以那一次落在新的沒顯示（是轉換那次，不加進累計，見下面的 transition）；
+        /// 完整資訊的期間不會跑常駐的重算（照樣擋著，免得混進「按住」）。
+        /// 數量（節點、物品、名稱、圖示組）留最後一次的。
+        /// transition：轉換那一幀的當幀重算（放開鍵回到常駐、從不畫進到常駐）。它要換框的內容、位置與 pivot、藏掉沒用到的框，比平常的重算重，
+        /// 進了累計會拉高常駐重算的平均與最慢（的通過標準看的是平常那幾輪）：數量照樣更新，重算、四段、全店、原因次數都不加
+        /// （這一輪重建了快照也不算進全店的次數）。scan：這一輪重建的全店快照（沒重建是 null）。
+        /// </summary>
+        internal static void IdleRecomputeDone(bool transition, long total, long find, long read, long put, long finish, int nodes, int items, int names, int iconGroups, StoreScan scan)
+        {
+            if (!_ready) return;
+            if (_showing) return;
+            _nodes = nodes;
+            _items = items;
+            _names = names;
+            _iconGroups = iconGroups;
+            if (transition) return;
+            _period.AddRecompute(Ms(total), Ms(find), Ms(read), Ms(put), Ms(finish), TimesOf(scan));
+        }
+
+        /// <summary>重建全店快照的時間換成毫秒（這一輪沒重建是 Built false 的空值）。</summary>
+        static ScanTimes TimesOf(StoreScan s)
+        {
+            if (s == null) return default;
+            return new ScanTimes
+            {
+                Built = true,
+                ListMs = Ms(s.ListTicks),
+                RunsMs = Ms(s.RunsTicks),
+                ChargesMs = Ms(s.ChargesTicks),
+                StatusMs = Ms(s.StatusTicks),
+                BoxMs = Ms(s.BoxTicks),
+                Reason = s.Reason,
+            };
         }
 
         /// <summary>遊戲結束（ItemQuickInfoMod.OnDisable）：停掉 ProfilerRecorder。沒在量時（玩家的版本）直接回來。</summary>
@@ -208,7 +272,7 @@ namespace ProbablyStolenItemQuickInfo
             var ok = new List<string>();
             var no = new List<string>();
             PerfRecorders.Start(ok, no);
-            ItemQuickInfoMod.Log.Msg($"效能｜開始量測（{(Cycling ? "每次開始顯示換一種對照組模式：正常 → 不擺位置 → 不重算 → 都不做 → 位置沒變不重設" : "模式一律正常")}）；" +
+            ItemQuickInfoMod.Log.Msg($"效能｜開始量測（{(Cycling ? "每次開始顯示換一種對照組模式：正常 → 不擺位置 → 不重算 → 都不做 → 位置沒變不重設；常駐每放開一次在正常、位置沒變不重設之間換" : "模式一律正常")}）；" +
                 $"Unity 計數讀得到：{(ok.Count > 0 ? string.Join("、", ok) : "沒有")}；讀不到：{(no.Count > 0 ? string.Join("、", no) : "沒有")}" +
                 "（GC 配置讀不到或一直是 0 時改用 Mono 堆積取樣，可能少算很多，比較時看 GC 次數；計數一直是 0 的不寫）");
             BeginPeriod();
@@ -229,6 +293,8 @@ namespace ProbablyStolenItemQuickInfo
             _summary.Nodes = _nodes;
             _summary.Items = _items;
             _summary.Labels = _labels;
+            _summary.Names = _names;
+            _summary.IconGroups = _iconGroups;
         }
     }
 

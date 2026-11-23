@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- 離線測試：標籤的數字格式、分段、掃描結果的解析、行序、顏色與開關、每台機器的判斷（MachineLogic）、效能量測的模式與統計（PerfStats）、資訊框與說明的字（1.2.0 起讀 public/Localization 的 csv）與挑語言（LocPick）（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
+  <!-- 離線測試：標籤的數字格式、分段、行序、顏色與開關、每台機器的判斷與狀態圖示的分類（MachineLogic）、狀態圖示的像素（IconArt）、效能量測的模式與統計（PerfStats）、資訊框與說明的字（1.2.0 起讀 public/Localization 的 csv）與挑語言（LocPick）（不用開遊戲、不需要遊戲的組件）。執行方式見 Program.cs 開頭 -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -18,7 +18,13 @@
     <!-- Loc 找繁中 mod 用的「找過就記住」（不碰遊戲型別的那一半） -->
     <Compile Include="..\src\LookupOnce.cs" Link="LookupOnce.cs" />
     <Compile Include="..\src\MachineLogic.cs" Link="MachineLogic.cs" />
+    <!-- 狀態圖示的字元圖與框（不碰 Unity；LabelRenderer 照它建 Sprite） -->
+    <Compile Include="..\src\IconArt.cs" Link="IconArt.cs" />
     <Compile Include="..\src\PerfStats.cs" Link="PerfStats.cs" />
+    <!-- 全店快照要不要重建、為什麼（不碰 Unity 的那一半） -->
+    <Compile Include="..\src\SnapshotRule.cs" Link="SnapshotRule.cs" />
+    <!-- 店內設定視窗（1.4.0）：37 個設定的定義與讀寫（含兩個不透明度的百分比、拖滑桿時還沒存的改動）、舊設定的轉換、分頁列、恢復預設的確認、視窗的位置（不碰 Unity 的那一半） -->
+    <Compile Include="..\src\SettingsModel.cs" Link="SettingsModel.cs" />
   </ItemGroup>
 
 </Project>

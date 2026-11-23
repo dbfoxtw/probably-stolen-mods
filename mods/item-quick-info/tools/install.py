@@ -13,7 +13,7 @@ Probably Stolen_Data\Managed（只讀）。
                                        一般安裝會清空 mod 資料夾，perf 標記就沒了）
                                        --longest：看字串長度用（自動加 --debug），另外放 longest 標記檔：資訊框與設定的字
                                        都改顯示英、德、法、西、俄、波蘭文裡最寬的那個（install-longest.bat）
-  python tools/install.py uninstall    移除 Mods\dbfoxtw.item-quick-info\（設定 ModConfigs 與資料 ModData：按鍵、字級保留，
+  python tools/install.py uninstall    移除 Mods\dbfoxtw.item-quick-info\（ModData 裡的設定與按鍵、1.3.0 以前的 ModConfigs 保留，
                                        訊息會說在哪裡）
   python tools/install.py package      編譯後打包給玩家的 zip（build\ProbablyStolen-ItemQuickInfo-<版本>.zip，最上層是
                                        dbfoxtw.item-quick-info\，不動遊戲；--out 改輸出資料夾）
@@ -37,11 +37,12 @@ MOD = modkit.OfficialMod(
     root=HERE.parent,
     mod_id="dbfoxtw.item-quick-info",  # 和 mod/src/ItemQuickInfoMod.cs 的 ModId 一致
     name="Item Quick Info",
-    # 不列會顯示哪些資訊（和按鍵的說明一樣）：每加一種資訊這裡也要跟著改。
-    # 不寫 Unofficial：模組畫面上本來就全是 mod，官方規定只要求不冒充本體
+    # 不列會顯示哪些資訊（和按鍵的說明一樣）：不然每加一種資訊這裡也要跟著改。
+    # 不寫 Unofficial：模組畫面上本來就全是 mod，官方規定只要求不冒充本體。
+    # 1.4.0 起設定在店內設定視窗（主選單的齒輪是灰的），所以這裡寫怎麼打開；不改存檔不用提（的定稿，只有英文）
     description=("Hold Tab to show info right on the items on screen, based on your settings and the item type. "
-                 "Release to hide, or switch to toggle in the settings. Change the key in Options > Key Binds. "
-                 "Your save files are never modified."),
+                 "Release to hide. To change the settings, show the info in the store and click the Item Quick Info button "
+                 "(top-right corner by default). The keys and the button's position are in Options > Key Binds."),
     assembly="ProbablyStolenItemQuickInfo",
     zip_name="ProbablyStolen-ItemQuickInfo",
     debug_note=("這個檔存在時，mod 會在每次開始顯示時把畫了幾個標籤、前 20 個物品的識別值與每行內容寫進 Player.log"

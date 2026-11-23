@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace ProbablyStolenItemQuickInfo
@@ -18,12 +19,14 @@ namespace ProbablyStolenItemQuickInfo
     sealed class Strings
     {
         /// <summary>
-        /// 每行前綴（後面空一格接數值）：水量、水質、機器的電、輸出區的成品數、贓物熱度、使用次數、耐久度。
-        /// 短的一份是一個字、一個字母（PrefixStyle.Short），長的一份是中文用詞、英文三四個字母的縮寫。
+        /// 每行前綴（後面空一格接數值）：輸出區的成品數、贓物熱度、使用次數、耐久度、濾材（水罐、循環水養殖系統裡的濾材）、
+        /// 反應爐的完好度。短的一份是一個字、一個字母（PrefixStyle.Short），長的一份是中文用詞、英文三四個字母的縮寫。
+        /// 液量、純度兩行決定 178 起沒有前綴（1.4.0 第⑦段以前是「水量」「水質」）；機器的電與反應爐的存電決定 189 起沒有前綴
+        /// （第⑧段以前是「電力」「電」，info_prefix_power_*）。
         /// </summary>
-        public string Water, Quality, Energy, Output, Heat, Uses, Durability;
-        /// <summary>機器的電池槽放的是容量 0 的電源（電流轉換器、超科技電池）：電那行寫「外部」。</summary>
-        public string External;
+        public string Output, Heat, Uses, Durability, Filter, Integrity;
+        /// <summary>自製反應爐今晚會爆炸：反應爐的資訊框最上面一行紅字，沒有前綴、長短一樣。</summary>
+        public string ReactorExplodes;
         /// <summary>
         /// 水量的估計（容器沒有刻度、也不是資深化學家時；遊戲 WaterHelper.GetEstimatedVolume 的七段，順序同 Rules.EstimateIndex）：
         /// 滿、快滿、過半、半滿、不到半、快空、空。
@@ -35,6 +38,10 @@ namespace ProbablyStolenItemQuickInfo
         public string NoModule, Blocked;
         /// <summary>缺電：電那行紅字、沒有別的原因時。英文用 No power（Not enough power 太長）。</summary>
         public string NoPower;
+        /// <summary>裝濾材的東西沒裝濾材：濾材那行換成這個橘字（沒有前綴，長短一樣）。不是機器今晚不會動的原因，不在 Reason 裡。</summary>
+        public string NoFilter;
+        /// <summary>水耕機的礦物質不在種子的範圍內：太少、太多，橘字、沒有前綴、長短一樣。不是原因（不在 Reason 裡）。</summary>
+        public string MineralLow, MineralHigh;
         /// <summary>
         /// 金屬錠純度的等級名稱，順序同 Rules.IngotPurityConstants（完美、極高、高、中等、低、極低）。
         /// 以遊戲字串表的 mech_condition_*_purity（遊戲提示框「[標籤] 金屬純度：高純度」那個名稱）為基礎，不加前綴，長短一樣。
@@ -98,14 +105,13 @@ namespace ProbablyStolenItemQuickInfo
         {
             var s = new Strings
             {
-                Water = Loc.Get("info_prefix_water_short"),
-                Quality = Loc.Get("info_prefix_purity_short"),
-                Energy = Loc.Get("info_prefix_power_short"),
                 Output = Loc.Get("info_prefix_output_short"),
                 Heat = Loc.Get("info_prefix_heat_short"),
                 Uses = Loc.Get("info_prefix_uses_short"),
                 Durability = Loc.Get("info_prefix_durability_short"),
-                External = Loc.Get("info_power_external"),
+                Filter = Loc.Get("info_prefix_filter_short"),
+                Integrity = Loc.Get("info_prefix_integrity_short"),
+                ReactorExplodes = Loc.Get("info_reactor_explodes"),
                 Estimates = new[]
                 {
                     Loc.Get("info_estimate_full"),
@@ -128,6 +134,9 @@ namespace ProbablyStolenItemQuickInfo
                 NoModule = Loc.Get("info_reason_no_module"),
                 Blocked = Loc.Get("info_reason_blocked"),
                 NoPower = Loc.Get("info_reason_no_power"),
+                NoFilter = Loc.Get("info_reason_no_filter"),
+                MineralLow = Loc.Get("info_mineral_low"),
+                MineralHigh = Loc.Get("info_mineral_high"),
                 IngotPurities = new[]
                 {
                     Loc.Get("info_ingot_perfect"),
@@ -144,20 +153,20 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 複製一份、換掉七個前綴與剩幾天的寫法（其他字串、陣列共用：都不會被改）；複製出來的記住短的那份（Short）。
+        /// 複製一份、換掉六個前綴（成品、熱度、使用次數、耐久度、濾材、反應爐的完好度；電的前綴 拿掉）與剩幾天的寫法
+        /// （其他字串、陣列共用：都不會被改）；複製出來的記住短的那份（Short）。
         /// 剩幾天的表要另外建一份：複製來的還是短的那張。
         /// </summary>
         Strings WithLongPrefixes()
         {
             var s = (Strings)MemberwiseClone();
             s._short = this;
-            s.Water = Loc.Get("info_prefix_water_long");
-            s.Quality = Loc.Get("info_prefix_purity_long");
-            s.Energy = Loc.Get("info_prefix_power_long");
             s.Output = Loc.Get("info_prefix_output_long");
             s.Heat = Loc.Get("info_prefix_heat_long");
             s.Uses = Loc.Get("info_prefix_uses_long");
             s.Durability = Loc.Get("info_prefix_durability_long");
+            s.Filter = Loc.Get("info_prefix_filter_long");
+            s.Integrity = Loc.Get("info_prefix_integrity_long");
             s._daysPlural = true;
             s._daysLong = new string[LocPick.PluralSamples];
             s._daysLong[0] = Loc.Plural("info_days_long", 0);
@@ -187,6 +196,17 @@ namespace ProbablyStolenItemQuickInfo
             string n = days.ToString(CultureInfo.InvariantCulture);
             string format = _daysPlural ? _daysLong[LocPick.PluralSample(days)] : _daysShort;
             return LocPick.Format(format, new object[] { n });
+        }
+
+        /// <summary>
+        /// 負的電力收支後面括號裡的還撐幾天（Rules.NetWithNights）：一律用剩幾天的短字（info_days_short：英文 10d、中文 10天），
+        /// 不跟著前綴長短換、不分單複數，8 種語言都用現成的字。超過 99 晚（Rules.NightsCap）填「99+」。
+        /// 數字用不受語系影響的格式（同 FormatDays）。每次配置幾個小物件（數字的字串、Format 的參數陣列與結果；只有按住鍵、收支是負的機器才叫，同一輪排版的 Key 配置得更多），不碰 Loc。
+        /// </summary>
+        internal string NightsText(int nights)
+        {
+            string n = nights >= Rules.NightsCap ? "99+" : nights.ToString(CultureInfo.InvariantCulture);
+            return LocPick.Format(_daysShort, new object[] { n });
         }
 
         /// <summary>原因的字；None 回 null（不畫那行）。</summary>

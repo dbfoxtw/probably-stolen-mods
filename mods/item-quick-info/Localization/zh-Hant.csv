@@ -3,7 +3,12 @@
 # 前半是設定與按鍵綁定的標籤和說明（key_、cfg_；從 zh.csv 轉過再校），後半是資訊框的字（info_）。
 # 說明裡的 {0}、{1}… 是 mod 用下面資訊框的字填進去的例子，每個都要留著。
 key_show_info,顯示物品資訊
-key_show_info_tip,按住時根據設定和物品種類顯示物品資訊，放開就消失。設定改成 Toggle 時，按一下顯示、再按一下消失。
+key_show_info_tip,按住時根據設定和物品種類顯示物品資訊，放開就消失。按鍵方式改成「切換」時，按一下顯示、再按一下消失。
+# 遊戲的「選項 → 按鍵綁定」（1.4.0 加的）：打開設定視窗的鍵、設定鈕放在哪裡。
+key_open_settings,打開物品速覽設定
+key_open_settings_tip,在店裡打開設定視窗。顯示資訊時，點畫面上的「物品速覽」按鈕也可以打開。
+key_button_position,設定鈕的位置
+key_button_position_tip,在店裡顯示資訊時，「物品速覽」按鈕放在畫面的哪個角，點它打開設定。選「不顯示」時，要用「打開物品速覽設定」鍵打開（預設沒有綁）。
 cfg_container_name,顯示箱子名稱
 cfg_container_name_tip,在箱子、背包、儲藏區等打得開、有自己視窗的物品上，用淺藍色顯示你取的名稱。
 cfg_machine_name,顯示機器名稱
@@ -13,75 +18,148 @@ cfg_item_name_tip,在箱子、機器以外的物品上（例如水桶、金屬�
 cfg_always_names,總是顯示名稱
 cfg_always_names_tip,打開時，名稱不用按鍵也一直顯示；其他資訊照舊要按鍵才顯示。\n顯示哪幾種名稱，照舊看下面三個名稱開關。
 cfg_idle_name_position,名稱位置（資訊框未顯示時）
-cfg_idle_name_position_tip,沒按鍵、只顯示名稱時，名稱顯示的位置。要先打開「總是顯示名稱」才有作用。\nTop＝物品上方置中\nCenter＝物品正中央\nBottomLeft＝物品左下角
+cfg_idle_name_position_tip,沒按鍵、只顯示名稱時，名稱顯示的位置。要先打開「總是顯示名稱」才有作用。\n上方＝物品上方置中\n置中＝物品正中央\n左下角＝物品左下角
 cfg_name_position,名稱位置（資訊框顯示時）
-cfg_name_position_tip,按鍵顯示資訊時，名稱顯示的位置。\nTop＝物品上方置中\nInfoBox＝顯示在資訊框的第一行
+cfg_name_position_tip,按鍵顯示資訊時，名稱顯示的位置。\n上方＝物品上方置中\n資訊框＝顯示在資訊框的第一行
 cfg_name_text_size,名稱文字大小
-cfg_name_text_size_tip,名稱的文字大小：Small（小）、Medium（中）、Large（大）、ExtraLarge（特大），大小和「文字大小」的四級一樣。
+cfg_name_text_size_tip,名稱的文字大小，四級和「文字大小」一樣。
 cfg_wrap_names,長名稱換行
 cfg_wrap_names_tip,打開時，比物品寬的名稱會換行，寬度不超過物品。\n關掉時，長名稱照樣伸出物品外。
-cfg_water_volume,顯示水量
-# {0}＝短前綴的水量那行（水 4000ml），{1}＝長前綴的（水量 4000ml）
-cfg_water_volume_tip,顯示容器裡有多少水，單位毫升。\nShort：{0}\nLong：{1}
-cfg_water_purity,顯示水質
-# {0}＝短前綴的水質那行（質 98.52%），{1}＝長前綴的（水質 98.52%）
-cfg_water_purity_tip,顯示容器裡的水的純度（空的容器不顯示）。\nShort：{0}\nLong：{1}
-cfg_real_purity,總是顯示真實水質
-cfg_real_purity_tip,關閉：掃描過的顯示百分比，其他顯示 ?。\n打開：全部顯示真實水質，不用再檢測（客人謊報也看得出來）。\n要先打開「顯示水質」。
+cfg_water_volume,顯示液體量
+# {0}＝資訊框上液量那行實際畫的字（250ml；數字和 ml 中間夾了看不見的零寬空格）
+cfg_water_volume_tip,顯示容器裡裝了多少液體，例如{0}。
+cfg_water_purity,顯示純度
+# {0}、{1}、{2}＝整數、小數一位、小數兩位時資訊框上純度那行實際畫的字（98%、98.5%、98.52%：主要成分佔了多少）；選項的字是 opt_dont_show、opt_whole_number、opt_one_decimal、opt_two_decimals
+cfg_water_purity_tip,顯示主要成分佔了多少；裝水時就是水質。空的容器不顯示。\n不顯示＝不顯示純度\n整數＝{0}（分不出純水）\n小數一位＝{1}\n小數兩位＝{2}
+cfg_machine_water,顯示機器裡的液體
+cfg_machine_water_tip,顯示機器裡面的液體。這兩行另外按「顯示液體量」「顯示純度」兩個設定顯示。
 cfg_battery_charge,顯示電池電量
-cfg_battery_charge_tip,顯示電池剩下的能量，例如 8kJ。
+cfg_battery_charge_tip,顯示電池剩下的能量，例如 8kJ。充能器上也顯示裡面每顆電池的電量。
 cfg_battery_tonight_charge,顯示今晚會充多少電
 cfg_battery_tonight_charge_tip,電池今晚會充電時，在下面用綠字顯示會充多少，例如 +4kJ。充滿或今晚不會充時不顯示。
 cfg_machine_power,顯示電量
-# {0}＝短前綴的電量那行（電 87kJ），{1}＝長前綴的（電力 87kJ）
-cfg_machine_power_tip,顯示機器裡電池剩下的能量。不夠今晚用時這一行變紅。\nShort：{0}\nLong：{1}
+# {0}＝資訊框上電池的那行（41kJ，電量那行沒有前綴），{1}＝接電流轉換器時今晚的電費（-6 加信用點圖示），{2}＝用一次的價錢（-6/8/14 加信用點圖示）
+cfg_machine_power_tip,顯示機器裡電池剩下的能量，例如{0}，不夠今晚用時變紅。接電流轉換器時改成顯示要付的電費：晚上運作的機器寫今晚的電費，例如{1}；白天按一下用一次的機器寫用一次的價錢，例如{2}。
 cfg_machine_tonight_net,顯示今晚的電力收支
-cfg_machine_tonight_net_tip,顯示機器今晚的電量會變多少（會充進來的減掉會用掉的），在電力那行下面。\n增加：綠字，例如 +4kJ\n減少：橘字，例如 -8kJ\n不變或電力那行變紅時不顯示。
+cfg_machine_tonight_net_tip,顯示機器今晚的電量會變多少（會充進來的減掉會用掉的），在電量那行下面。\n增加：綠字，例如 +4kJ\n減少：橘字，例如 -8kJ (10天)，括號裡是照這樣下去電還撐得了幾天\n不變或電量那行變紅時不顯示。
 cfg_machine_reason,顯示今晚不會運作的原因
 # {0}、{1}、{2}＝下面的三個原因（info_reason_no_input、info_reason_no_power、info_reason_output_full）
 cfg_machine_reason_tip,機器今晚不會運作時，用橘色顯示簡短的原因，例如{0}、{1}、{2}。
 cfg_machine_progress,顯示進度
 # {0}＝剩 3 天的短寫法（3天），{1}＝長寫法（剩3天）
-cfg_machine_progress_tip,顯示機器還要幾天完成，按現在的作業速度算，不推算過載、退化等模組效果之後的變化。今晚不會運作時不顯示。\nShort：{0}\nLong：{1}
+cfg_machine_progress_tip,顯示機器還要幾天完成，按現在的作業速度算，不推算過載、退化等模組效果之後的變化。今晚不會運作時不顯示。\n短：{0}\n長：{1}
 cfg_machine_output,顯示輸出區的成品數
 # {0}＝短前綴的成品數那行（成 7），{1}＝長前綴的（成品 7）
-cfg_machine_output_tip,機器的輸出區有東西時，顯示一共有幾個（進料斗、出料斗不算）。\nShort：{0}\nLong：{1}
-cfg_machine_water,顯示機器裡的水資訊
-# {0}／{1}＝短的水量、水質前綴（水／質），{2}／{3}＝長的（水量／水質）
-cfg_machine_water_tip,顯示機器裡面的水的水量和水質。這兩行另外按「顯示水量」「顯示水質」兩個設定顯示。\nShort：{0}／{1}\nLong：{2}／{3}
+cfg_machine_output_tip,機器的輸出區有東西時，顯示一共有幾個（進料斗、出料斗不算）。\n短：{0}\n長：{1}
+# 自製反應爐（1.4.0 加）。{0}＝今晚會爆炸時資訊框最上面那行紅字（info_reactor_explodes）
+cfg_reactor,顯示反應爐
+cfg_reactor_tip,顯示反應爐的完好度和存的電。今晚會爆炸時寫「{0}」，並顯示警告圖示。
+# 狀態圖示（1.4.0 加的）。
+cfg_status_icons,狀態圖示
+cfg_status_icons_tip,在機器的角落顯示小圖示：卡住、需要處理時顯示警告；要補東西才會運作時顯示 Zz；有東西可以收時顯示勾號。水罐的濾材用完時也顯示警告。\n不顯示＝不畫圖示\n按鍵時＝按「顯示物品資訊」鍵時，和資訊框一起顯示\n一直顯示＝不用按鍵也一直顯示
+cfg_status_icon_position,圖示位置
+cfg_status_icon_position_tip,狀態圖示放在物品的哪個角。
+cfg_status_icon_background,圖示底色
+cfg_status_icon_background_tip,狀態圖示後面的底用深色還是淺色。「圖示底色不透明度」調整它的透明程度。
+cfg_status_icon_opacity,圖示底色不透明度
+cfg_status_icon_opacity_tip,狀態圖示後面那塊底的不透明度。圖示本身一直是不透明的。（0＝沒有底、100＝完全不透明）
+cfg_warning_icon,顯示警告圖示
+# {0}＝下面的一個原因（info_reason_no_power）
+cfg_warning_icon_tip,機器有事要做卻卡住時（例如{0}），或水罐的濾材用完時，顯示警告。
+cfg_idle_icon,顯示閒置圖示
+# {0}、{1}＝下面的兩個原因（info_reason_no_input、info_reason_no_seed）；選項的字是 opt_icons_off、opt_except_empty、opt_all
+cfg_idle_icon_tip,機器要補東西今晚才會運作時（例如{0}、{1}），顯示 Zz。\n不顯示＝不顯示 Zz\n空機器除外＝輸入區沒放東西時不顯示（例如沒放容器、冰箱空著）\n全部＝輸入區空著也顯示
+cfg_done_icon,顯示完成圖示
+cfg_done_icon_tip,機器有東西可以收時顯示勾號，例如輸出區有成品（進料斗、出料斗不算），或收集好、淨化好的水。
+# 水培系統的礦物質（1.4.0 新增）：{0}、{1}＝下面資訊框的兩個字（info_mineral_low、info_mineral_high）
+cfg_mineral_warning,水培礦物質範圍警告
+cfg_mineral_warning_tip,水培系統的水，若礦物質不在種子的最佳養分濃度內時，顯示警告，資訊框也會寫「{0}」或「{1}」。
+cfg_container_icons,箱子上的圖示
+cfg_container_icons_tip,箱子（例如機器區）裡的機器有狀態時，箱子上也顯示狀態圖示。同時有警告和 Zz 時，優先顯示警告；任何一台有東西可以收就加上勾號。\n不顯示＝箱子上不顯示圖示\n只有警告＝只顯示警告\n警告和閒置＝顯示警告或 Zz\n全部＝也顯示勾號
 cfg_stolen_heat,顯示贓物熱度
 # {0}＝短前綴的熱度那行（熱 45%），{1}＝長前綴的（熱度 45%）
-cfg_stolen_heat_tip,用紅色顯示贓物的熱度。\nShort：{0}\nLong：{1}
+cfg_stolen_heat_tip,用紅色顯示贓物的熱度。\n短：{0}\n長：{1}
 cfg_use_count,顯示使用次數
 # {0}＝短前綴的使用次數那行（剩 3），{1}＝長前綴的（剩餘 3）
-cfg_use_count_tip,顯示還能用幾次。用完時變紅。\nShort：{0}\nLong：{1}
+cfg_use_count_tip,顯示還能用幾次。用完時變紅。\n短：{0}\n長：{1}
 cfg_durability,顯示耐久度
-# {0}＝短前綴的耐久度那行（耐 320），{1}＝長前綴的（耐久 320）
-cfg_durability_tip,顯示耐久度。剩 1/4 以下時變成橘色。\nShort：{0}\nLong：{1}
+# {0}＝短前綴的耐久度那行（耐 320），{1}＝長前綴的（耐久 320），{2}＝長前綴的濾材那行（濾材 400）
+cfg_durability_tip,顯示耐久度。剩 1/4 以下時變成橘色。裝濾材的東西改成顯示裡面的濾材（幾個就加起來），例如{2}。\n短：{0}\n長：{1}
 cfg_ingot_purity,顯示金屬錠純度
 # {0}＝下面的一個純度等級（info_ingot_high，高純度）
 cfg_ingot_purity_tip,在金屬錠上顯示純度的等級，例如「{0}」。
+# 藥品純度（1.4.0 加）。{0}＝資訊框那行（88%）
+cfg_drug_purity,顯示藥品純度
+cfg_drug_purity_tip,顯示藥品的純度，例如{0}。
 cfg_key_mode,按鍵方式
-cfg_key_mode_tip,選擇「顯示物品資訊」這個鍵要按住，還是按一下切換。\nHold＝按住時顯示，放開就消失\nToggle＝按一下顯示，再按一下消失；讀檔、回主選單時自動關閉
+cfg_key_mode_tip,選擇「顯示物品資訊」這個鍵要按住，還是按一下切換。\n按住＝按住時顯示，放開就消失\n切換＝按一下顯示，再按一下消失；讀檔、回主選單時自動關閉
 cfg_text_size,文字大小
-cfg_text_size_tip,資訊框的文字大小（名稱另外看「名稱文字大小」）：Small（小）、Medium（中）、Large（大）、ExtraLarge（特大）。一個物品格是 16 單位，文字高 3.5、4.5、6 或 8 單位。
+cfg_text_size_tip,資訊框的文字大小（名稱另外看「名稱文字大小」）。一個物品格是 16 單位，小、中、大、特大的文字高 3.5、4.5、6、8 單位。
 cfg_prefix,每行開頭的字
-# {0}～{7}＝短的前綴，{8}～{15}＝長的，順序是水量、水質、機器的電、剩 3 天、成品數、熱度、使用次數、耐久度
-cfg_prefix_tip,每行開頭用短的字還是長的詞。Long 放不下物品寬度時，那個資訊框改用短的。\nShort：{0}、{1}、{2}、{3}、{4}、{5}、{6}、{7}\nLong：{8}、{9}、{10}、{11}、{12}、{13}、{14}、{15}
+# {0}～{5} 是短前綴，{6}～{11} 是長前綴：剩3天、成品數、熱度、使用次數、耐久度、濾材。用「、」隔開。
+cfg_prefix_tip,每行開頭用短的字還是長的詞。選「長」放不下物品寬度時，那個資訊框改用短的。\n短：{0}、{1}、{2}、{3}、{4}、{5}\n長：{6}、{7}、{8}、{9}、{10}、{11}
+cfg_info_box_opacity,資訊框不透明度
+cfg_info_box_opacity_tip,資訊框和名稱後面那塊深色底的不透明度。文字本身一直是不透明的。（0＝沒有底、100＝完全不透明）
+
+# ---- 設定視窗的下拉選項與開關（1.4.0 加的）：玩家看到的字，存的值照舊是程式裡的英文名稱。上面的說明用同樣的字 ----
+opt_on,開
+opt_off,關
+opt_hold,按住
+opt_toggle,切換
+opt_short,短
+opt_long,長
+opt_small,小
+opt_medium,中
+opt_large,大
+opt_extra_large,特大
+opt_top,上方
+opt_center,置中
+opt_bottom_left,左下角
+opt_info_box,資訊框
+opt_icons_off,不顯示
+opt_icons_with_key,按鍵時
+opt_icons_always,一直顯示
+opt_top_right,右上角
+opt_bottom_right,右下角
+opt_top_left,左上角
+opt_hidden,不顯示
+opt_dark,深色
+opt_light,淺色
+opt_warning_only,只有警告
+opt_warning_and_idle,警告和閒置
+opt_all,全部
+opt_except_empty,空機器除外
+opt_dont_show,不顯示
+opt_whole_number,整數
+opt_one_decimal,小數一位
+opt_two_decimals,小數兩位
+
+# ---- 店裡的設定視窗（1.4.0 加的）。ui_hint 的 {0}＝「顯示物品資訊」現在的鍵（遊戲的鍵名），{1}＝設定鈕在哪個角（ui_hint_top_right 這些） ----
+ui_title,物品速覽設定
+ui_tab_general,一般
+ui_tab_names,名稱
+ui_tab_water,液體
+ui_tab_batteries,電池
+ui_tab_machines,機器
+ui_tab_icons,狀態圖示
+ui_tab_items,物品
+ui_reset,恢復預設
+ui_reset_sure,確定？
+ui_reset_tip,把這一頁的設定全部恢復成預設值。按一下後再按一次才會恢復。
+ui_button,物品速覽
+ui_button_tip,打開物品速覽的設定
+ui_hint,物品速覽的設定在店裡打開：按 {0} 顯示資訊時，點{1}的「物品速覽」按鈕。
+ui_hint_ok,知道了
+ui_hint_top_right,右上角
+ui_hint_top_left,左上角
+ui_hint_bottom_right,右下角
+ui_hint_bottom_left,左下角
+ui_percent,{0}%
 
 # ---- 資訊框：按住鍵時畫在物品上的字 ----
 # 資訊框在物品的左下角，很窄：一個物品格 16 單位寬，字高 3.5～6 單位。每條都盡量短。
 
-# 每行的前綴，後面空一格接數值（水 4000ml）。_short 是一個字，_long 是兩個字的詞。
-# 水容器、機器裡的水量
-info_prefix_water_short,水
-info_prefix_water_long,水量
-# 水質
-info_prefix_purity_short,質
-info_prefix_purity_long,水質
-# 機器電池剩下的電
-info_prefix_power_short,電
-info_prefix_power_long,電力
+# 每行的前綴，後面空一格接數值（成品 7）。_short 是一個字，_long 是兩個字的詞。機器的電量那行、反應爐存的電沒有前綴（41kJ、120/250kJ）。
 # 機器輸出區的成品數
 info_prefix_output_short,成
 info_prefix_output_long,成品
@@ -94,15 +172,18 @@ info_prefix_uses_long,剩餘
 # 耐久度
 info_prefix_durability_short,耐
 info_prefix_durability_long,耐久
+# 水罐、循環水養殖系統裡的濾材，幾個就加起來（濾材 400），在水的那幾行下面
+info_prefix_filter_short,濾
+info_prefix_filter_long,濾材
+# 反應爐的完好度（完好度 60/100；遊戲的用語）
+info_prefix_integrity_short,完
+info_prefix_integrity_long,完好度
 
 # 機器還要幾天完成（沒有前綴，整行就是這個）。{0}＝天數。短的不分單複數；長的照單複數分，中文只有 .other。
 info_days_short,{0}天
 info_days_long.other,剩{0}天
 
-# 機器的電池槽放的是沒有自己電量的電源（接外部電）時，電那行寫的字
-info_power_external,外部
-
-# 水量的估計（容器沒有刻度時代替毫升），從滿到空
+# 液量的估計（容器沒有刻度時代替毫升），沒有前綴，從滿到空
 info_estimate_full,滿
 info_estimate_almost_full,快滿
 info_estimate_over_half,過半
@@ -124,6 +205,13 @@ info_reason_max_purity,已淨化完
 info_reason_no_module,缺模組
 info_reason_blocked,無法開始
 info_reason_no_power,缺電
+# 水罐、循環水養殖系統沒裝濾材：代替濾材那行的橘字（沒有前綴）
+info_reason_no_filter,沒濾材
+# 水培系統的水裡礦物質太少、太多：自己一行橘字（沒有前綴）
+info_mineral_low,礦物質太少
+info_mineral_high,礦物質太多
+# 反應爐今晚會爆炸：資訊框最上面一行紅字，沒有前綴
+info_reactor_explodes,今晚爆炸
 
 # 金屬錠純度的等級，從好到差，照遊戲字串表的 mech_condition_*_purity
 info_ingot_perfect,完美純度

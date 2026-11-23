@@ -8,290 +8,457 @@ namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 設定（寫法照一鍵關窗的 Settings）：
-    /// - 每種資訊的開關、「一律顯示真實水質」「按鍵方式」「字級」「每行開頭的字」「總是顯示名稱」「名稱位置」兩個（資訊框未顯示時、顯示時）、
-    ///   「名稱文字大小」「長名稱換行」放遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.item-quick-info.json，主選單模組畫面的齒輪）。
-    ///   每次重算標籤時才讀值，玩家按套用就生效（不標 requiresRestart）。
-    /// - 顯示的鍵放遊戲的「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind），值由 mod 自己存在
-    ///   ModData\dbfoxtw_item-quick-info\settings.json（{"key": "Tab"}，KeyCode 名稱）。不放 ModConfig：放了設定視窗會多一格同一個值的文字欄。
-    /// 標籤與說明在 mod 的 Localization\*.csv（Loc.Get；遊戲在 Init 之後才讀這些檔，所以傳函式，打開視窗時才查）。
-    /// 說明裡長短的例子（Short：水 4000ml…）、原因與純度的例子由 Tips 用資訊框的字填進去，說明和資訊框上的字不會對不上。
+    /// - 37 個設定（SettingDefs）1.4.0 起存在 mod 自己的 ModData\dbfoxtw_item-quick-info\settings.json 的 "settings"，
+    ///   在店內設定視窗（SettingsUI）改，改了馬上生效、每改一次就存檔；滑桿（兩個不透明度）拖的時候生效、放開才存檔（SetLive、CommitLive）。
+    ///   主選單模組畫面的齒輪變灰（不再定義 ModConfig）。
+    ///   ModData 裡還沒有 "settings" 時（第一次跑 1.4.0）從 1.3.0 以前的 ModConfigs\dbfoxtw.item-quick-info.json 搬過來（MigrateFromModConfig）。
+    /// - 顯示的鍵、打開設定的鍵、設定鈕的位置放遊戲的「選項 → 按鍵綁定」，值也存在同一個 settings.json。
+    /// - 店內設定視窗記住的位置與分頁、第一次進店的提示看過了沒，也在 settings.json。
+    /// 讀值的屬性每幀、每次重算都會叫，只讀記憶體裡的陣列，不配置記憶體。
+    /// 檔案只在 Init 讀一次（玩家可以關著遊戲改檔）；遊戲開著時改檔，下次存檔會被蓋回去。Init 時讀檔出錯（檔案被鎖住）的那次遊戲不寫檔。
+    /// 不宣告權限：讀寫都透過 ModHelper 的 ModData（不用 System.IO）。
     /// </summary>
     static class Settings
     {
         internal const KeyCode DefaultKey = KeyCode.Tab;
-        /// <summary>按鍵存在 ModData 裡的檔名。</summary>
+        /// <summary>設定、按鍵與視窗狀態存在 ModData 裡的檔名（1.0.0 起放按鍵的那一個，1.4.0 起也放設定）。</summary>
         internal const string KeyFile = "settings.json";
-        /// <summary>
-        /// 設定視窗的六個段落，照 Init 裡第一次定義的順序列（ModConfig 照第一次定義的順序列段落）：
-        /// General、Names、Water containers、Batteries、Machines、Items。遊戲直接顯示段落字串（不經過翻譯），
-        /// 段落又只能在 Init 時定（那時 mod 的 Localization 還沒載入），所以用英文。段落不存進設定檔（ModConfigs 只存 key 與值），
-        /// 所以第一段 1.1.0 從 Labels 改名 General（裡面是整個 mod 的設定，不只標籤）不用相容。
-        /// </summary>
-        const string SectionNames = "Names", SectionWater = "Water containers", SectionBatteries = "Batteries",
-            SectionMachines = "Machines", SectionItems = "Items", SectionGeneral = "General";
-        /// <summary>名稱位置（資訊框顯示時）的 key（MigrateNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
-        const string NamePositionKey = "NamePosition";
-        /// <summary>名稱位置（資訊框未顯示時）的 key（1.3.0；MigrateIdleNamePosition 的探測用；Init 裡的 DefineEnum 寫同一個字串）。</summary>
-        const string IdleNamePositionKey = "IdleNamePosition";
 
-        static ConfigEntry<bool> _alwaysNames, _wrapNames, _containerName, _machineName, _itemName, _waterVolume, _waterPurity, _realPurity, _batteryCharge, _batteryTonightCharge,
-            _machinePower, _machineTonightNet, _machineReason, _machineProgress, _machineOutput, _machineWater,
-            _stolenHeat, _useCount, _durability, _ingotPurity;
-        static ConfigEntry<KeyMode> _keyMode;
-        static ConfigEntry<TextSize> _textSize, _nameTextSize;
-        static ConfigEntry<PrefixStyle> _prefix;
-        static ConfigEntry<NamePosition> _namePosition;
-        static ConfigEntry<IdleNamePosition> _idleNamePosition;
-        static KeyCode _key = DefaultKey;
-        /// <summary>settings.json 裡讀到的其他欄位（新版 mod 加的），寫回時保留。</summary>
-        static JObject _keyJson;
+        // settings.json 的欄位名稱（存進玩家的檔，定了就不要改）
+        const string KeyField = "key", OpenKeyField = "openSettingsKey", CornerField = "buttonPosition", HintField = "hintSeen",
+            WindowField = "window", WindowLeftField = "left", WindowTopField = "top", WindowTabField = "tab", SettingsField = "settings";
+
+        static SettingValues _values = new SettingValues();
+        static KeyCode _key = DefaultKey, _openKey = KeyCode.None;
+        static ButtonCorner _corner = Corners.Default;
+        static bool _hintSeen;
+        static bool _hasWindowPos;
+        static float _windowLeft, _windowTop;
+        static int _windowTab;
+        /// <summary>settings.json 讀到的整份（新版 mod 加的欄位、"settings" 裡不認得的 key），寫回時保留。</summary>
+        static JObject _json;
+        /// <summary>這次遊戲讀 settings.json 的情況：Unreadable（讀檔丟例外）時這次遊戲不寫檔（SettingsFile.CanSave）。</summary>
+        static SettingsFileState _fileState = SettingsFileState.Missing;
+        static bool _saveFailedLogged, _saveSkippedLogged;
+        /// <summary>拖滑桿改了、還沒存檔的設定（放開、關視窗時 CommitLive 存）。</summary>
+        static readonly PendingChanges _pending = new PendingChanges();
 
         /// <summary>顯示的鍵。None＝玩家沒綁鍵（不顯示）。</summary>
         internal static KeyCode Key => _key;
+        /// <summary>打開店內設定視窗的鍵（預設不綁）。</summary>
+        internal static KeyCode OpenKey => _openKey;
+        /// <summary>設定鈕放在畫面的哪個角（預設右上角）。</summary>
+        internal static ButtonCorner Corner => _corner;
+        /// <summary>第一次進店的提示按過「知道了」沒。</summary>
+        internal static bool HintSeen => _hintSeen;
 
-        /// <summary>
-        /// 一律顯示真實水質（起預設開，關掉＝照遊戲的規則）。「顯示水質」關掉時沒有作用（說明這樣寫）：水質那行不顯示，
-        /// 淨水器這類機器「水質看得到才判斷原因」的條件也不把它算成看得到。還沒讀設定時照預設（開），和其他開關一樣。
-        /// </summary>
-        internal static bool RealPurity => On(_realPurity) && On(_waterPurity);
+        internal static int Get(SettingDef d) => _values.Get(d);
+        static bool On(SettingDef d) => _values.On(d);
 
-        static bool On(ConfigEntry<bool> e) => e == null || e.Value;
-
-        /// <summary>
-        /// 總是顯示名稱（預設關）：開著時取過的名稱不用按鍵、一直顯示，其他資訊照舊要按鍵。每幀都讀（Runner），值是 ModConfig 記在記憶體裡的。
-        /// 還沒讀設定時照預設（關）。
-        /// </summary>
-        internal static bool AlwaysShowNames => _alwaysNames != null && _alwaysNames.Value;
+        /// <summary>總是顯示名稱（預設關）：開著時取過的名稱不用按鍵、一直顯示，其他資訊照舊要按鍵。每幀都讀（Runner）。</summary>
+        internal static bool AlwaysShowNames => On(SettingDefs.AlwaysShowNames);
 
         /// <summary>三個名稱開關（箱子、機器、其他物品）至少開一個：全關時常駐的名稱沒東西可畫，Runner 不去找。每幀讀。</summary>
-        internal static bool AnyNameShown => On(_containerName) || On(_machineName) || On(_itemName);
+        internal static bool AnyNameShown => On(SettingDefs.ShowContainerName) || On(SettingDefs.ShowMachineName) || On(SettingDefs.ShowItemName);
 
-        /// <summary>每種資訊顯示不顯示：每次重算時讀成一份，按套用就生效。還沒讀設定時全開（預設）。</summary>
+        /// <summary>每種資訊顯示不顯示：每次重算時讀成一份，店內設定視窗改了下一次重算就生效。</summary>
         internal static Display ReadDisplay() => new Display
         {
-            ContainerName = On(_containerName),
-            MachineName = On(_machineName),
-            ItemName = On(_itemName),
-            WaterVolume = On(_waterVolume),
-            WaterPurity = On(_waterPurity),
-            BatteryCharge = On(_batteryCharge),
-            BatteryTonightCharge = On(_batteryTonightCharge),
-            MachinePower = On(_machinePower),
-            MachineTonightNet = On(_machineTonightNet),
-            MachineReason = On(_machineReason),
-            MachineProgress = On(_machineProgress),
-            MachineOutput = On(_machineOutput),
-            MachineWater = On(_machineWater),
-            StolenHeat = On(_stolenHeat),
-            UseCount = On(_useCount),
-            Durability = On(_durability),
-            IngotPurity = On(_ingotPurity),
+            ContainerName = On(SettingDefs.ShowContainerName),
+            MachineName = On(SettingDefs.ShowMachineName),
+            ItemName = On(SettingDefs.ShowItemName),
+            WaterVolume = On(SettingDefs.ShowWaterVolume),
+            WaterPurity = (PurityFormat)Get(SettingDefs.ShowWaterPurity),
+            BatteryCharge = On(SettingDefs.ShowBatteryCharge),
+            BatteryTonightCharge = On(SettingDefs.ShowBatteryTonightCharge),
+            MachinePower = On(SettingDefs.ShowMachinePower),
+            MachineTonightNet = On(SettingDefs.ShowMachineTonightNet),
+            MachineReason = On(SettingDefs.ShowMachineReason),
+            MachineProgress = On(SettingDefs.ShowMachineProgress),
+            MachineOutput = On(SettingDefs.ShowMachineOutput),
+            MachineWater = On(SettingDefs.ShowMachineWater),
+            StolenHeat = On(SettingDefs.ShowStolenHeat),
+            UseCount = On(SettingDefs.ShowUseCount),
+            Durability = On(SettingDefs.ShowDurability),
+            IngotPurity = On(SettingDefs.ShowIngotPurity),
+            DrugPurity = On(SettingDefs.ShowDrugPurity),
+        };
+
+        /// <summary>狀態圖示的設定：每輪重算時讀成一份（拖滑桿改的不透明度下一輪就套上）。</summary>
+        internal static IconSettings ReadIcons() => new IconSettings
+        {
+            Mode = (StatusIconMode)Get(SettingDefs.StatusIcons),
+            Position = (StatusIconPosition)Get(SettingDefs.StatusIconPosition),
+            Background = (StatusIconBackground)Get(SettingDefs.StatusIconBackground),
+            Opacity = Get(SettingDefs.StatusIconOpacity),
+            Warning = On(SettingDefs.ShowWarningIcon),
+            Idle = (IdleIconMode)Get(SettingDefs.ShowIdleIcon),
+            Done = On(SettingDefs.ShowDoneIcon),
+            Containers = (ContainerIconMode)Get(SettingDefs.ContainerIcons),
+            Reactor = On(SettingDefs.ShowReactor),
         };
 
         /// <summary>
-        /// 按鍵方式（預設 Hold＝按住顯示）：Toggle 是按一下開、再按一下關（Runner、KeySwitch）。和字級一樣下拉選單直接顯示
-        /// 名稱（Hold／Toggle，Hold 在前），說明裡寫中文對照。每幀都讀（Runner），值是 ModConfig 記在記憶體裡的。
+        /// 水培礦物質範圍警告（預設開）：水耕機的水裡的礦物質不在種子的範圍內時，資訊框寫橘字、狀態圖示畫 ⚠。
+        /// 每輪重算時給 ReadContext（完整資訊、常駐的圖示、全店快照）。
         /// </summary>
-        internal static KeyMode KeyMode => _keyMode != null ? _keyMode.Value : KeyMode.Hold;
+        internal static bool MineralWarning => On(SettingDefs.MineralWarning);
 
         /// <summary>
-        /// 字級（預設中）。下拉選單直接顯示選項的名稱、不經過翻譯（ModConfigWindow 用 entry.Choices），存的也是名稱：
-        /// 翻成中文的話換語言就對不上，所以用英文的 Small／Medium／Large／ExtraLarge（特大是 1.3.0 加的），說明裡寫中文對照。
+        /// 顯示反應爐（預設開）：自製反應爐的今晚爆炸、完好度、存的電與今晚爆炸的 ⚠。每輪重算時給 ReadContext（完整資訊、常駐的圖示）。
         /// </summary>
-        internal static TextSize TextSize => _textSize != null ? _textSize.Value : TextSize.Medium;
+        internal static bool ShowReactor => On(SettingDefs.ShowReactor);
 
         /// <summary>
-        /// 每行開頭的字的長短（預設長）。和字級一樣下拉選單直接顯示名稱（Short／Long，Short 在前），說明裡寫中文對照與全部的字。
+        /// 狀態圖示不按鍵也要畫（Always，而且三個開關至少開一個；閒置是三選一，不是「不顯示」就算開）：每幀都讀
+        /// （Runner 決定要不要進常駐那條路），不配置記憶體。
         /// </summary>
-        internal static PrefixStyle Prefix => _prefix != null ? _prefix.Value : PrefixStyle.Long;
+        internal static bool AlwaysIcons =>
+            (StatusIconMode)Get(SettingDefs.StatusIcons) == StatusIconMode.Always
+            && (On(SettingDefs.ShowWarningIcon) || (IdleIconMode)Get(SettingDefs.ShowIdleIcon) != IdleIconMode.Off || On(SettingDefs.ShowDoneIcon));
 
-        /// <summary>
-        /// 名稱位置（資訊框顯示時；預設 Top＝名稱自己一個框、貼在物品上緣置中；InfoBox＝資訊框的第一行）：按鍵叫出資訊時用。
-        /// 三種名稱（箱子、機器、其他物品）都照它。key 照舊是 NamePosition、選項照舊兩個（1.3.0 只改了顯示的名稱）。
-        /// 和字級一樣下拉選單直接顯示名稱（Top／InfoBox，Top 在前），說明裡寫中文對照。InfoBox 在 1.1.0 以前叫 Label（MigrateNamePosition）。
-        /// </summary>
-        internal static NamePosition NamePosition => _namePosition != null ? _namePosition.Value : NamePosition.Top;
+        /// <summary>按鍵方式（預設 Hold＝按住顯示）：Toggle 是按一下開、再按一下關（Runner、KeySwitch）。每幀都讀。</summary>
+        internal static KeyMode KeyMode => (KeyMode)Get(SettingDefs.KeyMode);
 
-        /// <summary>
-        /// 名稱位置（資訊框未顯示時；1.3.0，預設 Top）：總是顯示名稱開著、沒按鍵時（只畫名稱）用。Top、Center、BottomLeft（下拉選單照這個順序）。
-        /// 更新前選 InfoBox 的玩家第一次讀到時自動設成 BottomLeft（MigrateIdleNamePosition）。
-        /// </summary>
-        internal static IdleNamePosition IdleNamePosition => _idleNamePosition != null ? _idleNamePosition.Value : IdleNamePosition.Top;
+        /// <summary>字級（預設中）：Small／Medium／Large／ExtraLarge。</summary>
+        internal static TextSize TextSize => (TextSize)Get(SettingDefs.TextSize);
 
-        /// <summary>名稱的字級（預設大）：四級和「文字大小」一樣（Rules.FontSize）；「文字大小」只管名稱以外的行。</summary>
-        internal static TextSize NameTextSize => _nameTextSize != null ? _nameTextSize.Value : TextSize.Large;
+        /// <summary>每行開頭的字的長短（預設長）。</summary>
+        internal static PrefixStyle Prefix => (PrefixStyle)Get(SettingDefs.Prefix);
 
-        /// <summary>
-        /// 長名稱換行（1.3.0，預設關）：開著時比物品寬的名稱換行（Rules.WrapName），每一行不超過物品寬；關著時照舊一行、伸出去。
-        /// 每輪重算時讀。還沒讀設定時照預設（關）。
-        /// </summary>
-        internal static bool WrapLongNames => _wrapNames != null && _wrapNames.Value;
+        /// <summary>名稱位置（資訊框顯示時；預設 Top；InfoBox＝資訊框的第一行，1.1.0 以前叫 Label）。</summary>
+        internal static NamePosition NamePosition => (NamePosition)Get(SettingDefs.NamePosition);
 
-        /// <summary>
-        /// 說明裡例子用的資訊框字串：目前語言、長前綴的那份（短的是 Short）。打開設定視窗、顯示說明時才取，換了語言也跟著換。
-        /// </summary>
-        static Strings Words => GameState.Words(PrefixStyle.Long);
+        /// <summary>名稱位置（資訊框未顯示時；1.3.0，預設 Top）：Top、Center、BottomLeft。</summary>
+        internal static IdleNamePosition IdleNamePosition => (IdleNamePosition)Get(SettingDefs.IdleNamePosition);
+
+        /// <summary>名稱的字級（預設大）：四級和「文字大小」一樣（Rules.FontSize）。</summary>
+        internal static TextSize NameTextSize => (TextSize)Get(SettingDefs.NameTextSize);
+
+        /// <summary>長名稱換行（1.3.0；1.4.0 起預設開）。</summary>
+        internal static bool WrapLongNames => On(SettingDefs.WrapLongNames);
+
+        /// <summary>資訊框與名稱框黑底的不透明度（百分比，預設 90）：每輪重算時讀（Runner.Style）。</summary>
+        internal static int InfoBoxOpacity => Get(SettingDefs.InfoBoxOpacity);
 
         internal static void Init()
         {
-            var cfg = ModConfig.For(ItemQuickInfoMod.ModId);
-            // key 名稱存進玩家的設定檔，定了就不要改（改了玩家的設定讀不回來）
-            // General 段排第一（1.1.0 以前叫 Labels）：按鍵方式、字級、前綴是整個 mod 的設定，打開設定視窗先看到；
-            // 段落照第一次定義的順序，所以先定義。
-            // 段落內照定義的順序列：按鍵方式排最前面，接著每行開頭的字、文字大小（2026-11-08 使用者要的，原本文字大小在前）
-            _keyMode = cfg.DefineEnum("KeyMode", KeyMode.Hold, SectionGeneral, () => Loc.Get("cfg_key_mode"), () => Loc.Get("cfg_key_mode_tip"));
-            _prefix = cfg.DefineEnum("Prefix", PrefixStyle.Long, SectionGeneral, () => Loc.Get("cfg_prefix"), () => Tips.Prefix(Words));
-            _textSize = cfg.DefineEnum("TextSize", TextSize.Medium, SectionGeneral, () => Loc.Get("cfg_text_size"), () => Loc.Get("cfg_text_size_tip"));
-            // Names 段接在 General 後面：名稱在物品上緣（Top）或資訊框的第一行（InfoBox），都在資訊的上面，
-            // 所以排在資訊的段落前面，資訊的段落再照標籤由上往下的順序排。
-            // 段落裡總是顯示名稱排最前面（決定名稱什麼時候出現，比位置、大小更先要看到），接著名稱位置兩個（未顯示時、顯示時）、
-            // 名稱文字大小、長名稱換行，三個名稱開關在後面（2026-11-08 使用者要的；原本名稱位置、名稱文字大小接在三個開關後面）
-            _alwaysNames = cfg.Define("AlwaysShowNames", false, SectionNames, () => Loc.Get("cfg_always_names"), () => Loc.Get("cfg_always_names_tip"));
-            // 名稱位置（資訊框未顯示時，1.3.0）：設定檔裡原本有沒有這個 key 要在 DefineEnum 之前探測（DefineEnum 之後讀到的都是值，分不出是預設還是存的）；
-            // 轉換要看「顯示時」讀完的值，所以等兩個都定義完才做（MigrateIdleNamePosition）
-            string idleRaw = ProbeRaw(cfg, IdleNamePositionKey, "名稱位置（資訊框未顯示時）不照舊設定轉換");
-            _idleNamePosition = cfg.DefineEnum("IdleNamePosition", IdleNamePosition.Top, SectionNames,
-                () => Loc.Get("cfg_idle_name_position"), () => Loc.Get("cfg_idle_name_position_tip"));
-            // 選項 Label 改名 InfoBox：舊值要在 DefineEnum 讀值之前先探測，DefineEnum 之後再改（MigrateNamePosition）
-            _namePosition = MigrateNamePosition(cfg, () =>
-                cfg.DefineEnum("NamePosition", NamePosition.Top, SectionNames, () => Loc.Get("cfg_name_position"), () => Loc.Get("cfg_name_position_tip")));
-            MigrateIdleNamePosition(idleRaw);
-            _nameTextSize = cfg.DefineEnum("NameTextSize", TextSize.Large, SectionNames, () => Loc.Get("cfg_name_text_size"), () => Loc.Get("cfg_name_text_size_tip"));
-            _wrapNames = cfg.Define("WrapLongNames", false, SectionNames, () => Loc.Get("cfg_wrap_names"), () => Loc.Get("cfg_wrap_names_tip"));
-            _containerName = cfg.Define("ShowContainerName", true, SectionNames, () => Loc.Get("cfg_container_name"), () => Loc.Get("cfg_container_name_tip"));
-            _machineName = cfg.Define("ShowMachineName", true, SectionNames, () => Loc.Get("cfg_machine_name"), () => Loc.Get("cfg_machine_name_tip"));
-            // 其他物品的名稱：水桶、金屬錠這些沒有自己視窗的物品，排在箱子、機器後面
-            _itemName = cfg.Define("ShowItemName", true, SectionNames, () => Loc.Get("cfg_item_name"), () => Loc.Get("cfg_item_name_tip"));
-            _waterVolume = cfg.Define("ShowWaterVolume", true, SectionWater, () => Loc.Get("cfg_water_volume"), () => Tips.WaterVolume(Words));
-            _waterPurity = cfg.Define("ShowWaterPurity", true, SectionWater, () => Loc.Get("cfg_water_purity"), () => Tips.WaterPurity(Words));
-            // 預設開（發布前改的；原本 是預設關）
-            _realPurity = cfg.Define("ShowRealPurity", true, SectionWater, () => Loc.Get("cfg_real_purity"), () => Loc.Get("cfg_real_purity_tip"));
-            _batteryCharge = cfg.Define("ShowBatteryCharge", true, SectionBatteries, () => Loc.Get("cfg_battery_charge"), () => Loc.Get("cfg_battery_charge_tip"));
-            // 電池今晚會充多少、機器今晚的電力收支（取代機器的今晚會充多少），各自接在電量後面
-            _batteryTonightCharge = cfg.Define("ShowBatteryTonightCharge", true, SectionBatteries, () => Loc.Get("cfg_battery_tonight_charge"), () => Loc.Get("cfg_battery_tonight_charge_tip"));
-            _machinePower = cfg.Define("ShowMachinePower", true, SectionMachines, () => Loc.Get("cfg_machine_power"), () => Tips.MachinePower(Words));
-            // key 從 ShowMachineTonightCharge 改名（還沒發布，沒有玩家的設定要相容）
-            _machineTonightNet = cfg.Define("ShowMachineTonightNet", true, SectionMachines, () => Loc.Get("cfg_machine_tonight_net"), () => Loc.Get("cfg_machine_tonight_net_tip"));
-            _machineReason = cfg.Define("ShowMachineReason", true, SectionMachines, () => Loc.Get("cfg_machine_reason"), () => Tips.MachineReason(Words));
-            _machineProgress = cfg.Define("ShowMachineProgress", true, SectionMachines, () => Loc.Get("cfg_machine_progress"), () => Tips.MachineProgress(Words));
-            // 輸出區的成品數接在進度後面
-            _machineOutput = cfg.Define("ShowMachineOutput", true, SectionMachines, () => Loc.Get("cfg_machine_output"), () => Tips.MachineOutput(Words));
-            _machineWater = cfg.Define("ShowMachineWater", true, SectionMachines, () => Loc.Get("cfg_machine_water"), () => Tips.MachineWater(Words));
-            // Items 段：任何物品都可能有的資訊，排在 Machines 後面。四個開關的順序是熱度、使用次數、耐久度、純度
-            // （和標籤上的行序不同，標籤是耐久度、純度、使用次數、熱度）
-            _stolenHeat = cfg.Define("ShowStolenHeat", true, SectionItems, () => Loc.Get("cfg_stolen_heat"), () => Tips.StolenHeat(Words));
-            _useCount = cfg.Define("ShowUseCount", true, SectionItems, () => Loc.Get("cfg_use_count"), () => Tips.UseCount(Words));
-            _durability = cfg.Define("ShowDurability", true, SectionItems, () => Loc.Get("cfg_durability"), () => Tips.Durability(Words));
-            _ingotPurity = cfg.Define("ShowIngotPurity", true, SectionItems, () => Loc.Get("cfg_ingot_purity"), () => Tips.IngotPurity(Words));
-            LoadKey();
+            Load();
+        }
+
+        // ---------------- 店內設定視窗改值（SettingsUI 叫） ----------------
+
+        /// <summary>改一個設定（馬上生效、每改一次就存檔）；值沒變時什麼都不做。回傳有沒有變。</summary>
+        internal static bool Set(SettingDef d, int value)
+        {
+            if (!_values.Set(d, value)) return false;
+            ItemQuickInfoMod.DebugLog($"設定 {d.Key} 改成 {d.NameOf(value)}");
+            if (ReferenceEquals(d, SettingDefs.MineralWarning)) DropSnapshot();
+            Save();
+            return true;
         }
 
         /// <summary>
-        /// 名稱位置的選項 Label 在 1.1.0 改名 InfoBox，玩家設定檔裡的舊值 Label 自動轉成 InfoBox；define 是名稱位置本來的 DefineEnum。
-        /// 不能直接讀：遊戲在 DefineEnum 時用 Enum.Parse 讀存起來的字串，讀不懂的 Label 只記警告、換成預設的 Top，原始字串拿不到；
-        /// 改成有 choices 的文字型也不行（值不在 choices 裡會被直接換成預設值）。所以先用同一個 key 定義一個沒有 choices 的文字型探測
-        /// （原樣拿到存的字串），讀完馬上從 ModConfig 的清單拿掉（設定視窗不多一列、DefineEnum 不會變成「定義兩次」），再照常 DefineEnum；
-        /// 探測到 Label 就 Set(InfoBox)（遊戲會存回設定檔，下次就是 InfoBox）。轉的那一次遊戲照樣記一行 Label 讀不懂的警告，之後不會再有。
-        /// ModConfig.Entries 現在是內部的 List，不是 List 時（遊戲改了）不探測、記一行（不能留下探測的設定項），存著 Label 的玩家名稱位置變回預設 Top。
-        /// 探測出錯也一樣跳過，不能讓設定整個壞掉。之後不想轉的話，拿掉這個方法、Init 直接叫 define 就好。
-        /// 1.3.0 起探測和名稱位置（資訊框未顯示時）的探測共用 ProbeRaw。1.0.x 存 Label 的玩家：這裡先轉成 InfoBox，
-        /// 接著 MigrateIdleNamePosition 看到 InfoBox 再把未顯示時設成 BottomLeft。
+        /// 「水培礦物質範圍警告」改了：全店快照存著照舊設定算的機器狀態（箱子上的圖示看它），馬上丟掉，下一次用到時照新設定重建
+        /// （不然箱子上的圖示最多晚 SnapshotRule.MaxAge 秒才跟上）。用現成的 StoreSnapshot.Reset：重建的原因記成「第一次」（只差在效能 log 的分類，不另加原因）。
         /// </summary>
-        static ConfigEntry<NamePosition> MigrateNamePosition(ModConfig cfg, Func<ConfigEntry<NamePosition>> define)
+        static void DropSnapshot()
         {
-            bool old = Rules.IsOldNamePosition(ProbeRaw(cfg, NamePositionKey, "名稱位置的舊值 Label 不轉成 InfoBox"));
-            var entry = define();
-            if (!old) return entry;
-            try
-            {
-                entry.Set(NamePosition.InfoBox);
-                ItemQuickInfoMod.Log.Msg("名稱位置的舊值 Label 轉成 InfoBox（1.1.0 改名）");
-            }
-            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"名稱位置的舊值 Label 轉成 InfoBox 失敗：{e.Message}"); }
-            return entry;
+            StoreSnapshot.Reset();
+            ItemQuickInfoMod.DebugLog("礦物質的設定改了：丟掉全店快照，下次用到時重建");
         }
 
         /// <summary>
-        /// 1.3.0 名稱位置拆成兩個設定：更新前名稱位置選 InfoBox 的玩家，常駐名稱原本在左下角（只有名稱一行的資訊框），
-        /// 新設定「名稱位置（資訊框未顯示時）」預設 Top 會讓名稱跑到上緣，所以自動設成 BottomLeft（畫面不變）。
-        /// 條件（Rules.IdleNeedsBottomLeft）：設定檔裡還沒有 IdleNamePosition 這個 key（idleRaw 是 ""；Init 在 DefineEnum 之前用 ProbeRaw 探測），
-        /// 而且讀完（MigrateNamePosition 把 Label 轉成 InfoBox 之後）的名稱位置（資訊框顯示時）是 InfoBox。
-        /// 要在兩個 DefineEnum 都叫完之後才 Set：Set 會存檔，存檔寫出所有已定義的設定，之後設定檔就有這個 key，只轉一次。
-        /// 選 Top 的玩家本來就和預設一樣，不用轉；探測不了（idleRaw 是 null）時不轉，選 InfoBox 的玩家常駐名稱換到上緣、要自己選回 BottomLeft。
+        /// 拖滑桿時改值（拖的時候生效、放開才存檔）：只改記憶體裡的值（資訊框、圖示下一輪重算就照新值），記下改之前的值，
+        /// 由 CommitLive（放開滑鼠、關視窗、換場景）存檔。值沒變時什麼都不做。回傳有沒有變。
         /// </summary>
-        static void MigrateIdleNamePosition(string idleRaw)
+        internal static bool SetLive(SettingDef d, int value)
         {
-            if (_idleNamePosition == null || _namePosition == null || !Rules.IdleNeedsBottomLeft(idleRaw, _namePosition.Value)) return;
-            try
-            {
-                _idleNamePosition.Set(IdleNamePosition.BottomLeft);
-                ItemQuickInfoMod.Log.Msg("名稱位置是 InfoBox：名稱位置（資訊框未顯示時）設成 BottomLeft，常駐名稱照舊在左下角（1.3.0 拆成兩個設定）");
-            }
-            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"名稱位置（資訊框未顯示時）設成 BottomLeft 失敗：{e.Message}"); }
+            int before = _values.Get(d);
+            if (!_values.Set(d, value)) return false;
+            _pending.Note(d, before);
+            return true;
         }
 
         /// <summary>
-        /// 讀設定檔裡 key 原本存的字串（DefineEnum 讀不懂的舊值、或分辨「沒有這個 key」用；MigrateNamePosition、Init 在 DefineEnum 之前叫）。
-        /// 遊戲在 Define 時只有設定檔有這個 key 才讀值（ModConfig.Register 看 rawValues），不存檔；列舉讀不懂就換成預設，有 choices 的文字型
-        /// 值不在 choices 裡也換成預設（ConfigEntry.Sanitize），所以用同一個 key 定義一個沒有 choices、預設 "" 的文字型當探測，原樣拿到存的字串
-        /// （""＝設定檔沒有這個 key）。讀完在 finally 裡從 ModConfig 的清單拿掉（設定視窗不多一列、之後的 DefineEnum 不會變成「定義兩次」）。
-        /// ModConfig.Entries 現在是內部的 List；不是 List（遊戲改了）或探測出錯時回 null（不轉換）、記一行警告，不能讓設定整個壞掉。
-        /// skipped＝探測不了時警告裡說哪個轉換不做。
+        /// 把拖滑桿改的值存檔（放開滑鼠、關視窗、換場景時叫；SetLive）。拖過去又拖回原本的值（或沒拖）不寫檔。why 給除錯 log。
         /// </summary>
-        static string ProbeRaw(ModConfig cfg, string key, string skipped)
+        internal static void CommitLive(string why)
         {
-            try
-            {
-                if (!(cfg.Entries is List<ConfigEntry> list))
-                {
-                    ItemQuickInfoMod.Log.Warning($"讀不到設定的清單（ModConfig.Entries 不是 List），{skipped}");
-                    return null;
-                }
-                try
-                {
-                    var probe = cfg.Define(key, "", SectionNames, null);
-                    return probe.Value ?? "";
-                }
-                finally
-                {
-                    // 探測一定要拿掉（中途出錯也是）：正式的 DefineEnum 還沒叫，清單裡這個 key 只會是探測
-                    list.RemoveAll(e => e != null && e.Key == key);
-                }
-            }
-            catch (Exception e)
-            {
-                ItemQuickInfoMod.Log.Warning($"讀設定 {key} 原本存的值失敗（{skipped}）：{e.Message}");
-                return null;
-            }
+            if (!_pending.Any) return;
+            bool changed = _pending.Changed(_values);
+            _pending.Clear();
+            if (!changed) return;
+            ItemQuickInfoMod.DebugLog($"滑桿改的設定存檔（{why}）：InfoBoxOpacity={Get(SettingDefs.InfoBoxOpacity)}、StatusIconOpacity={Get(SettingDefs.StatusIconOpacity)}");
+            Save();
         }
 
-        /// <summary>
-        /// 讀 settings.json 的按鍵。ReadModDataFileText 只靠 Application.persistentDataPath，Init 時就能用。
-        /// 沒有檔案用預設；壞掉、不是 KeyCode 名稱或不是綁得了的鍵也用預設並警告一次（讀的時候不改檔；下次在選項按套用時寫回）。
-        /// </summary>
-        static void LoadKey()
+        /// <summary>恢復一頁的預設；有改到才存檔。回傳改了幾個。</summary>
+        internal static int ResetPage(SettingPage page)
         {
-            string text;
+            bool mineral = On(SettingDefs.MineralWarning);
+            int n = _values.ResetPage(page);
+            ItemQuickInfoMod.DebugLog($"分頁 {page} 恢復預設：改了 {n} 個");
+            if (mineral != On(SettingDefs.MineralWarning)) DropSnapshot();
+            if (n > 0) Save();
+            return n;
+        }
+
+        /// <summary>視窗記住的位置（左上角，相對於圖層的中心；還沒存過回 false＝第一次打開放中間）。</summary>
+        internal static bool TryGetWindowPosition(out float left, out float top)
+        {
+            left = _windowLeft;
+            top = _windowTop;
+            return _hasWindowPos;
+        }
+
+        /// <summary>視窗記住的分頁。</summary>
+        internal static int WindowTab => _windowTab;
+
+        /// <summary>記下視窗的位置（拖完、關掉時）。和上次一樣就不寫檔。</summary>
+        internal static void SetWindowPosition(float left, float top)
+        {
+            if (_hasWindowPos && Mathf.Approximately(left, _windowLeft) && Mathf.Approximately(top, _windowTop)) return;
+            _hasWindowPos = true;
+            _windowLeft = left;
+            _windowTop = top;
+            Save();
+        }
+
+        /// <summary>記下視窗的分頁（換分頁時）。</summary>
+        internal static void SetWindowTab(int tab)
+        {
+            if (tab == _windowTab) return;
+            _windowTab = tab;
+            Save();
+        }
+
+        /// <summary>第一次進店的提示按了「知道了」（按了才算看過）。</summary>
+        internal static void MarkHintSeen()
+        {
+            if (_hintSeen) return;
+            _hintSeen = true;
+            Save();
+        }
+
+        // ---------------- 讀檔、搬舊設定 ----------------
+
+        /// <summary>
+        /// 讀 settings.json（Init；ReadModDataFileText 只靠 Application.persistentDataPath，Init 時就能用）。
+        /// 沒有檔案或沒有 "settings"：從 ModConfig 搬（第一次跑 1.4.0）。JSON 壞掉的檔：警告一次、當作沒有檔
+        /// （按鍵用預設、設定從 ModConfig 搬，搬完寫回）。
+        /// 讀檔本身出錯（檔案被同步軟體、防毒鎖住）：這次遊戲按鍵與設定用預設、不搬也不寫檔（SettingsFile），免得用預設值蓋掉檔裡玩家的設定。
+        /// </summary>
+        static void Load()
+        {
+            string text = null;
             try { text = ModHelper.ReadModDataFileText(ItemQuickInfoMod.ModId, KeyFile); }
             catch (Exception e)
             {
-                ItemQuickInfoMod.Log.Warning($"讀不了 {KeyFile}（{e.Message}），按鍵用預設的 {DefaultKey}");
+                _fileState = SettingsFileState.Unreadable;
+                ItemQuickInfoMod.Log.Warning($"讀不了 {KeyFile}（{e.Message}）：這次遊戲按鍵與設定用預設，改了也只在這次遊戲有效、不寫檔" +
+                                             "（免得蓋掉檔裡的設定），下次開遊戲再讀");
                 return;
             }
-            if (text == null) return;
+            if (text == null) _fileState = SettingsFileState.Missing;
+            else
+            {
+                try
+                {
+                    _json = JsonConvert.DeserializeObject<JObject>(text);
+                    _fileState = _json != null ? SettingsFileState.Ok : SettingsFileState.Corrupt;
+                    if (_json == null) ItemQuickInfoMod.Log.Warning($"{KeyFile} 是空的，按鍵用預設，設定從舊的設定檔重新搬");
+                }
+                catch (Exception e)
+                {
+                    // 當作沒有這個檔：按鍵用預設、設定照第一次跑 1.4.0 從 ModConfig 搬（搬完寫回，壞掉的內容就沒了）
+                    _json = null;
+                    _fileState = SettingsFileState.Corrupt;
+                    ItemQuickInfoMod.Log.Warning($"{KeyFile} 讀不了（{e.Message}），按鍵用預設，設定從舊的設定檔重新搬");
+                }
+            }
+            // 讀欄位出錯（不該發生）也不能讓 Init 壞掉：讀到哪算哪，其他用預設
             try
             {
-                _keyJson = JsonConvert.DeserializeObject<JObject>(text);
-                var s = (string)_keyJson?["key"];
-                if (TryParseKey(s, out var k)) _key = k;
-                else ItemQuickInfoMod.Log.Warning($"{KeyFile} 的 key「{s}」不是可以用的按鍵名稱，改用 {DefaultKey}");
+                if (_json != null)
+                {
+                    _key = ReadKey(KeyField, DefaultKey);
+                    _openKey = ReadKey(OpenKeyField, KeyCode.None);
+                    var corner = (string)(_json[CornerField] as JValue);
+                    if (corner != null && !Corners.TryParse(corner, out _corner))
+                        ItemQuickInfoMod.Log.Warning($"{KeyFile} 的 {CornerField}「{corner}」看不懂，設定鈕放預設的 {Corners.Default}");
+                    _hintSeen = _json[HintField] is JValue hint && hint.Type == JTokenType.Boolean && (bool)hint;
+                    ReadWindow(_json[WindowField] as JObject);
+                }
+                var saved = _json != null ? _json[SettingsField] as JObject : null;
+                if (SettingsFile.ShouldMigrate(_fileState, saved != null)) MigrateFromModConfig();
+                else if (saved != null)
+                {
+                    var problems = new List<string>();
+                    _values = SettingValues.Parse(ToRaw(saved), problems);
+                    if (problems.Count > 0)
+                        ItemQuickInfoMod.Log.Warning($"{KeyFile} 有看不懂的設定，這幾個用預設：{string.Join("、", problems)}");
+                }
+            }
+            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"讀 {KeyFile} 出錯（{e.Message}），讀不到的用預設"); }
+        }
+
+        static KeyCode ReadKey(string field, KeyCode fallback)
+        {
+            var token = _json[field];
+            if (token == null) return fallback;
+            var s = token.Type == JTokenType.String ? (string)token : token.ToString();
+            if (TryParseKey(s, out var k)) return k;
+            ItemQuickInfoMod.Log.Warning($"{KeyFile} 的 {field}「{s}」不是可以用的按鍵名稱，改用 {fallback}");
+            return fallback;
+        }
+
+        static void ReadWindow(JObject w)
+        {
+            if (w == null) return;
+            try
+            {
+                if (w[WindowLeftField] is JValue l && w[WindowTopField] is JValue t
+                    && (l.Type == JTokenType.Float || l.Type == JTokenType.Integer) && (t.Type == JTokenType.Float || t.Type == JTokenType.Integer))
+                {
+                    float left = (float)l, top = (float)t;
+                    if (!float.IsNaN(left) && !float.IsInfinity(left) && !float.IsNaN(top) && !float.IsInfinity(top))
+                    {
+                        _windowLeft = left;
+                        _windowTop = top;
+                        _hasWindowPos = true;
+                    }
+                }
+                if (w[WindowTabField] is JValue tab && tab.Type == JTokenType.Integer)
+                {
+                    int n = (int)tab;
+                    if (n >= 0 && n < SettingDefs.PageCount) _windowTab = n;
+                }
+            }
+            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"{KeyFile} 的 {WindowField} 讀不了（{e.Message}），設定視窗放中間、從第一頁開"); }
+        }
+
+        /// <summary>"settings" 物件 → key → 存的字（開關可能是 JSON 的 true／false，也可能是字串；都轉成字交給 SettingValues.Parse）。</summary>
+        static Dictionary<string, string> ToRaw(JObject o)
+        {
+            var raw = new Dictionary<string, string>();
+            foreach (var p in o.Properties())
+            {
+                var v = p.Value;
+                if (v == null || v.Type == JTokenType.Null) continue;
+                raw[p.Name] = v.Type == JTokenType.Boolean ? ((bool)v ? "true" : "false")
+                    : v.Type == JTokenType.String ? (string)v : v.ToString(Formatting.None);
+            }
+            return raw;
+        }
+
+        /// <summary>
+        /// 從 1.3.0 以前的 ModConfig 搬過來，只在 settings.json 還沒有 "settings" 時做一次：
+        /// 1. ModConfig.For 讀 ModConfigs\dbfoxtw.item-quick-info.json；每個 key 用沒有 choices、預設 "" 的文字型定義一次當探測，原樣拿到存的字串
+        ///    （""＝設定檔沒有這個 key；1.1.0 起 ProbeRaw 的同一個做法，舊值 Label 這種 DefineEnum 讀不懂的也拿得到）。
+        /// 2. 讀完在 finally 裡把 Entries 清空：遊戲的 ModConfig.HasSettings 看 Entries 有沒有東西，清空後主選單模組畫面的齒輪變灰。
+        ///    沒有叫 Set／Save，舊的設定檔原封不動（不用刪，也沒有權限刪）。
+        /// 3. SettingValues.FromOldConfig 照 enum 的名稱、bool 讀（和遊戲一樣寬鬆），做 1.1.0、1.3.0 的兩個舊值轉換（顯示純度的 true／false 也照轉），寫進 settings.json。
+        ///    之後 settings.json 有 "settings"，不再叫 ModConfig.For（遊戲的 ModConfig.Find 找不到，齒輪一樣是灰的）。
+        /// Entries 不是 List（遊戲改了）或出錯：記一行、用預設，不寫檔（下次開遊戲再試；在視窗裡改了設定就會寫檔，之後不再搬）。
+        /// </summary>
+        static void MigrateFromModConfig()
+        {
+            Dictionary<string, string> raw;
+            try { raw = ReadOldConfig(); }
+            catch (Exception e)
+            {
+                ItemQuickInfoMod.Log.Warning($"讀舊的設定（ModConfigs\\{ItemQuickInfoMod.ModId}.json）出錯，設定用預設：{e.Message}");
+                return;
+            }
+            if (raw == null) return;
+            var problems = new List<string>();
+            var notes = new List<string>();
+            _values = SettingValues.FromOldConfig(raw, problems, notes);
+            foreach (var n in notes) ItemQuickInfoMod.Log.Msg(n);
+            if (problems.Count > 0)
+                ItemQuickInfoMod.Log.Warning($"舊的設定有看不懂的值，這幾個用預設：{string.Join("、", problems)}");
+            int found = 0;
+            foreach (var kv in raw)
+                if (kv.Value.Length > 0) found++;
+            ItemQuickInfoMod.Log.Msg($"設定搬到 {ItemQuickInfoMod.DataFolder}\\{KeyFile}（1.4.0 起在店內設定視窗改；舊的設定檔有 {found} 個設定），主選單模組畫面的齒輪不再有設定");
+            Save();
+        }
+
+        /// <summary>讀舊的設定檔的原始字串（MigrateFromModConfig 的第 1、2 步）。Entries 不是 List 時記一行、回 null（不定義任何東西，齒輪也是灰的）。</summary>
+        static Dictionary<string, string> ReadOldConfig()
+        {
+            var cfg = ModConfig.For(ItemQuickInfoMod.ModId);
+            if (!(cfg.Entries is List<ConfigEntry> list))
+            {
+                ItemQuickInfoMod.Log.Warning("讀不到設定的清單（ModConfig.Entries 不是 List），舊的設定不搬、用預設");
+                return null;
+            }
+            var raw = new Dictionary<string, string>();
+            try
+            {
+                foreach (var d in SettingDefs.All)
+                {
+                    var probe = cfg.Define(d.Key, "", "General", null);
+                    raw[d.Key] = probe.Value ?? "";
+                }
+            }
+            finally
+            {
+                // 探測一定要拿掉（中途出錯也是）：清空後 HasEntries 是 false，齒輪變灰
+                list.Clear();
+            }
+            return raw;
+        }
+
+        /// <summary>
+        /// 整份寫回 settings.json（按鍵、設定鈕、提示、視窗、37 個設定）。讀到的檔裡不認得的欄位與 "settings" 裡不認得的 key 保留。
+        /// 整份寫出去，拖滑桿還沒存的改動（_pending）也一起寫了，所以先清掉。
+        /// 寫檔失敗只警告一次（這次遊戲照樣用新的值，重開遊戲後回到上次存成功的）。
+        /// 這次遊戲讀不到檔（SettingsFile.CanSave）時不寫：記憶體裡是預設值，寫了會蓋掉檔裡玩家的設定（Load 已經警告過，這裡只記第一次跳過）。
+        /// </summary>
+        static void Save()
+        {
+            _pending.Clear();
+            if (!SettingsFile.CanSave(_fileState))
+            {
+                if (!_saveSkippedLogged) ItemQuickInfoMod.Log.Msg($"這次遊戲開頭讀不了 {KeyFile}，改的設定只留在這次遊戲、不寫檔（之後不再記）");
+                _saveSkippedLogged = true;
+                return;
+            }
+            try
+            {
+                var json = _json ?? new JObject();
+                json[KeyField] = _key.ToString();
+                json[OpenKeyField] = _openKey.ToString();
+                json[CornerField] = _corner.ToString();
+                json[HintField] = _hintSeen;
+                if (_hasWindowPos || _windowTab != 0)
+                {
+                    var w = json[WindowField] as JObject ?? new JObject();
+                    if (_hasWindowPos)
+                    {
+                        w[WindowLeftField] = Math.Round(_windowLeft, 1);
+                        w[WindowTopField] = Math.Round(_windowTop, 1);
+                    }
+                    w[WindowTabField] = _windowTab;
+                    json[WindowField] = w;
+                }
+                var s = json[SettingsField] as JObject ?? new JObject();
+                foreach (var (key, kind, value, name) in _values.Entries())
+                    s[key] = kind == SettingKind.Toggle ? value != 0 : kind == SettingKind.Percent ? (JToken)value : name;
+                json[SettingsField] = s;
+                _json = json;
+                ModHelper.WriteModDataFileText(ItemQuickInfoMod.ModId, KeyFile, json.ToString(Formatting.Indented));
             }
             catch (Exception e)
             {
-                _keyJson = null;
-                ItemQuickInfoMod.Log.Warning($"{KeyFile} 讀不了（{e.Message}），按鍵用預設的 {DefaultKey}");
+                if (!_saveFailedLogged) ItemQuickInfoMod.Log.Warning($"寫入 {ItemQuickInfoMod.DataFolder}\\{KeyFile} 失敗（重開遊戲後會變回上次存的）：{e.Message}");
+                _saveFailedLogged = true;
             }
         }
+
+        // ---------------- 遊戲「選項 → 按鍵綁定」 ----------------
 
         /// <summary>
         /// KeyCode 名稱 → 鍵。只收名稱（「Tab」「F9」「Mouse3」），不收數字：Enum.TryParse 會把「12345」這種沒定義的值也收下。
@@ -299,7 +466,7 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         static bool TryParseKey(string s, out KeyCode key)
         {
-            key = DefaultKey;
+            key = KeyCode.None;
             s = (s ?? "").Trim();
             if (s.Length == 0 || char.IsDigit(s[0]) || s[0] == '-') return false;
             if (!Enum.TryParse(s, true, out KeyCode k) || !Enum.IsDefined(typeof(KeyCode), k)) return false;
@@ -314,40 +481,84 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         static bool Bindable(KeyCode k) => k < KeyCode.Mouse0 || (k > KeyCode.Mouse0 && k <= KeyCode.Mouse6);
 
-        /// <summary>選項按套用時（遊戲每次按套用都會對每一列叫 setter）：記下鍵並寫回 settings.json；寫檔失敗只警告（這次遊戲照樣用新的鍵）。</summary>
+        /// <summary>選項按套用時（遊戲每次按套用都會對每一列叫 setter，鍵沒改也叫）：記下顯示的鍵並寫回 settings.json；值沒變不寫檔。</summary>
         static void SetKey(KeyCode k)
         {
+            if (k == _key) return;
             _key = k;
-            try
-            {
-                var json = _keyJson ?? new JObject();
-                json["key"] = k.ToString();
-                _keyJson = json;
-                ModHelper.WriteModDataFileText(ItemQuickInfoMod.ModId, KeyFile, json.ToString(Formatting.Indented));
-                ItemQuickInfoMod.DebugLog($"按鍵改成 {k}");
-            }
-            catch (Exception e) { ItemQuickInfoMod.Log.Warning($"寫入 {ItemQuickInfoMod.DataFolder}\\{KeyFile} 失敗（重開遊戲後會變回原本的鍵）：{e.Message}"); }
+            Save();
+            ItemQuickInfoMod.DebugLog($"按鍵改成 {k}");
         }
 
+        /// <summary>打開設定的鍵：值沒變不寫檔。</summary>
+        static void SetOpenKey(KeyCode k)
+        {
+            if (k == _openKey) return;
+            _openKey = k;
+            Save();
+            ItemQuickInfoMod.DebugLog($"打開設定的鍵改成 {k}");
+        }
+
+        /// <summary>設定鈕的位置（遊戲選項的下拉；index 照 ButtonCorner 的順序）：值沒變不寫檔。</summary>
+        static void SetCorner(int index)
+        {
+            if (index < 0 || index > (int)ButtonCorner.BottomLeft) return;
+            var c = (ButtonCorner)index;
+            if (c == _corner) return;
+            _corner = c;
+            Save();
+            ItemQuickInfoMod.DebugLog($"設定鈕的位置改成 {c}");
+        }
+
+        /// <summary>遊戲選項裡物品速覽自己的一區的 id；遊戲會在前面加上 mod 的 ID 和「:」（ModHelper.GameOptionSectionId）。</summary>
+        const string OptionSection = "item_quick_info";
+
         /// <summary>
-        /// 加進遊戲「選項 → 按鍵綁定」那一區的最後一列。和別列重複的鍵遊戲自己會擋。
-        /// 先叫 GameOptionRegistry.EnsureVanilla：遊戲自己的選項分區要到第一次打開選項視窗才登記，不先登記的話「按鍵綁定」會被我們先建出來、
-        /// 排在所有分區最前面（一鍵關窗 2026-10-29 審查發現）。
+        /// 遊戲「選項」裡物品速覽自己的一區（原本放在遊戲的「按鍵綁定」那一區的最後），標題是 mod 名稱（ui_button，和設定鈕同一句），
+        /// 三列：顯示物品資訊的鍵、打開物品速覽設定的鍵（預設不綁）、設定鈕的位置。值照舊存 settings.json（get／set），換區不會丟。
+        /// 遊戲選項照遊戲的規矩按套用才呼叫 setter。和別列重複的鍵遊戲自己會擋：選項視窗打開時每個按鍵列都放進同一份 pendingKeys，
+        /// 不分在哪一區（GameOptionUIManager.FindPendingKeyOwner）。
+        /// 先叫 GameOptionRegistry.EnsureVanilla：遊戲自己的選項分區要到第一次打開選項視窗才登記，分區照登記的先後排，
+        /// 不先登記的話我們的區（和「按鍵綁定」）會排在所有分區最前面（一鍵關窗 2026-10-29 審查發現）。
         /// </summary>
         internal static void AddKeyBind()
         {
             GameOptionRegistry.EnsureVanilla();
-            ModHelper.AddGameOptionKeyBind(ItemQuickInfoMod.ModId, ModHelper.OPTION_SECTION_KEYBIND, "show_info",
+            string mod = ItemQuickInfoMod.ModId;
+            ModHelper.AddGameOptionSection(mod, OptionSection, () => Loc.Get("ui_button"));
+            ModHelper.AddGameOptionKeyBind(mod, OptionSection, "show_info",
                 () => Loc.Get("key_show_info"), () => _key, SetKey, () => Loc.Get("key_show_info_tip"));
+            ModHelper.AddGameOptionKeyBind(mod, OptionSection, "open_settings",
+                () => Loc.Get("key_open_settings"), () => _openKey, SetOpenKey, () => Loc.Get("key_open_settings_tip"));
+            ModHelper.AddGameOptionDropdown(mod, OptionSection, "button_position",
+                () => Loc.Get("key_button_position"), SettingDefs.CornerLabels, () => (int)_corner, SetCorner, () => Loc.Get("key_button_position_tip"));
+
+            // 設定按鍵時遊戲的提示（請按一個鍵、和某列重複、保留的鍵：GameOptionUIManager.KeyBindStatus）只畫在遊戲「按鍵綁定」那一區的
+            // 標題旁（那一區的 note）。我們的鍵在自己的區，捲到這裡時看不到那句，所以自己的區的標題旁也掛同一句，只在設定的是我們的鍵時顯示
+            // （遊戲每次改那句都會重算 noteVisible：SetKeyBindStatus → RefreshRules）。找不到區（遊戲改了 id 的格式）就不掛，只少了這句。
+            var section = GameOptionRegistry.FindSection(mod + ":" + OptionSection);
+            if (section != null)
+            {
+                section.note = () => GameOptionUIManager.KeyBindStatus;
+                section.noteVisible = _ => !string.IsNullOrEmpty(GameOptionUIManager.KeyBindStatus) && CapturingOurKey();
+            }
+        }
+
+        /// <summary>遊戲選項正在等玩家按鍵的那一列是物品速覽的（列的 id 是「mod 的 ID:列」，ModHelper.GameOptionId）。</summary>
+        static bool CapturingOurKey()
+        {
+            string id = KeyBindHelper.CapturingOptionId;
+            return id != null && id.StartsWith(ItemQuickInfoMod.ModId + ":", StringComparison.Ordinal);
         }
 
         internal static string Describe()
         {
-            var d = ReadDisplay();
-            return $"按鍵={Key}、按鍵方式={KeyMode}、總是顯示名稱={AlwaysShowNames}、箱子名稱={d.ContainerName}、機器名稱={d.MachineName}、其他物品名稱={d.ItemName}、名稱位置（未顯示時）={IdleNamePosition}、名稱位置（顯示時）={NamePosition}、名稱字級={NameTextSize}、長名稱換行={WrapLongNames}、"
-                 + $"水量={d.WaterVolume}、水質={d.WaterPurity}、一律顯示真實水質={RealPurity}、電池={d.BatteryCharge}、電池今晚充電={d.BatteryTonightCharge}、"
-                 + $"機器電量={d.MachinePower}、機器今晚收支={d.MachineTonightNet}、原因={d.MachineReason}、進度={d.MachineProgress}、成品數={d.MachineOutput}、機器裡的水={d.MachineWater}、"
-                 + $"熱度={d.StolenHeat}、使用次數={d.UseCount}、耐久度={d.Durability}、金屬錠純度={d.IngotPurity}、字級={TextSize}、前綴={Prefix}";
+            var parts = new List<string>
+            {
+                $"按鍵={Key}", $"打開設定的鍵={OpenKey}", $"設定鈕={Corner}", $"提示看過={HintSeen}",
+            };
+            foreach (var d in SettingDefs.All) parts.Add($"{d.Key}={d.NameOf(Get(d))}");
+            return string.Join("、", parts);
         }
     }
 }

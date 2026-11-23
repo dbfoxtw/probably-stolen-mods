@@ -1,9 +1,14 @@
 # Item Quick Info: Spanish (es) translation of en.csv, made with AI help (not checked by a native speaker). Format: key,value
 # See en.csv for where each text appears and how much space it has. Plural groups for es: .one and .other.
-# The dropdown choices (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) stay in English: the game shows the stored English value.
-# In tooltips, {0}, {1}... are filled in by the mod with the info box text below (for example "V 4000ml" / "Vol 4000ml"). Keep every placeholder.
+# Dropdown choices are translated (the opt_ keys, new in 1.4.0) and the tooltips use the same words; the saved values stay English names in the code.
+# In tooltips, {0}, {1}... are filled in by the mod with the info box text below (for example "Sal 7" / "Salida 7"). Keep every placeholder.
 key_show_info,Mostrar información de objetos
-key_show_info_tip,"Mantén pulsada la tecla para ver información sobre los objetos en pantalla, según tus ajustes y el tipo de objeto. Suéltala para ocultarla. Con «Modo de la tecla» en Toggle, pulsa una vez para mostrarla y otra para ocultarla."
+key_show_info_tip,"Mantén pulsada la tecla para ver información sobre los objetos en pantalla, según tus ajustes y el tipo de objeto. Suéltala para ocultarla. Con «Modo de la tecla» en «Alternar», pulsa una vez para mostrarla y otra para ocultarla."
+# Options > Key Binds (new in 1.4.0).
+key_open_settings,Abrir los ajustes de Información rápida de objetos
+key_open_settings_tip,Abre la ventana de ajustes en la tienda. También puedes hacer clic en el botón «Información rápida de objetos» de la pantalla mientras se muestra la información.
+key_button_position,Botón de ajustes
+key_button_position_tip,"Dónde va el botón «Información rápida de objetos» en la pantalla mientras se muestra la información en la tienda. Haz clic en él para abrir los ajustes. Con «Oculto», usa en su lugar la tecla «Abrir los ajustes de Información rápida de objetos» (sin asignar de forma predeterminada)."
 cfg_container_name,Mostrar nombres de contenedores
 cfg_container_name_tip,"Muestra en azul claro el nombre que le hayas puesto a una caja, mochila, depósito de almacenaje u otro objeto que abra su propia ventana."
 cfg_machine_name,Mostrar nombres de máquinas
@@ -13,76 +18,149 @@ cfg_item_name_tip,"Muestra en azul claro el nombre que le hayas puesto a cualqui
 cfg_always_names,Mostrar siempre los nombres
 cfg_always_names_tip,"Si está activado, los nombres se quedan en pantalla sin pulsar la tecla; el resto de la información sigue necesitando la tecla.\nQué nombres aparecen sigue dependiendo de las tres opciones de nombres de abajo."
 cfg_idle_name_position,Posición de nombres (información oculta)
-cfg_idle_name_position_tip,"Dónde se muestran los nombres cuando solo hay nombres en pantalla, sin pulsar la tecla. Requiere activar «Mostrar siempre los nombres».\nTop = centrados en la parte superior del objeto\nCenter = en el centro del objeto\nBottomLeft = en la esquina inferior izquierda del objeto"
+cfg_idle_name_position_tip,"Dónde se muestran los nombres cuando solo hay nombres en pantalla, sin pulsar la tecla. Requiere activar «Mostrar siempre los nombres».\nArriba = centrados en la parte superior del objeto\nCentro = en el centro del objeto\nAbajo a la izquierda = en la esquina inferior izquierda del objeto"
 cfg_name_position,Posición de nombres (información visible)
-cfg_name_position_tip,Dónde se muestran los nombres mientras la tecla muestra la información.\nTop = centrados en la parte superior del objeto\nInfoBox = primera línea del cuadro de información
+cfg_name_position_tip,Dónde se muestran los nombres mientras la tecla muestra la información.\nArriba = centrados en la parte superior del objeto\nCuadro de información = primera línea del cuadro de información
 cfg_name_text_size,Tamaño de los nombres
-cfg_name_text_size_tip,"Tamaño de los nombres: Small, Medium, Large o ExtraLarge, los mismos tamaños que «Tamaño del texto»."
+cfg_name_text_size_tip,"Tamaño de los nombres: Pequeño, Mediano, Grande o Muy grande, los mismos tamaños que «Tamaño del texto»."
 cfg_wrap_names,Partir los nombres largos
 cfg_wrap_names_tip,"Si está activado, los nombres más anchos que el objeto se parten en varias líneas para no superar el ancho del objeto.\nSi está desactivado, los nombres largos sobresalen del objeto."
-cfg_water_volume,Mostrar volumen de agua
-# {0} = the volume line with the short prefix ("V 4000ml"), {1} = with the long prefix ("Vol 4000ml")
-cfg_water_volume_tip,"Muestra cuánta agua tiene un recipiente, en ml.\nShort: {0}\nLong: {1}"
-cfg_water_purity,Mostrar pureza del agua
-# {0} = the purity line with the short prefix ("P 98.52%"), {1} = with the long prefix ("Pur 98.52%")
-cfg_water_purity_tip,Muestra la pureza del agua de un recipiente (no en los vacíos).\nShort: {0}\nLong: {1}
-cfg_real_purity,Mostrar siempre la pureza real del agua
-cfg_real_purity_tip,"Desactivado: el agua escaneada muestra el % exacto y el resto muestra ?.\nActivado: todos los recipientes muestran su pureza real, sin tener que analizarla (también sabrás cuándo miente un cliente).\nRequiere «Mostrar pureza del agua» activado."
+cfg_water_volume,Mostrar volumen de líquido
+# {0} = the volume line as drawn on the info box ("250ml"; an invisible zero-width space sits between the number and ml)
+cfg_water_volume_tip,"Muestra cuánto líquido tiene un recipiente, por ejemplo, {0}."
+cfg_water_purity,Mostrar pureza
+# {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
+cfg_water_purity_tip,"Muestra cuánto del líquido es su componente principal. En el agua, es la pureza del agua. No se muestra en recipientes vacíos.\nNo mostrar = sin la línea de pureza\nNúmero entero = {0} (no se distingue el aguapura)\n1 decimal = {1}\n2 decimales = {2}"
+cfg_machine_water,Mostrar líquido en máquinas
+cfg_machine_water_tip,Muestra el líquido dentro de una máquina. Las dos líneas también dependen de «Mostrar volumen de líquido» y «Mostrar pureza».
 cfg_battery_charge,Mostrar carga de baterías
-cfg_battery_charge_tip,"Muestra cuánta energía le queda a una batería, por ejemplo, 8kJ."
+cfg_battery_charge_tip,"Muestra cuánta energía le queda a una batería, por ejemplo, 8kJ. Un Cargador también muestra la carga de cada batería que tiene dentro."
 cfg_battery_tonight_charge,Mostrar carga de esta noche
 cfg_battery_tonight_charge_tip,"Muestra en verde cuánto se cargará una batería esta noche, por ejemplo, +4kJ. No aparece si está llena o no se va a cargar."
 cfg_machine_power,Mostrar energía de máquinas
-# {0} = the power line with the short prefix ("E 87kJ"), {1} = with the long prefix ("Ener 87kJ")
-cfg_machine_power_tip,Muestra la energía que le queda a la batería de una máquina. La línea se pone roja si no basta para esta noche.\nShort: {0}\nLong: {1}
+# {0} = a machine's battery line as drawn on the info box ("41kJ"; the power line has no prefix), {1} = with a Current Converter, tonight's bill ("-6" and the credit icon), {2} = the price of one use ("-6/8/14" and the credit icon)
+cfg_machine_power_tip,"Muestra la energía que le queda a la batería de una máquina, por ejemplo, {0}. La línea se pone roja si no basta para esta noche. Con un Convertidor de corriente, muestra en su lugar el coste de la electricidad: la factura de esta noche para las máquinas que funcionan de noche, por ejemplo, {1}, o el precio de un uso para las máquinas que se usan de día, por ejemplo, {2}."
 cfg_machine_tonight_net,Mostrar energía neta de esta noche
-cfg_machine_tonight_net_tip,"Muestra cuánto cambiará esta noche la batería de una máquina (lo que se carga menos lo que se gasta), debajo de la línea de energía.\nSube: en verde, por ejemplo, +4kJ\nBaja: en naranja, por ejemplo, -8kJ\nNo aparece si no va a cambiar o si la línea de energía está en rojo."
+cfg_machine_tonight_net_tip,"Muestra cuánto cambiará esta noche la batería de una máquina (lo que se carga menos lo que se gasta), debajo de la línea de energía.\nSube: en verde, por ejemplo, +4kJ\nBaja: en naranja, por ejemplo, -8kJ (10d), donde el número entre paréntesis indica cuántos días aguanta la batería a este ritmo\nNo aparece si no va a cambiar o si la línea de energía está en rojo."
 cfg_machine_reason,Mostrar por qué no funcionará esta noche
 # {0}, {1}, {2} = three of the reasons below (info_reason_no_input, info_reason_no_power, info_reason_output_full)
 cfg_machine_reason_tip,"Muestra en naranja un motivo breve cuando una máquina no va a funcionar esta noche, por ejemplo, «{0}», «{1}» o «{2}»."
 cfg_machine_progress,Mostrar progreso de máquinas
 # {0} = 3 days left in the short form ("3d"), {1} = in the long form ("3 días")
-cfg_machine_progress_tip,"Muestra cuántos días le faltan a una máquina, según su Velocidad del progreso actual. No se prevén cambios posteriores por efectos de módulos como Sobrecarga o Deterioro. No aparece si no va a funcionar esta noche.\nShort: {0}\nLong: {1}"
+cfg_machine_progress_tip,"Muestra cuántos días le faltan a una máquina, según su Velocidad del progreso actual. No se prevén cambios posteriores por efectos de módulos como Sobrecarga o Deterioro. No aparece si no va a funcionar esta noche.\nCortas: {0}\nLargas: {1}"
 cfg_machine_output,Mostrar cantidad en la salida
 # {0} = the output line with the short prefix ("Sal 7"), {1} = with the long prefix ("Salida 7")
-cfg_machine_output_tip,Muestra cuántos objetos hay en la salida de una máquina («Resultado»; las tolvas de entrada y de salida no cuentan).\nShort: {0}\nLong: {1}
-cfg_machine_water,Mostrar agua en máquinas
-# {0} / {1} = the short volume and purity prefixes ("V" / "P"), {2} / {3} = the long ones ("Vol" / "Pur")
-cfg_machine_water_tip,Muestra el volumen y la pureza del agua dentro de una máquina. Las dos líneas también dependen de «Mostrar volumen de agua» y «Mostrar pureza del agua».\nShort: {0} / {1}\nLong: {2} / {3}
+cfg_machine_output_tip,Muestra cuántos objetos hay en la salida de una máquina («Resultado»; las tolvas de entrada y de salida no cuentan).\nCortas: {0}\nLargas: {1}
+# Makeshift reactor (new in 1.4.0). {0} = the red line at the top of its info box when it will explode tonight (info_reactor_explodes)
+cfg_reactor,Mostrar reactor
+cfg_reactor_tip,"Muestra la integridad del reactor y la carga almacenada. Si va a explotar esta noche, indica «{0}» y muestra la señal de aviso."
+# Status icons (new in 1.4.0).
+cfg_status_icons,Iconos de estado
+cfg_status_icons_tip,"Iconos pequeños en una esquina de una máquina: una señal de aviso cuando está atascada y hay que arreglar algo, Zz cuando hay que añadirle algo para que funcione y una marca de verificación cuando hay algo que recoger. Una jarra de agua muestra la señal de aviso cuando su filtro se ha gastado.\nDesactivados = sin iconos\nCon la tecla = mostrar con los cuadros de información, con la tecla «Mostrar información de objetos»\nSiempre = mostrar también sin pulsar la tecla"
+cfg_status_icon_position,Posición de los iconos
+cfg_status_icon_position_tip,En qué esquina del objeto van los iconos de estado.
+cfg_status_icon_background,Fondo de los iconos
+cfg_status_icon_background_tip,El recuadro detrás de los iconos de estado: oscuro o claro. «Opacidad del fondo de los iconos» ajusta su transparencia.
+cfg_status_icon_opacity,Opacidad del fondo de los iconos
+cfg_status_icon_opacity_tip,Lo opaco que es el recuadro detrás de los iconos de estado. Los iconos en sí siempre son opacos.\n0 = sin recuadro\n100 = totalmente opaco
+cfg_warning_icon,Mostrar icono de aviso
+# {0} = one of the reasons below (info_reason_no_power)
+cfg_warning_icon_tip,"Muestra la señal de aviso cuando una máquina tiene trabajo pero está atascada (por ejemplo, «{0}») o el filtro de una jarra de agua se ha gastado."
+cfg_idle_icon,Mostrar icono de inactividad
+# {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
+cfg_idle_icon_tip,"Muestra Zz cuando una máquina no va a funcionar esta noche hasta que le añadas algo, por ejemplo, «{0}» o «{1}».\nDesactivados = no mostrar Zz\nExcepto vacías = no cuando las entradas de la máquina están vacías (por ejemplo, sin recipiente o una Nevera vacía)\nTodos = también cuando las entradas están vacías"
+cfg_done_icon,Mostrar icono de terminado
+cfg_done_icon_tip,"Muestra una marca de verificación cuando una máquina tiene algo que recoger, como objetos en su salida (las tolvas de entrada y de salida no cuentan) o agua que ha recogido o terminado de purificar."
+# Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
+cfg_mineral_warning,Aviso de rango de minerales (hidroponía)
+cfg_mineral_warning_tip,"Cuando los minerales del agua de un Sistema de hidroponía están fuera del Nivel óptimo de nutrientes de la semilla, muestra la señal de aviso y el cuadro de información indica «{0}» o «{1}»."
+cfg_container_icons,Iconos en contenedores
+cfg_container_icons_tip,"Muestra iconos de estado en un contenedor (como un Depósito de maquinaria) para las máquinas que tiene dentro. Cuando corresponden tanto la señal de aviso como Zz, solo se muestra la señal de aviso; la marca de verificación se añade si alguna máquina tiene algo que recoger.\nDesactivados = sin iconos en los contenedores\nSolo aviso = solo la señal de aviso\nAviso e inactividad = la señal de aviso o Zz\nTodos = también la marca de verificación"
 cfg_stolen_heat,Mostrar riesgo de objetos robados
 # {0} = the heat line with the short prefix ("R 45%"), {1} = with the long prefix ("Riesgo 45%")
-cfg_stolen_heat_tip,Muestra en rojo el riesgo de un objeto robado.\nShort: {0}\nLong: {1}
+cfg_stolen_heat_tip,Muestra en rojo el riesgo de un objeto robado.\nCortas: {0}\nLargas: {1}
 cfg_use_count,Mostrar usos restantes
 # {0} = the uses line with the short prefix ("U 3"), {1} = with the long prefix ("Usos 3")
-cfg_use_count_tip,Muestra cuántos usos le quedan a un objeto. En rojo cuando se agotan.\nShort: {0}\nLong: {1}
+cfg_use_count_tip,Muestra cuántos usos le quedan a un objeto. En rojo cuando se agotan.\nCortas: {0}\nLargas: {1}
 cfg_durability,Mostrar durabilidad
-# {0} = the durability line with the short prefix ("D 320"), {1} = with the long prefix ("Dur 320")
-cfg_durability_tip,Muestra la durabilidad de un objeto. En naranja con 1/4 o menos.\nShort: {0}\nLong: {1}
+# {0} = the durability line with the short prefix ("D 320"), {1} = with the long prefix ("Dur 320"), {2} = the filter line with the long prefix ("Filtro 400")
+cfg_durability_tip,"Muestra la durabilidad de un objeto. En naranja con 1/4 o menos. Lo que lleva filtros muestra en su lugar los filtros que tiene dentro, sumados, por ejemplo, {2}.\nCortas: {0}\nLargas: {1}"
 cfg_ingot_purity,Mostrar pureza de lingotes
 # {0} = one of the purity grades below (info_ingot_high, "Alta")
 cfg_ingot_purity_tip,"Muestra el grado de pureza de un lingote de metal, por ejemplo, «{0}»."
+# Drug purity (new in 1.4.0). {0} = the info box line ("88%")
+cfg_drug_purity,Mostrar pureza de fármacos
+cfg_drug_purity_tip,"Muestra la pureza de los fármacos, por ejemplo, {0}."
 cfg_key_mode,Modo de la tecla
-cfg_key_mode_tip,"Elige si hay que mantener pulsada la tecla «Mostrar información de objetos» o pulsarla para alternar.\nHold = se muestra mientras la mantienes pulsada y se oculta al soltarla\nToggle = pulsa una vez para mostrar y otra para ocultar; se desactiva al cargar una partida o volver al menú principal"
+cfg_key_mode_tip,Elige si hay que mantener pulsada la tecla «Mostrar información de objetos» o pulsarla para alternar.\nMantener = se muestra mientras la mantienes pulsada y se oculta al soltarla\nAlternar = pulsa una vez para mostrar y otra para ocultar; se desactiva al cargar una partida o volver al menú principal
 cfg_text_size,Tamaño del texto
-cfg_text_size_tip,"Tamaño del texto de los cuadros de información (los nombres siguen «Tamaño de los nombres»): Small, Medium, Large o ExtraLarge. Una casilla de objeto mide 16 unidades; el texto mide 3.5, 4.5, 6 u 8 unidades de alto."
+cfg_text_size_tip,"Tamaño del texto de los cuadros de información (los nombres siguen «Tamaño de los nombres»): Pequeño, Mediano, Grande o Muy grande. Una casilla de objeto mide 16 unidades; el texto mide 3.5, 4.5, 6 u 8 unidades de alto."
 cfg_prefix,Prefijos de línea
-# {0} to {7} = the short prefixes, {8} to {15} = the long ones, in this order: water volume, water purity, machine power,
-# 3 days left, output count, stolen heat, uses left, durability. Separator: ", ".
-cfg_prefix_tip,"Elige palabras cortas o largas al principio de cada línea. Si Long no cabe en el ancho del objeto, ese cuadro de información usa las cortas.\nShort: {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\nLong: {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}"
+# {0} to {5} = the short prefixes, {6} to {11} = the long ones, in this order:
+# 3 days left, output count, stolen heat, uses left, durability, filter. The separator (", ") is yours to choose for your language.
+cfg_prefix_tip,"Elige palabras cortas o largas al principio de cada línea. Si «Largas» no cabe en el ancho del objeto, ese cuadro de información usa las cortas.\nCortas: {0}, {1}, {2}, {3}, {4}, {5}\nLargas: {6}, {7}, {8}, {9}, {10}, {11}"
+cfg_info_box_opacity,Opacidad del cuadro de información
+cfg_info_box_opacity_tip,Lo opaco que es el recuadro oscuro detrás de los cuadros de información y los nombres. El texto en sí siempre es opaco.\n0 = sin recuadro\n100 = totalmente opaco
+
+# ---- Dropdown choices and On / Off of the settings window (new in 1.4.0; see en.csv) ----
+opt_on,Activado
+opt_off,Desactivado
+opt_hold,Mantener
+opt_toggle,Alternar
+opt_short,Cortas
+opt_long,Largas
+opt_small,Pequeño
+opt_medium,Mediano
+opt_large,Grande
+opt_extra_large,Muy grande
+opt_top,Arriba
+opt_center,Centro
+opt_bottom_left,Abajo a la izquierda
+opt_info_box,Cuadro de información
+opt_icons_off,Desactivados
+opt_icons_with_key,Con la tecla
+opt_icons_always,Siempre
+opt_top_right,Arriba a la derecha
+opt_bottom_right,Abajo a la derecha
+opt_top_left,Arriba a la izquierda
+opt_hidden,Oculto
+opt_dark,Oscuro
+opt_light,Claro
+opt_warning_only,Solo aviso
+opt_warning_and_idle,Aviso e inactividad
+opt_all,Todos
+opt_except_empty,Excepto vacías
+opt_dont_show,No mostrar
+opt_whole_number,Número entero
+opt_one_decimal,1 decimal
+opt_two_decimals,2 decimales
+
+# ---- Settings window in the store (new in 1.4.0; see en.csv for {0} and {1} in ui_hint) ----
+ui_title,Información rápida de objetos: ajustes
+ui_tab_general,General
+ui_tab_names,Nombres
+ui_tab_water,Líquidos
+ui_tab_batteries,Baterías
+ui_tab_machines,Máquinas
+ui_tab_icons,Iconos de estado
+ui_tab_items,Objetos
+ui_reset,Restablecer pestaña
+ui_reset_sure,¿Seguro?
+ui_reset_tip,Devuelve todos los ajustes de esta pestaña a su valor predeterminado. Haz clic otra vez para confirmar.
+ui_button,Información rápida de objetos
+ui_button_tip,Abrir los ajustes de Información rápida de objetos
+ui_hint,Los ajustes de Información rápida de objetos se abren en la tienda: pulsa {0} para mostrar la información y haz clic en el botón «Información rápida de objetos» de la esquina {1}.
+ui_hint_ok,Entendido
+ui_hint_top_right,superior derecha
+ui_hint_top_left,superior izquierda
+ui_hint_bottom_right,inferior derecha
+ui_hint_bottom_left,inferior izquierda
+ui_percent,{0} %
 
 # ---- Info box: the text drawn on the items while the key is held ----
 # A 1-cell item fits only about 6 to 8 letters per line. Keep every entry as short as you can.
 
-# Line prefixes ("V 4000ml"). _short = one letter, _long = a short abbreviation (no period, like en).
-# Water volume (volumen)
-info_prefix_water_short,V
-info_prefix_water_long,Vol
-# Water purity (pureza)
-info_prefix_purity_short,P
-info_prefix_purity_long,Pur
-# Energy left in a machine's battery (energía)
-info_prefix_power_short,E
-info_prefix_power_long,Ener
+# Line prefixes ("Salida 7"). _short = one letter, _long = a short abbreviation (no period, like en).
 # Number of items in a machine's output (salida). Short up to 3 letters, long up to 6.
 info_prefix_output_short,Sal
 info_prefix_output_long,Salida
@@ -95,16 +173,19 @@ info_prefix_uses_long,Usos
 # Durability (durabilidad)
 info_prefix_durability_short,D
 info_prefix_durability_long,Dur
+# Filters in a jarra de agua or a sistema de acuicultura recirculante, added up ("Filtro 400"). Shown under the water lines.
+info_prefix_filter_short,F
+info_prefix_filter_long,Filtro
+# Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
+info_prefix_integrity_short,Int
+info_prefix_integrity_long,Integridad
 
 # Machine progress: days until the machine finishes. {0} = number of days.
 info_days_short,{0}d
 info_days_long.one,{0} día
 info_days_long.other,{0} días
 
-# Machine power line when it runs on outside power (externa)
-info_power_external,ext
-
-# Water volume estimate when the container has no scale, from full to empty
+# Liquid volume estimate when the container has no scale, from full to empty. No prefix.
 info_estimate_full,Lleno
 info_estimate_almost_full,Casi lleno
 info_estimate_over_half,Más de 1/2
@@ -127,6 +208,13 @@ info_reason_max_purity,Pureza máx.
 info_reason_no_module,Sin módulo
 info_reason_blocked,No inicia
 info_reason_no_power,Sin energía
+# Jarra de agua or sistema de acuicultura with no filter in it: an orange line of its own instead of the filter line, no prefix.
+info_reason_no_filter,Sin filtro
+# Sistema de hidroponía whose water has too few or too many minerals for its seed: an orange line of its own, no prefix.
+info_mineral_low,Pocos minerales
+info_mineral_high,Muchos minerales
+# Makeshift reactor that will explode tonight: a red line of its own at the top, no prefix. 1 to 3 short words.
+info_reactor_explodes,Explota esta noche
 
 # Metal Ingot purity grades, from best to worst. Only the grade, without the word "pureza": the info box sits on the ingot,
 # and a short line is less often cut off by the inventory edge. The game's grade names (mech_condition_*_purity),

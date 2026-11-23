@@ -1,10 +1,15 @@
 # Item Quick Info : textes de ce mod (ModHelper.GetLocalized). Format : key,value (une entrée par ligne ; \n = retour à la ligne).
 # Traduit de en.csv avec l'aide d'une IA (voir les commentaires de en.csv : où apparaît chaque texte, place disponible, sens de {0}, {1}...).
 # Deux parties : libellés et infobulles des réglages et du raccourci (key_, cfg_), puis le texte des encadrés d'infos dessinés sur les objets (info_, à la fin).
-# Dans les infobulles, {0}, {1}... sont des exemples que le mod remplit avec le texte des encadrés d'infos ci-dessous (ex. « V 4000ml » / « Vol 4000ml »).
-# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes (Top, InfoBox, Center, BottomLeft, Small, Medium, Large, ExtraLarge, Hold, Toggle, Short, Long) restent en anglais.
+# Dans les infobulles, {0}, {1}... sont des exemples que le mod remplit avec le texte des encadrés d'infos ci-dessous (ex. « S 7 » / « Sortie 7 »).
+# Pluriels : en français, .one sert pour 0 et 1, .other pour le reste. Les choix des listes déroulantes sont traduits (clés opt_, depuis 1.4.0) et les infobulles reprennent les mêmes mots ; les valeurs enregistrées restent les noms anglais du code.
 key_show_info,Afficher les infos des objets
-key_show_info_tip,"Maintenez cette touche pour afficher les infos des objets à l'écran, selon vos réglages et le type d'objet. Relâchez-la pour les masquer. Si « Mode de la touche » est sur Toggle, appuyez une fois pour afficher et une autre fois pour masquer."
+key_show_info_tip,"Maintenez cette touche pour afficher les infos des objets à l'écran, selon vos réglages et le type d'objet. Relâchez-la pour les masquer. Si « Mode de la touche » est sur « Basculer », appuyez une fois pour afficher et une autre fois pour masquer."
+# Options > Key Binds (new in 1.4.0).
+key_open_settings,Ouvrir les réglages d'Infos rapides sur les objets
+key_open_settings_tip,Ouvre la fenêtre des réglages dans la boutique. Vous pouvez aussi cliquer sur le bouton « Infos rapides sur les objets » à l'écran pendant que les infos sont affichées.
+key_button_position,Bouton des réglages
+key_button_position_tip,"Où se trouve le bouton « Infos rapides sur les objets » à l'écran pendant que les infos sont affichées dans la boutique. Cliquez dessus pour ouvrir les réglages. Avec « Masqué », utilisez plutôt la touche « Ouvrir les réglages d'Infos rapides sur les objets » (non attribuée par défaut)."
 cfg_container_name,Afficher le nom des conteneurs
 cfg_container_name_tip,"Affiche en bleu clair le nom que vous avez donné à une caisse, un sac à dos, un casier de rangement ou tout autre objet qui ouvre sa propre fenêtre."
 cfg_machine_name,Afficher le nom des machines
@@ -14,78 +19,151 @@ cfg_item_name_tip,Affiche en bleu clair le nom que vous avez donné à tout autr
 cfg_always_names,Toujours afficher les noms
 cfg_always_names_tip,"Activé : les noms restent à l'écran sans la touche ; les autres infos demandent toujours la touche.\nLes noms affichés suivent toujours les trois réglages de noms ci-dessous."
 cfg_idle_name_position,Position des noms (encadré d'infos masqué)
-cfg_idle_name_position_tip,"Où les noms sont affichés quand seuls les noms sont à l'écran, sans la touche. Nécessite « Toujours afficher les noms » activé.\nTop = centrés en haut de l'objet\nCenter = au milieu de l'objet\nBottomLeft = dans le coin inférieur gauche de l'objet"
+cfg_idle_name_position_tip,"Où les noms sont affichés quand seuls les noms sont à l'écran, sans la touche. Nécessite « Toujours afficher les noms » activé.\nEn haut = centrés en haut de l'objet\nAu centre = au milieu de l'objet\nEn bas à gauche = dans le coin inférieur gauche de l'objet"
 cfg_name_position,Position des noms (encadré d'infos affiché)
-cfg_name_position_tip,Où les noms sont affichés pendant que la touche affiche les infos.\nTop = centrés en haut de l'objet\nInfoBox = première ligne de l'encadré d'infos
+cfg_name_position_tip,Où les noms sont affichés pendant que la touche affiche les infos.\nEn haut = centrés en haut de l'objet\nEncadré d'infos = première ligne de l'encadré d'infos
 cfg_name_text_size,Taille du texte des noms
-cfg_name_text_size_tip,"Taille des noms : Small, Medium, Large ou ExtraLarge, les mêmes tailles que pour « Taille du texte »."
+cfg_name_text_size_tip,"Taille des noms : Petit, Moyen, Grand ou Très grand, les mêmes tailles que pour « Taille du texte »."
 cfg_wrap_names,Retour à la ligne des noms longs
 cfg_wrap_names_tip,Activé : les noms plus larges que l'objet passent sur plusieurs lignes pour rester dans la largeur de l'objet.\nDésactivé : les noms longs dépassent de l'objet.
-cfg_water_volume,Afficher le volume d'eau
-# {0} = ligne du volume avec le préfixe court (« V 4000ml »), {1} = avec le préfixe long (« Vol 4000ml »)
-cfg_water_volume_tip,"Affiche la quantité d'eau d'un récipient, en ml.\nShort : {0}\nLong : {1}"
-cfg_water_purity,Afficher la pureté de l'eau
-# {0} = ligne de la pureté avec le préfixe court (« P 98.52% »), {1} = avec le préfixe long (« Pur 98.52% »)
-cfg_water_purity_tip,Affiche la pureté de l'eau d'un récipient (pas pour les récipients vides).\nShort : {0}\nLong : {1}
-cfg_real_purity,Toujours afficher la pureté réelle de l'eau
-cfg_real_purity_tip,"Désactivé : l'eau analysée affiche le % exact, les autres affichent ?.\nActivé : chaque récipient affiche sa pureté réelle, sans analyse (vous voyez aussi quand un client ment).\nNécessite que « Afficher la pureté de l'eau » soit activé."
+cfg_water_volume,Afficher le volume de liquide
+# {0} = la ligne du volume telle qu'elle est affichée (« 250ml » ; un espace sans chasse invisible sépare le nombre et ml)
+cfg_water_volume_tip,"Affiche la quantité de liquide d'un récipient, par exemple {0}."
+cfg_water_purity,Afficher la pureté
+# {0}, {1}, {2} = la ligne de la pureté telle qu'elle est affichée pour Nombre entier, 1 décimale et 2 décimales (« 98% », « 98.5% », « 98.52% » : la part du composant principal) ; les choix sont opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
+cfg_water_purity_tip,"Affiche la part du liquide que représente son composant principal. Pour l'eau, c'est la pureté de l'eau. Pas pour les récipients vides.\nNe pas afficher = pas de ligne de pureté\nNombre entier = {0} (impossible de repérer l'eau pure)\n1 décimale = {1}\n2 décimales = {2}"
+cfg_machine_water,Afficher le liquide dans les machines
+cfg_machine_water_tip,Affiche le liquide à l'intérieur d'une machine. Les deux lignes suivent aussi « Afficher le volume de liquide » et « Afficher la pureté ».
 cfg_battery_charge,Afficher la charge des batteries
-cfg_battery_charge_tip,"Affiche l'énergie qu'il reste dans une batterie, par exemple 8kJ."
+cfg_battery_charge_tip,"Affiche l'énergie qu'il reste dans une batterie, par exemple 8kJ. Une Station de recharge affiche aussi la charge de chaque batterie qu'elle contient."
 cfg_battery_tonight_charge,Afficher la recharge de cette nuit
 cfg_battery_tonight_charge_tip,"Affiche en vert de combien une batterie sera rechargée cette nuit, par exemple +4kJ. Masqué quand elle est pleine ou ne sera pas rechargée."
 cfg_machine_power,Afficher l'énergie des machines
-# {0} = ligne de l'énergie avec le préfixe court (« É 87kJ »), {1} = avec le préfixe long (« Éner 87kJ »)
-cfg_machine_power_tip,Affiche l'énergie qu'il reste dans la batterie d'une machine. La ligne passe au rouge quand elle ne suffit pas pour cette nuit.\nShort : {0}\nLong : {1}
+# {0} = la ligne de la batterie d'une machine telle qu'affichée (« 41kJ » ; la ligne de l'énergie n'a pas de préfixe), {1} = avec un Convertisseur de courant, la facture de cette nuit (« -6 » et l'icône de crédit), {2} = le prix d'une utilisation (« -6/8/14 » et l'icône de crédit)
+cfg_machine_power_tip,"Affiche l'énergie qu'il reste dans la batterie d'une machine, par exemple {0}. La ligne passe au rouge quand l'énergie ne suffit pas pour cette nuit. Avec un Convertisseur de courant, affiche plutôt le coût de l'électricité : la facture de cette nuit pour les machines qui tournent la nuit, par exemple {1}, ou le prix d'une utilisation pour les machines utilisées en journée, par exemple {2}."
 cfg_machine_tonight_net,Afficher le bilan d'énergie de cette nuit
-cfg_machine_tonight_net_tip,"Affiche de combien la batterie d'une machine va changer cette nuit (recharge moins consommation), sous la ligne d'énergie.\nHausse : en vert, par exemple +4kJ\nBaisse : en orange, par exemple -8kJ\nMasqué quand rien ne change ou que la ligne d'énergie est rouge."
+cfg_machine_tonight_net_tip,"Affiche de combien la batterie d'une machine va changer cette nuit (recharge moins consommation), sous la ligne d'énergie.\nHausse : en vert, par exemple +4kJ\nBaisse : en orange, par exemple -8kJ (10j), le nombre entre parenthèses indiquant combien de jours la batterie tiendra à ce rythme\nMasqué quand rien ne change ou que la ligne d'énergie est rouge."
 cfg_machine_reason,Afficher pourquoi une machine ne tournera pas
 # {0}, {1}, {2} = trois des raisons ci-dessous (info_reason_no_input, info_reason_no_power, info_reason_output_full)
 cfg_machine_reason_tip,"Affiche une courte raison en orange quand une machine ne tournera pas cette nuit, par exemple « {0} », « {1} » ou « {2} »."
 cfg_machine_progress,Afficher la progression des machines
 # {0} = 3 jours restants en forme courte (« 3j »), {1} = en forme longue (« 3 jours »)
-cfg_machine_progress_tip,"Affiche combien de jours il faut encore à une machine, à sa vitesse de progression actuelle. Les changements ultérieurs dus aux effets de module comme « Surcharge » ou « Obsolescence programmée » ne sont pas prévus. Masqué quand elle ne tournera pas cette nuit.\nShort : {0}\nLong : {1}"
+cfg_machine_progress_tip,"Affiche combien de jours il faut encore à une machine, à sa vitesse de progression actuelle. Les changements ultérieurs dus aux effets de module comme « Surcharge » ou « Obsolescence programmée » ne sont pas prévus. Masqué quand elle ne tournera pas cette nuit.\nCourts : {0}\nLongs : {1}"
 cfg_machine_output,Afficher le nombre d'objets en sortie
 # {0} = ligne de la sortie avec le préfixe court (« S 7 »), {1} = avec le préfixe long (« Sortie 7 »)
-cfg_machine_output_tip,Affiche combien d'objets se trouvent dans la sortie d'une machine (les trémies d'entrée et de sortie ne comptent pas).\nShort : {0}\nLong : {1}
-cfg_machine_water,Afficher l'eau dans les machines
-# {0} / {1} = préfixes courts du volume et de la pureté (« V » / « P »), {2} / {3} = les longs (« Vol » / « Pur »)
-cfg_machine_water_tip,Affiche le volume et la pureté de l'eau à l'intérieur d'une machine. Les deux lignes suivent aussi « Afficher le volume d'eau » et « Afficher la pureté de l'eau ».\nShort : {0} / {1}\nLong : {2} / {3}
+cfg_machine_output_tip,Affiche combien d'objets se trouvent dans la sortie d'une machine (les trémies d'entrée et de sortie ne comptent pas).\nCourts : {0}\nLongs : {1}
+# Réacteur improvisé (nouveau en 1.4.0). {0} = la ligne rouge en haut de l'encadré quand il va exploser cette nuit (info_reactor_explodes)
+cfg_reactor,Afficher le réacteur
+cfg_reactor_tip,"Affiche l'intégrité du réacteur et la charge stockée. S'il va exploser cette nuit, il indique « {0} » et affiche le panneau d'avertissement."
+# Icônes d'état (nouveau en 1.4.0).
+cfg_status_icons,Icônes d'état
+cfg_status_icons_tip,"Petites icônes dans un coin d'une machine : un panneau d'avertissement quand elle est bloquée et qu'il faut intervenir, Zz quand il faut lui ajouter quelque chose pour qu'elle tourne, et une coche quand il y a quelque chose à récupérer. Une carafe affiche le panneau d'avertissement quand son filtre est usé.\nDésactivées = pas d'icônes\nAvec la touche = afficher avec les encadrés d'infos, avec la touche « Afficher les infos des objets »\nToujours = afficher même sans la touche"
+cfg_status_icon_position,Position des icônes
+cfg_status_icon_position_tip,Dans quel coin de l'objet placer les icônes d'état.
+cfg_status_icon_background,Fond des icônes
+cfg_status_icon_background_tip,Le fond derrière les icônes d'état : sombre ou clair. « Opacité du fond des icônes » règle sa transparence.
+cfg_status_icon_opacity,Opacité du fond des icônes
+cfg_status_icon_opacity_tip,Opacité du fond derrière les icônes d'état. Les icônes elles-mêmes restent toujours opaques.\n0 = pas de fond\n100 = complètement opaque
+cfg_warning_icon,Afficher l'icône d'avertissement
+# {0} = une des raisons ci-dessous (info_reason_no_power)
+cfg_warning_icon_tip,"Affiche le panneau d'avertissement quand une machine a du travail mais est bloquée (par exemple « {0} »), ou que le filtre d'une carafe est usé."
+cfg_idle_icon,Afficher l'icône d'inactivité
+# {0}, {1} = deux des raisons ci-dessous (info_reason_no_input, info_reason_no_seed) ; les choix sont opt_icons_off, opt_except_empty, opt_all
+cfg_idle_icon_tip,"Affiche Zz quand une machine ne tournera pas cette nuit tant que vous n'aurez rien ajouté, par exemple « {0} » ou « {1} ».\nDésactivées = pas de Zz\nSauf vides = pas quand les entrées de la machine sont vides (par exemple pas de récipient, ou un Réfrigérateur vide)\nToutes = même quand les entrées sont vides"
+cfg_done_icon,Afficher l'icône de fin
+cfg_done_icon_tip,"Affiche une coche quand une machine a quelque chose à récupérer, comme des objets dans sa sortie (les trémies d'entrée et de sortie ne comptent pas) ou de l'eau qu'elle a collectée ou fini de purifier."
+# Minéraux du Système hydroponique (nouveau en 1.4.0). {0}, {1} = les deux lignes de l'encadré d'infos ci-dessous (info_mineral_low, info_mineral_high)
+cfg_mineral_warning,Alerte de plage de minéraux (hydroponie)
+cfg_mineral_warning_tip,"Quand les minéraux de l'eau d'un Système hydroponique sont hors de la Plage optimale de nutriments de la graine, affiche le panneau d'avertissement, et l'encadré d'infos indique « {0} » ou « {1} »."
+cfg_container_icons,Icônes sur les conteneurs
+cfg_container_icons_tip,"Affiche les icônes d'état sur un conteneur (comme un Casier de machiniste) pour les machines qu'il contient. Quand le panneau d'avertissement et Zz s'appliquent tous les deux, seul le panneau d'avertissement s'affiche ; la coche s'ajoute si au moins une machine a quelque chose à récupérer.\nDésactivées = pas d'icônes sur les conteneurs\nAvertissement seul = seulement le panneau d'avertissement\nAvertissement et inactivité = le panneau d'avertissement ou Zz\nToutes = la coche aussi"
 cfg_stolen_heat,Afficher le danger des objets volés
 # {0} = ligne du danger avec le préfixe court (« R 45% »), {1} = avec le préfixe long (« Dang 45% »)
-cfg_stolen_heat_tip,Affiche en rouge le danger d'un objet volé.\nShort : {0}\nLong : {1}
+cfg_stolen_heat_tip,Affiche en rouge le danger d'un objet volé.\nCourts : {0}\nLongs : {1}
 cfg_use_count,Afficher les utilisations restantes
 # {0} = ligne des utilisations avec le préfixe court (« U 3 »), {1} = avec le préfixe long (« Util 3 »)
-cfg_use_count_tip,Affiche combien d'utilisations il reste à un objet. En rouge quand il n'en reste plus.\nShort : {0}\nLong : {1}
+cfg_use_count_tip,Affiche combien d'utilisations il reste à un objet. En rouge quand il n'en reste plus.\nCourts : {0}\nLongs : {1}
 cfg_durability,Afficher la durabilité
-# {0} = ligne de la durabilité avec le préfixe court (« D 320 »), {1} = avec le préfixe long (« Dur 320 »)
-cfg_durability_tip,Affiche la durabilité d'un objet. En orange à 1/4 ou moins.\nShort : {0}\nLong : {1}
+# {0} = ligne de la durabilité avec le préfixe court (« D 320 »), {1} = avec le préfixe long (« Dur 320 »), {2} = ligne des filtres avec le préfixe long (« Filtre 400 »)
+cfg_durability_tip,"Affiche la durabilité d'un objet. En orange à 1/4 ou moins. Ce qui contient des filtres affiche à la place les filtres à l'intérieur, additionnés, par exemple {2}.\nCourts : {0}\nLongs : {1}"
 cfg_ingot_purity,Afficher la pureté des lingots
 # {0} = un des niveaux de pureté ci-dessous (info_ingot_high, « Élevée »)
 cfg_ingot_purity_tip,"Affiche le niveau de pureté d'un lingot de métal, par exemple « {0} »."
+# Pureté des médicaments (nouveau en 1.4.0). {0} = la ligne de l'encadré (« 88% »)
+cfg_drug_purity,Afficher la pureté des médicaments
+cfg_drug_purity_tip,"Affiche la pureté des médicaments, par exemple {0}."
 cfg_key_mode,Mode de la touche
-cfg_key_mode_tip,"Choisissez s'il faut maintenir la touche « Afficher les infos des objets » ou appuyer dessus pour basculer.\nHold = affiche tant qu'elle est maintenue, masque quand vous la relâchez\nToggle = appuyez une fois pour afficher, encore une fois pour masquer ; se désactive quand vous chargez une sauvegarde ou revenez au menu principal"
+cfg_key_mode_tip,"Choisissez s'il faut maintenir la touche « Afficher les infos des objets » ou appuyer dessus pour basculer.\nMaintenir = affiche tant qu'elle est maintenue, masque quand vous la relâchez\nBasculer = appuyez une fois pour afficher, encore une fois pour masquer ; se désactive quand vous chargez une sauvegarde ou revenez au menu principal"
 cfg_text_size,Taille du texte
-cfg_text_size_tip,"Taille du texte des encadrés d'infos (les noms suivent « Taille du texte des noms ») : Small, Medium, Large ou ExtraLarge. Une case d'objet fait 16 unités ; le texte fait 3,5 ; 4,5 ; 6 ou 8 unités de haut."
+cfg_text_size_tip,"Taille du texte des encadrés d'infos (les noms suivent « Taille du texte des noms ») : Petit, Moyen, Grand ou Très grand. Une case d'objet fait 16 unités ; le texte fait 3,5 ; 4,5 ; 6 ou 8 unités de haut."
 cfg_prefix,Préfixes des lignes
-# {0} à {7} = préfixes courts, {8} à {15} = préfixes longs, dans cet ordre : volume d'eau, pureté de l'eau, énergie de la machine,
-# 3 jours restants, nombre en sortie, danger, utilisations restantes, durabilité. Séparateur : « , ».
-cfg_prefix_tip,"Choisissez des mots courts ou longs en début de ligne. Quand Long ne tient pas dans la largeur de l'objet, cet encadré d'infos utilise les mots courts.\nShort : {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\nLong : {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}"
+# {0} à {5} = les préfixes courts, {6} à {11} = les longs : 3 jours restants, nombre de produits,
+# danger d'un objet volé, utilisations restantes, durabilité, filtre.
+cfg_prefix_tip,"Choisissez des mots courts ou longs en début de ligne. Quand « Longs » ne tient pas dans la largeur de l'objet, cet encadré d'infos utilise les mots courts.\nCourts : {0}, {1}, {2}, {3}, {4}, {5}\nLongs : {6}, {7}, {8}, {9}, {10}, {11}"
+cfg_info_box_opacity,Opacité des encadrés d'infos
+cfg_info_box_opacity_tip,Opacité du fond sombre derrière les encadrés d'infos et les noms. Le texte lui-même reste toujours opaque.\n0 = pas de fond\n100 = complètement opaque
+
+# ---- Dropdown choices and On / Off of the settings window (new in 1.4.0; see en.csv) ----
+opt_on,Activé
+opt_off,Désactivé
+opt_hold,Maintenir
+opt_toggle,Basculer
+opt_short,Courts
+opt_long,Longs
+opt_small,Petit
+opt_medium,Moyen
+opt_large,Grand
+opt_extra_large,Très grand
+opt_top,En haut
+opt_center,Au centre
+opt_bottom_left,En bas à gauche
+opt_info_box,Encadré d'infos
+opt_icons_off,Désactivées
+opt_icons_with_key,Avec la touche
+opt_icons_always,Toujours
+opt_top_right,En haut à droite
+opt_bottom_right,En bas à droite
+opt_top_left,En haut à gauche
+opt_hidden,Masqué
+opt_dark,Sombre
+opt_light,Clair
+opt_warning_only,Avertissement seul
+opt_warning_and_idle,Avertissement et inactivité
+opt_all,Toutes
+opt_except_empty,Sauf vides
+opt_dont_show,Ne pas afficher
+opt_whole_number,Nombre entier
+opt_one_decimal,1 décimale
+opt_two_decimals,2 décimales
+
+# ---- Settings window in the store (new in 1.4.0; see en.csv for {0} and {1} in ui_hint) ----
+ui_title,Infos rapides sur les objets : réglages
+ui_tab_general,Général
+ui_tab_names,Noms
+ui_tab_water,Liquides
+ui_tab_batteries,Batteries
+ui_tab_machines,Machines
+ui_tab_icons,Icônes d'état
+ui_tab_items,Objets
+ui_reset,Réinitialiser l'onglet
+ui_reset_sure,Sûr ?
+ui_reset_tip,Remet tous les réglages de cet onglet à leur valeur par défaut. Cliquez à nouveau pour confirmer.
+ui_button,Infos rapides sur les objets
+ui_button_tip,Ouvrir les réglages d'Infos rapides sur les objets
+ui_hint,"Les réglages d'Infos rapides sur les objets s'ouvrent dans la boutique : appuyez sur {0} pour afficher les infos, puis cliquez sur le bouton « Infos rapides sur les objets » dans le coin {1}."
+ui_hint_ok,Compris
+ui_hint_top_right,en haut à droite
+ui_hint_top_left,en haut à gauche
+ui_hint_bottom_right,en bas à droite
+ui_hint_bottom_left,en bas à gauche
+ui_percent,{0} %
 
 # ---- Encadrés d'infos : le texte dessiné sur les objets pendant que la touche est maintenue ----
 # L'encadré est dans le coin inférieur gauche de l'objet et très étroit : une case fait 16 unités de large et le texte 3,5 à 6 unités
 # de haut, donc un objet d'une case n'a la place que pour 6 à 8 lettres par ligne. Chaque entrée doit être la plus courte possible.
 
-# Préfixes des lignes : le mot avant la valeur, suivi d'une espace et du nombre (« V 4000ml »).
+# Préfixes des lignes : le mot avant la valeur, suivi d'une espace et du nombre (« Sortie 7 »).
 # _short = une lettre. _long = abréviation ou mot court de 3 à 5 lettres.
-# Volume d'eau d'un récipient ou d'une machine (« Vol 4000ml »)
-info_prefix_water_short,V
-info_prefix_water_long,Vol
-# Pureté de l'eau (« Pur 98.52% »)
-info_prefix_purity_short,P
-info_prefix_purity_long,Pur
-# Énergie restante dans la batterie d'une machine (« Éner 87kJ »)
-info_prefix_power_short,É
-info_prefix_power_long,Éner
 # Nombre d'objets dans la sortie d'une machine (« Sortie 7 »). Ici, court = jusqu'à 3 lettres, long = jusqu'à 6.
 info_prefix_output_short,S
 info_prefix_output_long,Sortie
@@ -98,15 +176,18 @@ info_prefix_uses_long,Util
 # Durabilité (« Dur 320 »)
 info_prefix_durability_short,D
 info_prefix_durability_long,Dur
+# Filtres d'une carafe ou d'un système de circuit recirculé, additionnés (« Filtre 400 »). Affiché sous les lignes de l'eau.
+info_prefix_filter_short,F
+info_prefix_filter_long,Filtre
+# Intégrité du réacteur (« Intégrité 60/100 », le mot du jeu). Court : jusqu'à 3 lettres.
+info_prefix_integrity_short,Int
+info_prefix_integrity_long,Intégrité
 
 # Progression d'une machine : nombre de jours avant la fin. Pas de préfixe : c'est toute la ligne. {0} = nombre de jours.
 # info_days_short : forme la plus courte, la même pour tous les nombres (« 3j »). info_days_long : en toutes lettres, .one (0 et 1) et .other.
 info_days_short,{0}j
 info_days_long.one,{0} jour
 info_days_long.other,{0} jours
-
-# Ligne d'énergie quand l'emplacement de batterie contient une source sans charge propre (alimentation extérieure) : « Éner ext ».
-info_power_external,ext
 
 # Estimation du volume d'eau, à la place des ml quand le récipient n'a pas de graduation (« Vol Quasi plein »). Du plein au vide.
 info_estimate_full,Plein
@@ -131,6 +212,13 @@ info_reason_max_purity,Pureté max
 info_reason_no_module,Sans module
 info_reason_blocked,Bloqué
 info_reason_no_power,Sans énergie
+# Carafe ou système de circuit recirculé sans filtre : une ligne orange à part, à la place de la ligne des filtres, sans préfixe.
+info_reason_no_filter,Sans filtre
+# Système hydroponique dont l'eau a trop peu ou trop de minéraux pour sa graine : une ligne orange à part, sans préfixe.
+info_mineral_low,Peu de minéraux
+info_mineral_high,Trop de minéraux
+# Réacteur qui va exploser cette nuit : une ligne rouge en haut, sans préfixe. 1 à 3 mots courts.
+info_reactor_explodes,Explose cette nuit
 
 # Niveaux de pureté des lingots de métal, du meilleur au pire. Seulement le niveau, sans le mot « pureté » : l'encadré est dessiné
 # sur le lingot, et une ligne courte risque moins d'être coupée par le bord de l'inventaire. D'après les noms du jeu

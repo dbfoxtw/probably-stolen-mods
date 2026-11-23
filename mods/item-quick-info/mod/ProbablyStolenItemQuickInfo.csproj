@@ -10,7 +10,7 @@
     <AssemblyName>ProbablyStolenItemQuickInfo</AssemblyName>
     <RootNamespace>ProbablyStolenItemQuickInfo</RootNamespace>
     <!-- 版本號只放這裡：組件版本、manifest.xml 的 ModVersion、打包檔名都從這裡來（tools/modkit.py 的 csproj_version） -->
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Compile Remove="verify/**" />
+    <!-- 店內設定視窗的攔截（1.4.0，mod/src/Patches.cs）：遊戲自帶的 Harmony，載入器 PatchAll -->
+    <Reference Include="$(ManagedDir)\0Harmony.dll" Private="false" />
     <Reference Include="$(ManagedDir)\Assembly-CSharp.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />

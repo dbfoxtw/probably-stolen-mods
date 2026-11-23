@@ -11,6 +11,115 @@ namespace ProbablyStolenItemQuickInfo
     enum ProgressKind { None, Working, Starting }
 
     /// <summary>
+    /// 狀態圖示的第一個：今晚跑不跑得動。None＝正常會跑（不畫）；Warning＝⚠ 有事要做卻被卡住、要處理；
+    /// Idle＝💤 要補東西才會跑。⚠ 和 💤 一次只會有一個。
+    /// </summary>
+    enum StatusIcon { None, Warning, Idle }
+
+    /// <summary>
+    /// 一個物品的狀態圖示：第一個（Icon：⚠／💤／不畫）與第二個（Done：✓ 有東西可以收）。預設值是什麼都沒有。
+    /// 三個開關（IconSettings.Visible）、畫的位置與框在 LabelRenderer。
+    /// </summary>
+    readonly struct ItemStatus
+    {
+        public readonly StatusIcon Icon;
+        public readonly bool Done;
+        /// <summary>
+        /// 💤 是因為輸入區沒放東西（空機器，MachineFacts.InputsEmpty）：「顯示閒置圖示」選空機器除外時不畫（IconSettings.Visible）。
+        /// 只在 Icon 是 Idle 時才可能是 true。
+        /// </summary>
+        public readonly bool EmptyIdle;
+
+        public ItemStatus(StatusIcon icon, bool done, bool emptyIdle = false)
+        {
+            Icon = icon;
+            Done = done;
+            EmptyIdle = icon == StatusIcon.Idle && emptyIdle;
+        }
+
+        /// <summary>兩個都沒有：不畫。</summary>
+        public bool IsEmpty => Icon == StatusIcon.None && !Done;
+
+        public bool Equals(ItemStatus o) => Icon == o.Icon && Done == o.Done && EmptyIdle == o.EmptyIdle;
+
+        /// <summary>除錯 log 用：警告、閒置（空機器的寫「閒置（空機器）」）、完成，兩個時用「＋」接起來；沒有是「無」。</summary>
+        public override string ToString()
+        {
+            string first = Icon == StatusIcon.Warning ? "警告" : Icon == StatusIcon.Idle ? (EmptyIdle ? "閒置（空機器）" : "閒置") : null;
+            if (first == null) return Done ? "完成" : "無";
+            return Done ? first + "＋完成" : first;
+        }
+    }
+
+    /// <summary>水耕機的水裡的礦物質對種子的最佳範圍：Ok＝範圍內或不提醒（沒讀、填心果、水蘆葦）；Low＝太少；High＝太多。</summary>
+    enum MineralLevel { Ok, Low, High }
+
+    /// <summary>
+    /// 一台水耕機的礦物質讀到的值與判斷（MachineLogic.CheckMineral；MachineRules 在「水培礦物質範圍警告」開著時讀）。預設值是沒讀（Measured 是 false、Ok）。
+    /// Ratio＝礦物質 ÷ 水（萬分比，WaterHelper.GetContaminantPercentage）；Level、Range＝種子的最佳養分濃度的中心與半寬
+    /// （HydroponicHelper.GetNutrimentLevel、GetNutrimentRange），範圍是 Level − Range～Level + Range。除錯 log（Rules.MineralNote）也用這幾個值。
+    /// </summary>
+    readonly struct MineralCheck
+    {
+        /// <summary>有種子、水罐裡有水（讀了比例與範圍）。</summary>
+        public readonly bool Measured;
+        /// <summary>填心果、水蘆葦：收成不看生長評分，不提醒（Result 一律 Ok）。</summary>
+        public readonly bool Exempt;
+        public readonly int Ratio, Level, Range;
+        public readonly MineralLevel Result;
+
+        public MineralCheck(bool measured, bool exempt, int ratio, int level, int range, MineralLevel result)
+        {
+            Measured = measured;
+            Exempt = exempt;
+            Ratio = ratio;
+            Level = level;
+            Range = range;
+            Result = result;
+        }
+
+        /// <summary>範圍的下限、上限（萬分比）：剛好等於算範圍內。</summary>
+        public int Min => Level - Range;
+        public int Max => Level + Range;
+    }
+
+    /// <summary>
+    /// 一個箱子裡的機器的狀態（全店快照的第 5 部分 StoreScan.BoxOf）：⚠、💤（不是空機器的、空機器的分開記）、✓ 各幾台、
+    /// 一共幾台（含狀態是「無」的）。存的是原始的台數（還沒套三個開關與下拉）：換設定不用重建快照，畫的時候才由 IconSettings.BoxStatus 換算
+    /// （「顯示閒置圖示」選空機器除外時只算 Idle，全部時兩個都算）。預設值是一台都沒有。
+    /// 值型別：存在 Dictionary 裡，改的時候取出、Add、再放回去。
+    /// Reactors 是裝在這個箱子裡、今晚會爆炸的自己的自製反應爐（2026-11-22 主人定：機器區、擴建機器區、超科技儲藏區都收機器，5×3 的反應爐
+    /// 塞得進去）；和 Warning 分開記，「顯示反應爐」關著時 IconSettings.BoxStatus 不算它，換設定照樣不用重建快照。
+    /// </summary>
+    struct BoxSummary
+    {
+        public int Warning, Idle, IdleEmpty, Done, Machines, Reactors;
+
+        /// <summary>加一台今晚會爆炸的反應爐（只有今晚會爆炸的才記，不算進 Machines）。</summary>
+        public void AddReactor() => Reactors++;
+
+        /// <summary>加一台機器的狀態（⚠ 和 💤 一台只會有一個；💤 照 EmptyIdle 分兩種）。</summary>
+        public void Add(ItemStatus s)
+        {
+            Machines++;
+            if (s.Icon == StatusIcon.Warning) Warning++;
+            else if (s.Icon == StatusIcon.Idle)
+            {
+                if (s.EmptyIdle) IdleEmpty++;
+                else Idle++;
+            }
+            if (s.Done) Done++;
+        }
+
+        public bool Equals(BoxSummary o) =>
+            Warning == o.Warning && Idle == o.Idle && IdleEmpty == o.IdleEmpty && Done == o.Done && Machines == o.Machines && Reactors == o.Reactors;
+
+        /// <summary>全店核對用：「警告 1、閒置 0、空機器 1、完成 2（3 台）」；有今晚會爆炸的反應爐時後面接「、今晚爆炸的反應爐 1」。</summary>
+        public override string ToString() =>
+            $"警告 {Warning}、閒置 {Idle}、空機器 {IdleEmpty}、完成 {Done}（{Machines} 台）" + (Reactors > 0 ? $"、今晚爆炸的反應爐 {Reactors}" : "");
+    }
+
+    /// <summary>
     /// 判斷一台機器要的資料，都是簡單的值（MachineRules 從遊戲讀出來填；離線測試直接建）。
     /// 每台只用到自己那幾格，其他欄位不管。欄位的預設值是「什麼都沒有」。
     /// </summary>
@@ -27,15 +136,23 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         public string State = "";
 
+        /// <summary>
+        /// 輸出區的成品數（堆疊數量加起來，料斗不算；MachineLogic.OutputSlot 的那一格）。狀態圖示的 ✓ 看它，
+        /// 和「顯示成品數」開關無關：開關關掉時照樣讀。沒有輸出區的機器是 0。
+        /// </summary>
+        public int OutputCount;
+
+        /// <summary>
+        /// 輸入區沒放東西（空機器）：要放材料、容器、種子、魚的格子全空（電池槽、模組、輸出區、說明、循環水養殖系統的濾水器不算；
+        /// 每台是哪幾格照遊戲的機器視窗，MachineRules.InputsEmpty）。這時的 💤 帶「空機器」的記號（ItemStatus.EmptyIdle），
+        /// 「顯示閒置圖示」選空機器除外時不畫。今晚會跑、要畫狀態圖示時 MachineRules 才讀；不讀時是 false（照以前一律畫）。
+        /// </summary>
+        public bool InputsEmpty;
+
         // ── 容器格（淨水器、水分收集器、蒸餾器）──
         public bool HasContainer;
-        /// <summary>容器的液體總量與裡面的水（µl）。</summary>
+        /// <summary>容器的液體總量與裡面的水（µl）。1.4.0 起靠成分判斷的原因一律照真實的成分（拿掉 的「水質看得到才判斷」）。</summary>
         public int ContainerTotal, ContainerWater;
-        /// <summary>
-        /// 那瓶水的水質看不看得到：掃描結果有效、鑑定過、或設定一律顯示真實水質。
-        /// 看不到時，靠容器成分判斷的原因（已淨化完、不空但沒有水的缺水、蒸餾器不空但沒有會蒸發液體的缺水）不顯示。
-        /// </summary>
-        public bool PurityVisible;
         /// <summary>淨水器：這台的純度上限（MachinePurifier.GetMaxPurityCap，萬分比）、能被淨化去掉的雜質總量（µl）。</summary>
         public int PurifierCap;
         public long PurifierRemovable;
@@ -62,6 +179,11 @@ namespace ProbablyStolenItemQuickInfo
 
         // ── 水耕機 ──
         public bool HasSeed, EnoughWater;
+        /// <summary>
+        /// 礦物質不在種子的範圍內：「水培礦物質範圍警告」開著時 MachineRules 照 CheckMineral 填，不管今晚會不會跑；
+        /// 關著時一律 Ok。Status 在沒有別的圖示時把它算成 ⚠。
+        /// </summary>
+        public MineralLevel Mineral;
 
         // ── DNA 編輯器 ──
         /// <summary>MachineDnaManipulator.PlanOperation 不是 null；PlanBlocked＝它的 blockedReason 不是空的。</summary>
@@ -73,6 +195,8 @@ namespace ProbablyStolenItemQuickInfo
 
         // ── 循環養殖 ──
         public bool RasHasWater, RasHasLiveStock;
+        /// <summary>4 個濾水器格裡的濾材；讀不到濾水器格時 null（不另外警告）。</summary>
+        public FilterInfo Filters;
     }
 
     /// <summary>
@@ -80,6 +204,7 @@ namespace ProbablyStolenItemQuickInfo
     /// 照各機器每晚處理（onCycleEndSlotItemFunc）的判斷順序，取第一個擋住的原因。Decide 不看電：遊戲先看電的，這裡跳過電、照樣往下看，
     /// 別的原因優先（電量那行開著時紅字本來就看得到，先告訴你還缺什麼）；都沒有別的原因、電又不夠今晚用時才是缺電
     /// （WithPower，電那行照樣變紅）。門檻與順序照抄遊戲（出處寫在各方法），遊戲改了要跟著改。
+    /// 狀態圖示的分類也在這裡（Status：原因＋事實 → ⚠／💤、✓）。
     /// </summary>
     static class MachineLogic
     {
@@ -151,6 +276,15 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>Deal Maker、高級渦輪增壓器的 identifier（NightlyPowerUse 另外處理的兩台）。</summary>
         internal const string DealMakerId = "deal_maker", TurboBoosterAdvId = "turbo_booster_adv";
+
+        /// <summary>
+        /// 白天按次用電的機器（沒有 machinery_drawn_power，每晚不收錢；接電流轉換器時電那行寫用一次的價錢，Rules.PerUseEnergies）：
+        /// 瓶子印表機、改造體掃描器、箱子販賣機。
+        /// </summary>
+        internal const string BottlePrinterId = "bottle_printer", AugScannerId = "aug_scanner", BoxDispenserId = "box_dispenser";
+
+        /// <summary>箱子販賣機按一次用多少電（kJ）：遊戲在按鈕的處理裡寫死 1（MachineBoxDispenser，沒有常數），照抄。</summary>
+        internal const int BoxDispenserUse = 1;
 
         /// <summary>高級渦輪增壓器儲能到多少就不再充（MachineTurboBoosterAdv.POWER_TARGET，照抄遊戲寫死的數字）。</summary>
         internal const int TurboPowerTarget = 15;
@@ -229,6 +363,130 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
+        /// 狀態圖示（表在）：reason＝Decide 加上 WithPower 之後的原因（資訊框寫的那個），
+        /// f＝同一份事實（OutputCount、循環水養殖系統的魚與濾材另外要讀，MachineRules 在要畫圖示時讀）。
+        /// - 今晚不會跑的機器（客人的、不在店裡的）兩個都不畫，連 ✓ 也不畫。
+        /// - 第一個圖示照原因分（IconOf）：⚠ 只留給真的卡住的（缺電、缺模組、無法開始、放的不是鑰匙卡、解序器與還有料的熔爐產出滿了、
+        ///   水耕機種了種子但缺水），缺料、缺種子這類要補東西的是 💤。沒事做又沒電是 💤（Decide 的原因優先，///   WithPower 只在沒有別的原因時才補缺電，順序本來就是這樣）。
+        /// - 循環水養殖系統先看有沒有活魚（資訊框的原因照舊先看水）：沒有活魚 💤（不管有沒有水）；有活魚但缺水、缺電，
+        ///   或濾材沒裝、加總 0是 ⚠。
+        /// - ✓：輸出區有成品（料斗不算）；淨水器已淨化完、蒸餾器缺水（容器空或沒有可蒸發的）、水分收集器產出滿了
+        ///   這三種同一個容器進出的做完時是 💤＋✓；水分收集器容器裡有水也打勾。
+        ///   蒸餾器的餾出液格不看：✓ 只看輸入的容器還有沒有會蒸發的液體（水、酒精、脂合劑，和遊戲蒸不蒸同一個判斷）。
+        /// - 水耕機的礦物質：本來的第一個圖示是「不畫」（沒有原因）、礦物質範圍外（f.Mineral，設定開著才會有）→ ⚠。
+        ///   本來就是 ⚠（缺水、缺電）或 💤（缺種子）的照舊，✓ 照舊（有成品就是 ⚠＋✓）。
+        /// - 空機器：💤 而且輸入區全空（f.InputsEmpty）時帶「空機器」的記號（ItemStatus.EmptyIdle），畫不畫由「顯示閒置圖示」的三選一定
+        ///   （IconSettings.Visible、BoxStatus）。放了一部分還缺一樣的（有容器但空了、有料不夠一爐、接著水罐沒種子、有水沒魚）不是空機器。
+        /// </summary>
+        internal static ItemStatus Status(MachineKind kind, MachineFacts f, Reason reason)
+        {
+            if (!f.RunsTonight) return default;
+            bool done = f.OutputCount > 0;
+            switch (kind)
+            {
+                case MachineKind.Purifier: done |= reason == Reason.MaxPurity; break;
+                case MachineKind.MoistureFarm: done |= reason == Reason.OutputFull || f.HasContainer && f.ContainerWater > 0; break;
+                case MachineKind.Evaporator: done |= reason == Reason.NoWater; break;
+            }
+            var icon = kind == MachineKind.Ras ? RasIcon(f, reason) : IconOf(kind, f, reason);
+            if (kind == MachineKind.Hydroponic && icon == StatusIcon.None && f.Mineral != MineralLevel.Ok) icon = StatusIcon.Warning;
+            // 空機器的 💤：輸入區全空時帶記號，「顯示閒置圖示」選空機器除外時不畫（IconSettings.Visible）；⚠、✓ 照舊
+            return new ItemStatus(icon, done, f.InputsEmpty);
+        }
+
+        /// <summary>收成不看生長評分的種子（填心果、水蘆葦；PlantList 的 FILLERWEED_SEED、HYDROREED_SEED）：礦物質不提醒。</summary>
+        internal const string FillerweedSeed = "fillerweed_seed", HydroreedSeed = "hydroreed_seed";
+
+        /// <summary>
+        /// 水耕機的礦物質對種子的範圍（照遊戲 HydroponicHelper.HandleNutriment）：有種子、水罐裡有水（水 &gt; 0）、
+        /// 不是填心果與水蘆葦（plantId＝HydroponicHelper.GetPlantId）時，比例（ratio，礦物質 ÷ 水的萬分比）&lt; level − range 是太少、
+        /// &gt; level + range 是太多，剛好在邊界算範圍內（遊戲是嚴格的小於、大於）。沒種子、沒水時沒讀（Measured 是 false），
+        /// 填心果、水蘆葦讀了但不提醒（Exempt，Result 一律 Ok；它們的下限是 0，本來也不會太少）。
+        /// 呼叫端在沒種子、沒水時不用讀比例與範圍（傳 0）。
+        /// </summary>
+        internal static MineralCheck CheckMineral(bool hasSeed, bool hasWater, string plantId, int ratio, int level, int range)
+        {
+            if (!hasSeed || !hasWater) return default;
+            bool exempt = plantId == FillerweedSeed || plantId == HydroreedSeed;
+            var result = exempt ? MineralLevel.Ok
+                : ratio < level - range ? MineralLevel.Low
+                : ratio > level + range ? MineralLevel.High
+                : MineralLevel.Ok;
+            return new MineralCheck(true, exempt, ratio, level, range, result);
+        }
+
+        /// <summary>
+        /// 判斷完填進 info（MachineRules.Read 讀好事實以後叫；不碰 Unity，離線測試直接叫）：原因＝Decide 加上 WithPower
+        /// （Decide 不看電：沒有別的原因、今晚會跑、電那行紅字 info.Insufficient 才是缺電，「顯示電量」關掉時紅字看不到，/// 靠這行告訴你今晚不會動），icons（這一輪要畫狀態圖示，ReadContext.Icons）時照同一個原因算狀態圖示（Status）。
+        /// 回傳進度的狀態（MachineRules 照它讀點數）。
+        /// </summary>
+        internal static ProgressKind Judge(MachineInfo info, MachineKind kind, MachineFacts f, bool icons)
+        {
+            var (reason, progress) = Decide(kind, f);
+            reason = WithPower(reason, f.RunsTonight, info.Insufficient);
+            info.Reason = reason;
+            if (icons) info.Status = Status(kind, f, reason);
+            return progress;
+        }
+
+        /// <summary>
+        /// 水罐的狀態圖示：自己的水罐（GeneralHelper.IsItemOwned）裝了濾材、看得到的耐久加總是 0（FilterInfo.UsedUp）才 ⚠，
+        /// 其他都不畫；水罐沒有 💤、✓。沒裝不畫：客人買水罐時裡面有濾材就不買（StoreClient.IsRefusingForFilterInside），
+        /// 要賣的、剛買的水罐一定沒濾材，畫了會整片亮（資訊框照舊寫橘字「沒濾材」）。不是自己的照決定 110 不畫（資訊框照舊）。
+        /// f 是 null（不是裝濾材的東西，或不是自己的、沒讀濾材）時不畫。
+        /// </summary>
+        internal static ItemStatus PitcherStatus(bool owned, FilterInfo f) =>
+            owned && f != null && f.UsedUp ? new ItemStatus(StatusIcon.Warning, false) : default;
+
+        /// <summary>
+        /// 第一個圖示（循環水養殖系統以外）：原因 → ⚠／💤。
+        /// - 缺電、缺模組（印表機）、無法開始（DNA 編輯器）：⚠。
+        /// - 產出滿了：熔爐要看材料夠不夠開一爐（HasFurnaceCharge；剩的不夠一錠是正常的結束，💤）、水分收集器是裝滿了（💤），
+        ///   解序器（就緒或解序中）是 ⚠。
+        /// - 缺鑰匙卡：解序器兩個分支共用這個字，輸入格有東西（HasCard）＝放的不是鑰匙卡 → ⚠，空的 → 💤。
+        /// - 缺水：水耕機（種了種子但水不夠一輪，作物停長）⚠；淨水器、蒸餾器、自動售水機 💤。
+        /// - 其他原因（缺料、缺晶片、缺種子、缺資料碟、沒容器、已淨化完）：💤。沒有原因：不畫。
+        /// </summary>
+        static StatusIcon IconOf(MachineKind kind, MachineFacts f, Reason reason)
+        {
+            switch (reason)
+            {
+                case Reason.None: return StatusIcon.None;
+                case Reason.NoPower:
+                case Reason.NoModule:
+                case Reason.Blocked:
+                    return StatusIcon.Warning;
+                case Reason.OutputFull:
+                    if (kind == MachineKind.Furnace)
+                        return HasFurnaceCharge(f.OreCount, f.BlastModule, f.JunkModule, f.JunkCount) ? StatusIcon.Warning : StatusIcon.Idle;
+                    return kind == MachineKind.MoistureFarm ? StatusIcon.Idle : StatusIcon.Warning;
+                case Reason.NoCard: return f.HasCard ? StatusIcon.Warning : StatusIcon.Idle;
+                case Reason.NoWater: return kind == MachineKind.Hydroponic ? StatusIcon.Warning : StatusIcon.Idle;
+                default: return StatusIcon.Idle;
+            }
+        }
+
+        /// <summary>
+        /// 循環水養殖系統的第一個圖示：沒有活魚 💤（不管有沒有水、濾材）；有活魚而且缺水（魚當晚就死）、缺電
+        /// （WithPower 補的）、濾材沒裝或看得到的加總 0（RasFilterWarning；裝著的全都看不到耐久時只看「沒裝」）→ ⚠；其他不畫。
+        /// 讀不到濾水器格（Filters 是 null）時不看濾材。紫外線燈不算濾材，只裝它時算沒裝。
+        /// </summary>
+        static StatusIcon RasIcon(MachineFacts f, Reason reason)
+        {
+            if (!f.RasHasLiveStock) return StatusIcon.Idle;
+            if (!f.RasHasWater || reason == Reason.NoPower || RasFilterWarning(f.Filters)) return StatusIcon.Warning;
+            return StatusIcon.None;
+        }
+
+        /// <summary>
+        /// 循環水養殖系統的濾材算不算 ⚠ 的理由：讀得到濾水器格，而且沒裝濾材、或看得到的耐久加總 0（FilterInfo.Warning）。
+        /// 狀態圖示（RasIcon）與資訊框的行序（這時濾材那行移到原因後面、資訊框最上面；Rules.MachineLines）共用這一個條件，
+        /// 兩邊不會一邊算 ⚠、一邊不算。null（讀不到濾水器格、不是循環水養殖系統）不算。
+        /// 這裡只看濾材本身：有沒有活魚（沒有活魚時圖示是 💤）另外看，行序不看它（沒濾材的橘字、濾材 0 的紅字照樣要先看到）。
+        /// </summary>
+        internal static bool RasFilterWarning(FilterInfo filters) => filters != null && filters.Warning;
+
+        /// <summary>
         /// 水耕機（MachineHydroponic 的每晚處理）：沒種子 → 不動（運作中也會被結束）；電不夠或水不夠一輪（private 的 CanWater）→ 不動。
         /// 產出不擋。都夠時：運作中就繼續；就緒就在今晚開始（HydroponicHelper.StartGrowing，接著同一晚 GrowOneCycle 先長一次）。
         /// </summary>
@@ -242,14 +500,14 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 淨水器（MachinePurifier.WaterPurifier 的每晚處理）：容器格空 → 沒容器；容器空 → 缺水（水量看得到，照常顯示）；
-        /// 之後照 RemoveLargestFirst 算會不會去掉 0（PurifierReason），這些靠容器成分判斷，水質看不到時不顯示。
+        /// 淨水器（MachinePurifier.WaterPurifier 的每晚處理）：容器格空 → 沒容器；容器空 → 缺水；
+        /// 之後照 RemoveLargestFirst 算會不會去掉 0（PurifierReason）。1.4.0 起靠容器成分判斷的這幾種一律照真實的成分
+        /// （拿掉 的「水質看得到才顯示」）。
         /// </summary>
         static Reason Purifier(MachineFacts f)
         {
             if (!f.HasContainer) return Reason.NoContainer;
             if (f.ContainerTotal <= 0) return Reason.NoWater;
-            if (!f.PurityVisible) return Reason.None;
             return PurifierReason(f.ContainerTotal, f.ContainerWater, f.PurifierCap, f.PurifierRemovable);
         }
 
@@ -272,15 +530,14 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 蒸餾器（MachineEvaporator）：容器格空 → 沒容器；容器空 → 缺水（照常）；不空但沒有會蒸發的液體（CanEvaporateContainer 不成立）
-        /// → 缺水，靠容器成分判斷，水質看不到時不顯示。餾出液格不在判斷裡，沒有「產出滿了」。
+        /// 蒸餾器（MachineEvaporator）：容器格空 → 沒容器；容器空 → 缺水；不空但沒有會蒸發的液體（CanEvaporateContainer 不成立）
+        /// → 缺水（1.4.0 起一律照真實的成分）。餾出液格不在判斷裡，沒有「產出滿了」。
         /// </summary>
         static Reason Evaporator(MachineFacts f)
         {
             if (!f.HasContainer) return Reason.NoContainer;
             if (f.ContainerTotal <= 0) return Reason.NoWater;
-            if (f.Evaporable || !f.PurityVisible) return Reason.None;
-            return Reason.NoWater;
+            return f.Evaporable ? Reason.None : Reason.NoWater;
         }
 
         /// <summary>
@@ -297,6 +554,13 @@ namespace ProbablyStolenItemQuickInfo
             if (junkModule && junkCount >= FurnaceJunk) return outputFitsScrap ? Reason.None : Reason.OutputFull;
             return Reason.NoInput;
         }
+
+        /// <summary>
+        /// 熔爐的材料夠不夠開一爐（產出格放不放得下另外看）：廢金屬＋礦夠（2 個，高爐模組 3 個），或裝了垃圾模組、垃圾 ≥6 個。
+        /// 產出滿了的時候用它分 ⚠ 與 💤（還有料但產出滿了才是卡住；剩的不夠一錠是正常的結束）。
+        /// </summary>
+        internal static bool HasFurnaceCharge(int oreCount, bool blastModule, bool junkModule, int junkCount) =>
+            oreCount >= (blastModule ? FurnaceOreBlast : FurnaceOre) || junkModule && junkCount >= FurnaceJunk;
 
         /// <summary>
         /// 印表機（MachinePrinter.Printer 的每晚處理）：運作中就繼續（顯示進度）；就緒時依序要晶片、材料齊（HasRequiredAdditionalItems）、

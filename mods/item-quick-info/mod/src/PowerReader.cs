@@ -10,8 +10,8 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 今晚會充進每顆電池的電。一輪重算（0.25 秒）只算一次全店的表
-    /// （ReadContext.Charges，畫面上有電池或機器時才算），每顆電池查表，不每個物品各自掃全店。只讀：不呼叫會充電、改物品的方法，
+    /// 今晚會充進每顆電池的電。全店的表是全店快照的一部分：
+    /// 快照重建時 StoreScan.Build 叫 Build 算一次（物品進出、遊戲事件、超過 2 秒才重建），ReadContext.ChargeOf 查快照，每顆電池查表，不每個物品各自掃全店。只讀：不呼叫會充電、改物品的方法，
     /// 條件照抄遊戲（出處寫在各方法），遊戲改了要跟著改。
     ///
     /// 遊戲每晚的順序（PlayerStore.EndNight）：CurrentConverterHelper.DrawReactorEnergyForNight（Rev15 起；電流轉換器今晚要的電先從反應爐的
