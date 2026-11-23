@@ -47,9 +47,16 @@ DATA_ROOT = Path(os.environ.get("USERPROFILE", "~")) / "AppData" / "LocalLow" / 
 LONGEST_FILE = "longest"
 LONGEST_NOTE = ("這個檔存在時是最長字串模式（開發版）：mod 的每條介面字串都改顯示英文、德文、法文、西文、俄文、波蘭文裡"
                 "最寬的那個，用來檢查版面擠不擠得下。測完用一般的安裝重裝就會拿掉。\n")
+# 介面版的參考資料夾的標記檔（放在遊戲資料夾那一層）：沒有裝遊戲的建置環境用的，裡面只有剝掉實作的組件、
+# 沒有遊戲執行檔。有這個檔時 game_dir_problem 不看執行檔，只能編正式版（見 is_interface_only）
+INTERFACE_ONLY_MARKER = "interface-only.txt"
 
 
 def _steam_library_dirs() -> list[Path]:
+    # Steam 收藏庫只在 Windows 上找（登錄檔＋預設安裝位置）；其他系統（沒有裝遊戲的建置環境）直接當作沒有，
+    # 遊戲資料夾改用 --game 或 PS_GAME_DIR 指定
+    if os.name != "nt":
+        return []
     roots: list[Path] = []
     try:
         import winreg
@@ -83,10 +90,23 @@ def steam_app_dirs(app_ids: list[str]) -> list[Path]:
     return dirs
 
 
+def is_interface_only(d: Path) -> bool:
+    """d 是介面版的參考資料夾：沒有裝遊戲的建置環境用的，只有剝掉實作的組件（類別、方法簽章、欄位都在，
+    方法內容是空的），沒有遊戲執行檔。編譯 mod 夠用，執行遊戲的程式（例如遊戲自己的 mod 掃描）不行。"""
+    return (d / INTERFACE_ONLY_MARKER).is_file()
+
+
 def game_dir_problem(d: Path, demo: bool) -> str | None:
     """d 不是要的那個版本的遊戲資料夾時，說明哪裡不對；是的話傳回 None。
     兩個版本的執行檔同名，要看引擎的檔案分：Demo 是 IL2CPP（有 GameAssembly.dll），正式版是 Mono
-    （有 Probably Stolen_Data\\Managed\\Assembly-CSharp.dll，官方格式的 mod 編譯要參考它）。"""
+    （有 Probably Stolen_Data\\Managed\\Assembly-CSharp.dll，官方格式的 mod 編譯要參考它）。
+    介面版的參考資料夾（is_interface_only）沒有執行檔，只要有正式版的 Managed 就能編官方格式的 mod。"""
+    if is_interface_only(d):
+        if demo:
+            return f"{d} 是介面版的參考資料夾（只有剝掉實作的組件），只能編正式版（官方格式）的 mod，不能編 Demo 的"
+        if not (d / "Probably Stolen_Data" / "Managed" / "Assembly-CSharp.dll").is_file():
+            return f"{d} 是介面版的參考資料夾，卻沒有 Probably Stolen_Data\\Managed\\Assembly-CSharp.dll"
+        return None
     if not (d / EXE_NAME).is_file():
         return f"{d} 裡沒有 {EXE_NAME}，不是遊戲資料夾"
     official = (d / "Probably Stolen_Data" / "Managed" / "Assembly-CSharp.dll").is_file()
@@ -141,6 +161,15 @@ def require_game_closed() -> None:
         raise SystemExit("遊戲正在執行，請先關閉。")
 
 
+def require_real_game(game: Path, action: str) -> None:
+    """會寫入遊戲資料夾的動作（安裝、移除、改設定檔）遇到介面版的參考資料夾（is_interface_only）就停。
+    那個資料夾只拿來編譯，不是裝好的遊戲：裝進去的 mod 不會被任何遊戲載入，還會弄髒參考資料夾
+    （它常常是另一個 git repo 的工作目錄）。PS_GAME_DIR 指到參考資料夾時 build、package 照常可以用。"""
+    if is_interface_only(game):
+        raise SystemExit(f"{game} 是介面版的參考資料夾（只有剝掉實作的組件，沒有裝遊戲），只能編譯與打包，不能{action}。"
+                         "要動遊戲裡的 mod，請在裝了遊戲的電腦上執行，或用 --game 指定真的遊戲資料夾。")
+
+
 def dotnet() -> str:
     return shutil.which("dotnet") or r"C:\Program Files\dotnet\dotnet.exe"
 
@@ -178,6 +207,7 @@ def _toml_value(value: str | bool) -> str:
 def set_pref(game: Path, section: str, key: str, value: str | bool) -> None:
     """改 UserData\\MelonPreferences.cfg 的 [section] key；段落或鍵不存在就加上（mod 第一次執行時會讀到這個值）。
     遊戲執行時不能改：MelonLoader 關遊戲時會把記憶體裡的設定寫回去、蓋掉這裡改的。"""
+    require_real_game(game, "改設定檔")
     cfg = game / "UserData" / "MelonPreferences.cfg"
     # utf-8-sig：有 BOM 時第一行的段落名稱才比對得到（比對不到會多加一個同名段落，TOML 解析失敗、所有 mod 的設定都失效）；
     # 只用 \n 切行：splitlines 會在 U+2028 之類的字元切開，弄壞別的 mod 的字串值
@@ -269,6 +299,7 @@ class Mod:
         build_dll(self.csproj, self.dll, game, self.check_dll)
 
     def install(self, game: Path, debug: bool) -> None:
+        require_real_game(game, "安裝")
         require_game_closed()
         (game / "Mods").mkdir(exist_ok=True)
         shutil.copy2(self.dll, game / "Mods" / self.dll.name)
@@ -283,6 +314,7 @@ class Mod:
         print(f"已安裝到 {game}\\Mods{'（除錯模式）' if debug else ''}；{self.data_label}在 {data}{pref}")
 
     def uninstall(self, game: Path) -> None:
+        require_real_game(game, "移除")
         require_game_closed()
         (game / "Mods" / self.dll.name).unlink(missing_ok=True)
         data = game / "UserData" / self.data_dir
@@ -452,6 +484,7 @@ class OfficialMod:
     def install(self, game: Path, debug: bool, extra: Callable[[Path], None] | None = None, longest: bool = False) -> None:
         """裝到 <遊戲>\\Mods\\<mod_id>\\：先清空資料夾（舊版留下的檔，尤其是沒列在 manifest 的 dll，會讓 mod 不能啟用）。
         longest：另外放最長字串模式的標記檔（LONGEST_FILE）；一般安裝會清空資料夾，標記自然就沒了。"""
+        require_real_game(game, "安裝")
         require_game_closed()
         dest = self.mod_dir(game)
         if dest.exists():
@@ -469,6 +502,7 @@ class OfficialMod:
         print("第一次安裝：開遊戲後在主選單的 mod 管理畫面啟用這個 mod，再重開遊戲。之後更新只要重新安裝、重開遊戲。")
 
     def uninstall(self, game: Path) -> None:
+        require_real_game(game, "移除")
         require_game_closed()
         dest = self.mod_dir(game)
         if dest.exists():
@@ -516,6 +550,7 @@ def official_main(mod: OfficialMod) -> None:
         mod.uninstall(game)
         return
     if args.action == "install":
+        require_real_game(game, "安裝")  # 編譯之前就停，不用等建置跑完才知道
         require_game_closed()
     mod.build(game)
     if args.action == "install":
