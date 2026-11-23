@@ -37,7 +37,7 @@ namespace ProbablyStolenWindowTabs
 
     /// <summary>
     /// 分頁條的一套配色，照視窗的樣式挑（TabPalette.For）。顏色常數都集中在這裡，註解寫來源。
-    /// - Machinery：正式版玩家拿得到的箱子與機器（的配色 A，///   畫法是 tabs_colors_1_0.py 的 style_a）。目前那頁和機器樣式的標題列同一塊深灰、上緣與左緣有亮邊、右緣一條暗邊，
+    /// - Machinery：正式版玩家拿得到的箱子與機器（畫法是 tabs_colors_1_0.py 的 style_a）。目前那頁和機器樣式的標題列同一塊深灰、上緣與左緣有亮邊、右緣一條暗邊，
     ///   分頁的下緣直接坐在標題列上（標題列最上面那排就是亮線，分頁不另外畫下緣）。
     /// - Demo：舊樣式（Classic，只剩其他 mod 做的箱子可能是）。標題列還是 Demo 那種橘色，配色 A 的深灰接不上去，
     ///   照 Demo 的配色：外框 → 邊 → 底三層。
@@ -102,7 +102,7 @@ namespace ProbablyStolenWindowTabs
             HoverText = MachineryStyle.TAB_TEXT_HOVER,     // #fff09b，遊戲的標籤頁滑過時的黃色
             PreviewFill = Hex(0x424242, 150),
             PreviewLine = Hex(0xfff09b),
-            Chain = Hex(0xd9d9d9),                         // 分頁字的白（的 C1，示意圖 lock_mockup4.py 的 NEUTRAL）
+            Chain = Hex(0xd9d9d9),                         // 分頁字的白（示意圖 lock_mockup4.py 的 NEUTRAL）
         };
 
         internal static TabPalette For(PixelWindow w) => w.style == WindowStyle.Machinery ? Machinery : Demo;

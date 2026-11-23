@@ -151,7 +151,7 @@ namespace ProbablyStolenItemQuickInfo
 
         // ── 容器格（淨水器、水分收集器、蒸餾器）──
         public bool HasContainer;
-        /// <summary>容器的液體總量與裡面的水（µl）。1.4.0 起靠成分判斷的原因一律照真實的成分（拿掉 的「水質看得到才判斷」）。</summary>
+        /// <summary>容器的液體總量與裡面的水（µl）。1.4.0 起靠成分判斷的原因一律照真實的成分（拿掉「水質看得到才判斷」）。</summary>
         public int ContainerTotal, ContainerWater;
         /// <summary>淨水器：這台的純度上限（MachinePurifier.GetMaxPurityCap，萬分比）、能被淨化去掉的雜質總量（µl）。</summary>
         public int PurifierCap;
@@ -170,7 +170,8 @@ namespace ProbablyStolenItemQuickInfo
         public bool HasChip, HasRequiredItems, CanStart;
 
         /// <summary>
-        /// 就緒的有進度機器今晚開始時的目標點數（印表機、解序器是晶片的 PROGRESS_ITEM_TARGET_TAG，水耕機是種子要的點數，/// DNA 編輯器是 PlanOperation 的 progress）。0＝讀不到（不顯示剩幾天）。
+        /// 就緒的有進度機器今晚開始時的目標點數（印表機、解序器是晶片的 PROGRESS_ITEM_TARGET_TAG，水耕機是種子要的點數，
+        /// DNA 編輯器是 PlanOperation 的 progress）。0＝讀不到（不顯示剩幾天）。
         /// </summary>
         public int StartTarget;
 
@@ -200,7 +201,7 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 每台機器今晚會不會動（機器裡的水與輸出區的格子，判斷表在）。不碰 Unity，離線測試也編這個檔。
+    /// 每台機器今晚會不會動（機器裡的水與輸出區的格子）。不碰 Unity，離線測試也編這個檔。
     /// 照各機器每晚處理（onCycleEndSlotItemFunc）的判斷順序，取第一個擋住的原因。Decide 不看電：遊戲先看電的，這裡跳過電、照樣往下看，
     /// 別的原因優先（電量那行開著時紅字本來就看得到，先告訴你還缺什麼）；都沒有別的原因、電又不夠今晚用時才是缺電
     /// （WithPower，電那行照樣變紅）。門檻與順序照抄遊戲（出處寫在各方法），遊戲改了要跟著改。
@@ -266,7 +267,7 @@ namespace ProbablyStolenItemQuickInfo
         };
 
         /// <summary>
-        /// 在每晚的 early 那一輪（onCycleEndEarlySlotItemFunc）用電的機器（的例外）：警報器 security_alarm（MachineAlarm.Alarme，
+        /// 在每晚的 early 那一輪（onCycleEndEarlySlotItemFunc）用電的機器：警報器 security_alarm（MachineAlarm.Alarme，
         /// early 裡 DrawPowerSource，一般那一輪是空的）。能量陣列、自製反應爐、循環水養殖系統、energy_credit_breeder 也在 early 充電，
         /// 和它的先後看 FindAllItem 的順序（breeder 放在警報器槽裡時一定是警報器先用電），所以「用電前一定充好的電」對它不成立，
         /// 紅字照遊戲原本的判斷（早充算 0，等於 CanDrawPowerSource）。2026-11-08 查正式版反編譯：early 那一輪用電的只有它；
@@ -317,7 +318,7 @@ namespace ProbablyStolenItemQuickInfo
             machineryTag && NightlyPowerUse(identifier, drawnPower, turboCharge) > 0;
 
         /// <summary>
-        /// 加上缺電之後的原因：Decide 找不到別的原因（None）、今晚會跑（runsTonight，：客人的、不在店裡各區的照舊不寫原因）、
+        /// 加上缺電之後的原因：Decide 找不到別的原因（None）、今晚會跑（runsTonight，客人的、不在店裡各區的照舊不寫原因）、
         /// 電那行是紅字（insufficient，電不夠今晚用）時是缺電，其他照 Decide 的。原因照舊只有一行，別的原因優先。
         /// 電池槽空、機器每晚要用電時 insufficient 也成立（MachineRules.ReadPower），一樣寫缺電，不另外寫「沒電池」。
         /// </summary>
@@ -363,11 +364,12 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 狀態圖示（表在）：reason＝Decide 加上 WithPower 之後的原因（資訊框寫的那個），
+        /// 狀態圖示：reason＝Decide 加上 WithPower 之後的原因（資訊框寫的那個），
         /// f＝同一份事實（OutputCount、循環水養殖系統的魚與濾材另外要讀，MachineRules 在要畫圖示時讀）。
         /// - 今晚不會跑的機器（客人的、不在店裡的）兩個都不畫，連 ✓ 也不畫。
         /// - 第一個圖示照原因分（IconOf）：⚠ 只留給真的卡住的（缺電、缺模組、無法開始、放的不是鑰匙卡、解序器與還有料的熔爐產出滿了、
-        ///   水耕機種了種子但缺水），缺料、缺種子這類要補東西的是 💤。沒事做又沒電是 💤（Decide 的原因優先，///   WithPower 只在沒有別的原因時才補缺電，順序本來就是這樣）。
+        ///   水耕機種了種子但缺水），缺料、缺種子這類要補東西的是 💤。沒事做又沒電是 💤（Decide 的原因優先，
+        ///   WithPower 只在沒有別的原因時才補缺電，順序本來就是這樣）。
         /// - 循環水養殖系統先看有沒有活魚（資訊框的原因照舊先看水）：沒有活魚 💤（不管有沒有水）；有活魚但缺水、缺電，
         ///   或濾材沒裝、加總 0是 ⚠。
         /// - ✓：輸出區有成品（料斗不算）；淨水器已淨化完、蒸餾器缺水（容器空或沒有可蒸發的）、水分收集器產出滿了
@@ -417,7 +419,8 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 判斷完填進 info（MachineRules.Read 讀好事實以後叫；不碰 Unity，離線測試直接叫）：原因＝Decide 加上 WithPower
-        /// （Decide 不看電：沒有別的原因、今晚會跑、電那行紅字 info.Insufficient 才是缺電，「顯示電量」關掉時紅字看不到，/// 靠這行告訴你今晚不會動），icons（這一輪要畫狀態圖示，ReadContext.Icons）時照同一個原因算狀態圖示（Status）。
+        /// （Decide 不看電：沒有別的原因、今晚會跑、電那行紅字 info.Insufficient 才是缺電，「顯示電量」關掉時紅字看不到，
+        /// 靠這行告訴你今晚不會動），icons（這一輪要畫狀態圖示，ReadContext.Icons）時照同一個原因算狀態圖示（Status）。
         /// 回傳進度的狀態（MachineRules 照它讀點數）。
         /// </summary>
         internal static ProgressKind Judge(MachineInfo info, MachineKind kind, MachineFacts f, bool icons)
@@ -502,7 +505,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 淨水器（MachinePurifier.WaterPurifier 的每晚處理）：容器格空 → 沒容器；容器空 → 缺水；
         /// 之後照 RemoveLargestFirst 算會不會去掉 0（PurifierReason）。1.4.0 起靠容器成分判斷的這幾種一律照真實的成分
-        /// （拿掉 的「水質看得到才顯示」）。
+        /// （拿掉「水質看得到才顯示」）。
         /// </summary>
         static Reason Purifier(MachineFacts f)
         {

@@ -25,7 +25,8 @@ namespace ProbablyStolenItemQuickInfo
     /// perf 標記的對照組模式在這裡跳過週期重算、每幀擺位置。沒有標記時每個量測點只多一個 bool 判斷。
     /// Perf 的「按下／按住」是完整資訊的期間；常駐名稱與 Always 的狀態圖示的重算（四段，和完整資訊一樣）與擺位置也量，記在「沒按」的期間裡。
     /// 兩條路要用到全店資料時都向全店快照拿（ReadContext），這一輪重建了快照就把那份交給 Perf，量重建花多久。
-    /// 對照組模式（跳過重算、跳過擺位置）只套用在完整資訊；「位置沒變不重設」常駐也有（perf 標記時常駐每放開一次在正常與它之間換，/// 判斷在 Perf.SkipSamePosition、LabelRenderer 擺位置時看它）。
+    /// 對照組模式（跳過重算、跳過擺位置）只套用在完整資訊；「位置沒變不重設」常駐也有（perf 標記時常駐每放開一次在正常與它之間換，
+    /// 判斷在 Perf.SkipSamePosition、LabelRenderer 擺位置時看它）。
     /// </summary>
     static class Runner
     {
@@ -104,7 +105,7 @@ namespace ProbablyStolenItemQuickInfo
                         }
                     }
                 }
-                // 量的時候常駐也計時（記在「沒按」）。常駐一律每幀擺位置；只有「位置沒變不重設」套用在常駐（// perf 標記時每放開一次在正常與它之間換，Perf.SkipSamePosition 自己分完整資訊與常駐），不擺位置、不重算這些對照組不套用
+                // 量的時候常駐也計時（記在「沒按」）。常駐一律每幀擺位置；只有「位置沒變不重設」套用在常駐（perf 標記時每放開一次在正常與它之間換，Perf.SkipSamePosition 自己分完整資訊與常駐），不擺位置、不重算這些對照組不套用
                 if (!perf) LabelRenderer.UpdatePositions();
                 else if (!full || PerfModes.PlacesEachFrame(Perf.Mode))
                 {
@@ -239,7 +240,7 @@ namespace ProbablyStolenItemQuickInfo
                     drawn |= iconsDrawn;
                     if (iconsDrawn && inBox > 0) boxIcons++;
                 }
-                // 水耕機接礦物質的比例與範圍（的實機核對；設定開著、有種子、有水時才有）
+                // 水耕機接礦物質的比例與範圍（設定開著、有種子、有水時才有）
                 if (drawn && debug != null && debug.Count < DebugItems)
                     debug.Add(shown.IsEmpty ? $"{el.identifier}：{string.Join("／", lines ?? NoLines)}{Rules.MineralNote(ctx.Mineral)}"
                         : $"{el.identifier}：{string.Join("／", lines ?? NoLines)}｜圖示 {shown}{Rules.BoxIconNote(inBox)}{Rules.MineralNote(ctx.Mineral)}");
@@ -268,7 +269,8 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 字級（資訊、名稱）、名稱位置、長名稱換行、框的黑底的不透明度每輪重讀（店內設定視窗改了、拖滑桿時下一輪就生效）。
         /// 完整資訊與常駐名稱的外觀一樣，只有名稱位置照狀態分（Rules.NamePlaceOf）：完整資訊照「名稱位置（資訊框顯示時）」、
-        /// 只畫名稱照「名稱位置（資訊框未顯示時）」。名稱放不進圖示左邊時在左邊那段重新換行也只有完整資訊才做（B，LabelStyle.FullInfo；/// 另外要這個物品這一輪有資訊框，LabelRenderer.Put 看有沒有資訊行）。
+        /// 只畫名稱照「名稱位置（資訊框未顯示時）」。名稱放不進圖示左邊時在左邊那段重新換行也只有完整資訊才做（LabelStyle.FullInfo；
+        /// 另外要這個物品這一輪有資訊框，LabelRenderer.Put 看有沒有資訊行）。
         /// </summary>
         static LabelStyle Style(TMPro.TMP_FontAsset font, ShowState state) =>
             new LabelStyle(Rules.FontSize(Settings.TextSize), Rules.FontSize(Settings.NameTextSize),

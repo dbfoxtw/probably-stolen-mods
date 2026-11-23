@@ -1086,7 +1086,7 @@ namespace ProbablyStolenCollectAllWater.Verify
                 foreach (var w in new[] { "基础水以上", "优质水以上", "纯水", "幽灵水" })
                     Check(zhQualityTip.Contains(w), $"zh.csv 水培最低水質的說明有「{w}」");
             }
-            // 說明不寫遊戲本身的行為（作物沒水會怎樣、化學蒸出來的酒精；：固定的物品整理、卸下時留在原位）與「按鈕默認關」
+            // 說明不寫遊戲本身的行為（作物沒水會怎樣、化學蒸出來的酒精；固定的物品整理、卸下時留在原位）與「按鈕默認關」
             foreach (var (table, name) in new[] { (zh, "zh.csv"), (en, "en.csv") })
                 foreach (var key in new[] { Rules.HydroponicKindTipKey, Rules.HydroponicQualityTipKey, "cfg_src_evaporator_tip" })
                     if (table.TryGetValue(key, out var t))

@@ -439,7 +439,7 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 視窗群組 mod（2.1.0 起）叫出時在視窗 handler 底下掛的記號物件的名稱開頭，後面接它擺位置那一幀的 Time.frameCount
-        /// （視窗群組、本 mod ；視窗群組的 Rules.RecallMarkerPrefix，兩邊要一致）。
+        /// （視窗群組的 Rules.RecallMarkerPrefix，兩邊要一致）。
         /// </summary>
         internal const string RecallMarkerPrefix = "WindowGroups_Recalled:";
 

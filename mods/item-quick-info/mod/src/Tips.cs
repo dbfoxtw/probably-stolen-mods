@@ -10,7 +10,7 @@ namespace ProbablyStolenItemQuickInfo
     static class Tips
     {
         /// <summary>
-        /// 例子的數值：7、45%、3、320（剩幾天用 3 天），1.4.0 加濾材 400；液量 250ml（的定稿）；
+        /// 例子的數值：7、45%、3、320（剩幾天用 3 天），1.4.0 加濾材 400；液量 250ml；
         /// 純度的三種位數 98%、98.5%、98.52%（同一瓶 9852 照三種寫）。
         /// </summary>
         static readonly string Volume = Rules.VolumeText(250000),
@@ -18,7 +18,7 @@ namespace ProbablyStolenItemQuickInfo
             PurityOne = Rules.PurityText(9852, PurityFormat.OneDecimal),
             PurityTwo = Rules.PurityText(9852, PurityFormat.TwoDecimals);
         /// <summary>
-        /// 「顯示電量」的三個例子（的定稿）：電池 41kJ、每晚耗電的機器今晚的電費 -6₡（耗電 4kJ × 遊戲沒升級的費率 1.5，
+        /// 「顯示電量」的三個例子：電池 41kJ、每晚耗電的機器今晚的電費 -6₡（耗電 4kJ × 遊戲沒升級的費率 1.5，
         /// CurrentConverterHelper.DEFAULT_RATE）、白天按次用電的瓶子印表機三種都解鎖時用一次的價錢 -6/8/14₡（4、5、9 kJ 照同一個費率、
         /// 遊戲的 ToCredits 各自進位）。和資訊框同一個組法（Rules.Kj、Rules.CostText），字一定一樣。
         /// 錢的兩個在 MachinePower 裡現組、不存成 static readonly：CostText 接 Rules.CreditIcon，而 Init 是先 Settings.Init（設定的定義
@@ -28,12 +28,12 @@ namespace ProbablyStolenItemQuickInfo
         static string PowerNightly => Rules.CostText(Rules.Credits(4, 1.5f));
         static string PowerPerUse => Rules.CostText(Rules.CreditList(new[] { 6, 8, 14 }));
         const string OutputCount = "7", HeatValue = "45%", UsesLeft = "3", DurabilityValue = "320";
-        /// <summary>濾材那行的例子（的定稿「濾材 400」）。</summary>
+        /// <summary>濾材那行的例子。</summary>
         const string FilterValue = "400";
         const int ExampleDays = 3;
         /// <summary>金屬錠純度的例子用的等級：高純度（Rules.IngotPurityConstants 的第 3 個）。</summary>
         const int ExampleIngot = 2;
-        /// <summary>藥品純度的例子（的定稿「88%」：沒裝模組的化學製劑成型機做得出來的最高純度）。</summary>
+        /// <summary>藥品純度的例子（沒裝模組的化學製劑成型機做得出來的最高純度）。</summary>
         const double ExampleDrug = 88.0;
 
         /// <summary>資訊框上那一行的樣子（前綴＋空格＋數值）。</summary>
@@ -79,8 +79,8 @@ namespace ProbablyStolenItemQuickInfo
         internal static string WarningIcon(Strings s) => Loc.Get("cfg_warning_icon_tip", s.NoPower);
 
         /// <summary>
-        /// 閒置圖示（的定稿）：{0}、{1} 是缺料、缺種子（放了一部分還缺一樣的例子：空機器除外時照樣畫）。
-        /// 1.4.0 第⑦段以前是沒容器、缺料（沒容器是空機器，起預設不畫）。
+        /// 閒置圖示：{0}、{1} 是缺料、缺種子（放了一部分還缺一樣的例子：空機器除外時照樣畫）。
+        /// 1.4.0 第⑦段以前是沒容器、缺料（沒容器是空機器，預設不畫）。
         /// </summary>
         internal static string IdleIcon(Strings s) => Loc.Get("cfg_idle_icon_tip", s.NoInput, s.NoSeed);
 

@@ -12,7 +12,8 @@ namespace ProbablyStolenTodo
     sealed partial class TodoPanel
     {
         /// <summary>
-        /// 設定頁內容的高度（未縮放的單位，最後一行「存檔點」的說明也算進去；第八輪最上面多了樣式的兩排按鈕；/// 2.0.0 拿掉摺疊快捷鍵那一行，高 56；鍵改到遊戲的按鍵綁定）。
+        /// 設定頁內容的高度（未縮放的單位，最後一行「存檔點」的說明也算進去；第八輪最上面多了樣式的兩排按鈕；
+        /// 2.0.0 拿掉摺疊快捷鍵那一行，高 56；鍵改到遊戲的按鍵綁定）。
         /// </summary>
         const float SettingsContentH = 484;
 

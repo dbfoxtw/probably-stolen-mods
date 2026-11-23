@@ -127,8 +127,7 @@ namespace ProbablyStolenExchangePreview
 
         /// <summary>
         /// Stackable Keycards（可叠钥匙卡，Workshop 上別人的 mod，manifest ID keycard_stack）讓它疊在一起的卡：
-        /// 5 種鑰匙卡＋空白卡。照它 1.0.6 的 ID 清單抄的（1.0.7 對過沒變），它改了清單要跟著改；
-        /// 。
+        /// 5 種鑰匙卡＋空白卡。照它 1.0.6 的 ID 清單抄的（1.0.7 對過沒變），它改了清單要跟著改。
         /// </summary>
         public static readonly HashSet<string> StackableKeycardIds = new HashSet<string>
         {

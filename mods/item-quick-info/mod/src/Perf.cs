@@ -212,7 +212,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 完整資訊的期間不會跑常駐的重算（照樣擋著，免得混進「按住」）。
         /// 數量（節點、物品、名稱、圖示組）留最後一次的。
         /// transition：轉換那一幀的當幀重算（放開鍵回到常駐、從不畫進到常駐）。它要換框的內容、位置與 pivot、藏掉沒用到的框，比平常的重算重，
-        /// 進了累計會拉高常駐重算的平均與最慢（的通過標準看的是平常那幾輪）：數量照樣更新，重算、四段、全店、原因次數都不加
+        /// 進了累計會拉高常駐重算的平均與最慢：數量照樣更新，重算、四段、全店、原因次數都不加
         /// （這一輪重建了快照也不算進全店的次數）。scan：這一輪重建的全店快照（沒重建是 null）。
         /// </summary>
         internal static void IdleRecomputeDone(bool transition, long total, long find, long read, long put, long finish, int nodes, int items, int names, int iconGroups, StoreScan scan)

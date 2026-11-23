@@ -19,7 +19,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 機器今晚的電力收支（先充再扣、警報系統先扣再充、每晚耗電、+4kJ／-8kJ 的行）、缺電（別的原因優先、判紅看今晚會扣的電）、
     /// 原因移到資訊框最上面與循環水養殖系統 ⚠ 的濾材跟著上移、負的收支後面的還撐幾天（NightsLeft 的網格、-8kJ (10d)、電池槽不寫）、
     /// 按鍵的 Hold／Toggle（KeySwitch）、這一幀畫什麼（ShowStateOf：不畫、常駐（名稱、Always 的圖示）、完整資訊）、常駐名稱（分類、料斗自動編的號碼）、
-    /// 名稱位置舊值 Label 的轉換與 1.3.0 拆成兩個設定時的轉換（InfoBox → 未顯示時 BottomLeft）、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log；的全店分組、常駐重算與全店核對 StoreCheck）、
+    /// 名稱位置舊值 Label 的轉換與 1.3.0 拆成兩個設定時的轉換（InfoBox → 未顯示時 BottomLeft）、效能量測（PerfStats：對照組模式的輪替與行為、每幀耗時的統計、配置的近似值、log 行的格式、找節點核對的比對與 log）、
     /// 全店快照（要不要重建、為什麼 SnapshotRule；8 個物品進出的攔截、訂閱的遊戲事件、快照只從 ReadContext 拿的原始碼）、
     /// 資訊框的字（1.2.0 起在 public/Localization 的 csv，經過假的 Loc（FakeLoc.cs，照遊戲的解析規則讀）建 Strings：en、zh、zh-Hant 每個都有）、
     /// 換語言時才重建（語言沒變不配置記憶體）、剩幾天的單複數（超過查表時用代表數字查建好的格式，和直接取的一樣、切語言也不變）、
@@ -29,7 +29,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 第一次進店的提示什麼時候畫（HintRule）、恢復一頁的預設、
     /// 分頁列的捲法（TabStrip）、恢復預設的兩段確認（ConfirmArm）、視窗的位置（WindowPlace）、齒輪與 ◀ ▶ 的字元圖、
     /// 9 種語言的新字串與選項的字、說明裡不再有英文的選項名稱、
-    /// 1.4.0 收尾的第①段：名稱框閃開狀態圖示（Rules.DodgeIcons、TopIconsWidth；：完整資訊時在圖示左邊那段重新換行
+    /// 1.4.0 收尾的第①段：名稱框閃開狀態圖示（Rules.DodgeIcons、TopIconsWidth；完整資訊時在圖示左邊那段重新換行
     /// NameLinesAroundIcons 的條件與行、和資訊框疊到時資訊框在上 InfoAboveName）、兩個不透明度（百分比設定的讀寫、
     /// 夾範圍與對齊 5、alpha 的換算、圖示底色拿掉 None、拖滑桿時還沒存的改動 PendingChanges）、滑桿列與框色的原始碼。
     /// 1.4.0 第⑤⑥⑦段：充能器的電池行與兩顆一行、主成分（挑法、兩行的字、液體名稱照語言、換行）、
@@ -242,7 +242,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Rules.WaterLines(En, Water(4000000, 9852), All).All(l => !l.Text.Contains('?')), "不再有 ?");
         }
 
-        /// <summary>電池與機器的行序（原因、水、質、進度、電；原因在最上面是）與顏色（原因橘、電不夠紅）。</summary>
+        /// <summary>電池與機器的行序（原因、水、質、進度、電）與顏色（原因橘、電不夠紅）。</summary>
         static void BatteryAndMachineLabels()
         {
             var bat = Rules.BatteryLines(8, All);
@@ -1736,7 +1736,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
         /// <summary>
         /// 每台機器的判斷順序（MachineLogic.Decide，照遊戲各機器的 onCycleEndSlotItemFunc）：每種原因、會動的情況、
-        /// 容器成分判斷的原因一律照真實的成分（拿掉）、今晚不會跑的機器沒有原因與進度。
+        /// 容器成分判斷的原因一律照真實的成分、今晚不會跑的機器沒有原因與進度。
         /// </summary>
         static void Machines()
         {
@@ -1886,7 +1886,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// 狀態圖示的分類（MachineLogic.Status；表在）：每台機器的 ⚠／💤／不畫 與 ✓，含邊界：
+        /// 狀態圖示的分類（MachineLogic.Status）：每台機器的 ⚠／💤／不畫 與 ✓，含邊界：
         /// 沒事做又沒電是 💤、同一個容器進出的做完時 💤＋✓、熔爐產出滿了看材料夠不夠開一爐、解序器的缺鑰匙卡分兩種、
         /// 循環水養殖系統先看活魚、濾材、今晚不會跑的什麼都不畫。
         /// </summary>
@@ -1932,10 +1932,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
             var Fu = MachineKind.Furnace;
             Icon(Fu, new MachineFacts(), Idle, false, "熔爐空的：💤");
             Icon(Fu, new MachineFacts { OreCount = 1 }, Idle, false, "熔爐剩 1 個（不夠一錠）：💤");
-            Icon(Fu, new MachineFacts { OreCount = 1, OutputCount = 4 }, Idle, true, "熔爐料燒完、輸出區有錠：💤＋✓（的例子）");
+            Icon(Fu, new MachineFacts { OreCount = 1, OutputCount = 4 }, Idle, true, "熔爐料燒完、輸出區有錠：💤＋✓");
             Icon(Fu, new MachineFacts { OreCount = 2 }, NoIcon, false, "熔爐有料：不畫");
             Icon(Fu, new MachineFacts { OreCount = 2, OutputCount = 3 }, NoIcon, true, "熔爐有料、輸出區有錠：✓");
-            Icon(Fu, new MachineFacts { OreCount = 2, OutputFitsIngot = false, OutputCount = 9 }, Warn, true, "熔爐還有料但產出滿了：⚠＋✓（的例子）");
+            Icon(Fu, new MachineFacts { OreCount = 2, OutputFitsIngot = false, OutputCount = 9 }, Warn, true, "熔爐還有料但產出滿了：⚠＋✓");
             Icon(Fu, new MachineFacts { OreCount = 1, OutputFitsIngot = false, OutputCount = 9 }, Idle, true, "熔爐產出滿了、剩的不夠一錠：💤＋✓");
             Icon(Fu, new MachineFacts { OreCount = 2, BlastModule = true, OutputFitsIngot = false, OutputCount = 9 }, Idle, true, "熔爐產出滿了、高爐模組 2 個不夠：💤＋✓");
             Icon(Fu, new MachineFacts { OreCount = 3, BlastModule = true, OutputFitsIngot = false, OutputCount = 9 }, Warn, true, "熔爐產出滿了、高爐模組 3 個：⚠＋✓");
@@ -2290,7 +2290,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             }
             var one = FiltersOf((400, 400));
             Check(!one.Warning, "裝了、有耐久：不警告");
-            Eq(Rules.FilterLine(HantL, one).Text, "濾材 400", "繁中長：濾材 400（的定稿）");
+            Eq(Rules.FilterLine(HantL, one).Text, "濾材 400", "繁中長：濾材 400");
             Eq(Rules.FilterLine(Hant, one).Text, "濾 400", "繁中短：濾 400");
             Eq(Rules.FilterLine(HansL, one).Text, "滤材 400", "簡中長：滤材 400");
             Eq(Rules.FilterLine(Hans, one).Text, "滤 400", "簡中短：滤 400");
@@ -2384,7 +2384,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             }
             string reader = File.ReadAllText(Path.Combine(root, "mod", "src", "ItemReader.cs"));
             Check(reader.Contains("internal static WaterInfo ReadWater(GameItem c)") && reader.Contains("Purity = pick.Ratio,"),
-                "ReadWater 一律讀真實的成分（起自己算主成分的比例）");
+                "ReadWater 一律讀真實的成分（自己算主成分的比例）");
             // 狀態圖示要的事實在原因、進度、成品數、收支的開關都關掉時照樣讀
             string rules = File.ReadAllText(Path.Combine(root, "mod", "src", "MachineRules.cs"));
             Check(rules.Contains("if (ctx.D.MachineOutput || icons)") && rules.Contains("if (kind == MachineKind.Other && !net && !noPower && !icons) return info;")
@@ -2515,7 +2515,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 Check(ion != null && csv.TryGetValue("cfg_status_icon_background_tip", out var bgt) && !bgt.Contains('\n') && bgt.Contains(ion),
                     $"{name}.csv cfg_status_icon_background_tip 一句、提到「{ion}」");
                 Check(!csv.ContainsKey("opt_none"), $"{name}.csv 沒有 opt_none");
-                // 兩個不透明度的說明：寫 0 和 100 各是什麼；英文、西文這類三行（說明、0、100），中文一句括號（的定稿）
+                // 兩個不透明度的說明：寫 0 和 100 各是什麼；英文、西文這類三行（說明、0、100），中文一句括號
                 foreach (var k in new[] { "cfg_info_box_opacity_tip", "cfg_status_icon_opacity_tip" })
                 {
                     if (!csv.TryGetValue(k, out var ot)) { Check(false, $"{name}.csv 有 {k}"); continue; }
@@ -2575,7 +2575,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Forms(filterL, LabelForm.Normal), "耐久 400", "Normal 照設定的字");
             Eq(Forms(filterL, LabelForm.Short), "耐 400", "短的：耐 400");
             Eq(Rules.ChooseForm(filterL, Available(1, L), FakeMeasure(L)), LabelForm.Split, "一格寬、大字，耐 400 也放不下：拆兩行（第二輪第 9 步）");
-            Eq(Forms(filterL, LabelForm.Split), "耐 / 400", "拆兩行：耐／400（的例子）");
+            Eq(Forms(filterL, LabelForm.Split), "耐 / 400", "拆兩行：耐／400");
             Eq(string.Join(",", Rules.Rows(Rules.ExtraLines(HantL, Dur(50, 400), All), LabelForm.Split).Select(l => l.Color)), "Orange,Orange", "拆開的兩行顏色一樣");
             var enDur = Rules.ExtraLines(EnL, Dur(400, 400), All);
             Eq(Rules.ChooseForm(enDur, Available(1, M), FakeMeasure(M)), LabelForm.Short, "英文 Dur 400 放不下：換短的（第二輪第 10 步）");
@@ -2611,7 +2611,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(Rules.MachineLines(HantL, new MachineInfo { Reason = Reason.NoWater, Power = PowerKind.Empty }, new Display { MachinePower = false }).All(l => l.Prefix == null),
                 "原因沒有前綴");
             Eq(Forms(Rules.MachineLines(HantL, new MachineInfo { Reason = Reason.NoWater, Power = PowerKind.Battery, Energy = 3 }, All), LabelForm.Split), "缺水 / 3kJ",
-                "原因不拆、電那行也不拆（起沒有前綴）");
+                "原因不拆、電那行也不拆（沒有前綴）");
             Check(Rules.MachineLines(EnL, new MachineInfo { HasProgress = true, ProgressTarget = 16, ProgressSpeed = 8, Power = PowerKind.Empty }, new Display { MachinePower = false })
                 .All(l => l.Prefix == null), "剩幾天沒有前綴（長短的字不同，但不拆）");
             Eq(Forms(Rules.MachineLines(HantL, Converter("6"), All), LabelForm.Split), "-6" + C, "電流轉換器的錢沒有前綴：拆兩行時照樣一行");
@@ -3034,7 +3034,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
         /// <summary>
         /// 名稱放不進圖示左邊時：B 完整資訊、有資訊框時照左邊那段重新換行（Rules.RewrapsAroundIcons 的條件、
-        /// NameLinesAroundIcons 的寬與行、兩格寬的直條、換完還放不下照 移到下面、DodgeIcons 的 narrowed、只有圖示框寬變了時沿用排好的行
+        /// NameLinesAroundIcons 的寬與行、兩格寬的直條、換完還放不下移到下面、DodgeIcons 的 narrowed、只有圖示框寬變了時沿用排好的行
         /// KeepsNameLines）、C 名稱這一輪被移動過（NameMoved）又和資訊框疊到時資訊框在上（Rules.InfoAboveName）。
         /// 假的量法：名稱字級 6，中日韓文字一個 6、其他一個 3；內距 6 × 0.15＝0.9（左右共 1.8）。預期值直接寫數字。
         /// </summary>
@@ -3101,7 +3101,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Lines("很長的名稱很長的名", 32f, 12f, true, out narrowed), "很長 / 的名 / 稱很 / 長的 / 名", "兩格寬、一個圖示：9 個字換成五行");
             Check(narrowed, "兩格寬、一個圖示、9 個字：斷窄了");
 
-            // 換完還放不下：照物品寬斷的行（照 移到下面，物品的寬都能用）
+            // 換完還放不下：照物品寬斷的行（移到下面，物品的寬都能用）
             Eq(Lines("淨水器", 16f, 12f, true, out narrowed), "淨水 / 器", "一格寬、一個圖示：左邊只剩 3，一個字（7.8）也放不下，照物品寬（可用 14.2）斷");
             Check(!narrowed, "一格寬、一個圖示：沒有斷窄（移到下面）");
             Eq(Lines("水桶二號", 16f, 22.5f, true, out narrowed), "水桶 / 二號", "一格寬、兩個圖示（左邊那段是負的）：照物品寬斷");
@@ -3687,7 +3687,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Rules.ChargedEnergy(150, 100, 1), 100L, "ChargedEnergy：超過上限的電充一下就停在上限（照遊戲）");
             Eq(Rules.ChargedEnergy(150, 100, 0), 150L, "ChargedEnergy：沒收入不變");
 
-            // 不提早結束的參考算法（照 的規則直接寫，每晚一步、最多 100 晚）；網格裡電量都 ≤ 上限、收入 ≥ 0
+            // 不提早結束的參考算法（照規則直接寫，每晚一步、最多 100 晚）；網格裡電量都 ≤ 上限、收入 ≥ 0
             int Reference(int e0, int max, int income, int draw, bool drawFirst)
             {
                 long e = e0;
@@ -3871,7 +3871,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 "電池槽空：只有缺電（不另外寫沒電池；拿掉「電力 -」）");
             Eq(Join(Rules.MachineLines(HantL, new MachineInfo { Reason = Reason.NoPower, Power = PowerKind.Converter, Insufficient = true }, All)), "缺電",
                 "電流轉換器沒電（停電、服務沒付）：只有缺電");
-            // 開關：原因那行關掉時沒有缺電；電量那行關掉時只剩缺電（這就是 的起因）
+            // 開關：原因那行關掉時沒有缺電；電量那行關掉時只剩缺電（這就是起因）
             Eq(Join(Rules.MachineLines(HantL, low, new Display { MachineReason = false })), "2kJ", "原因那行關掉：沒有缺電");
             Eq(Join(Rules.MachineLines(HantL, low, new Display { MachinePower = false })), "缺電", "電量那行關掉：缺電照樣看得到");
             // 缺電時不寫剩幾天、不寫收支（和缺電變成原因以前一樣）
@@ -3960,7 +3960,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             for (int i = 0; i < all.Count; i++) Eq(all[i].Index, i, $"{all[i].Key} 的 Index");
             Eq(all.Select(d => d.Key).Distinct().Count(), 37, "key 不重複");
 
-            // 預設值（的表）：開關
+            // 預設值：開關
             var offByDefault = new[] { "AlwaysShowNames" }; // WrapLongNames 1.4.0 起預設開
             foreach (var d in all.Where(d => d.IsToggle))
                 Eq(d.NameOf(d.Default), offByDefault.Contains(d.Key) ? "false" : "true", $"{d.Key} 的預設");
@@ -4781,7 +4781,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
         }
 
         /// <summary>
-        /// cfg_prefix_tip 對照的六個欄位：五個前綴與剩幾天的格式（Days）；順序同 cfg_prefix_tip 的對照（成品數接在剩幾天後面，/// 濾材 1.4.0 加在最後）。水量、水質決定 178、179 拿掉（液體兩行沒有前綴），機器的電決定 189 拿掉（原本排最前面）。
+        /// cfg_prefix_tip 對照的六個欄位：五個前綴與剩幾天的格式（Days）；順序同 cfg_prefix_tip 的對照（成品數接在剩幾天後面，
+        /// 濾材 1.4.0 加在最後）。水量、水質決定 178、179 拿掉（液體兩行沒有前綴），機器的電決定 189 拿掉（原本排最前面）。
         /// </summary>
         static readonly string[] PrefixFields = { "Days", "Output", "Heat", "Uses", "Durability", "Filter" };
 
@@ -5009,7 +5010,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Join(Rules.MachineLines(HantL, still, All)), "Still / 250ml / 70.0% / 50kJ", "機器裡的液體也是兩行");
             Eq(Join(Rules.MachineLines(HantL, still, new Display { MachineWater = false })), "Still / 50kJ", "關掉機器裡的液體：沒有那兩行");
 
-            // 說明（的定稿）：{0} 是資訊框實際畫的字（液量含零寬空格）
+            // 說明：{0} 是資訊框實際畫的字（液量含零寬空格）
             var liquidLangs = new (string lang, Strings longS)[] { (Lang.En, EnL), (Lang.ZhHans, HansL), (Lang.ZhHant, HantL), ("ru", null), ("de", null), ("ja", null), ("fr", null), ("es", null), ("pl", null) };
             foreach (var (lang, longS) in liquidLangs)
             {
@@ -5351,7 +5352,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(noPowerInfo.Reason == Reason.NoPower && noPowerInfo.Status.Icon == Warn, "轉換器沒電：原因缺電、⚠");
             // 量字寬：Rich 的行用打開格式標籤的量法（假的量法：打開時圖示算 4 寬、關著時照字數）
             float Measure(string s, bool rich) => rich ? s.Replace(C, "").Length * 2.25f + 4f : s.Length * 2.25f;
-            // 決定 189 起錢那行沒有前綴，不觸發換短、拆兩行；有前綴的 Rich 行（的「Pwr 6₡」）照打開的量法量，這裡用自己組的行測量法本身
+            // 決定 189 起錢那行沒有前綴，不觸發換短、拆兩行；有前綴的 Rich 行照打開的量法量，這裡用自己組的行測量法本身
             Eq(Rules.ChooseForm(Rules.MachineLines(EnL, Converter("6"), All), 14.65f, (s, rich) => 999f), LabelForm.Normal, "錢那行沒有前綴：多寬都維持 Normal");
             var lines = new List<Line> { Line.Prefixed("Pwr", "E", "6" + C, LineColor.White, LineKind.Rich) };
             Eq(Rules.ChooseForm(lines, 14.65f, Measure), LabelForm.Short, "一格寬：照打開的量法 Pwr 6₡ 放不下、E 6₡ 放得下（關著量的話標籤原文二十幾個字會變成拆兩行）");
@@ -5391,13 +5392,13 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Loc.Use(Lang.En);
             Eq(Tips.MachinePower(EnL),
                 $"Show the energy left in a machine's battery, for example 41kJ. It turns red when it's not enough for tonight. With a Current Converter, it shows the power cost instead: tonight's bill for machines that run at night, for example -6{C}, or the price of one use for machines used during the day, for example -6/8/14{C}.",
-                "en 顯示電量的說明（的定稿）");
+                "en 顯示電量的說明");
             Loc.Use(Lang.ZhHans);
             Eq(Tips.MachinePower(HansL), $"显示机器里电池剩下的能量，例如41kJ，不够今晚用时变红。接电流转换器时改成显示要付的电费：晚上运作的机器写今晚的电费，例如-6{C}；白天按一下用一次的机器写用一次的价钱，例如-6/8/14{C}。",
-                "zh 顯示電量的說明（的定稿）");
+                "zh 顯示電量的說明");
             Loc.Use(Lang.ZhHant);
             Eq(Tips.MachinePower(HantL), $"顯示機器裡電池剩下的能量，例如41kJ，不夠今晚用時變紅。接電流轉換器時改成顯示要付的電費：晚上運作的機器寫今晚的電費，例如-6{C}；白天按一下用一次的機器寫用一次的價錢，例如-6/8/14{C}。",
-                "zh-Hant 顯示電量的說明（的定稿）");
+                "zh-Hant 顯示電量的說明");
             Loc.Use(Lang.En);
             Eq(Tips.Prefix(EnL).Split('\n')[1], "Short: 3d, Out, H, U, D, F", "en 每行開頭的字：短的六個");
             Eq(Tips.Prefix(EnL).Split('\n')[2], "Long: 3 days, Output, Heat, Uses, Dur, Filter", "en 每行開頭的字：長的六個");
@@ -6092,7 +6093,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Loc.Use(Lang.ZhHans);
             var pZh = Tips.Prefix(HansL);
             Check(pEn.Contains("3d,") && pEn.Contains("3 days,") && !pEn.Contains("Prog"), "en cfg_prefix_tip 是剩幾天的字樣");
-            Check(pZh.Contains("：3天、") && pZh.Contains("：剩3天、") && !pZh.Contains("进度"), "zh cfg_prefix_tip 是剩幾天的字樣（起排第一個）");
+            Check(pZh.Contains("：3天、") && pZh.Contains("：剩3天、") && !pZh.Contains("进度"), "zh cfg_prefix_tip 是剩幾天的字樣（排第一個）");
             // 成品數的前綴（Out／Output、成／成品）也在前綴的對照裡
             Check(pEn.Contains(", Out,") && pEn.Contains(", Output,"), "en cfg_prefix_tip 有 Out／Output");
             Check(pZh.Contains("、成、") && pZh.Contains("、成品、"), "zh cfg_prefix_tip 有 成／成品");

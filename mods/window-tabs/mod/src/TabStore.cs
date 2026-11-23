@@ -207,7 +207,7 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 把一個分頁拖出分頁條、放在空的地方：從它的組拿掉，變回獨立的視窗。
-        /// 不在任何一組、或那組的鎖有效（LockHolds；：組員拖不出去；Tabs 拖鎖住的組的分頁時一律照重排放，這裡再守一次）時回傳 null。
+        /// 不在任何一組、或那組的鎖有效（LockHolds；組員拖不出去；Tabs 拖鎖住的組的分頁時一律照重排放，這裡再守一次）時回傳 null。
         /// </summary>
         public SourceChange Detach(int id, Func<int, bool> alive = null)
         {

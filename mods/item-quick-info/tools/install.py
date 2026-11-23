@@ -39,7 +39,7 @@ MOD = modkit.OfficialMod(
     name="Item Quick Info",
     # 不列會顯示哪些資訊（和按鍵的說明一樣）：不然每加一種資訊這裡也要跟著改。
     # 不寫 Unofficial：模組畫面上本來就全是 mod，官方規定只要求不冒充本體。
-    # 1.4.0 起設定在店內設定視窗（主選單的齒輪是灰的），所以這裡寫怎麼打開；不改存檔不用提（的定稿，只有英文）
+    # 1.4.0 起設定在店內設定視窗（主選單的齒輪是灰的），所以這裡寫怎麼打開；不改存檔不用提（只有英文）
     description=("Hold Tab to show info right on the items on screen, based on your settings and the item type. "
                  "Release to hide. To change the settings, show the info in the store and click the Item Quick Info button "
                  "(top-right corner by default). The keys and the button's position are in Options > Key Binds."),

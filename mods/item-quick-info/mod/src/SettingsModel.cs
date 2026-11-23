@@ -19,7 +19,8 @@ namespace ProbablyStolenItemQuickInfo
     enum SettingKind { Toggle, Choice, Percent }
 
     /// <summary>
-    /// 一個設定（31 個設定的 key、預設、分頁照 1.3.0 以前的 ModConfig；1.4.0 加兩個不透明度，箱子上的圖示，/// 藥品純度、反應爐）。開關存 0／1，有選項的存選項的位置
+    /// 一個設定（31 個設定的 key、預設、分頁照 1.3.0 以前的 ModConfig；1.4.0 加兩個不透明度，箱子上的圖示，
+    /// 藥品純度、反應爐）。開關存 0／1，有選項的存選項的位置
     /// （Choices 是 enum 的名稱、照宣告順序，和 ModConfig.DefineEnum 的 Enum.GetNames 一樣；mod 的 enum 都是從 0 連號），
     /// 百分比存百分比本身（0～100、每格 PercentStep）。
     /// 標籤、說明、選項的字是函式：用到時才向 Loc 取（換語言跟著換），程式裡寫字面的 key，tools/locale_check.py 才比得到。
@@ -140,7 +141,8 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 37 個設定（起存 ModData，key 與選項名稱照舊；1.4.0 加兩個不透明度，箱子上的圖示，水培礦物質範圍警告，/// 藥品純度，顯示反應爐）與分頁的字。
+    /// 37 個設定（存 ModData，key 與選項名稱照舊；1.4.0 加兩個不透明度，箱子上的圖示，水培礦物質範圍警告，
+    /// 藥品純度，顯示反應爐）與分頁的字。
     /// 順序就是視窗裡每頁由上往下的順序（定的段落內順序）。
     /// </summary>
     static class SettingDefs
@@ -257,7 +259,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static readonly SettingDef StatusIconBackground = Choice("StatusIconBackground", SettingPage.Icons, ProbablyStolenItemQuickInfo.StatusIconBackground.Dark,
             () => Loc.Get("cfg_status_icon_background"), _ => Loc.Get("cfg_status_icon_background_tip"),
             () => Loc.Get("opt_dark"), () => Loc.Get("opt_light"));
-        // 圖示框的不透明度：Dark、Light 共用，預設 80%（取代 的 Dark alpha 110、Light alpha 90）
+        // 圖示框的不透明度：Dark、Light 共用，預設 80%（取代 Dark alpha 110、Light alpha 90）
         internal static readonly SettingDef StatusIconOpacity = Percent("StatusIconOpacity", SettingPage.Icons, 80,
             () => Loc.Get("cfg_status_icon_opacity"), _ => Loc.Get("cfg_status_icon_opacity_tip"));
         internal static readonly SettingDef ShowWarningIcon = Toggle("ShowWarningIcon", SettingPage.Icons, true,
@@ -345,7 +347,7 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 37 個設定目前的值（起存 ModData 的 settings.json 的 "settings"）。讀值不配置記憶體（Runner 每幀讀幾個）。
+    /// 37 個設定目前的值（存 ModData 的 settings.json 的 "settings"）。讀值不配置記憶體（Runner 每幀讀幾個）。
     /// 不碰 Unity，離線測試也編這個檔：讀寫來回、缺 key 與壞值用預設、從 1.3.0 以前的 ModConfig 搬過來（含兩個舊值轉換，與顯示純度的 true／false）、恢復一頁的預設。
     /// </summary>
     sealed class SettingValues
@@ -406,7 +408,8 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 從 1.3.0 以前的 ModConfig 搬過來（Settings 用探測讀出 ModConfigs\dbfoxtw.item-quick-info.json 存的原始字串，/// ""＝設定檔沒有這個 key）。讀法和 Parse 一樣，另外照舊做兩個舊值轉換（notes 記轉了什麼）：
+        /// 從 1.3.0 以前的 ModConfig 搬過來（Settings 用探測讀出 ModConfigs\dbfoxtw.item-quick-info.json 存的原始字串，
+        /// ""＝設定檔沒有這個 key）。讀法和 Parse 一樣，另外照舊做兩個舊值轉換（notes 記轉了什麼）：
         /// - 1.1.0：名稱位置的 Label 改名 InfoBox（Rules.IsOldNamePosition）。
         /// - 1.3.0：設定檔還沒有 IdleNamePosition、而且（轉完的）名稱位置是 InfoBox → 名稱位置（資訊框未顯示時）設成 BottomLeft（Rules.IdleNeedsBottomLeft）。
         /// 1.4.0 拿掉的 ShowRealPurity 這類多出來的 key 不理。顯示純度的 true／false（改成選項）由 SettingDef.TryParse 轉，這裡只記一行。
@@ -544,7 +547,7 @@ namespace ProbablyStolenItemQuickInfo
     /// </summary>
     sealed class ConfirmArm
     {
-        /// <summary>按一下之後等第二下的秒數（的「幾秒」，主線說約 3 秒）。</summary>
+        /// <summary>按一下之後等第二下的秒數（主線說約 3 秒）。</summary>
         internal const float Window = 3f;
 
         bool _armed;

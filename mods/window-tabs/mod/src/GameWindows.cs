@@ -43,7 +43,7 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         internal static bool IsTabWindow(PixelWindow w) => w != null && w.canMove && w.IsVisible() && OwnerItem(w) != null;
 
-        /// <summary>店裡的固定設施（檔案箱、垃圾桶、卡帶機）本身。FindAllItem 不掃卡帶機那格（視窗群組）。</summary>
+        /// <summary>店裡的固定設施（檔案箱、垃圾桶、卡帶機）本身。FindAllItem 不掃卡帶機那格。</summary>
         static IEnumerable<GameItem> Fixtures()
         {
             var ee = EmporiumEntry.Instance;

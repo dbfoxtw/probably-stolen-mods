@@ -54,7 +54,7 @@ namespace ProbablyStolenWindowGroups
         const string CloseAllWindowsShowLocksKey = "ShowLocks";
 
         /// <summary>
-        /// 一鍵關窗的「顯示鎖頭」開著沒（一鍵關窗）：關著時它的鎖全部不算數，這邊也當作沒有鎖。
+        /// 一鍵關窗的「顯示鎖頭」開著沒：關著時它的鎖全部不算數，這邊也當作沒有鎖。
         /// 讀它在遊戲 ModConfig 裡的值：ModConfig.Find 只找已經建好的設定、不會替它建一份（ModConfig.For 會），
         /// 是遊戲公開的方法、不是反射，不必宣告權限；讀到的是它記憶體裡的值，玩家在設定視窗按了套用馬上就變。
         /// 一鍵關窗 2.0.0 沒有這個設定（Get 回傳 null）或讀不到時當作開著（Rules.CloseAllWindowsShowsLocks）。呼叫前先看它有沒有在跑。

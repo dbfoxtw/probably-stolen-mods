@@ -358,7 +358,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, allOpen, null), "全開就關：全部開著就關（不需要叫出後的位置）");
             Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)> { Open(10, 900, 900), Open(-102, -900, 0) }, rec), "全開就關：位置動過也關");
             Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, oneClosed, rec), "全開就關：少了一個就照常叫出");
-            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)>(), rec), "沒有找得到的視窗：不關（照 只提示）");
+            Check(!Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)>(), rec), "沒有找得到的視窗：不關（只提示）");
             Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfAllOpen, new List<(int, (float, float)?)> { Open(10, 0, 0) }, null), "全開就關：一個視窗的組，開著就關");
             // 沒動才關
             Check(Rules.ShouldCloseOnRepeat(RepeatMode.CloseIfUnmoved, allOpen, rec), "沒動才關：全開、位置和叫出後一樣：關");
@@ -742,7 +742,7 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(zht.Saved(2, 5, null), "視窗群組 2 已儲存（5 個視窗）", "繁中：沒名字照舊");
             Eq(en.Cleared(2, null), "Window group 2 cleared", "英文：沒名字照舊");
             // 有名字
-            Eq(zht.Saved(2, 5, "倉庫"), "視窗群組 2「倉庫」已儲存（5 個視窗）", "繁中：已儲存帶名字（的例子）");
+            Eq(zht.Saved(2, 5, "倉庫"), "視窗群組 2「倉庫」已儲存（5 個視窗）", "繁中：已儲存帶名字");
             Eq(zht.Saved(2, 1, "倉庫"), "視窗群組 2「倉庫」已儲存（1 個視窗）", "繁中：1 個視窗");
             Eq(zht.Cleared(2, "倉庫"), "視窗群組 2「倉庫」已清空", "繁中：已清空帶名字");
             Eq(zht.Empty(2, "倉庫"), "視窗群組 2「倉庫」是空的", "繁中：是空的帶名字");

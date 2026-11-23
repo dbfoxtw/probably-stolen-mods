@@ -30,7 +30,7 @@ namespace ProbablyStolenWindowGroups
             {
                 switch (parts[i].Trim().ToLowerInvariant())
                 {
-                    // Strg：德文鍵盤上 Ctrl 印成 Strg，遊戲的德文教學也寫「Strg + Klick」，德國玩家可能照著打（2.4.0 起，照視窗分頁 2.5.0，//）；給玩家看的正式寫法照舊是 Ctrl（遊戲的按鍵綁定畫面每種語言都顯示英文的 Ctrl），說明也照舊寫 Ctrl
+                    // Strg：德文鍵盤上 Ctrl 印成 Strg，遊戲的德文教學也寫「Strg + Klick」，德國玩家可能照著打（2.4.0 起，照視窗分頁 2.5.0）；給玩家看的正式寫法照舊是 Ctrl（遊戲的按鍵綁定畫面每種語言都顯示英文的 Ctrl），說明也照舊寫 Ctrl
                     case "ctrl": case "control": case "strg": h.Ctrl = true; break;
                     case "shift": h.Shift = true; break;
                     case "alt": h.Alt = true; break;

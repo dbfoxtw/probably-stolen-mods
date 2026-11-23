@@ -425,7 +425,7 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 一列：設定名稱（太長換行，深色字；後面接遊戲的 ⓘ）＋控制項。說明掛在 ⓘ 上，只有指著 ⓘ 才出現（///  原本是指著那一列的任何地方都出現）。開關是按鈕：金色底深色字「開」、灰底白字「關」；
+        /// 一列：設定名稱（太長換行，深色字；後面接遊戲的 ⓘ）＋控制項。說明掛在 ⓘ 上，只有指著 ⓘ 才出現（原本是指著那一列的任何地方都出現）。開關是按鈕：金色底深色字「開」、灰底白字「關」；
         /// 有選項的是下拉（米色、右邊 ▼），選項的字跟著語言、存的照舊是名稱；百分比是滑桿＋右邊的數字（BuildSlider）。
         /// </summary>
         static void BuildRow(CustomUIBuilder b, SettingDef d, Strings words)
@@ -594,7 +594,8 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 量字定大小（照視窗群組的 GroupList.Layout：機器樣式的視窗沒有自動大小，先設字再量元件自己的字，繁中 mod 的轉換已經做完）：
         /// - 每個分頁按鈕照字寬；◀ ▶ 照圖。
-        /// - 設定名稱一欄同寬（最長的名稱連同後面的 ⓘ，最多 LabelMaxWidth，再長換行）；控制項一欄同寬（「開」「關」、每個下拉選項最寬的，///   取最寬的；滑桿列的滑桿和這一欄同寬、數字另外接在後面）。
+        /// - 設定名稱一欄同寬（最長的名稱連同後面的 ⓘ，最多 LabelMaxWidth，再長換行）；控制項一欄同寬（「開」「關」、每個下拉選項最寬的，
+        ///   取最寬的；滑桿列的滑桿和這一欄同寬、數字另外接在後面）。
         /// - 內容寬＝名稱＋控制項（滑桿列再加數字），至少 MinContentWidth；標題太長時照標題加寬（加寬的部分分頁列也用得到）。
         /// - 滑桿列：滑桿和控制項那一欄同寬，數字固定寬（最寬的「100%」）接在後面。
         /// - 頁區的高照最高的那頁（換分頁時視窗不跳、恢復預設一直在同一個位置）。
@@ -666,7 +667,7 @@ namespace ProbablyStolenItemQuickInfo
             var title = _window.frame != null ? _window.frame.titleText : null;
             if (title != null) width = Mathf.Max(width, Mathf.Ceil(title.GetPreferredValues().x) + TitleRoom);
             _contentWidth = width - ChromeX;
-            // 滑桿和開關、下拉同寬，數字接在後面（實測時 全部拉到 238 嫌開關太寬、 滑桿撐到右緣嫌滑桿太長）。
+            // 滑桿和開關、下拉同寬，數字接在後面（實測時全部拉到 238 嫌開關太寬、滑桿撐到右緣嫌滑桿太長）。
             // 框架的滑桿 minWidth 192 不是擋著縮不了：SetFixedWidth 會把 minWidth 蓋掉
             if (hasSlider)
                 foreach (var r in _rows)

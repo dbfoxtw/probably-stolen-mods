@@ -237,7 +237,7 @@ namespace ProbablyStolenItemQuickInfo
             return r;
         }
 
-        /// <summary>字元 → RGBA（的顏色；B 是機器樣式按鈕字的深色 #292334）；透明與認不得的字元是 (0,0,0,0)。</summary>
+        /// <summary>字元 → RGBA（B 是機器樣式按鈕字的深色 #292334）；透明與認不得的字元是 (0,0,0,0)。</summary>
         internal static (byte r, byte g, byte b, byte a) Palette(char c) => c switch
         {
             'O' => (24, 18, 30, 255),

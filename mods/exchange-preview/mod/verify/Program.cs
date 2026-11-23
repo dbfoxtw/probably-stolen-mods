@@ -997,7 +997,7 @@ namespace ProbablyStolenExchangePreview.Verify
                 && ExchangeSim.ActivePromos(gameOrder, x => x, null).Count == 0
                 && ExchangeSim.ActivePromos<string>(null, x => x, weekIds).Count == 0, "促銷：本週沒有、或讀不到清單時是空的");
 
-            // 同一筆促銷上面已經是差一點的（的 D1）：下面照樣列三筆
+            // 同一筆促銷上面已經是差一點的：下面照樣列三筆
             var week = Week(false);
             r = ExchangeSim.Run(new[] { I("sec_keycard", "一次性鑰匙卡（治安）"), I("sec_keycard", "一次性鑰匙卡（治安）") }, week);
             lines = PreviewText.TooltipFull(s, new PreviewInput { JanitorialOn = true, Result = r }, week);

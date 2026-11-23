@@ -165,7 +165,7 @@ namespace ProbablyStolenCollectAllWater
             Rules.Grades.Where(g => _entries.TryGetValue(g, out var e) && e != null ? e.Value : g.DefaultOn).ToList();
 
         /// <summary>
-        /// 這個水源要不要收：看開關（起水分收集器也有開關，起水塔也有，起蒸發器也有，起淨水塔也有）；水培系統看種類的下拉是不是 Off。
+        /// 這個水源要不要收：看開關（水分收集器也有開關，水塔也有，蒸發器也有，淨水塔也有）；水培系統看種類的下拉是不是 Off。
         /// 攔截在 Init 之前就掛上了，還沒讀設定時用預設值（水分收集器、水塔、淨水塔開，其他關）。
         /// </summary>
         internal static bool IsOn(Rules.Source source)

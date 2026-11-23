@@ -13,7 +13,7 @@ namespace ProbablyStolenWindowTabs.Verify
     /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字（2.5.0 起在 Localization\*.csv）、
     /// 介面字串挑語言（LocPick：最長字串模式、中文時用不用 zh-Hant）、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）、
-    /// 鎖住整組（2.6.0 起，：各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收。
+    /// 鎖住整組（2.6.0 起，各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -824,7 +824,7 @@ namespace ProbablyStolenWindowTabs.Verify
         }
 
         /// <summary>
-        /// 設定欄的文字（的稿；2.5.0 起放 public/Localization/*.csv，用和遊戲一樣的解析規則讀）：
+        /// 設定欄的文字（2.5.0 起放 public/Localization/*.csv，用和遊戲一樣的解析規則讀）：
         /// 每一份都剛好四個 key、說明欄有兩行，第二行是例子與「留空」；英文、簡中、繁中的定稿一字不差。
         /// 之後加的語言也跑同樣的檢查：按鍵名稱與 Mouse4、Mouse5 不翻。
         /// </summary>
@@ -847,7 +847,7 @@ namespace ProbablyStolenWindowTabs.Verify
                 Eq(t["cfg_prev_tip"].Split('\n').Length, 2, $"{lang}：上一頁的說明是兩行");
                 Check(t["cfg_next_tip"].Contains("Ctrl+Tab") && !t["cfg_next_tip"].Contains("Shift"), $"{lang}：下一頁的例子是 Ctrl+Tab");
                 Check(t["cfg_prev_tip"].Contains("Ctrl+Shift+Tab"), $"{lang}：上一頁的例子是 Ctrl+Shift+Tab");
-                // 2.4.0（的稿）：第二行的例子加滑鼠側鍵，下一頁 Mouse5、上一頁 Mouse4（照瀏覽器的前進、後退）
+                // 2.4.0：第二行的例子加滑鼠側鍵，下一頁 Mouse5、上一頁 Mouse4（照瀏覽器的前進、後退）
                 Check(t["cfg_next_tip"].Split('\n')[1].Contains("Mouse5") && !t["cfg_next_tip"].Contains("Mouse4"), $"{lang}：下一頁的例子有側鍵 Mouse5");
                 Check(t["cfg_prev_tip"].Split('\n')[1].Contains("Mouse4") && !t["cfg_prev_tip"].Contains("Mouse5"), $"{lang}：上一頁的例子有側鍵 Mouse4");
             }
@@ -1351,7 +1351,7 @@ namespace ProbablyStolenWindowTabs.Verify
         }
 
         /// <summary>
-        /// Demo 版（1.0.0，MelonLoader）用 System.Text.Json 寫出來的檔（照的格式：縮排、中文不跳脫、
+        /// Demo 版（1.0.0，MelonLoader）用 System.Text.Json 寫出來的檔（照格式：縮排、中文不跳脫、
         /// 位置是整數或小數、numbers 的鍵是字串、各層都可能有不認得的欄位）。玩家自己把 Demo 的檔搬過來、或新版 mod 加了欄位時，
         /// 正式版（Newtonsoft）照樣讀得懂、寫回去欄位不丟；System.Text.Json 也讀得懂 Newtonsoft 寫的。
         /// </summary>

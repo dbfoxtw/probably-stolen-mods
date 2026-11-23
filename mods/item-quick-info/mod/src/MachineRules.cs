@@ -5,8 +5,7 @@ using UnityEngine;
 namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
-    /// 從遊戲讀一台機器的電、今晚的電力收支、進度、輸出區的成品數、循環水養殖系統的濾材、水耕機的礦物質、判斷要的資料、狀態圖示
-    /// （判斷表在）。
+    /// 從遊戲讀一台機器的電、今晚的電力收支、進度、輸出區的成品數、循環水養殖系統的濾材、水耕機的礦物質、判斷要的資料、狀態圖示。
     /// 判斷的順序本身在 MachineLogic（不碰 Unity、離線測試）；這裡只負責照遊戲的儲存區與唯讀方法填 MachineFacts。
     /// 只讀：不呼叫會改物品、會建立物品的方法（遊戲判斷熔爐產出格時會建一個金屬錠來試，這裡改用格子有沒有空位，見 Fits）。
     /// 儲存區的編號照機器視窗建構時面板的順序（MachineHelper.GetBodyStorage；0 電池、1 模組…，每台不同，寫在各方法）。
@@ -120,9 +119,10 @@ namespace ProbablyStolenItemQuickInfo
         /// 藏剩幾天，沒有電源也用來藏剩幾天。電那行只寫有容量的電池與有錢可寫的電流轉換器（Rules.AddPower）；
         /// 其他（電池槽空、超科技能源單元、別的 mod 的容量 0 電源、轉換器今晚沒電）不寫那行，這裡照樣算紅字的條件（Insufficient）。
         /// 紅色的條件照遊戲 MachineryHelper.CreateMachineryTooltip → CreatePowerInsufficientTooltip：機器有 machinery／machinery_drawn_power 標記、
-        /// 每晚耗電 &gt; 0 才判斷，但耗電換成今晚會扣的電（MachineLogic.ChecksPower：高級渦輪增壓器儲能滿 15、Deal Maker 不判斷，紅字＝今晚缺電，///）；沒放東西 → 紅；放的是電源 → 電流轉換器看今晚有沒有電（ReadConverter），超科技能源單元看
+        /// 每晚耗電 &gt; 0 才判斷，但耗電換成今晚會扣的電（MachineLogic.ChecksPower：高級渦輪增壓器儲能滿 15、Deal Maker 不判斷，紅字＝今晚缺電）；沒放東西 → 紅；放的是電源 → 電流轉換器看今晚有沒有電（ReadConverter），超科技能源單元看
         /// HypertechBatteryHelper.CanSupply，別的 mod 的容量 0 電源看 PowerHelper.CanDrawPowerSource，
-        /// 其他電池照 CanDrawPowerSource 的比較，但電量用「現在＋今晚機器用電前一定會充進來的」（PowerReader 的 Early；/// 遊戲的提示框照樣寫能量不足時這裡不紅；在 early 那一輪就用電的機器 MachineLogic.DrawsPowerEarly 早充算 0，照遊戲原本的判斷）；
+        /// 其他電池照 CanDrawPowerSource 的比較，但電量用「現在＋今晚機器用電前一定會充進來的」（PowerReader 的 Early；
+        /// 遊戲的提示框照樣寫能量不足時這裡不紅；在 early 那一輪就用電的機器 MachineLogic.DrawsPowerEarly 早充算 0，照遊戲原本的判斷）；
         /// 夠不夠用照舊和 machinery_drawn_power 比。放的不是電源（照理放不進去）→ 遊戲不警告。
         /// 今晚的電力收支要的值另外回傳（Read 在判斷完原因後交給 Rules.TonightDraw、TonightNet）：容量（Max）、
         /// 今晚會充進這顆電池的（Income，PowerReader 的 Early；機器電池槽裡的電池 Total 和 Early 一樣，充能器只充放在它裡面的電池）、

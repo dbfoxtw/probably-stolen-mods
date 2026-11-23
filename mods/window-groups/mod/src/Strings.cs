@@ -58,7 +58,7 @@ namespace ProbablyStolenWindowGroups
         public static string CloseLockedTip => Loc.Get("close_locked_tip");
         public static string TabsLabel => Loc.Get("tabs_label");
         public static string TabsTip => Loc.Get("tabs_tip");
-        /// <summary>2.3.0 的設定「群組清單」；說明的例子就是預設的 Ctrl+0（清單的鍵不受 的「不舉 0」限制）。</summary>
+        /// <summary>2.3.0 的設定「群組清單」；說明的例子就是預設的 Ctrl+0（清單的鍵不受「不舉 0」限制）。</summary>
         public static string ListLabel => Loc.Get("list_label");
         public static string ListTip => Loc.Get("list_tip");
         /// <summary>2.3.0 的設定「清單再按一次」；選項是英文（Rules.ListAgainChoices），說明裡一個一行寫對照。</summary>

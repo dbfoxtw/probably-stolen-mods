@@ -20,7 +20,7 @@ namespace ProbablyStolenItemQuickInfo
     enum LineKind { Normal, RechargerBattery, Rich }
 
     /// <summary>
-    /// 標籤的一行。有前綴的行（成品數、熱度、使用次數、耐久度、濾材、反應爐的完好度；液量、純度 起、電那行 起沒有前綴）另外帶短的寫法與拆兩行用的前綴、數值：
+    /// 標籤的一行。有前綴的行（成品數、熱度、使用次數、耐久度、濾材、反應爐的完好度；液量、純度、電那行沒有前綴）另外帶短的寫法與拆兩行用的前綴、數值：
     /// 一格寬的物品放不下時，整個標籤先換短的（Short），有前綴的行還放不下再把每個有前綴的行拆成「前綴」「數值」兩行（LabelRenderer 量字寬後選，
     /// 判斷在 Rules.ChooseForm；只看換了會變窄的行）。沒有前綴的行（名稱、原因、電池電量、機器的電、剩幾天、純度…）Short 和 Text 一樣、Prefix 是 null，不拆；
     /// 剩幾天沒有前綴但長短的字不同（剩3天／3天），Short 是短的那個。
@@ -80,7 +80,8 @@ namespace ProbablyStolenItemQuickInfo
 
     /// <summary>
     /// 按鍵叫出資訊時名稱放哪裡（1.3.0 起只管資訊框顯示時）。設定的名稱是「名稱位置（資訊框顯示時）」。
-    /// Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；InfoBox＝資訊框的第一行（之前的樣子）。不給 Center（資訊框從左下角往上長，/// 會疊到中間的名稱）。只畫名稱時看 IdleNamePosition。
+    /// Top（預設）＝名稱自己一個框，貼在物品上緣、水平置中；InfoBox＝資訊框的第一行（之前的樣子）。不給 Center（資訊框從左下角往上長，
+    /// 會疊到中間的名稱）。只畫名稱時看 IdleNamePosition。
     /// 和 TextSize 一樣存名稱、下拉選單直接顯示名稱，改名要轉玩家設定檔裡的舊值（下一行）；宣告順序就是下拉選單的順序（Top 在前）。
     /// InfoBox 在 1.1.0 以前叫 Label：下拉選單直接顯示列舉名稱，Label 會和遊戲的標籤印表機（英文 Labeler）、提示框的 [Label] 混在一起；
     /// 玩家看得到的「標籤」1.1.0 起改叫資訊框。舊值 Label 由 Settings.MigrateNamePosition 轉成 InfoBox（判斷在 Rules.IsOldNamePosition）。
@@ -406,7 +407,7 @@ namespace ProbablyStolenItemQuickInfo
 
     /// <summary>
     /// 狀態圖示後面的框：Dark（預設）＝深色 (10,10,12)；Light＝米白 (232,226,212)。透明程度另外照「圖示底色不透明度」
-    /// （StatusIconOpacity，預設 80%，兩種共用；原本是 Dark alpha 110、Light alpha 90）。1.4.0 拿掉 None（不想要框就把不透明度拉到 0，///）；開發中存著 "None" 的設定檔讀不懂、退回預設 Dark。存名稱，不要改。
+    /// （StatusIconOpacity，預設 80%，兩種共用；原本是 Dark alpha 110、Light alpha 90）。1.4.0 拿掉 None（不想要框就把不透明度拉到 0）；開發中存著 "None" 的設定檔讀不懂、退回預設 Dark。存名稱，不要改。
     /// </summary>
     enum StatusIconBackground { Dark, Light }
 
@@ -493,7 +494,7 @@ namespace ProbablyStolenItemQuickInfo
         ///    All 連空機器的（IdleEmpty）也算。今晚會爆炸的反應爐（BoxSummary.Reactors）在「顯示反應爐」開著時算 ⚠。
         /// 2. 再合併：有 ⚠ 就是 ⚠，沒有才看 💤；任何一台 ✓ 就加 ✓。
         /// 3. 最後套下拉：Off 什麼都沒有；WarningOnly 只留 ⚠；WarningAndIdle 拿掉 ✓；All 照舊。
-        /// 先合併再套開關的話，警告關掉時一台 ⚠、一台 💤 的箱子會合併成 ⚠ 又被開關拿掉、什麼都不畫；照這個順序畫 💤（的例子）。
+        /// 先合併再套開關的話，警告關掉時一台 ⚠、一台 💤 的箱子會合併成 ⚠ 又被開關拿掉、什麼都不畫；照這個順序畫 💤。
         /// 開關已經先套過，所以結果再過 Visible 不會變（Runner 之後照樣叫它；回傳的 💤 不帶空機器的記號）。
         /// </summary>
         public ItemStatus BoxStatus(BoxSummary b)
@@ -674,7 +675,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static float LeftOfIcons(float itemWidth, float iconWidth) => itemWidth - IconArt.Margin - iconWidth;
 
         /// <summary>
-        /// 名稱放不進圖示左邊時，可不可以照左邊那段重新換行（B、161）：完整資訊（按鍵顯示）、這一輪這個物品有資訊框（hasInfo：
+        /// 名稱放不進圖示左邊時，可不可以照左邊那段重新換行：完整資訊（按鍵顯示）、這一輪這個物品有資訊框（hasInfo：
         /// 資訊行全被關掉、只剩名稱的沒有）、名稱畫在 Top、長名稱換行開著、這一輪右上角有圖示（iconWidth＝TopIconsWidth，圖示在右下角、
         /// 沒有圖示是 0）。換行是為了不蓋到資訊框：常駐只畫名稱、完整資訊卻只有名稱的都沒有資訊框可蓋，照決定 145 移到圖示下面；
         /// 換行關著時也照 145。
@@ -737,7 +738,7 @@ namespace ProbablyStolenItemQuickInfo
         internal static bool NameMoved(NameDodge dodge, bool narrowed) => dodge != NameDodge.None || narrowed;
 
         /// <summary>
-        /// 資訊框要不要畫在名稱框上面（C、161；不然照 名稱在上）：名稱這一輪真的被移動了（moved＝NameMoved），
+        /// 資訊框要不要畫在名稱框上面（不然名稱在上）：名稱這一輪真的被移動了（moved＝NameMoved），
         /// 而且兩個框照實際擺好的位置有交集。名稱移到圖示下面、或在左邊那段斷成好幾行時會往下蓋到資訊框最上面一行（移上去的原因），
         /// 這時讓資訊框在上：原因一定看得到，名稱被蓋的是下半。名稱沒疊到圖示、照常置中的照決定 49 名稱在上，就算和資訊框疊到也一樣
         /// （一格高、右上角有圖示的物品，名稱不會被資訊框蓋掉）。
@@ -1001,7 +1002,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 純度那行：萬分比 → 照設定的位數寫百分比，一律無條件捨去：整數 `98%`、小數一位 `98.5%`、小數兩位 `98.52%`
-        /// （兩位是 原本的寫法，和遊戲提示框的掃描結果 string.Format("{1:F2}%", 萬分比 / 100.0) 一樣）。尾巴的 0 照寫（`70.0%`、`70.00%`），
+        /// （兩位是原本的寫法，和遊戲提示框的掃描結果 string.Format("{1:F2}%", 萬分比 / 100.0) 一樣）。尾巴的 0 照寫（`70.0%`、`70.00%`），
         /// 同一個設定下每瓶的寬度一樣。捨去是為了不到 100 的不會寫成 100（99.99 在整數寫 `99%`、小數一位寫 `99.9%`）；
         /// 剛好 100% 不管幾位都寫「100%」（不寫 100.00%：一格寬放得下）。用整數拼不受語系的小數點影響（英文介面只能用 ASCII）。
         /// Off 回 null（呼叫的人不加這行）。
@@ -1167,7 +1168,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 今晚會扣多少電：遊戲今晚會跑這台（runsTonight）、沒有原因（MachineLogic.Decide）、電夠今晚用
         /// （!insufficient，和紅字同一個判斷）時是今晚的耗電（MachineLogic.NightlyPowerUse），不然 0。
         /// 遊戲每台機器都是確定要運作才扣電，電不夠時 DrawPowerSource 一點都不扣。
-        /// 已淨化完、蒸餾器沒有可蒸發的這類原因一律照真實水質判斷（拿掉），有原因就不扣。
+        /// 已淨化完、蒸餾器沒有可蒸發的這類原因一律照真實水質判斷，有原因就不扣。
         /// 缺電（NoPower）時有原因、insufficient 也成立，兩個條件都不扣。
         /// </summary>
         internal static int TonightDraw(bool runsTonight, Reason reason, bool insufficient, int use) =>
@@ -1389,7 +1390,8 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 液量、純度兩行（單獨的容器和機器裡的液體共用；設定「顯示液體量」「顯示純度」）：第一行液量（「250ml」，數字和 ml 中間夾零寬空格，/// VolumeText，沒有刻度時是估計的字），第二行量最多的那種液體佔總量的比例（預設「70.0%」，位數照「顯示純度」，「100%」；PurityText）。
+        /// 液量、純度兩行（單獨的容器和機器裡的液體共用；設定「顯示液體量」「顯示純度」）：第一行液量（「250ml」，數字和 ml 中間夾零寬空格，
+        /// VolumeText，沒有刻度時是估計的字），第二行量最多的那種液體佔總量的比例（預設「70.0%」，位數照「顯示純度」，「100%」；PurityText）。
         /// 不寫是哪種液體，水也一樣。
         /// 兩行都沒有前綴、長短一樣，不觸發 ChooseForm 的換短、拆兩行（對液體兩行不再作用）。空的容器不寫第二行。
         /// 1.4.0 第⑥段以前水寫「水量 4000ml」「水質 98.52%」、主成分不是水時寫液體名稱，決定 178 改成這樣。
@@ -1504,7 +1506,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 自製反應爐的行（開關「顯示反應爐」，呼叫端看）：今晚爆炸時最上面一行紅字「今晚爆炸」（像機器的原因）、完好度「完好度 60/100」
         /// （前綴照長短；顏色照遊戲提示框：≤ 25 紅、≤ 50 橘、其他綠，ReactorIntegrityColor）、存的電與上限「120/250kJ」（白字，沒有前綴：
-        ///  和機器的電那行一起拿掉，第⑧段是「電力 120/250kJ」）。
+        /// 和機器的電那行一起拿掉，第⑧段是「電力 120/250kJ」）。
         /// 不寫「不供電」（今晚爆炸嚴重多了）。名稱照「其他物品」的規則由呼叫端接在前面。舊版遊戲讀不到存電（r.HasEnergy 是 false）時不寫存電那行。
         /// </summary>
         internal static List<Line> ReactorLines(Strings s, ReactorInfo r)
@@ -1534,7 +1536,7 @@ namespace ProbablyStolenItemQuickInfo
         };
 
         /// <summary>
-        /// 除錯 log 前 20 個物品裡，水耕機後面接的礦物質（的實機核對用）：「｜礦物質 120（範圍 50～250，萬分比）太少」；
+        /// 除錯 log 前 20 個物品裡，水耕機後面接的礦物質：「｜礦物質 120（範圍 50～250，萬分比）太少」；
         /// 填心果、水蘆葦寫「（填心果、水蘆葦不提醒）」。沒讀（設定關著、沒種子、沒水、不是水耕機）是空字串。
         /// </summary>
         internal static string MineralNote(MineralCheck c)

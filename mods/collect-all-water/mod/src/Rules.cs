@@ -130,7 +130,8 @@ namespace ProbablyStolenCollectAllWater
         }
 
         /// <summary>
-        /// 同一層裡誰先收：水分收集器、淨水器、mod 水源（水塔、淨水塔）、水培系統、蒸發器水多的先（容器滿了隔夜的產量就浪費了，淨水器照同一條；/// 蓄水箱滿了，塔裡沒放容器的水分收集器當晚就不產；淨水壺滿了，淨水塔當晚就不再把淨化好的水抽進去；水培蘆葦和它們一樣是產水的；餾出液的容器滿了，隔晚凝結的就浪費掉）；
+        /// 同一層裡誰先收：水分收集器、淨水器、mod 水源（水塔、淨水塔）、水培系統、蒸發器水多的先（容器滿了隔夜的產量就浪費了，淨水器照同一條；
+        /// 蓄水箱滿了，塔裡沒放容器的水分收集器當晚就不產；淨水壺滿了，淨水塔當晚就不再把淨化好的水抽進去；水培蘆葦和它們一樣是產水的；餾出液的容器滿了，隔晚凝結的就浪費掉）；
         /// 其他水少的先（一次清空最多個容器）。
         /// </summary>
         internal static bool FullestFirst(Source s) =>
@@ -257,7 +258,7 @@ namespace ProbablyStolenCollectAllWater
 
         /// <summary>
         /// 設定「收水培系統的水」的下拉選項。ModConfig 的下拉照字面顯示選項、存的也是這個字串（不能跟著語言換，
-        /// 換了存的值會對不上而回到預設；照視窗群組的 RecallAgain），所以選項用英文，中文的說明欄寫對照（的理由）。
+        /// 換了存的值會對不上而回到預設；照視窗群組的 RecallAgain），所以選項用英文，中文的說明欄寫對照。
         /// 順序就是下拉的順序；字串存進設定檔，發布後不要改。2.4.0 加的 Pinned 插在 harvested 和 All 中間：
         /// 存的是字串、不是索引，插在中間不影響玩家已經選好的值。
         /// </summary>
@@ -265,7 +266,7 @@ namespace ProbablyStolenCollectAllWater
             HydroponicHydroreedHarvested = "Hydroreed (incl. harvested)", HydroponicPinned = "Pinned", HydroponicAll = "All";
         internal static readonly string[] HydroponicKinds =
             { HydroponicOff, HydroponicHydroreed, HydroponicHydroreedHarvested, HydroponicPinned, HydroponicAll };
-        /// <summary>預設不收（Workshop 會自動更新，新水源預設關，和 一樣）。</summary>
+        /// <summary>預設不收（Workshop 會自動更新，新水源預設關）。</summary>
         internal const string HydroponicKindDefault = HydroponicOff;
         /// <summary>設定（ModConfig）裡的鍵。2.3.0 發布前從單一下拉 SourceHydroreed 換過來，沒有玩家的舊設定要相容。</summary>
         internal const string HydroponicKindConfigKey = "SourceHydroponics";
@@ -443,7 +444,7 @@ namespace ProbablyStolenCollectAllWater
         /// 蒸發器的餾出液格 ＞ 其他機器裡（不收）＞ 櫃台上（不收）＞ 垃圾桶 ＞ 展示櫃 ＞ 物品欄。
         /// 淨水壺照蓄水箱的同一條理由排在「其他機器裡」前面（它也在塔的子孫裡）；淨水塔工作區裡的淨水器沒記進淨水器的容器格，
         /// 容器落到「其他機器裡」不收。
-        /// 水培系統的水格也在水培（機器）的子孫裡，所以排在「其他機器裡」前面（的「水培系統不收」照種類的設定開例外）；
+        /// 水培系統的水格也在水培（機器）的子孫裡，所以排在「其他機器裡」前面；
         /// 不符合種類的水培照舊是「其他機器裡」。蒸發器的餾出液格同理（只對餾出液格開例外），
         /// 輸入格（容器格）照舊是「其他機器裡」。
         /// 蓄水箱也在塔（機器）的子孫裡，所以排在「其他機器裡」前面；塔放不進自動售水機，排在它後面；塔裡的取水槽、濾芯格不是蓄水箱，

@@ -161,7 +161,7 @@ namespace ProbablyStolenWindowGroups
 
         /// <summary>
         /// 儲存或叫出一組：先看現在能不能動作（GameWindows.CanAct），不行的話除錯 log 寫原因。按鍵與群組清單點名字都走這裡
-        /// （點名字＝按那組的叫出鍵，含「再按一次」、一鍵關窗的鎖、 的拖曳規則）。例外交給呼叫的人。
+        /// （點名字＝按那組的叫出鍵，含「再按一次」、一鍵關窗的鎖、拖曳規則）。例外交給呼叫的人。
         /// </summary>
         internal static void Act(KeyAction action, int group, string source)
         {

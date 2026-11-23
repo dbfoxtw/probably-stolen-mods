@@ -48,7 +48,8 @@ namespace ProbablyStolenItemQuickInfo
     ///
     /// 圖層掛 CanvasGroup（不擋射線、不能互動）：不影響提示框、點擊、拖曳；LayoutElement.ignoreLayout 免得被版面配置排進去。
     /// 一個物品最多兩個框：資訊框貼在物品外框（ItemRect：rotator 的外接矩形）的左下角往上、往右長；
-    /// 名稱畫在 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長（疊到右上角的狀態圖示時閃開，、Rules.DodgeIcons；/// 完整資訊、有資訊框時放不進圖示左邊就在左邊那段重新換行，名稱被移動過又和資訊框疊到時資訊框在上）；
+    /// 名稱畫在 Top 時名稱另外一個框，上緣貼物品外框的上緣、水平置中往下長（疊到右上角的狀態圖示時閃開，Rules.DodgeIcons；
+    /// 完整資訊、有資訊框時放不進圖示左邊就在左邊那段重新換行，名稱被移動過又和資訊框疊到時資訊框在上）；
     /// Center（只畫名稱時）時名稱框的中心對齊物品的中心；
     /// InfoBox（顯示時選 InfoBox、未顯示時選 BottomLeft）時名稱是資訊框的第一行。名稱框的 pivot 跟著每一輪的位置換（同一個框會在 Top、Center 之間換）。
     /// 長名稱換行開著時名稱比物品寬就斷成幾行（Rules.WrapName），框照 pivot 長：Top 往下、Center 上下各一半、資訊框往上。
@@ -64,7 +65,7 @@ namespace ProbablyStolenItemQuickInfo
     /// </summary>
     static class LabelRenderer
     {
-        /// <summary>資訊框、名稱框的黑底（alpha 照資訊框不透明度，、SetBack；1.3.0 以前固定 235）。</summary>
+        /// <summary>資訊框、名稱框的黑底（alpha 照資訊框不透明度，SetBack；1.3.0 以前固定 235）。</summary>
         static readonly Color32 BackColor = new Color32(10, 10, 12, 255);
         static readonly Color32 White = new Color32(240, 240, 240, 255);
         static readonly Color32 Red = new Color32(255, 110, 100, 255);
@@ -128,7 +129,7 @@ namespace ProbablyStolenItemQuickInfo
             /// </summary>
             public float IconWidth;
             /// <summary>
-            /// 上次確認過的兩個框的前後（Stack）：0＝名稱框在上、1＝資訊框在上（C）、-1＝還沒確認。
+            /// 上次確認過的兩個框的前後（Stack）：0＝名稱框在上、1＝資訊框在上、-1＝還沒確認。
             /// 每幀的 Place 只在要的和它不一樣時才讀、改 sibling 的順序；Put 每一輪重設成 -1（框可能新建、重用），確認一次。
             /// </summary>
             public int Stack = -1;
@@ -340,7 +341,7 @@ namespace ProbablyStolenItemQuickInfo
                     SetBack(label.Info, style.BackAlpha);
                 }
                 else SetUsed(label.Info, false);
-                Place(layer, label); // 兩個框的前後（C）也在這裡照擺好的位置排
+                Place(layer, label); // 兩個框的前後也在這裡照擺好的位置排
             }
             catch
             {
@@ -635,7 +636,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 同一個物品兩個框的前後：平常名稱框畫在資訊框上面（Top 時一格高的物品兩個框會疊到，名稱要看得到）；
-        /// 名稱這一輪為了右上角的圖示被移動、而且和資訊框疊到時資訊框在上（C、161，Rules.InfoAboveName：原因一定看得到）。
+        /// 名稱這一輪為了右上角的圖示被移動、而且和資訊框疊到時資訊框在上（Rules.InfoAboveName：原因一定看得到）。
         /// 同一個圖層裡後面的子節點畫在上面，框又是用到時才建，建的先後不一定（先只有名稱、後來才有資訊的物品，資訊框會排在名稱框後面）。
         /// 每幀叫：和上次確認的（label.Stack）一樣就什麼都不讀；不一樣才看 sibling 的編號，順序已經對就不動（改順序會讓 Canvas 重排）。
         /// Unity 的 SetSiblingIndex 往後移時，目標位置是移走自己之後的編號，所以設成下面那個框現在的編號就是它的正後面。
@@ -770,12 +771,13 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 資訊框（名稱畫在 InfoBox 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，/// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），長名稱換行開著時名稱行再照物品寬度斷成幾行（都在框的最上面），
+        /// 資訊框（名稱畫在 InfoBox 時也含名稱那行）：先照物品寬度選排法（Rules.ChooseForm：長短不同的行放不下就整個換短前綴，
+        /// 有前綴的行還放不下就拆兩行；名稱行與換了也不會變窄的行不算），長名稱換行開著時名稱行再照物品寬度斷成幾行（都在框的最上面），
         /// 再排字。內距照名稱以外的行的字級算（只有名稱時照名稱的）。
         /// 排好的行再做一件只有充能器才有的事（用排好的行判斷）：整個資訊框加上上緣名稱框的高（nameHeight，Put 先排好名稱框；不在 Top 或
         /// 沒有名稱框是 0）比充能器高時改成兩顆一行（Rules.PairRechargerRows）。itemHeight＝物品外框的高（ItemSize）。
         /// 1.4.0 第⑥段的主成分那行換行決定 178 拿掉了（液體不再寫名稱）。
-        /// 有格式標籤的行（LineKind.Rich：電那行的錢「-6₡」）量字寬時打開格式標籤（ChooseFormFor；起它沒有前綴，不在那裡量），
+        /// 有格式標籤的行（LineKind.Rich：電那行的錢「-6₡」）量字寬時打開格式標籤（ChooseFormFor；它沒有前綴，不在那裡量），
         /// 畫的時候也只有那幾行打開（SetRows，框寬照打開的狀態量）。
         /// </summary>
         static void FillInfo(Layer layer, Box box, List<Line> lines, LabelStyle style, float itemWidth, float itemHeight, float nameHeight)
@@ -846,8 +848,7 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 名稱框（名稱畫在 Top、Center）：字級照名稱文字大小，內距也照它；長名稱換行開著時可能是幾行，每一行置中（框的 pivot 也是水平置中；
-        /// 使用者選的示意圖）。資訊框裡的名稱照舊靠左（FillInfo）。iconWidth＝同一輪右上角圖示框的寬、hasInfo＝這一輪這個物品有沒有資訊框
-        /// （的重新換行用）。
+        /// 使用者選的示意圖）。資訊框裡的名稱照舊靠左（FillInfo）。iconWidth＝同一輪右上角圖示框的寬、hasInfo＝這一輪這個物品有沒有資訊框。
         /// </summary>
         static void FillName(Layer layer, Box box, Line name, LabelStyle style, float itemWidth, float iconWidth, bool hasInfo) =>
             FillSingleName(layer, box, name, style, itemWidth, iconWidth, hasInfo, true);
@@ -858,7 +859,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 對每個名稱叫一次，每次配置會累積成週期性的 GC 卡頓。換行關著時物品寬度記成 0、不看，和 1.2.0 一樣只比字、顏色、字級、字型。
         /// 換行開著、名稱比物品寬時斷成幾行（Rules.WrapName），每一行都是名稱色、名稱字級。
         /// 完整資訊、有資訊框、Top、換行開著、右上角有圖示時（Rules.RewrapsAroundIcons），照物品寬斷好的名稱放不進圖示左邊就照左邊那段重新斷
-        /// （B、161，Rules.NameLinesAroundIcons）：這時圖示框的寬也影響排法，記進 NameIcons 一起比（圖示一個↔兩個↔沒有時重排；
+        /// （Rules.NameLinesAroundIcons）：這時圖示框的寬也影響排法，記進 NameIcons 一起比（圖示一個↔兩個↔沒有時重排；
         /// 其他情況記 0、不看，常駐時圖示變了不重排）。是不是斷窄了記在 Narrowed（Place 照它在左邊那段置中）。
         /// 只有 NameIcons 不一樣時（總是顯示名稱開著、按下放開 Tab），上次沒斷窄而且這一輪也不會換行的就沿用（Rules.KeepsNameLines，
         /// 用排好的名稱框寬判斷），只改記下的 NameIcons，不量、不重排。
@@ -1026,7 +1027,7 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 物品在圖層座標裡的寬與高（寬給 的放不下判斷、長名稱換行；高給充能器的兩顆一行判斷）。轉過的物品是轉過以後的
+        /// 物品在圖層座標裡的寬與高（寬給放不下判斷、長名稱換行；高給充能器的兩顆一行判斷）。轉過的物品是轉過以後的
         /// （外接矩形，見 ItemRect）。拿不到時兩個都是無限大（不限制寬度、不換兩顆一行）。
         /// </summary>
         static void ItemSize(Layer layer, GameItemElement item, out float width, out float height)
@@ -1041,10 +1042,11 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 把框擺到物品上（ItemRect）：資訊框的左下角對齊物品的左下角；名稱框 Top 時上緣中點對齊物品上緣的中點，
-        /// 疊到右上角的狀態圖示時閃開（Rules.DodgeIcons：左邊放得下就在物品左緣到圖示框左緣之間置中，放不下移到圖示下面；/// 用排好的名稱框寬判斷，這裡不換行；完整資訊、有資訊框時放不下的在 FillSingleName 已經照左邊那段斷窄、這裡在那段置中，B）；
+        /// 疊到右上角的狀態圖示時閃開（Rules.DodgeIcons：左邊放得下就在物品左緣到圖示框左緣之間置中，放不下移到圖示下面；
+        /// 用排好的名稱框寬判斷，這裡不換行；完整資訊、有資訊框時放不下的在 FillSingleName 已經照左邊那段斷窄、這裡在那段置中）；
         /// Center 時中心對齊物品的中心（旋轉過的物品也是外接矩形的中心）。
         /// 兩個框都在時接著排前後（Stack）：名稱這一輪為了圖示被移動（Rules.NameMoved：移到左邊那段、移到下面、在左邊那段換過行）、
-        /// 而且和資訊框照這一幀的位置疊到時資訊框在上（C、161，Rules.InfoAboveName），不然名稱在上（照常置中的名稱疊到也是）。
+        /// 而且和資訊框照這一幀的位置疊到時資訊框在上（Rules.InfoAboveName），不然名稱在上（照常置中的名稱疊到也是）。
         /// 名稱框的 pivot 在 Put 時已經照位置設好。每幀叫，只讀兩個框的 sizeDelta（只有名稱框時一個）、算幾個數，不配置記憶體。
         /// </summary>
         static void Place(Layer layer, Label label)
@@ -1099,7 +1101,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 排好的內容：字級（資訊、名稱）、字型、長名稱換行開關、物品寬度（影響長短、拆不拆、名稱怎麼斷）
         /// 與每行的字（長、短、拆開的前綴與數值）、顏色。名稱位置不用另外記：它決定名稱行在不在這個框裡，已經在行裡了。
         /// 要另外處理的行（Kind 不是 Normal）另外記種類：有格式標籤的行（Rich）打不打開格式標籤看它；
-        /// 有充能器的電池時再記物品的高與上緣名稱框的高（的兩顆一行看它們），其他物品的 Key 和以前一樣。
+        /// 有充能器的電池時再記物品的高與上緣名稱框的高，其他物品的 Key 和以前一樣。
         /// 順便回傳有沒有充能器電池（recharger）的行：FillInfo 只在有的時候才做兩顆一行（不建量字的閉包）。
         /// </summary>
         static string Key(List<Line> lines, LabelStyle style, float itemWidth, float itemHeight, float nameHeight, out bool recharger)

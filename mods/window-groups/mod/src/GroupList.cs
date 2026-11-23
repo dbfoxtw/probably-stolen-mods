@@ -103,7 +103,8 @@ namespace ProbablyStolenWindowGroups
         // ---------------- 開關 ----------------
 
         /// <summary>
-        /// 按了群組清單的鍵（WindowGroupsMod.Tick）：開著時照設定「清單再按一次」關掉或移到滑鼠旁邊（打字中都不做，/// 那是在輸入框裡打字），關著就照「能不能動作」判斷再開（和叫出一樣，另外拖著物品時不開）。
+        /// 按了群組清單的鍵（WindowGroupsMod.Tick）：開著時照設定「清單再按一次」關掉或移到滑鼠旁邊（打字中都不做，
+        /// 那是在輸入框裡打字），關著就照「能不能動作」判斷再開（和叫出一樣，另外拖著物品時不開）。
         /// </summary>
         internal static void Toggle(Binding b)
         {

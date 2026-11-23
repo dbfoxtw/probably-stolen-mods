@@ -27,7 +27,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>標題列的淺色字（#d5d2b8，遊戲米色按鈕面的顏色）。</summary>
         static readonly Color TitleText = new Color32(213, 210, 184, 255);
         /// <summary>
-        /// 打開的下拉清單裡選中的那一項：深綠（的綠）。清單是深色、字是同一個樣板的淺色，淺色底配淺色字看不清楚，
+        /// 打開的下拉清單裡選中的那一項：深綠。清單是深色、字是同一個樣板的淺色，淺色底配淺色字看不清楚，
         /// 所以這一項不跟著換成「開」的金色。
         /// </summary>
         static readonly Color Green = new Color32(63, 138, 74, 255);
@@ -36,7 +36,7 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>分頁列下面的分隔線：比米色內頁深一點的淡線（遊戲的深色線在米色上太重）。</summary>
         static readonly Color Rule = new Color32(170, 160, 126, 255);
         /// <summary>
-        /// 打開的下拉清單：深色清單，和米色內頁差得最多（的米色清單和內頁同色，看不出是清單）。
+        /// 打開的下拉清單：深色清單，和米色內頁差得最多（看不出是清單）。
         /// 底是標題列的深藍灰（IconArt 的「T」#414554），框是標題列的九宮格（深色描邊），字是標題列的淺色字。
         /// </summary>
         static readonly Color ListBack = new Color32(65, 69, 84, 255);
@@ -215,7 +215,7 @@ namespace ProbablyStolenItemQuickInfo
         // ================= 滑桿 =================
 
         /// <summary>
-        /// 滑桿填滿的部分：「開」與選中的分頁的金色 #c4a45f（的按鈕面，IconArt 調色盤的 q；的示意圖 C）。
+        /// 滑桿填滿的部分：「開」與選中的分頁的金色 #c4a45f（IconArt 調色盤的 q）。
         /// 從調色盤拿，兩邊不會各寫一份對不上。
         /// </summary>
         static Color Gold()
@@ -330,7 +330,7 @@ namespace ProbablyStolenItemQuickInfo
                 }
                 if (item.graphic is Image mark)
                 {
-                    // 勾拉滿整項、綠底（的深綠）：選中的那項整條看得出來；勾排在字的前面，字照樣在上面。
+                    // 勾拉滿整項、綠底：選中的那項整條看得出來；勾排在字的前面，字照樣在上面。
                     // 清單的字是同一個樣板、每一項同色，淺色字在深色底和綠底上都看得清楚。不內縮：清單打開時遊戲替目前的那項叫
                     // toggle.Select()，那一項的底是選取時的亮色，內縮的話綠底外面會露一圈亮邊（審查發現）
                     Flat(mark, Green);

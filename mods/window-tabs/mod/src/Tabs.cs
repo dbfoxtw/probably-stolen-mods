@@ -10,7 +10,8 @@ namespace ProbablyStolenWindowTabs
     /// 分頁的主邏輯：每幀（WindowTabsRunner.LateUpdate，遊戲與別的 mod 都開關完視窗之後）
     /// 1. 整理：一組只留一個開著的視窗、新打開的擺到這組的位置；
     /// 2. 滑鼠：點分頁切頁、拖分頁重排／移到別組／拖出來、拖視窗到別的標題列合併、拖著物品停在分頁上切頁；
-    ///    只有從自己的標題列開始拖的視窗才合併。右鍵點分頁切換鎖住整組（2.6.0 起，：成員固定，///    別的併不進來、組員拖不出去）。接著看切頁鍵：切滑鼠底下那組（Settings）；
+    ///    只有從自己的標題列開始拖的視窗才合併。右鍵點分頁切換鎖住整組（2.6.0 起，成員固定，
+    ///    別的併不進來、組員拖不出去）。接著看切頁鍵：切滑鼠底下那組（Settings）；
     /// 3. 畫分頁條（TabStrip）。
     /// 沒有攔遊戲的任何方法：開關視窗都用遊戲自己的方法（GameWindows），判斷都看視窗清單與滑鼠位置。
     /// 分頁組記在 mod 自己的檔案（TabStore），不碰存檔。
@@ -902,7 +903,8 @@ namespace ProbablyStolenWindowTabs
         /// 拖到哪裡：照上下順序（focusStamp 大的在上面）找滑鼠底下的視窗，跳過被拖的那個；
         /// 最上面那個的分頁條或標題列在滑鼠底下就是目標，滑鼠在它的內容區就什麼都不是（被它擋住了）。
         /// 只有店裡自己的箱子能組（_own）。tabDrag：拖分頁時，自己這組的分頁條＝重排，自己的標題列＝取消。
-        /// 最上面那個所在的組鎖住了（2.6.0 起，Rules.AcceptsMerge）：沒有目標、記在 _blockedBy（不出預告、不顯示被擋；/// 拖分頁時放開＝取消）。它蓋在最上面，和內容區一樣不往下找。
+        /// 最上面那個所在的組鎖住了（2.6.0 起，Rules.AcceptsMerge）：沒有目標、記在 _blockedBy（不出預告、不顯示被擋；
+        /// 拖分頁時放開＝取消）。它蓋在最上面，和內容區一樣不往下找。
         /// </summary>
         static Target FindTarget(TabRecord r, List<PixelWindow> windows, Vector2 mouse, PixelWindow dragged, bool tabDrag)
         {

@@ -173,8 +173,8 @@ namespace ProbablyStolenWindowGroups
 
         /// <summary>
         /// 同一組再按一次時要不要關掉這組。只看找得到、打得開的視窗（found：編號 → 現在的位置，沒開著的是 null）；
-        /// 一個都沒有時不會走到這裡（照 只提示）。
-        /// - 重新排好：永遠不關（照 叫出）。
+        /// 一個都沒有時不會走到這裡（只提示）。
+        /// - 重新排好：永遠不關（叫出）。
         /// - 全開就關：全部開著就關，不管位置、不管旁邊多開了什麼。
         /// - 沒動才關：全部開著，而且每個都在上次叫出這組後實際擺到的位置（recorded；沒有紀錄或少了誰都算動過）的容差以內才關。
         /// </summary>
@@ -353,7 +353,7 @@ namespace ProbablyStolenWindowGroups
         /// Esc 的判斷表（改名中 Esc 只取消改名），照順序：沒按 Esc → 不管；輸入框這一幀已經取消了改名 → 用掉；
         /// 清單沒開 → 不管；改名中 → 取消改名；其他 → 不管。
         /// 只有改名的 Esc 由清單自己用掉；其他的照遊戲 ResolveEscape 的順序（先取消確認框、選取、多選、拖曳……），
-        /// 關清單在它最後的 CloseTopmostEscapeTarget 那一步做（GroupList.CloseIfTopmost，的後續）。
+        /// 關清單在它最後的 CloseTopmostEscapeTarget 那一步做（GroupList.CloseIfTopmost）。
         /// </summary>
         internal static EscapeChoice DecideEscape(bool backDown, bool renameCanceledThisFrame, bool listOpen, bool editing)
         {
