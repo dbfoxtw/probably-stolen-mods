@@ -2,7 +2,8 @@ Probably Stolen 物品速覽 mod（Item Quick Info） v{version}
 ======================================================
 
 按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：液體量與純度、電量、今晚的電力收支、
-機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。
+機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度、模組加成，還有你取的名稱；
+放開就消失。
 機器上另有狀態圖示：⚠ 卡住、Zz 要補東西、✓ 可以收。
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
@@ -34,12 +35,14 @@ ModData\dbfoxtw_item-quick-info 資料夾；用過 1.3.0 以前版本的，還�
   身上出現資訊框，放開就消失。設定的「按鍵方式」選「切換」時，按一下顯示、再按一下消失；讀檔、回主選單時自動關掉。
 - 狀態圖示：機器的右上角畫一個小圖示，⚠ 是卡住了（例如缺電、產出滿了）、Zz 是要補東西才會運作（例如缺料）、
   ✓ 是有東西可以收。可以改成一直顯示；機器收在箱子裡時，箱子上也畫裡面機器的圖示。
+  設定打開「忽略沒裝電池的冰箱」時，電池槽空著的冰箱不畫圖示、不寫原因。
 - 液體：液量（ml）與純度（量最多的那種液體佔多少，例如 98.5%）。純度一律是真實的值，不用水質掃描器檢測。
 - 電池：剩下的電量；今晚會充電時，下面用綠字顯示會充多少（例如 +4kJ）。充能器裡的電池每顆一行。
 - 機器：今晚不會運作的原因（橘字，排在最上面）、還要幾天完成（例如 剩3天）、電量（不夠今晚用時變紅；
   接了電流轉換器時改寫今晚的電費）、今晚的電力收支（增加綠字、減少橘字，括號裡是電池還撐幾天，例如 -8kJ (10天)）、
   輸出區的成品數、機器裡的液體。水培系統的礦物質不在種子的範圍內時寫「礦物質太少」或「礦物質太多」；
   簡易微型核反應爐顯示完好度、存的電，今晚會爆炸時寫「今晚爆炸」。
+- 模組：性能、效率、品質三項裡最高的加成（例如 性能 +16%）；機器專用的模組不顯示。
 - 任何物品：耐久度（水罐、循環水養殖系統顯示濾材的耐久）、金屬錠的純度等級、藥品的純度、還能用幾次、贓物的熱度。
 - 名稱：你取過名稱的箱子、背包、機器和其他物品，用淺藍色顯示在物品上方（也可以放在資訊框的第一行）。
   設定打開「總是顯示名稱」，名稱就不用按鍵、一直顯示。「長名稱換行」一開始是開的：比物品寬的名稱會換行。
@@ -50,7 +53,7 @@ ModData\dbfoxtw_item-quick-info 資料夾；用過 1.3.0 以前版本的，還�
 
 【設定】
 - 打開設定：在店裡按住 Tab，點畫面右上角的「物品速覽」設定鈕；也可以替「打開物品速覽設定」綁一個鍵。
-  改了馬上生效，不用重開遊戲。7 個分頁：一般、名稱、液體、電池、機器、狀態圖示、物品；
+  改了馬上生效，不用重開遊戲。8 個分頁：一般、名稱、液體、電池、機器、狀態圖示、物品、特殊；
   設定名稱後面的 ⓘ，滑鼠指著就看得到說明。主選單「模組」畫面的齒輪是灰的（1.4.0 起設定不在那裡）。
 - 按鍵與設定鈕的位置：遊戲「選項」裡「按鍵綁定」後面的「物品速覽」一區（顯示物品資訊預設 Tab）。
 - 設定、按鍵存在存檔資料夾的 ModData\dbfoxtw_item-quick-info\settings.json。
@@ -78,8 +81,8 @@ Probably Stolen Item Quick Info mod v{version}
 
 Hold a key (Tab by default) to show key info right on the items on screen: liquid volume and purity,
 battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left,
-stolen heat and the names you gave things. Release to hide. Machines also get status icons:
-⚠ stuck, Zz needs something, ✓ ready to collect.
+stolen heat, module bonuses and the names you gave things. Release to hide.
+Machines also get status icons: ⚠ stuck, Zz needs something, ✓ ready to collect.
 Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
@@ -118,6 +121,7 @@ Features
 - Status icons: a small icon at the top right of a machine. ⚠ means it's stuck (e.g. No power, Output full),
   Zz means it needs something before it can run (e.g. No input), ✓ means there's something to collect.
   You can make them always show; machines stored in a container show their icons on the container too.
+  With Ignore Fridges without a battery on, a Fridge with an empty battery slot gets no icon and no reason.
 - Liquids: volume (ml) and purity (the share of the main liquid, e.g. 98.5%). Purity is always the real
   value, no AquaScan needed.
 - Batteries: the energy left; when a battery will be charged tonight, a green line below shows how much
@@ -128,6 +132,8 @@ Features
   how many items are in its output, and the liquid inside it. A Hydroponic System shows Low minerals or
   High minerals when the water is outside the seed's range; the Makeshift Micro Nuclear Reactor shows its
   integrity, stored charge, and Explodes tonight when it will.
+- Modules: the highest bonus among Performance, Efficiency and Quality (e.g. Perf +16%); modules made
+  for one kind of machine aren't shown.
 - Any item: durability (Water Pitchers and the Recirculating Aquaculture System show their filters'),
   a Metal Ingot's purity grade, a drug's purity, uses left, and the heat of a stolen item.
 - Names: the names you gave containers, backpacks, machines and other items, in light blue above the item
@@ -144,9 +150,9 @@ to this mod, not to the game developers.
 Settings
 - Open the settings: in your shop, hold Tab and click the Item Quick Info button at the top right of the
   screen, or bind a key to Open Item Quick Info settings. Changes apply right away; no restart needed.
-  7 tabs: General, Names, Liquids, Batteries, Machines, Status icons, Items; point at the ⓘ after a
-  setting's name to see what it does. The gear on the Mods screen of the main menu is gray (from 1.4.0
-  the settings aren't there).
+  8 tabs: General, Names, Liquids, Batteries, Machines, Status icons, Items, Special; point at the ⓘ
+  after a setting's name to see what it does. The gear on the Mods screen of the main menu is gray
+  (from 1.4.0 the settings aren't there).
 - Keys and where the button goes: the Item Quick Info section after Key Binds in the game's Options
   (Show item info is Tab by default).
 - The settings and keys are kept in ModData\dbfoxtw_item-quick-info\settings.json in the save folder.

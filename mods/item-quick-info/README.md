@@ -1,6 +1,6 @@
 # Probably Stolen 物品速覽 mod（Item Quick Info）
 
-*Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：液體量與純度、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度，還有你取的名稱；放開就消失。機器上另有狀態圖示：⚠ 卡住、Zz 要補東西、✓ 可以收。
+*Probably Stolen* 的 mod：按住一個鍵（預設 Tab），畫面上的物品身上直接顯示重點資訊：液體量與純度、電量、今晚的電力收支、機器今晚不會運作的原因、還要幾天完成、耐久度、使用次數、贓物熱度、模組加成，還有你取的名稱；放開就消失。機器上另有狀態圖示：⚠ 卡住、Zz 要補東西、✓ 可以收。
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
@@ -8,7 +8,7 @@
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報（[Issues](https://github.com/dbfoxtw/probably-stolen-mods/issues)、[工作坊頁面](https://steamcommunity.com/sharedfiles/filedetails/?id=3836004383)的留言，或 Nexus 頁面的 Bugs 分頁）。
 
-> A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen, such as liquid volume and purity, battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left, stolen heat and the names you gave things. Release to hide. Machines also get status icons: ⚠ stuck, Zz needs something, ✓ ready to collect. See [English](#english) below.
+> A mod for *Probably Stolen*: hold a key (Tab by default) to show key info right on the items on screen, such as liquid volume and purity, battery charge, tonight's net energy, why a machine won't run tonight, days left, durability, uses left, stolen heat, module bonuses and the names you gave things. Release to hide. Machines also get status icons: ⚠ stuck, Zz needs something, ✓ ready to collect. See [English](#english) below.
 
 ## 功能
 
@@ -19,6 +19,7 @@
   - 一開始跟著資訊框一起出現，也可以改成一直顯示；可以挑要畫哪幾種、放右上角還是右下角。沒放任何東西的空機器一開始不畫 Zz。
   - 機器收在箱子裡（例如機器區）時，箱子上也畫裡面機器的圖示。
   - 裝了濾材的水罐，濾材耐久用完時畫 ⚠。
+  - 設定打開「忽略沒裝電池的冰箱」時，電池槽空著的冰箱（例如拿來當倉庫用的）不畫圖示、不寫原因。
 - **液體**：液量（ml）與純度（量最多的那種液體佔多少，例如 `98.5%`），水和其他液體都一樣。純度一律是真實的值，不用水質掃描器檢測。
 - **電池**：剩下的電量；今晚會充電時，下面用綠字顯示會充多少，例如 `+4kJ`。充能器裡的電池每顆一行。
 - **機器**：
@@ -30,7 +31,8 @@
   - 機器裡的液體的液量與純度。
   - 水培系統：水裡的礦物質不在種子的範圍內時，寫「礦物質太少」或「礦物質太多」，並畫 ⚠。
   - 簡易微型核反應爐：完好度、存的電；今晚會爆炸時寫「今晚爆炸」，並畫 ⚠。
-- **任何物品**：耐久度（剩 1/4 以下變橘色；水罐、循環水養殖系統顯示裡面濾材的耐久）、金屬錠的純度等級、藥品的純度（例如 `88%`）、還能用幾次（用完變紅）、贓物的熱度（紅字）。
+- **模組**：性能、效率、品質三項裡最高的加成，例如 `性能 +16%`（負的是橘字），寫在模組最寬的那一排。機器專用的模組不顯示。
+- **任何物品**：耐久度（剩 1/4 以下變橘色；水罐、循環水養殖系統顯示裡面濾材的耐久，水罐沒裝濾材時寫「沒濾材」）、金屬錠的純度等級、藥品的純度（例如 `88%`）、還能用幾次（用完變紅）、贓物的熱度（紅字）。
 - **名稱**：你取過名稱的箱子、背包、機器和其他物品，用淺藍色顯示在物品上方置中，會讓開右上角的狀態圖示；按鍵顯示資訊時，也可以在設定改成放在資訊框的第一行。
   - 設定打開「總是顯示名稱」，名稱就不用按鍵、一直顯示，其他資訊照舊按鍵才顯示。料斗自動編的號碼（#1、#2…）照舊只在按鍵時顯示。只顯示名稱時的位置另外設定，可以放在物品上方置中、中間或左下角。
   - 「長名稱換行」（一開始是開的）：比物品寬的名稱會換行，寬度不超過物品。
@@ -52,19 +54,20 @@
 
 按鍵是點一下那列、再按想用的鍵，按套用就生效；Esc 和其他列已經用掉的鍵，遊戲會擋下來。
 
-**設定視窗**有 7 個分頁，分頁、設定名稱和選項的字都跟著遊戲語言（下表是繁中）。設定名稱後面的 ⓘ，滑鼠指著就看得到說明。右下角的「恢復預設」只把這一頁改回預設（按一下變成「確定？」，再按一次才算）。
+**設定視窗**有 8 個分頁，分頁、設定名稱和選項的字都跟著遊戲語言（下表是繁中）。設定名稱後面的 ⓘ，滑鼠指著就看得到說明。右下角的「恢復預設」只把這一頁改回預設（按一下變成「確定？」，再按一次才算）。
 
 | 分頁 | 設定 |
 |---|---|
 | 一般 | 按鍵方式（按住／切換）、每行開頭的字（短／長）、文字大小（小／中／大／特大）、資訊框不透明度 |
 | 名稱 | 總是顯示名稱、名稱位置（資訊框未顯示時：上方／置中／左下角）、名稱位置（資訊框顯示時：上方／資訊框）、名稱文字大小、長名稱換行、顯示箱子名稱、顯示機器名稱、顯示其他物品名稱 |
-| 液體 | 顯示液體量、顯示純度、顯示機器裡的液體 |
+| 液體 | 顯示液體量、顯示純度、顯示液體容器的「沒濾材」、顯示機器裡的液體 |
 | 電池 | 顯示電池電量、顯示今晚會充多少電 |
 | 機器 | 顯示電量、顯示今晚的電力收支、顯示今晚不會運作的原因、水培礦物質範圍警告、顯示進度、顯示輸出區的成品數、顯示反應爐 |
 | 狀態圖示 | 狀態圖示（不顯示／按鍵時／一直顯示）、圖示位置（右上角／右下角）、圖示底色（深色／淺色）、圖示底色不透明度、顯示警告圖示、顯示閒置圖示（不顯示／空機器除外／全部）、顯示完成圖示、箱子上的圖示（不顯示／只有警告／警告和閒置／全部） |
-| 物品 | 顯示贓物熱度、顯示使用次數、顯示耐久度、顯示金屬錠純度、顯示藥品純度 |
+| 物品 | 顯示贓物熱度、顯示使用次數、顯示耐久度、顯示金屬錠純度、顯示藥品純度、顯示模組加成 |
+| 特殊 | 忽略沒裝電池的冰箱 |
 
-開關一開始只有「總是顯示名稱」是關的，其他都是開的。
+開關一開始只有「總是顯示名稱」「忽略沒裝電池的冰箱」是關的，其他都是開的。
 
 設定、按鍵與設定鈕的位置存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModData\dbfoxtw_item-quick-info\settings.json`。從 1.3.0 以前的版本更新的，第一次開遊戲時舊的設定（`ModConfigs\dbfoxtw.item-quick-info.json`）會自動搬過來，之後不再讀寫那個舊檔。
 
@@ -107,6 +110,7 @@
 - **電流轉換器的電費**是每台各自的價錢，好幾台加起來，可能和遊戲晚上實際收的差一點。
 - 預設分支（VERSION 100-REV13）上，反應爐不顯示存的電。
 - 名稱或資訊框比物品寬時（長名稱、大字）會伸出物品外，蓋住旁邊的物品；物品在格子邊緣時，伸出去太多的部分會被裁掉。名稱在物品上方時，一格高的物品的名稱和資訊框會疊在一起。「長名稱換行」開著時，窄的物品上長名稱會變成好幾行，蓋住上下的物品。
+- 取過名的模組，加成寫在最上面那一排時（例如橫放的 L、T 形），名稱可能蓋住加成。
 - 遊戲之後如果改了物品或機器的做法，要等 mod 更新。
 
 ## 相容性
@@ -150,6 +154,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - They appear with the info boxes at first; you can make them always show, pick which ones to draw, and put them at the top right or bottom right. Empty machines (nothing put in) don't get Zz at first.
   - Machines stored in a container (e.g. a Machine Bay) show their icons on the container too.
   - A Water Pitcher with a filter gets ⚠ when the filter is used up.
+  - With Ignore Fridges without a battery on, a Fridge with an empty battery slot (e.g. one kept as storage) gets no icon and no reason.
 - **Liquids**: volume (ml) and purity (the share of the main liquid, e.g. `98.5%`), for water and any other liquid. Purity is always the real value, no AquaScan needed.
 - **Batteries**: the energy left; when a battery will be charged tonight, a green line below shows how much, e.g. `+4kJ`. Each battery in a Recharger gets its own line.
 - **Machines**:
@@ -161,7 +166,8 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - Volume and purity of the liquid inside the machine.
   - Hydroponic System: Low minerals or High minerals, with ⚠, when the water is outside the seed's range.
   - Makeshift Micro Nuclear Reactor: its integrity and stored charge; Explodes tonight, with ⚠, when it will.
-- **Any item**: durability (orange at 1/4 or less; Water Pitchers and the Recirculating Aquaculture System show their filters' durability), a Metal Ingot's purity grade, a drug's purity (e.g. `88%`), uses left (red when used up), and the heat of a stolen item (in red).
+- **Modules**: the highest bonus among Performance, Efficiency and Quality, e.g. `Perf +16%` (orange when negative), on the module's widest row. Modules made for one kind of machine aren't shown.
+- **Any item**: durability (orange at 1/4 or less; Water Pitchers and the Recirculating Aquaculture System show their filters' durability, and a Water Pitcher without a filter says No filter), a Metal Ingot's purity grade, a drug's purity (e.g. `88%`), uses left (red when used up), and the heat of a stolen item (in red).
 - **Names**: the names you gave containers, backpacks, machines and other items, in light blue, centered at the top of the item and moved aside for the status icon. While the key shows the info, you can put them on the first line of the info box instead in the settings.
   - Turn on Always show names to keep names on screen without the key; the other info still needs the key. Hopper numbers the game assigns (#1, #2…) still show only with the key. Where names go when only names are shown is a separate setting: the top, the middle or the bottom-left corner of the item.
   - Wrap long names (on at first): names wider than the item wrap onto more lines, within the item's width.
@@ -175,19 +181,20 @@ The names, info boxes and status icons come from this mod, not the base game; pl
 
 - **Open the settings**: in your shop, hold Tab and click the Item Quick Info button at the top right of the screen (a hint shows the first time you enter the shop), or bind a key to Open Item Quick Info settings and press it to open and close the window. Changes apply right away; no Apply button, no restart. The gear on the Mods screen of the main menu is gray (from 1.4.0 the settings aren't there).
 - **Keys and the button**: in the game's Options (open it from the main menu, or press Esc in your shop), the Item Quick Info section after Key Binds: Show item info (Tab by default), Open Item Quick Info settings (not bound at first), and Settings button (Top right, Top left, Bottom right, Bottom left or Hidden). Click a key row, press the key you want, and apply. The game won't let you pick Esc or a key another row already uses.
-- **The settings window** has 7 tabs; the tab names, settings and options follow the game language. Point at the ⓘ after a setting's name to see what it does. Reset tab at the bottom right resets only the current tab (click it, then click Sure? to confirm).
+- **The settings window** has 8 tabs; the tab names, settings and options follow the game language. Point at the ⓘ after a setting's name to see what it does. Reset tab at the bottom right resets only the current tab (click it, then click Sure? to confirm).
 
 | Tab | Settings |
 |---|---|
 | General | Key mode (Hold / Toggle), Line prefixes (Short / Long), Text size (Small / Medium / Large / Extra large), Info box opacity |
 | Names | Always show names; Name position (info box hidden): Top / Center / Bottom left; Name position (info box shown): Top / Info box; Name text size; Wrap long names; Show container names; Show machine names; Show other item names |
-| Liquids | Show liquid volume, Show purity, Show liquid in machines |
+| Liquids | Show liquid volume, Show purity, Show "No filter" on liquid containers, Show liquid in machines |
 | Batteries | Show battery charge, Show tonight's charge |
 | Machines | Show machine power, Show tonight's net energy, Show why a machine won't run tonight, Hydroponic mineral range warning, Show machine progress, Show output count, Show reactor |
 | Status icons | Status icons (Off / With key / Always), Icon position (Top right / Bottom right), Icon background (Dark / Light), Icon background opacity, Show warning icon, Show idle icon (Off / Except empty / All), Show done icon, Icons on containers (Off / Warning only / Warning and idle / All) |
-| Items | Show stolen heat, Show uses left, Show durability, Show ingot purity, Show drug purity |
+| Items | Show stolen heat, Show uses left, Show durability, Show ingot purity, Show drug purity, Show module bonuses |
+| Special | Ignore Fridges without a battery |
 
-Of the switches, only Always show names starts off. The settings, keys and the button's position are kept in `ModData\dbfoxtw_item-quick-info\settings.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`). If you update from 1.3.0 or earlier, your old settings (`ModConfigs\dbfoxtw.item-quick-info.json`) are moved over the first time you start the game; the old file isn't read or written after that.
+Of the switches, only Always show names and Ignore Fridges without a battery start off. The settings, keys and the button's position are kept in `ModData\dbfoxtw_item-quick-info\settings.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`). If you update from 1.3.0 or earlier, your old settings (`ModConfigs\dbfoxtw.item-quick-info.json`) are moved over the first time you start the game; the old file isn't read or written after that.
 
 **Languages:** the info boxes, the settings window, the three rows in Options and the hint follow the game language: English, Simplified Chinese (Traditional Chinese with the [Traditional Chinese mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3828909380)), Russian, German, Japanese, French, Spanish or Polish, English for any other language.
 
@@ -222,6 +229,7 @@ If the mod is both in your `Mods` folder and subscribed on the Workshop, the gam
 - **The Current Converter cost** is each machine's own price; added up, it can differ slightly from what the game charges at night.
 - On the default branch (VERSION 100-REV13), the reactor's stored charge isn't shown.
 - Names or info boxes wider than the item (long names, large text) stick out and cover the items next to it; on an item at the edge of a grid, what sticks out too far is cut off. With names at the top, the name and the info box of an item one cell high overlap. With Wrap long names on, a long name on a narrow item becomes several lines and covers the items above or below.
+- On a module you've named, the name can cover the bonus when the bonus sits on the top row (e.g. an L or T shape lying flat).
 - If a game update changes how items or machines work, wait for a mod update.
 
 **Compatibility**

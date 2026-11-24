@@ -31,6 +31,9 @@ cfg_water_volume_tip,"Show how much liquid a container holds, for example {0}."
 cfg_water_purity,Show purity
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Show how much of the liquid is its main component. For water, it's the water purity. Not shown for empty containers.\nOff = don't show\nWhole number = {0} (can't spot Pure Water)\n1 decimal = {1}\n2 decimals = {2}"
+cfg_no_filter,Show "No filter" on liquid containers
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,"Liquid containers that take a filter, such as the Water Pitcher, show "{0}" when they have none. The Recirculating Aquaculture System isn't included."
 cfg_machine_water,Show liquid in machines
 cfg_machine_water_tip,Show the liquid inside a machine. The two lines also follow Show liquid volume and Show purity.
 cfg_battery_charge,Show battery charge
@@ -93,6 +96,12 @@ cfg_ingot_purity_tip,"Show the purity grade of a Metal Ingot, for example {0}."
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,Show drug purity
 cfg_drug_purity_tip,"Show the purity of drugs, for example {0}."
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("Perf +16%"; info_prefix_performance below)
+cfg_module_bonus,Show module bonuses
+cfg_module_bonus_tip,"Show a module's highest bonus among Performance, Efficiency and Quality, for example {0}. Modules made for one kind of machine aren't shown."
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Ignore Fridges without a battery
+cfg_ignore_fridges_without_battery_tip,A Fridge with no battery shows no status icons and no reason such as {0}. Useful when you keep Fridges as storage.
 cfg_key_mode,Key mode
 cfg_key_mode_tip,"Choose whether to hold the Show item info key or press it to switch.\nHold = show while held, hide on release\nToggle = press once to show, press again to hide; turns off when you load a save or go back to the main menu"
 cfg_text_size,Text size
@@ -141,7 +150,7 @@ opt_one_decimal,1 decimal
 opt_two_decimals,2 decimals
 
 # ---- Settings window in the store (new in 1.4.0) ----
-# ui_tab_* = the 7 tabs in one row (arrows appear when they don't fit). ui_reset = bottom-right button; one click turns it into ui_reset_sure,
+# ui_tab_* = the 8 tabs in one row (arrows appear when they don't fit). ui_reset = bottom-right button; one click turns it into ui_reset_sure,
 # a second click within a few seconds resets the tab. ui_button = the button on screen that opens the window (a gear is drawn before it):
 # use the mod's name in your language. ui_hint = shown in the store until ui_hint_ok is clicked: {0} = the key bound to Show item info
 # (the game's key name), {1} = one of ui_hint_top_right ... (the corner the button is in).
@@ -153,6 +162,7 @@ ui_tab_batteries,Batteries
 ui_tab_machines,Machines
 ui_tab_icons,Status icons
 ui_tab_items,Items
+ui_tab_special,Special
 ui_reset,Reset tab
 ui_reset_sure,Sure?
 ui_reset_tip,Set every setting on this tab back to its default. Click again to confirm.
@@ -194,6 +204,11 @@ info_prefix_filter_long,Filter
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,Int
 info_prefix_integrity_long,Integrity
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("Perf +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,Perf
+info_prefix_efficiency,Eff
+info_prefix_quality,Qual
 
 # Machine progress: how many days until the machine finishes. No prefix: this is the whole line. {0} = number of days.
 # info_days_short: shortest form, the same for every number ("3d").

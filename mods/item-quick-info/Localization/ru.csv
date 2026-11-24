@@ -30,6 +30,9 @@ cfg_water_volume_tip,"Показывать, сколько жидкости в �
 cfg_water_purity,Показывать чистоту
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Показывать, какую долю жидкости составляет её основной компонент. Для воды это чистота воды. Для пустых контейнеров не показывается.\nНе показывать = без строки чистоты\nЦелое число = {0} (чистую воду не отличить)\nДо десятых = {1}\nДо сотых = {2}"
+cfg_no_filter,Показывать «Нет фильтра» у контейнеров для жидкостей
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,"Контейнеры для жидкостей, в которые можно установить фильтр (например, кувшин для воды), показывают «{0}», если фильтра нет. Не относится к системе замкнутого цикла для аквакультуры."
 cfg_machine_water,Показывать жидкость в устройствах
 cfg_machine_water_tip,Показывать жидкость внутри устройства. Эти две строки также зависят от «Показывать объём жидкости» и «Показывать чистоту».
 cfg_battery_charge,Показывать заряд батарей
@@ -67,7 +70,7 @@ cfg_warning_icon,Показывать значок предупреждения
 cfg_warning_icon_tip,"Показывать предупреждающий знак, если у устройства есть работа, но оно застряло (например, «{0}»), или фильтр в кувшине для воды израсходован."
 cfg_idle_icon,Показывать значок простоя
 # {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
-cfg_idle_icon_tip,"Показывать Zz, если устройство не будет работать этой ночью, пока вы что-нибудь не добавите, например «{0}» или «{1}».\nНе показывать = не показывать Zz\nКроме пустых = не показывать, когда входные ячейки устройства пусты (например, нет контейнера или пустой Холодильник)\nВсе = показывать, даже когда входные ячейки пусты"
+cfg_idle_icon_tip,"Показывать Zz, если устройство не будет работать этой ночью, пока вы что-нибудь не добавите, например «{0}» или «{1}».\nНе показывать = не показывать Zz\nКроме пустых = не показывать, когда входные ячейки устройства пусты (например, нет контейнера или пустой холодильник)\nВсе = показывать, даже когда входные ячейки пусты"
 cfg_done_icon,Показывать значок готовности
 cfg_done_icon_tip,"Показывать галочку, если у устройства есть что забрать, например предметы на выходе (приёмный и выпускной бункеры не считаются) или вода, которую оно собрало или закончило очищать."
 # Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
@@ -90,6 +93,12 @@ cfg_ingot_purity_tip,"Показывать степень чистоты сли�
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,Показывать чистоту препаратов
 cfg_drug_purity_tip,"Показывать чистоту препаратов, например {0}."
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("Пок. +16%"; info_prefix_performance below)
+cfg_module_bonus,Показывать бонусы модулей
+cfg_module_bonus_tip,"Показывать наибольший из бонусов модуля («Показатели», «Эффективность» или «Качество»), например {0}. Модули, сделанные для одного вида устройств, не показываются."
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Игнорировать холодильники без батареи
+cfg_ignore_fridges_without_battery_tip,"Холодильник без батареи не показывает значки состояния и причины вроде «{0}». Удобно, если вы используете холодильники как склад."
 cfg_key_mode,Режим клавиши
 cfg_key_mode_tip,"Выберите, удерживать ли клавишу «Показать сведения о предметах» или переключать показ нажатием.\nУдерживать = показывать, пока клавиша зажата, и скрывать, когда она отпущена\nПереключать = нажать, чтобы показать, и ещё раз, чтобы скрыть; выключается при загрузке сохранения или выходе в главное меню"
 cfg_text_size,Размер текста
@@ -143,6 +152,7 @@ ui_tab_batteries,Батареи
 ui_tab_machines,Устройства
 ui_tab_icons,Значки состояния
 ui_tab_items,Предметы
+ui_tab_special,Особые
 ui_reset,Сбросить вкладку
 ui_reset_sure,Точно?
 ui_reset_tip,"Вернуть все настройки на этой вкладке к значениям по умолчанию. Нажмите ещё раз, чтобы подтвердить."
@@ -180,6 +190,11 @@ info_prefix_filter_long,Фильтр
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,Раб.
 info_prefix_integrity_long,Работоспособность
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("Пок. +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,Пок.
+info_prefix_efficiency,Эфф.
+info_prefix_quality,Кач.
 
 # Machine progress: how many days until the machine finishes. No prefix: this is the whole line. {0} = number of days.
 # info_days_short: shortest form, the same for every number ("3д"). info_days_long: 1 день, 3 дня, 5 дней (21 день, 22 дня, 11 дней).

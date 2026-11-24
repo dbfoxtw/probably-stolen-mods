@@ -8,7 +8,7 @@ namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
     /// 設定（寫法照一鍵關窗的 Settings）：
-    /// - 37 個設定（SettingDefs）1.4.0 起存在 mod 自己的 ModData\dbfoxtw_item-quick-info\settings.json 的 "settings"，
+    /// - 40 個設定（SettingDefs）1.4.0 起存在 mod 自己的 ModData\dbfoxtw_item-quick-info\settings.json 的 "settings"，
     ///   在店內設定視窗（SettingsUI）改，改了馬上生效、每改一次就存檔；滑桿（兩個不透明度）拖的時候生效、放開才存檔（SetLive、CommitLive）。
     ///   主選單模組畫面的齒輪變灰（不再定義 ModConfig）。
     ///   ModData 裡還沒有 "settings" 時（第一次跑 1.4.0）從 1.3.0 以前的 ModConfigs\dbfoxtw.item-quick-info.json 搬過來（MigrateFromModConfig）。
@@ -80,8 +80,10 @@ namespace ProbablyStolenItemQuickInfo
             StolenHeat = On(SettingDefs.ShowStolenHeat),
             UseCount = On(SettingDefs.ShowUseCount),
             Durability = On(SettingDefs.ShowDurability),
+            NoFilter = On(SettingDefs.ShowNoFilter),
             IngotPurity = On(SettingDefs.ShowIngotPurity),
             DrugPurity = On(SettingDefs.ShowDrugPurity),
+            ModuleBonus = On(SettingDefs.ShowModuleBonus),
         };
 
         /// <summary>狀態圖示的設定：每輪重算時讀成一份（拖滑桿改的不透明度下一輪就套上）。</summary>
@@ -108,6 +110,12 @@ namespace ProbablyStolenItemQuickInfo
         /// 顯示反應爐（預設開）：自製反應爐的今晚爆炸、完好度、存的電與今晚爆炸的 ⚠。每輪重算時給 ReadContext（完整資訊、常駐的圖示）。
         /// </summary>
         internal static bool ShowReactor => On(SettingDefs.ShowReactor);
+
+        /// <summary>
+        /// 忽略沒裝電池的冰箱（預設關）：電池槽空著的冰箱不畫狀態圖示、資訊框不寫原因、不算進箱子上的圖示。
+        /// 每輪重算時給 ReadContext（完整資訊、常駐的圖示、全店快照），和 MineralWarning 一樣。
+        /// </summary>
+        internal static bool IgnoreFridgesWithoutBattery => On(SettingDefs.IgnoreFridgesWithoutBattery);
 
         /// <summary>
         /// 狀態圖示不按鍵也要畫（Always，而且三個開關至少開一個；閒置是三選一，不是「不顯示」就算開）：每幀都讀
@@ -153,19 +161,20 @@ namespace ProbablyStolenItemQuickInfo
         {
             if (!_values.Set(d, value)) return false;
             ItemQuickInfoMod.DebugLog($"設定 {d.Key} 改成 {d.NameOf(value)}");
-            if (ReferenceEquals(d, SettingDefs.MineralWarning)) DropSnapshot();
+            if (SettingDefs.AffectsSnapshot(d)) DropSnapshot(d.Key);
             Save();
             return true;
         }
 
         /// <summary>
-        /// 「水培礦物質範圍警告」改了：全店快照存著照舊設定算的機器狀態（箱子上的圖示看它），馬上丟掉，下一次用到時照新設定重建
-        /// （不然箱子上的圖示最多晚 SnapshotRule.MaxAge 秒才跟上）。用現成的 StoreSnapshot.Reset：重建的原因記成「第一次」（只差在效能 log 的分類，不另加原因）。
+        /// 會影響全店快照的設定（SettingDefs.AffectsSnapshot）改了：
+        /// 快照存著照舊設定算的機器狀態（箱子上的圖示看它），馬上丟掉，下一次用到時照新設定重建（不然箱子上的圖示最多晚 SnapshotRule.MaxAge 秒才跟上）。
+        /// 用現成的 StoreSnapshot.Reset：重建的原因記成「第一次」（只差在效能 log 的分類，不另加原因）。key 給除錯 log。
         /// </summary>
-        static void DropSnapshot()
+        static void DropSnapshot(string key)
         {
             StoreSnapshot.Reset();
-            ItemQuickInfoMod.DebugLog("礦物質的設定改了：丟掉全店快照，下次用到時重建");
+            ItemQuickInfoMod.DebugLog($"{key} 改了：丟掉全店快照，下次用到時重建");
         }
 
         /// <summary>
@@ -196,10 +205,14 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>恢復一頁的預設；有改到才存檔。回傳改了幾個。</summary>
         internal static int ResetPage(SettingPage page)
         {
-            bool mineral = On(SettingDefs.MineralWarning);
+            // 會影響全店快照的設定（SettingDefs.AffectsSnapshot）先記下改之前的值，恢復後有變的才丟快照（只丟一次）。按一次恢復預設才跑一次，配置不要緊
+            var before = new List<(SettingDef d, int value)>();
+            foreach (var d in SettingDefs.All)
+                if (SettingDefs.AffectsSnapshot(d)) before.Add((d, Get(d)));
             int n = _values.ResetPage(page);
             ItemQuickInfoMod.DebugLog($"分頁 {page} 恢復預設：改了 {n} 個");
-            if (mineral != On(SettingDefs.MineralWarning)) DropSnapshot();
+            foreach (var (d, value) in before)
+                if (Get(d) != value) { DropSnapshot(d.Key); break; }
             if (n > 0) Save();
             return n;
         }
@@ -332,7 +345,7 @@ namespace ProbablyStolenItemQuickInfo
                 if (w[WindowTabField] is JValue tab && tab.Type == JTokenType.Integer)
                 {
                     int n = (int)tab;
-                    if (n >= 0 && n < SettingDefs.PageCount) _windowTab = n;
+                    if (SettingDefs.IsValidTab(n)) _windowTab = n;
                 }
             }
             catch (Exception e) { ItemQuickInfoMod.Log.Warning($"{KeyFile} 的 {WindowField} 讀不了（{e.Message}），設定視窗放中間、從第一頁開"); }
@@ -412,7 +425,7 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
-        /// 整份寫回 settings.json（按鍵、設定鈕、提示、視窗、37 個設定）。讀到的檔裡不認得的欄位與 "settings" 裡不認得的 key 保留。
+        /// 整份寫回 settings.json（按鍵、設定鈕、提示、視窗、40 個設定）。讀到的檔裡不認得的欄位與 "settings" 裡不認得的 key 保留。
         /// 整份寫出去，拖滑桿還沒存的改動（_pending）也一起寫了，所以先清掉。
         /// 寫檔失敗只警告一次（這次遊戲照樣用新的值，重開遊戲後回到上次存成功的）。
         /// 這次遊戲讀不到檔（SettingsFile.CanSave）時不寫：記憶體裡是預設值，寫了會蓋掉檔裡玩家的設定（Load 已經警告過，這裡只記第一次跳過）。

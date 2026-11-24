@@ -16,8 +16,10 @@ namespace ProbablyStolenItemQuickInfo
     /// （高放不下時兩顆一行，Rules.PairRechargerRows）；Rich＝這行有格式標籤（電那行的錢「-6₡」：數字後面接遊戲的信用點圖示）。
     /// 資訊框的 TMP 平常關掉格式標籤（玩家取的名稱不能改到排版），只有 Rich 的行打開：內容全是 mod 自己組的，量字寬也照打開的狀態量。
     /// 顏色、前綴照舊看 Color、Prefix。1.4.0 第⑥段的主成分那行（MainLiquid）決定 178 拿掉了。
+    /// ModuleBonus＝模組最高的那項加成（ModuleRules.BonusLine）：有這一行的資訊框不貼整個物品的左下角，
+    /// 改貼模組形狀裡最長那一橫排的左下角，放不放得下也照那一塊的寬判斷（LabelRenderer.Put、Place）。
     /// </summary>
-    enum LineKind { Normal, RechargerBattery, Rich }
+    enum LineKind { Normal, RechargerBattery, Rich, ModuleBonus }
 
     /// <summary>
     /// 標籤的一行。有前綴的行（成品數、熱度、使用次數、耐久度、濾材、反應爐的完好度；液量、純度、電那行沒有前綴）另外帶短的寫法與拆兩行用的前綴、數值：
@@ -378,9 +380,17 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>機器的電量、今晚的電力收支（取代以前的機器今晚會充多少）、原因、進度、輸出區的成品數、機器裡的水。</summary>
         public bool MachinePower = true, MachineTonightNet = true, MachineReason = true, MachineProgress = true, MachineOutput = true, MachineWater = true;
         /// <summary>
-        /// 任何物品的贓物熱度、使用次數、耐久度、金屬錠純度、藥品純度。耐久度也管水罐、循環水養殖系統的濾材那行。
+        /// 任何物品的贓物熱度、使用次數、耐久度、金屬錠純度、藥品純度。耐久度也管濾材那行：
+        /// 水罐這類液體容器只管裝了濾材時的「濾材 400」，循環水養殖系統裝了、沒裝都管（1.5.0 起）。
         /// </summary>
         public bool StolenHeat = true, UseCount = true, Durability = true, IngotPurity = true, DrugPurity = true;
+        /// <summary>
+        /// 液體容器（水罐這類 FILTER_CONTAINER_TAG 的東西）沒裝濾材時的「沒濾材」（1.5.0）。
+        /// 拿水罐存液體的人不想一直看到橘字，又不想連其他物品的耐久一起關掉，所以和「顯示耐久度」分開。
+        /// </summary>
+        public bool NoFilter = true;
+        /// <summary>模組（泛用模組與神經核心）最高的那項加成（1.5.0）。</summary>
+        public bool ModuleBonus = true;
 
         /// <summary>
         /// 每一行都關掉的一份：只讀狀態圖示的時候用（Always、沒按鍵）。MachineRules 看到這份只讀圖示要的事實（判斷原因的資料、
@@ -391,7 +401,8 @@ namespace ProbablyStolenItemQuickInfo
             ContainerName = false, MachineName = false, ItemName = false, WaterVolume = false, WaterPurity = PurityFormat.Off,
             BatteryCharge = false, BatteryTonightCharge = false,
             MachinePower = false, MachineTonightNet = false, MachineReason = false, MachineProgress = false, MachineOutput = false, MachineWater = false,
-            StolenHeat = false, UseCount = false, Durability = false, IngotPurity = false, DrugPurity = false,
+            StolenHeat = false, UseCount = false, Durability = false, IngotPurity = false, DrugPurity = false, ModuleBonus = false,
+            NoFilter = false,
         };
     }
 
@@ -1379,13 +1390,13 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 液體容器的行：液量一行（開關「顯示液體量」）；容器不是空的才加純度一行（「顯示純度」不是「關」時；空的不顯示）。
         /// 純度一律是真實的成分。兩個都關時是空的清單（沒有標籤）。
-        /// filters：裝濾材的東西（水罐）裡的濾材，在液量、純度下面加一行（開關「顯示耐久度」）；不是裝濾材的東西是 null。
+        /// filters：裝濾材的東西（水罐）裡的濾材，在液量、純度下面加一行（沒裝時開關「顯示「沒濾材」」、有裝時「顯示耐久度」）；不是裝濾材的東西是 null。
         /// </summary>
         internal static List<Line> WaterLines(Strings s, WaterInfo w, Display d, FilterInfo filters = null)
         {
             var lines = new List<Line>();
             AddWater(lines, s, w, d);
-            AddFilter(lines, s, filters, d);
+            AddFilter(lines, s, filters, d, FilterOwner.Container);
             return lines;
         }
 
@@ -1405,14 +1416,28 @@ namespace ProbablyStolenItemQuickInfo
             lines.Add(new Line(PurityText(w.Purity, d.WaterPurity)));
         }
 
+        /// <summary>濾材那行是誰的：開關的規則兩邊不一樣，由 AddFilter 分開看。</summary>
+        enum FilterOwner
+        {
+            /// <summary>液體容器（水罐這類 FILTER_CONTAINER_TAG 的東西）：沒裝看「顯示「沒濾材」」，有裝看「顯示耐久度」。</summary>
+            Container,
+            /// <summary>循環水養殖系統：沒裝、有裝都看「顯示耐久度」。</summary>
+            Machine,
+        }
+
         /// <summary>
-        /// 濾材那一行（開關「顯示耐久度」，f 是 null 時沒有這行）：水罐接在液量、純度下面，循環水養殖系統接在機器裡的水後面、
+        /// 濾材那一行（f 是 null 時沒有這行）：水罐接在液量、純度下面，循環水養殖系統接在機器裡的水後面、
         /// 是 ⚠ 的理由時（沒濾材、加總 0）移到原因後面（MachineLines）。
+        /// 開關：液體容器沒裝濾材時看「顯示「沒濾材」」（d.NoFilter；拿水罐存液體的人可以單獨關掉，不用連耐久一起關），
+        /// 有裝時看「顯示耐久度」；循環水養殖系統沒裝、有裝都照舊看「顯示耐久度」：它的「沒濾材」是今晚出問題的原因（⚠），
+        /// 不歸新設定管。
         /// 裝著的濾材全都看不到耐久時也沒有這行（FilterInfo.HasLine）。
         /// </summary>
-        static void AddFilter(List<Line> lines, Strings s, FilterInfo f, Display d)
+        static void AddFilter(List<Line> lines, Strings s, FilterInfo f, Display d, FilterOwner owner)
         {
-            if (f != null && d.Durability && f.HasLine) lines.Add(FilterLine(s, f));
+            if (f == null || !f.HasLine) return;
+            bool on = owner == FilterOwner.Container && f.Count == 0 ? d.NoFilter : d.Durability;
+            if (on) lines.Add(FilterLine(s, f));
         }
 
         /// <summary>
@@ -1469,11 +1494,11 @@ namespace ProbablyStolenItemQuickInfo
             // 只跟著「水培礦物質範圍警告」（關著時 MachineRules 不讀，Result 是 Ok），「顯示原因」「顯示機器裡的液體」都不管它
             var mineral = MineralText(s, m.Mineral.Result);
             if (mineral != null) lines.Add(new Line(mineral, LineColor.Orange));
-            // ⚠ 的濾材跟著原因往上移；開關照舊是「顯示耐久度」（AddFilter 裡看）
+            // ⚠ 的濾材跟著原因往上移；開關照舊是「顯示耐久度」，沒裝時也是（AddFilter 裡看）
             bool filterFirst = MachineLogic.RasFilterWarning(m.Filters);
-            if (filterFirst) AddFilter(lines, s, m.Filters, d);
+            if (filterFirst) AddFilter(lines, s, m.Filters, d, FilterOwner.Machine);
             if (d.MachineWater) AddWater(lines, s, m.Water, d);
-            if (!filterFirst) AddFilter(lines, s, m.Filters, d);
+            if (!filterFirst) AddFilter(lines, s, m.Filters, d, FilterOwner.Machine);
             if (d.MachineProgress && m.HasProgress && !StopsTonight(m))
             {
                 var days = DaysLeft(m.ProgressCurrent, m.ProgressTarget, m.ProgressSpeed);
@@ -1489,11 +1514,11 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 電那一行（開關「顯示機器電量」）。沒有前綴（kJ、信用點圖示本身就認得出是電），長短一樣、不拆：
         /// - 有容量的電池：剩多少「41kJ」。不夠今晚用（Insufficient）紅字：每晚耗電的機器剩 0 就是紅字「0kJ」；每晚耗電 0、不判斷的
-        ///   （白天按次用電的機器、儲能滿的高級渦輪增壓器、Deal Maker）剩 0 是白字（紅字只表示今晚缺電，主人選的）。
+        ///   （白天按次用電的機器、儲能滿的高級渦輪增壓器、Deal Maker）剩 0 是白字（紅字只表示今晚缺電）。
         /// - 電流轉換器、有錢可寫（PowerCost 不是 null）：「-6₡」（CostText；每晚耗電的是今晚的電費，白天按次用電的是用一次的價錢「-6/8/14₡」）。
         ///   一律白字：固定要付的錢，不是警告（有錢可寫時本來就有電）。這行打開格式標籤（LineKind.Rich），其他行照舊關著。
         /// - 其他一律不寫：電池槽空、放的不是電源、轉換器今晚沒電或沒有能寫的價錢、超科技能源單元、別的 mod 的容量 0 電源。
-        ///   主人的規則：沒有電源時原因那行已經寫缺電、畫 ⚠（Insufficient 照舊算），不必再畫一個「-」；白天按次用電的機器沒電源時點開機器就看得到。
+        ///   規則：沒有電源時原因那行已經寫缺電、畫 ⚠（Insufficient 照舊算），不必再畫一個「-」；白天按次用電的機器沒電源時點開機器就看得到。
         /// 紅字＝今晚缺電（Insufficient，MachineRules 算好；原因寫缺電、⚠）。1.4.0 第⑦段以前轉換器與超科技電池一律寫「電 外部」，
         /// 第⑧段是「電力 41kJ」「電力 6₡」「電力 -」，決定 189 拿掉前綴與「-」。
         /// </summary>

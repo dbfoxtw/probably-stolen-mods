@@ -30,6 +30,9 @@ cfg_water_volume_tip,"Zeigt, wie viel Flüssigkeit ein Behälter enthält, z. B.
 cfg_water_purity,Reinheit anzeigen
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Zeigt, wie viel der Flüssigkeit ihr Hauptbestandteil ausmacht. Bei Wasser ist das die Wasserreinheit. Nicht bei leeren Behältern.\nAus = Reinheit nicht anzeigen\nGanzzahl = {0} (Premiumwasser nicht erkennbar)\n1 Nachkommastelle = {1}\n2 Nachkommastellen = {2}"
+cfg_no_filter,„Kein Filter“ bei Flüssigkeitsbehältern anzeigen
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,"Flüssigkeitsbehälter, die einen Filter aufnehmen können (z. B. die Wasserkaraffe), zeigen „{0}“, wenn keiner eingesetzt ist. Das geschlossene Aquakultursystem gehört nicht dazu."
 cfg_machine_water,Flüssigkeit in Geräten anzeigen
 cfg_machine_water_tip,Zeigt die Flüssigkeit in einem Gerät. Die beiden Zeilen richten sich zusätzlich nach „Flüssigkeitsmenge anzeigen“ und „Reinheit anzeigen“.
 cfg_battery_charge,Batterieladung anzeigen
@@ -90,6 +93,12 @@ cfg_ingot_purity_tip,"Zeigt die Reinheitsstufe eines Metallbarrens, z. B. „{0}
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,Reinheit von Präparaten anzeigen
 cfg_drug_purity_tip,"Zeigt die Reinheit von Präparaten, z. B. {0}."
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("Leist. +16%"; info_prefix_performance below)
+cfg_module_bonus,Modulboni anzeigen
+cfg_module_bonus_tip,"Zeigt den höchsten der Boni eines Moduls (Leistung, Effizienz oder Qualität), z. B. {0}. Module für nur eine Art von Gerät werden nicht angezeigt."
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Kühlschränke ohne Batterie ignorieren
+cfg_ignore_fridges_without_battery_tip,"Ein Kühlschrank ohne Batterie zeigt keine Statussymbole und keinen Grund wie {0}. Praktisch, wenn du Kühlschränke als Lager nutzt."
 cfg_key_mode,Tastenmodus
 cfg_key_mode_tip,"Wähle, ob die Taste „Gegenstandsinfo anzeigen“ gehalten oder zum Umschalten gedrückt wird.\nHalten = anzeigen, solange sie gehalten wird; beim Loslassen ausblenden\nUmschalten = einmal drücken zum Anzeigen, erneut zum Ausblenden; schaltet sich aus, wenn du einen Spielstand lädst oder ins Hauptmenü zurückkehrst"
 cfg_text_size,Textgröße
@@ -143,6 +152,7 @@ ui_tab_batteries,Batterien
 ui_tab_machines,Geräte
 ui_tab_icons,Statussymbole
 ui_tab_items,Gegenstände
+ui_tab_special,Spezial
 ui_reset,Tab zurücksetzen
 ui_reset_sure,Sicher?
 ui_reset_tip,Setzt alle Einstellungen auf diesem Tab auf ihren Standardwert zurück. Zum Bestätigen erneut klicken.
@@ -179,6 +189,11 @@ info_prefix_filter_long,Filter
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,Stab.
 info_prefix_integrity_long,Stabilität
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("Leist. +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,Leist.
+info_prefix_efficiency,Eff.
+info_prefix_quality,Qual.
 
 # Machine progress: days until the machine finishes. {0} = number of days. German: .one (1), .other.
 info_days_short,{0}T

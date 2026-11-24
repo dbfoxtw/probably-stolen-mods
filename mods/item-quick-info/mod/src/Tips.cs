@@ -1,7 +1,7 @@
 namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
-    /// 設定說明裡有例子的那幾條（16 條；打開設定視窗時 Settings 才叫，不是每輪重算）。說明最後的「Short：Out 7」「Long：Output 7」
+    /// 設定說明裡有例子的那幾條（19 條；1.5.0 加模組加成 ModuleBonus、顯示「沒濾材」NoFilter；打開設定視窗時 Settings 才叫，不是每輪重算）。說明最後的「Short：Out 7」「Long：Output 7」
     /// 這種例子在 csv 裡寫成 {0}、{1}，這裡用目前語言的資訊框字串（Strings）填：前綴、原因、純度的字只寫在資訊框那幾組 key，
     /// 說明和資訊框上畫的字就不會對不上，翻譯的人也不用在說明裡再抄一次前綴。
     /// 例子的行用和資訊框同一個組法（Line.Prefixed：前綴、空一格、數值；沒有前綴的電那行用 Rules.Kj、Rules.CostText），數值用 Rules 的格式（各語言一樣）。
@@ -35,6 +35,8 @@ namespace ProbablyStolenItemQuickInfo
         const int ExampleIngot = 2;
         /// <summary>藥品純度的例子（沒裝模組的化學製劑成型機做得出來的最高純度）。</summary>
         const double ExampleDrug = 88.0;
+        /// <summary>模組加成的例子（性能模組的基礎值）。</summary>
+        const int ExampleModule = 16;
 
         /// <summary>資訊框上那一行的樣子（前綴＋空格＋數值）。</summary>
         static string Ex(string prefix, string value) => Line.Prefixed(prefix, prefix, value).Text;
@@ -96,6 +98,22 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>顯示反應爐：{0} 是今晚會爆炸時資訊框寫的那行字（「今晚爆炸」）。</summary>
         internal static string Reactor(Strings s) => Loc.Get("cfg_reactor_tip", s.ReactorExplodes);
+
+        /// <summary>
+        /// 顯示模組加成：{0} 是資訊框那行實際畫的字（性能模組的「Perf +16%」「性能 +16%」，ModuleRules.BonusLine 同一個組法）。
+        /// 前綴固定一份，沒有長短兩個例子。
+        /// </summary>
+        internal static string ModuleBonus(Strings s) =>
+            Loc.Get("cfg_module_bonus_tip", ModuleRules.BonusLine(s, ExampleModule, 0, 0).Value.Text);
+
+        /// <summary>
+        /// 顯示「沒濾材」：{0} 是資訊框的「沒濾材」（info_reason_no_filter），液體容器沒裝濾材時畫的那行字，
+        /// 名稱與說明裡寫的字和資訊框上的對得上。
+        /// </summary>
+        internal static string NoFilter(Strings s) => Loc.Get("cfg_no_filter_tip", s.NoFilter);
+
+        /// <summary>忽略沒裝電池的冰箱：{0} 是資訊框的「缺電」（info_reason_no_power），被忽略的冰箱不寫的那個原因。</summary>
+        internal static string IgnoreFridges(Strings s) => Loc.Get("cfg_ignore_fridges_without_battery_tip", s.NoPower);
 
         /// <summary>
         /// 前綴設定：短、長各六個的對照（{0}～{5} 是短的，{6}～{11} 是長的），順序是剩幾天（3 天）、成品數、熱度、使用次數、耐久度、濾材。

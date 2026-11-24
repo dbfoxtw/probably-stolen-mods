@@ -18,12 +18,14 @@
     <!-- Loc 找繁中 mod 用的「找過就記住」（不碰遊戲型別的那一半） -->
     <Compile Include="..\src\LookupOnce.cs" Link="LookupOnce.cs" />
     <Compile Include="..\src\MachineLogic.cs" Link="MachineLogic.cs" />
+    <!-- 模組顯示最高的加成（1.5.0）：白名單、取哪一項、那一行的字、形狀裡選哪一塊、換成圖層座標（不碰 Unity 的那一半） -->
+    <Compile Include="..\src\ModuleRules.cs" Link="ModuleRules.cs" />
     <!-- 狀態圖示的字元圖與框（不碰 Unity；LabelRenderer 照它建 Sprite） -->
     <Compile Include="..\src\IconArt.cs" Link="IconArt.cs" />
     <Compile Include="..\src\PerfStats.cs" Link="PerfStats.cs" />
     <!-- 全店快照要不要重建、為什麼（不碰 Unity 的那一半） -->
     <Compile Include="..\src\SnapshotRule.cs" Link="SnapshotRule.cs" />
-    <!-- 店內設定視窗（1.4.0）：37 個設定的定義與讀寫（含兩個不透明度的百分比、拖滑桿時還沒存的改動）、舊設定的轉換、分頁列、恢復預設的確認、視窗的位置（不碰 Unity 的那一半） -->
+    <!-- 店內設定視窗（1.4.0 起；1.5.0 加特殊分頁）：38 個設定的定義與讀寫（含兩個不透明度的百分比、拖滑桿時還沒存的改動）、舊設定的轉換、分頁列、恢復預設的確認、視窗的位置（不碰 Unity 的那一半） -->
     <Compile Include="..\src\SettingsModel.cs" Link="SettingsModel.cs" />
   </ItemGroup>
 

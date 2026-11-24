@@ -12,7 +12,7 @@ namespace ProbablyStolenItemQuickInfo
     /// 外觀是米色：框架的機器樣式建好以後由 SettingsSkin 重新上色（金屬框、深色標題列、米色內頁、深色字、金色／灰的開關、深色的下拉清單）。
     /// - 視窗：遊戲官方的 UI 框架（CustomUIManager.CreateWindow＋CustomUIBuilder，機器樣式），paper 層（和視窗群組的群組清單、遊戲的漏斗一樣：
     ///   畫在箱子視窗與紙張面板上面、框架替它加 StoreUI 與 PaperPanelFocusStamp）。不擋畫面、照常玩；標題列可以拖（自己的 SettingsDragHandle，
-    ///   框架的 UIDragHandler 會停靠到黑邊，關掉），× 或 Esc 關。7 個分頁一排（TabStrip：放不下時 ◀ ▶），每列是設定名稱＋遊戲的 ⓘ＋開關、下拉或滑桿
+    ///   框架的 UIDragHandler 會停靠到黑邊，關掉），× 或 Esc 關。8 個分頁一排（TabStrip：放不下時 ◀ ▶），每列是設定名稱＋遊戲的 ⓘ＋開關、下拉或滑桿
     ///   （兩個不透明度，右邊寫數字），滑鼠指著 ⓘ 顯示遊戲的提示框（說明）；改了馬上生效、每改一次就存檔（Settings.Set）；
     ///   滑桿拖的時候生效、放開才存檔（Settings.SetLive、CommitLive）。右下角「恢復預設」兩段確認（ConfirmArm）。
     ///   記住位置與分頁（Settings 存 ModData），第一次打開在畫面中間；離開店鋪畫面（讀檔、回主選單）、外出、讀完存檔時關掉。
@@ -44,9 +44,13 @@ namespace ProbablyStolenItemQuickInfo
         /// </summary>
         const float LabelMaxWidth = 360f, MinControlWidth = 72f;
         /// <summary>
-        /// 內容最窄多少：中文的 7 個分頁（按鈕字 14、每頁 2～4 個字）一排約 470，放得下、不出現箭頭；英文約 630，出現箭頭。
+        /// 內容最窄多少：中文的 8 個分頁要一排、不出現箭頭；英文照舊出現箭頭。1.4.0 是 520（中文 7 個分頁一排約 470），
+        /// 1.5.0 加「特殊」改 560。估法：按鈕字 14（MachineryStyle.BUTTON_TEXT_SIZE 7 × CustomUIMachineryStyle.SCALE 2），分頁按鈕寬＝字寬＋ButtonPadding，
+        /// 按鈕間距 Spacing，分頁能用的寬＝內容寬－Spacing（SelectPage）。中文是 7 個兩個字的頁＋1 個四個字的（狀態圖示／状态图标）：
+        /// 一個字 14 寬時 7×54＋82＋7×8＝516，15 寬時 534，16 寬時 552，所以 560（能用 552）放得下到每個字 16 寬；520（能用 512）連 14 寬都放不下。
+        /// 這是雲端估的、沒有量實際的字寬：回本機實機看簡中、繁中的 8 個分頁是不是一排、沒有箭頭。
         /// </summary>
-        const float MinContentWidth = 520f;
+        const float MinContentWidth = 560f;
         /// <summary>
         /// 視窗外框（CustomUIMachineryStyle.CreateFrame）：內容左右各留 16；上面 58（框架的標題列 40＋分隔線 2＋16；米色外觀把標題列縮進來、
         /// 內容的位置不變）、下面 16。標題左右各讓出 40 給 ×，米色外觀的標題列左右又各縮進 8（SettingsSkin.Frame），所以標題要多留 96，
@@ -99,6 +103,8 @@ namespace ProbablyStolenItemQuickInfo
         static CustomUIElement _buttonEl, _hintLabel, _hintOk;
         /// <summary>設定鈕上次填字時的語言（顯示中換了語言就重填）。</summary>
         static string _buttonLocale;
+        /// <summary>設定鈕是用哪個語言建的：字型照建的時候的語言挑，換了語言就重建（和提示一樣）。</summary>
+        static string _buttonBuiltLocale;
         /// <summary>提示上次填字時的語言、鍵、角（變了才重填：每幀比三個值，不配置記憶體）。</summary>
         static string _hintLocale;
         /// <summary>提示是用哪個語言建的：外框的字型（CustomUIMachineryStyle.Font）照建的時候的語言挑，換了語言就重建（和設定視窗一樣）。</summary>
@@ -368,7 +374,7 @@ namespace ProbablyStolenItemQuickInfo
         // ================= 視窗：內容 =================
 
         /// <summary>
-        /// 建內容：分頁列（◀、7 個分頁、▶）、分隔線、7 頁（每頁一欄，一次只開一頁）、恢復預設那一列。
+        /// 建內容：分頁列（◀、8 個分頁、▶）、分隔線、8 頁（每頁一欄，一次只開一頁）、恢復預設那一列。
         /// 說明用目前語言、長前綴的資訊框字填（Tips），換語言時整個重建（Tick）。
         /// </summary>
         static void Build(CustomUIBuilder b)
@@ -942,7 +948,11 @@ namespace ProbablyStolenItemQuickInfo
                 if (_button != null && _button.activeSelf) _button.SetActive(false);
                 return;
             }
-            if (!EnsureButton()) return;
+            // 按鈕的字型照建的時候的語言挑（CustomUIMachineryStyle），框架的 overlay 層又不隨場景銷毀：
+            // 用英文進過店、再換成中文時，只重填字的話中文字在英文字型裡找不到、整個是空白（2026-11-24 說明圖截圖時看到）。
+            // 和提示一樣，換了語言就拆掉重建。
+            if (_button != null && !string.Equals(locale, _buttonBuiltLocale, StringComparison.Ordinal)) DestroyButton();
+            if (!EnsureButton(locale)) return;
             bool appear = !_button.activeSelf;
             if (appear || !string.Equals(locale, _buttonLocale, StringComparison.Ordinal))
             {
@@ -963,13 +973,15 @@ namespace ProbablyStolenItemQuickInfo
         /// 建設定鈕（框架 overlay 層的子物件；CustomUIManager 不在或 overlay 層被銷毀了就重建）：機器樣式的按鈕（CustomUIMachineryStyle.Create：
         /// 遊戲的米色按鈕圖，和設定視窗的米色按鈕同一套），字前面放自己畫的齒輪（IconArt.Gear），大小照內容（ContentSizeFitter）。
         /// </summary>
-        static bool EnsureButton()
+        static bool EnsureButton(string locale)
         {
             if (_button != null) return true;
             var root = OverlayRoot();
             if (root == null) return false;
             EnsureSprites();
             _button = CustomUIMachineryStyle.Create(CustomUIManager.ElementKind.Button, root);
+            _buttonBuiltLocale = locale;
+            _buttonLocale = null;
             _button.name = "ItemQuickInfo_SettingsButton";
             _buttonEl = CustomUIElement.Bind(_button, null);
             var gear = new GameObject("gear", typeof(RectTransform));
@@ -991,6 +1003,20 @@ namespace ProbablyStolenItemQuickInfo
             _buttonEl.OnClick(ButtonClicked);
             _button.SetActive(false);
             return true;
+        }
+
+        /// <summary>拆掉設定鈕（換了語言，下一次 EnsureButton 照新的語言建；寫法同 DestroyHint）。</summary>
+        static void DestroyButton()
+        {
+            if (_button != null)
+            {
+                _button.SetActive(false);
+                UnityEngine.Object.Destroy(_button);
+            }
+            _button = null;
+            _buttonEl = null;
+            _buttonLocale = _buttonBuiltLocale = null;
+            _hitFrame = -1;
         }
 
         /// <summary>點了設定鈕：打開視窗，已經開著就帶到最前面。按鈕不留在選取狀態（Submit）。</summary>

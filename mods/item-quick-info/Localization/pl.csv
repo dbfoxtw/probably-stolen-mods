@@ -13,7 +13,7 @@ cfg_container_name_tip,"Pokazuje na jasnoniebiesko nazwę nadaną przez ciebie s
 cfg_machine_name,Pokazuj nazwy maszyn
 cfg_machine_name_tip,Pokazuje na jasnoniebiesko nazwę nadaną przez ciebie maszynie.
 cfg_item_name,Pokazuj nazwy innych przedmiotów
-cfg_item_name_tip,Pokazuje na jasnoniebiesko nazwę nadaną przez ciebie każdemu innemu przedmiotowi (np. Dzbanek wody lub Sztabka metalu).
+cfg_item_name_tip,Pokazuje na jasnoniebiesko nazwę nadaną przez ciebie każdemu innemu przedmiotowi (np. dzbanek wody lub sztabka metalu).
 cfg_always_names,Zawsze pokazuj nazwy
 cfg_always_names_tip,"Po włączeniu nazwy są widoczne bez klawisza; pozostałe informacje nadal wymagają klawisza.\nO tym, które nazwy są widoczne, nadal decydują trzy przełączniki nazw poniżej."
 cfg_idle_name_position,Położenie nazw (ramka informacji ukryta)
@@ -30,6 +30,9 @@ cfg_water_volume_tip,"Pokazuje, ile cieczy jest w pojemniku, np. {0}."
 cfg_water_purity,Pokazuj czystość
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Pokazuje, jaką część cieczy stanowi jej główny składnik. W przypadku wody to czystość wody. Nie dotyczy pustych pojemników.\nNie pokazuj = bez linii czystości\nLiczba całkowita = {0} (nie odróżnisz czystej wody)\n1 miejsce dziesiętne = {1}\n2 miejsca dziesiętne = {2}"
+cfg_no_filter,Pokazuj „Brak filtra” na pojemnikach na płyn
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,"Pojemniki na płyn, które mogą mieć filtr (np. dzbanek do wody), pokazują „{0}”, gdy go nie mają. Nie dotyczy recyrkulacyjnego systemu akwakultury."
 cfg_machine_water,Pokazuj ciecz w maszynach
 cfg_machine_water_tip,Pokazuje ciecz w maszynie. Oba wiersze zależą też od ustawień „Pokazuj objętość cieczy” i „Pokazuj czystość”.
 cfg_battery_charge,Pokazuj naładowanie baterii
@@ -46,10 +49,10 @@ cfg_machine_reason,"Pokazuj, dlaczego maszyna nie zadziała tej nocy"
 cfg_machine_reason_tip,"Pokazuje na pomarańczowo krótki powód, gdy maszyna nie zadziała tej nocy, np. {0}, {1} lub {2}."
 cfg_machine_progress,Pokazuj postęp maszyn
 # {0} = 3 days left in the short form ("3d"), {1} = in the long form ("3 dni")
-cfg_machine_progress_tip,"Pokazuje, ile dni maszyna jeszcze potrzebuje przy obecnej wartości „Szybkość postępów”. Późniejsze zmiany wywołane efektami modułów, takimi jak Przeciążenie czy Degradacja, nie są przewidywane. Ukryte, gdy maszyna nie zadziała tej nocy.\nKrótkie: {0}\nDługie: {1}"
+cfg_machine_progress_tip,"Pokazuje, ile dni maszyna jeszcze potrzebuje przy obecnej wartości „Szybkość postępów”. Późniejsze zmiany wywołane efektami modułów, takimi jak „Przeciążenie” czy „Degradacja”, nie są przewidywane. Ukryte, gdy maszyna nie zadziała tej nocy.\nKrótkie: {0}\nDługie: {1}"
 cfg_machine_output,Pokazuj liczbę produktów
 # {0} = the output line with the short prefix ("Wyj 7"), {1} = with the long prefix ("Wyjście 7")
-cfg_machine_output_tip,"Pokazuje, ile przedmiotów jest na wyjściu maszyny (Lej wejściowy i Lej wyjściowy się nie liczą).\nKrótkie: {0}\nDługie: {1}"
+cfg_machine_output_tip,"Pokazuje, ile przedmiotów jest na wyjściu maszyny (lej wejściowy i lej wyjściowy się nie liczą).\nKrótkie: {0}\nDługie: {1}"
 # Makeshift reactor (new in 1.4.0). {0} = the red line at the top of its info box when it will explode tonight (info_reactor_explodes)
 cfg_reactor,Pokazuj reaktor
 cfg_reactor_tip,"Pokazuje stabilność reaktora i zgromadzony ładunek. Jeśli wybuchnie tej nocy, pisze „{0}” i pokazuje znak ostrzegawczy."
@@ -67,14 +70,14 @@ cfg_warning_icon,Pokazuj ikonę ostrzeżenia
 cfg_warning_icon_tip,"Pokazuje znak ostrzegawczy, gdy maszyna ma co robić, ale utknęła (np. {0}), albo filtr w dzbanku do wody się zużył."
 cfg_idle_icon,Pokazuj ikonę bezczynności
 # {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
-cfg_idle_icon_tip,"Pokazuje Zz, gdy maszyna nie zadziała tej nocy, dopóki czegoś nie dołożysz, np. {0} lub {1}.\nWyłączone = bez Zz\nOprócz pustych = nie, gdy wejścia maszyny są puste (np. brak pojemnika albo pusta Lodówka)\nWszystkie = także, gdy wejścia są puste"
+cfg_idle_icon_tip,"Pokazuje Zz, gdy maszyna nie zadziała tej nocy, dopóki czegoś nie dołożysz, np. {0} lub {1}.\nWyłączone = bez Zz\nOprócz pustych = nie, gdy wejścia maszyny są puste (np. brak pojemnika albo pusta lodówka)\nWszystkie = także, gdy wejścia są puste"
 cfg_done_icon,Pokazuj ikonę gotowości
-cfg_done_icon_tip,"Pokazuje ptaszek, gdy z maszyny można coś zebrać, np. przedmioty na wyjściu (Lej wejściowy i Lej wyjściowy się nie liczą) albo wodę, którą zebrała lub skończyła oczyszczać."
+cfg_done_icon_tip,"Pokazuje ptaszek, gdy z maszyny można coś zebrać, np. przedmioty na wyjściu (lej wejściowy i lej wyjściowy się nie liczą) albo wodę, którą zebrała lub skończyła oczyszczać."
 # Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
 cfg_mineral_warning,Ostrzeżenie o zakresie minerałów (hydroponika)
-cfg_mineral_warning_tip,"Gdy minerały w wodzie Systemu hydroponicznego są poza Optymalnym zakresem odżywczym nasiona, pokazuje znak ostrzegawczy, a ramka informacji pokazuje {0} lub {1}."
+cfg_mineral_warning_tip,"Gdy minerały w wodzie systemu hydroponicznego są poza optymalnym zakresem odżywczym nasiona, pokazuje znak ostrzegawczy, a ramka informacji pokazuje {0} lub {1}."
 cfg_container_icons,Ikony na pojemnikach
-cfg_container_icons_tip,"Pokazuje ikony stanu na pojemniku (np. Składziku maszynowym) dla maszyn w środku. Gdy pasują zarówno znak ostrzegawczy, jak i Zz, pokazywany jest tylko znak ostrzegawczy; ptaszek dochodzi, jeśli którakolwiek maszyna ma coś do zebrania.\nWyłączone = bez ikon na pojemnikach\nTylko ostrzeżenie = tylko znak ostrzegawczy\nOstrzeżenie i bezczynność = znak ostrzegawczy lub Zz\nWszystkie = także ptaszek"
+cfg_container_icons_tip,"Pokazuje ikony stanu na pojemniku (np. składziku maszynowym) dla maszyn w środku. Gdy pasują zarówno znak ostrzegawczy, jak i Zz, pokazywany jest tylko znak ostrzegawczy; ptaszek dochodzi, jeśli którakolwiek maszyna ma coś do zebrania.\nWyłączone = bez ikon na pojemnikach\nTylko ostrzeżenie = tylko znak ostrzegawczy\nOstrzeżenie i bezczynność = znak ostrzegawczy lub Zz\nWszystkie = także ptaszek"
 cfg_stolen_heat,Pokazuj poziom uwagi
 # {0} = the heat line with the short prefix ("K 45%"), {1} = with the long prefix ("Uwaga 45%"). The game calls stolen heat "Uwaga" (mech_stolen_tooltip).
 cfg_stolen_heat_tip,Pokazuje na czerwono poziom uwagi kradzionego przedmiotu.\nKrótkie: {0}\nDługie: {1}
@@ -90,6 +93,12 @@ cfg_ingot_purity_tip,"Pokazuje stopień czystości sztabki metalu, np. „{0}”
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,Pokazuj czystość leków
 cfg_drug_purity_tip,"Pokazuje czystość leków, np. {0}."
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("Dział. +16%"; info_prefix_performance below)
+cfg_module_bonus,Pokazuj premie modułów
+cfg_module_bonus_tip,"Pokazuje najwyższą premię modułu spośród działania, wydajności i jakości, np. {0}. Moduły przeznaczone do jednego rodzaju maszyn nie są pokazywane."
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Ignoruj lodówki bez baterii
+cfg_ignore_fridges_without_battery_tip,"Lodówka bez baterii nie pokazuje ikon stanu ani powodów takich jak {0}. Przydatne, gdy używasz lodówek jako magazynu."
 cfg_key_mode,Tryb klawisza
 cfg_key_mode_tip,"Wybierz, czy klawisz „Pokaż informacje o przedmiotach” trzeba przytrzymywać, czy naciskać, aby przełączać.\nPrzytrzymaj = pokazuje, gdy jest przytrzymany, i ukrywa po puszczeniu\nPrzełącz = naciśnij raz, aby pokazać, i jeszcze raz, aby ukryć; wyłącza się po wczytaniu zapisu lub powrocie do menu głównego"
 cfg_text_size,Rozmiar tekstu
@@ -143,6 +152,7 @@ ui_tab_batteries,Baterie
 ui_tab_machines,Maszyny
 ui_tab_icons,Ikony stanu
 ui_tab_items,Przedmioty
+ui_tab_special,Specjalne
 ui_reset,Resetuj kartę
 ui_reset_sure,Na pewno?
 ui_reset_tip,"Przywraca domyślne wartości wszystkich ustawień na tej karcie. Kliknij jeszcze raz, aby potwierdzić."
@@ -177,6 +187,11 @@ info_prefix_filter_long,Filtr
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,Stab.
 info_prefix_integrity_long,Stabilność
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("Dział. +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,Dział.
+info_prefix_efficiency,Wyd.
+info_prefix_quality,Jak.
 
 # Machine progress: days left. Short is the same for every number; long: 1 dzień, 2-4 dni, 5 dni (also 12-14, 21...).
 info_days_short,{0}d

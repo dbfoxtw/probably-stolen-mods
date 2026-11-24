@@ -32,6 +32,9 @@ cfg_water_volume_tip,容器に入っている液体の量を表示する（例�
 cfg_water_purity,純度を表示
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,液体のうち主成分がどれだけを占めるかを表示する。水の場合は水の純度。空の容器には表示しない。\n表示しない＝純度を表示しない\n整数＝{0}（純水を見分けられない）\n小数点以下1桁＝{1}\n小数点以下2桁＝{2}
+cfg_no_filter,液体容器の「ろ過器なし」を表示
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,ろ過器を入れられる液体容器（ピッチャーなど）にろ過器がないとき「{0}」と表示する。循環式養殖システムは含まない。
 cfg_machine_water,機械の中の液体を表示
 cfg_machine_water_tip,機械の中にある液体を表示する。この2行は「液体の量を表示」「純度を表示」の設定にも従う。
 cfg_battery_charge,バッテリー残量を表示
@@ -92,6 +95,12 @@ cfg_ingot_purity_tip,インゴットの純度の等級を表示する（例：�
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,薬品の純度を表示
 cfg_drug_purity_tip,薬品の純度を表示する（例：{0}）。
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("性能 +16%"; info_prefix_performance below)
+cfg_module_bonus,モジュールのボーナスを表示
+cfg_module_bonus_tip,モジュールの性能・効率・品質のうち、いちばん高いボーナスを表示する（例：{0}）。特定の機械専用のモジュールは表示しない。
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,バッテリーのない冷蔵庫を無視
+cfg_ignore_fridges_without_battery_tip,バッテリーのない冷蔵庫には、状態アイコンも「{0}」などの理由も表示しない。冷蔵庫を倉庫として使うときに便利。
 cfg_key_mode,キーモード
 cfg_key_mode_tip,「アイテム情報を表示」キーを押している間だけ表示するか、押すたびに切り替えるかを選ぶ。\n長押し＝押している間は表示し、離すと消える\n切り替え＝1回押すと表示、もう1回押すと消える。セーブデータをロードしたときや、メインメニューに戻ったときはオフになる
 cfg_text_size,文字サイズ
@@ -145,6 +154,7 @@ ui_tab_batteries,バッテリー
 ui_tab_machines,機械
 ui_tab_icons,状態アイコン
 ui_tab_items,アイテム
+ui_tab_special,特殊
 ui_reset,このタブを初期化
 ui_reset_sure,本当に？
 ui_reset_tip,このタブの設定をすべて初期値に戻す。もう一度クリックすると戻る。
@@ -182,6 +192,11 @@ info_prefix_filter_long,ろ過器
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,完
 info_prefix_integrity_long,完全性
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("性能 +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,性能
+info_prefix_efficiency,効率
+info_prefix_quality,品質
 
 # Machine progress: days until the machine finishes, the whole line. {0} = number of days. Japanese has one plural form: only .other.
 info_days_short,{0}日

@@ -190,6 +190,7 @@ namespace ProbablyStolenItemQuickInfo
                 IconSet = icons,
                 MineralWarning = Settings.MineralWarning,
                 Reactor = Settings.ShowReactor,
+                IgnoreFridgesWithoutBattery = Settings.IgnoreFridgesWithoutBattery,
             };
             var style = Style(font, ShowState.Full);
             long t = perf ? Perf.Now() : 0;
@@ -309,8 +310,13 @@ namespace ProbablyStolenItemQuickInfo
             // 只讀圖示要的事實：行全關的 Display（MachineRules 不讀水、進度、收支）。一輪一份（全店快照一輪最多拿一次）
             // 「水培礦物質範圍警告」開著時，只讀圖示這條也讀礦物質（⚠ 要用）
             // 「顯示反應爐」也一樣另外給（Display 是全關的一份；反應爐今晚爆炸的 ⚠ 要用）
+            // 「忽略沒裝電池的冰箱」也照設定給（電池槽空的冰箱不畫 ⚠、💤）
             var iconCtx = icons.WithoutKey
-                ? new ReadContext { D = Display.AllOff(), Icons = true, IconSet = icons, MineralWarning = Settings.MineralWarning, Reactor = Settings.ShowReactor }
+                ? new ReadContext
+                {
+                    D = Display.AllOff(), Icons = true, IconSet = icons, MineralWarning = Settings.MineralWarning, Reactor = Settings.ShowReactor,
+                    IgnoreFridgesWithoutBattery = Settings.IgnoreFridgesWithoutBattery,
+                }
                 : null;
             var style = Style(font, ShowState.Names);
             long t = perf ? Perf.Now() : 0;

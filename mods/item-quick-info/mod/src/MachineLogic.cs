@@ -88,7 +88,7 @@ namespace ProbablyStolenItemQuickInfo
     /// 一共幾台（含狀態是「無」的）。存的是原始的台數（還沒套三個開關與下拉）：換設定不用重建快照，畫的時候才由 IconSettings.BoxStatus 換算
     /// （「顯示閒置圖示」選空機器除外時只算 Idle，全部時兩個都算）。預設值是一台都沒有。
     /// 值型別：存在 Dictionary 裡，改的時候取出、Add、再放回去。
-    /// Reactors 是裝在這個箱子裡、今晚會爆炸的自己的自製反應爐（2026-11-22 主人定：機器區、擴建機器區、超科技儲藏區都收機器，5×3 的反應爐
+    /// Reactors 是裝在這個箱子裡、今晚會爆炸的自己的自製反應爐（2026-11-22 定：機器區、擴建機器區、超科技儲藏區都收機器，5×3 的反應爐
     /// 塞得進去）；和 Warning 分開記，「顯示反應爐」關著時 IconSettings.BoxStatus 不算它，換設定照樣不用重建快照。
     /// </summary>
     struct BoxSummary
@@ -148,6 +148,13 @@ namespace ProbablyStolenItemQuickInfo
         /// 「顯示閒置圖示」選空機器除外時不畫。今晚會跑、要畫狀態圖示時 MachineRules 才讀；不讀時是 false（照以前一律畫）。
         /// </summary>
         public bool InputsEmpty;
+
+        /// <summary>
+        /// 電池槽空著（MachineHelper.GetBatterySlot 的 childItem 是 null）：「忽略沒裝電池的冰箱」看它（MachineLogic.IgnoresFridge）。
+        /// 放了東西就是 false，不管放的是電池（含電量 0 的）、電流轉換器、超科技能源單元，還是不是電源的東西（照理放不進去）。
+        /// 不能用 MachineInfo.Power == PowerKind.Empty 代替：MachineRules.ReadPower 對放的不是電源也設 Empty。MachineRules.Read 一律填。
+        /// </summary>
+        public bool BatteryEmpty;
 
         // ── 容器格（淨水器、水分收集器、蒸餾器）──
         public bool HasContainer;
@@ -418,13 +425,31 @@ namespace ProbablyStolenItemQuickInfo
         }
 
         /// <summary>
+        /// 「忽略沒裝電池的冰箱」：設定開著、是冰箱（identifier fridge）、電池槽空著（f.BatteryEmpty）。
+        /// 電池槽空著的冰箱在遊戲裡本來就不會冰東西（冰箱每秒 PowerHelper.CanDrawPowerSource(電池, 1) 成立才冷藏），
+        /// 拿來當倉庫用；販賣機這類同樣放得進格子的機器不算。
+        /// </summary>
+        internal static bool IgnoresFridge(MachineKind kind, MachineFacts f, bool ignoreFridges) =>
+            ignoreFridges && kind == MachineKind.Fridge && f.BatteryEmpty;
+
+        /// <summary>
         /// 判斷完填進 info（MachineRules.Read 讀好事實以後叫；不碰 Unity，離線測試直接叫）：原因＝Decide 加上 WithPower
         /// （Decide 不看電：沒有別的原因、今晚會跑、電那行紅字 info.Insufficient 才是缺電，「顯示電量」關掉時紅字看不到，
         /// 靠這行告訴你今晚不會動），icons（這一輪要畫狀態圖示，ReadContext.Icons）時照同一個原因算狀態圖示（Status）。
+        /// ignoreFridges＝「忽略沒裝電池的冰箱」（ReadContext.IgnoreFridgesWithoutBattery；必填，免得哪條路忘了給）：成立時（IgnoresFridge）
+        /// 沒有原因、沒有狀態圖示（⚠、💤 都不畫，閒置圖示的三選一選哪個都一樣；冰箱本來就沒有 ✓），全店快照的箱子表也就把它當成
+        /// 沒有狀態的一台。info.Insufficient 不用清：電池槽空著時沒有電那行，Insufficient 另外只用在電池的紅字、今晚的電力收支
+        /// （都只看有容量的電池，PowerKind.Battery）與剩幾天（冰箱沒有進度），原因已經清掉，缺電不會再冒出來。
         /// 回傳進度的狀態（MachineRules 照它讀點數）。
         /// </summary>
-        internal static ProgressKind Judge(MachineInfo info, MachineKind kind, MachineFacts f, bool icons)
+        internal static ProgressKind Judge(MachineInfo info, MachineKind kind, MachineFacts f, bool icons, bool ignoreFridges)
         {
+            if (IgnoresFridge(kind, f, ignoreFridges))
+            {
+                info.Reason = Reason.None;
+                info.Status = default;
+                return ProgressKind.None;
+            }
             var (reason, progress) = Decide(kind, f);
             reason = WithPower(reason, f.RunsTonight, info.Insufficient);
             info.Reason = reason;

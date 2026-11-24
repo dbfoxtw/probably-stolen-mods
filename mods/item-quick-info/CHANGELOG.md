@@ -1,5 +1,23 @@
 # 版本紀錄（Changelog）
 
+## v1.5.0（2026-11-24）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 新設定「顯示模組加成」（物品頁，一開始是開的）：模組顯示性能、效率、品質三項裡最高的加成，例如 `性能 +16%`（負的是橘字）。機器專用的模組不顯示。
+- 設定視窗多了「特殊」分頁，放新設定「忽略沒裝電池的冰箱」（一開始是關的）：電池槽空著的冰箱不顯示狀態圖示，也不寫「缺電」這類原因，適合把冰箱當倉庫用的時候。
+- 新設定「顯示液體容器的『沒濾材』」（液體頁，一開始是開的）：關掉時，沒裝濾材的水罐不寫「沒濾材」。原本關掉「顯示耐久度」的，這個也從關開始。
+- 修正：換了遊戲語言以後，「物品速覽」設定鈕沒有字。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- New setting Show module bonuses (Items tab, on at first): modules show their highest bonus among Performance, Efficiency and Quality, e.g. `Perf +16%` (orange when negative). Modules made for one kind of machine aren't shown.
+- New Special tab with the setting Ignore Fridges without a battery (off at first): a Fridge with an empty battery slot shows no status icons and no reason such as No power. Useful when you keep Fridges as storage.
+- New setting Show "No filter" on liquid containers (Liquids tab, on at first): turn it off to hide No filter on Water Pitchers without a filter. If you had Show durability off, it starts off too.
+- Fixed: the Item Quick Info button had no text after you switched the game language.
+
 ## v1.4.0（2026-11-23）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）

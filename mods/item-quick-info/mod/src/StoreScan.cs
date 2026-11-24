@@ -39,7 +39,8 @@ namespace ProbablyStolenItemQuickInfo
         /// 每個部分讀壞了都當作空的、LogOnce，不會丟出去。Perf.On 時每個部分各自計時。
         /// 清單：店裡各區的視窗往下找、有 IS_OWNED_TAG 的（EndNight 就是對這份清單呼叫每晚處理）。不在店鋪畫面（沒有 EmporiumEntry）時是空的。
         /// 機器狀態：清單裡 ItemReader.IsMachine 的每台用 MachineRules.Read 讀狀態圖示，ctx 和常駐那條路的圖示一樣（全關的 Display、Icons 開著），
-        /// Scan 是這一份（不會再去拿快照）。每台各自接住例外、讀壞的跳過（沒有那台的狀態）。
+        /// Scan 是這一份（不會再去拿快照）。「水培礦物質範圍警告」「忽略沒裝電池的冰箱」照設定給（改這兩個設定時 Settings 丟掉快照；
+        /// 被忽略的冰箱讀到的狀態是「無」，下一部分照樣算進箱子的台數）。每台各自接住例外、讀壞的跳過（沒有那台的狀態）。
         /// 箱子：上一部分讀到狀態的每台機器（含狀態是「無」的，才數得到一共幾台），用遊戲的 GetParentItem 找它裝在哪個物品裡
         /// （所在的 inventory 往上找到的第一個物品；超科技儲藏區看不到的分頁只是 SetActive 關掉，往上的連結還在，照理照樣找到）。那個物品本身不是機器
         /// （ItemReader.IsMachine）才記進表：冰箱、販賣機這類本身是機器的容器照舊只畫自己的。只算直接那一層、不再往上找（別的 mod 的容器套好幾層時，
@@ -72,8 +73,13 @@ namespace ProbablyStolenItemQuickInfo
             if (perf) t = Lap(t, ref s.ChargesTicks);
 
             s._status = new Dictionary<GameItem, ItemStatus>();
-            // 礦物質照設定讀：水耕機範圍外的 ⚠ 也算進箱子上的圖示；全店核對重新算的那份也走這裡，同一個設定
-            var ctx = new ReadContext { D = Display.AllOff(), Icons = true, Scan = s, MineralWarning = Settings.MineralWarning };
+            // 礦物質、忽略沒裝電池的冰箱照設定讀：水耕機範圍外的 ⚠、被忽略的冰箱沒有狀態都照樣反映到箱子上的圖示；
+            // 全店核對重新算的那份也走這裡，同一個設定
+            var ctx = new ReadContext
+            {
+                D = Display.AllOff(), Icons = true, Scan = s, MineralWarning = Settings.MineralWarning,
+                IgnoreFridgesWithoutBattery = Settings.IgnoreFridgesWithoutBattery,
+            };
             foreach (var item in s._all)
             {
                 try
@@ -100,7 +106,7 @@ namespace ProbablyStolenItemQuickInfo
                 }
                 catch (Exception e) { ItemQuickInfoMod.LogOnce($"全店箱子裡的機器 {item?.identifier}", e); }
             }
-            // 今晚會爆炸的自己的反應爐也記到裝它的箱子（2026-11-22 主人定：機器區、擴建機器區、超科技儲藏區都收機器，反應爐塞得進去）。
+            // 今晚會爆炸的自己的反應爐也記到裝它的箱子（2026-11-22 定：機器區、擴建機器區、超科技儲藏區都收機器，反應爐塞得進去）。
             // 原始的台數照記，「顯示反應爐」由 IconSettings.BoxStatus 套（換設定不用重建）；只算直接那一層，和機器一樣
             foreach (var item in s._all)
             {
@@ -154,7 +160,7 @@ namespace ProbablyStolenItemQuickInfo
         /// 水耕機裡這顆種子的最佳範圍（HydroponicHelper.GetNutrimentRange，礦物質那行）與每輪用水量（GetWaterUsePerCycle，今晚水夠不夠）。
         /// 兩個都走 PlantGeneticsHelper.GetStatMultiplier → GetTraits：每次建一個清單、每種特性組一次字串，一顆種子約 25 個小物件，
         /// 而完整資訊、常駐的圖示、快照重建每 0.25 秒對每台有種子的水耕機各叫一次，所以存在這一份裡：同一顆種子第一次問到才叫遊戲的方法，
-        /// 之後查表、不配置。跟著這一份的壽命：快照重建（物品進出、遊戲事件含睡覺、超過 2 秒）、換場景、mod 停用、改「水培礦物質範圍警告」時一起丟。
+        /// 之後查表、不配置。跟著這一份的壽命：快照重建（物品進出、遊戲事件含睡覺、超過 2 秒）、換場景、mod 停用、改「水培礦物質範圍警告」或「忽略沒裝電池的冰箱」時一起丟。
         /// 種子的特性只在搬動（DNA 編輯器，會有物品進出）或過夜（睡覺的事件）時才變，所以用不到過期的值。
         /// 全店核對重新算的那份有自己的表，不碰快照的：快照的表過期時核對看得出來。
         /// </summary>

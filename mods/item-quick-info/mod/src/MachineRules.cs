@@ -57,9 +57,13 @@ namespace ProbablyStolenItemQuickInfo
             // 收支開著時也一定判斷（有原因的今晚不扣電），原因那行照開關顯示或不顯示
             if (!ctx.D.MachineReason && !ctx.D.MachineProgress && !net && !icons) return info;
             var facts = new MachineFacts { RunsTonight = ctx.RunsTonight(m), OutputCount = outputCount, Filters = filters, Mineral = info.Mineral.Result };
-            if (facts.RunsTonight) Fill(kind, m, facts, ctx);
+            // 電池槽空著：「忽略沒裝電池的冰箱」看它。照 ReadPower 判斷電池槽空的同一個條件（childItem 是 null），
+            // 不看 info.Power：放的不是電源時 ReadPower 也設 PowerKind.Empty，那種算「有東西」、照舊不忽略
+            facts.BatteryEmpty = battery.childItem == null;
+            // 被忽略的冰箱不讀格子：Judge 反正把原因與圖示清掉（冰箱的 Fill 會讀兩個格子、配置清單）
+            if (facts.RunsTonight && !MachineLogic.IgnoresFridge(kind, facts, ctx.IgnoreFridgesWithoutBattery)) Fill(kind, m, facts, ctx);
             // 事實 → 原因（Decide＋缺電的 WithPower）與狀態圖示：不碰 Unity 的那一步在 MachineLogic.Judge（離線測試直接叫它）
-            var progress = MachineLogic.Judge(info, kind, facts, icons);
+            var progress = MachineLogic.Judge(info, kind, facts, icons, ctx.IgnoreFridgesWithoutBattery);
             // 空機器：只有 💤 要不要帶「空機器」的記號用得到，所以判出 💤 才去看輸入區（今晚會跑的每台機器每 0.25 秒都判斷一次，
             // 讀格子會配置記憶體），看完照同一個原因重算圖示（Status 照 facts.InputsEmpty 帶記號）。💤 只會出在今晚會跑的機器上（Status）。
             // 常駐的圖示、全店快照（箱子上的圖示、全店核對）都走這裡，結果一樣

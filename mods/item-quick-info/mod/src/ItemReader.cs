@@ -254,6 +254,8 @@ namespace ProbablyStolenItemQuickInfo
         /// 上面的行之後，任何物品（含機器、箱子、櫃檯上客人的東西）再接耐久度、金屬錠純度、使用次數、熱度（ReadExtras），
         /// 熱度永遠是最後一行。
         /// - 自製反應爐：今晚爆炸、完好度、存的電（Rules.ReactorLines，跟著「顯示反應爐」），取過名的前面照「顯示其他物品名稱」加名稱。
+        /// - 模組：泛用模組與神經核心三項加成裡最高的那項（ModuleRules.Lines，跟著「顯示模組加成」），取過名的前面照「顯示其他物品名稱」加名稱；
+        ///   資訊框貼在形狀最長的那一橫排（LabelRenderer）。
         /// status：狀態圖示（ctx.Icons 時才算，不然是什麼都沒有）：機器照 MachineLogic.Status，水罐看濾材，
         /// 箱子（有自己視窗、不是機器、不是水容器）照裡面的機器換算（BoxStatus），反應爐今晚會爆炸時 ⚠，其他物品沒有。
         /// 行全被關掉時照樣算（圖示和資訊框的開關各自獨立）。
@@ -283,9 +285,10 @@ namespace ProbablyStolenItemQuickInfo
             var w = ReadWater(item);
             if (w != null)
             {
-                // 水罐：液量、純度下面加濾材那行（「顯示耐久度」；客人的、沒裝的照樣寫），
-                // 自己的水罐裝了濾材、耐久 0 才畫警告圖示
-                var filters = ctx.D.Durability || ctx.Icons ? PitcherFilters(item) : null;
+                // 水罐：液量、純度下面加濾材那行（有裝看「顯示耐久度」、沒裝看「顯示「沒濾材」」，
+                // 客人的、沒裝的照樣寫），自己的水罐裝了濾材、耐久 0 才畫警告圖示（不看這兩個開關）。
+                // 「顯示耐久度」關、「顯示「沒濾材」」開時也要讀濾材，才知道是不是沒裝
+                var filters = ctx.D.Durability || ctx.D.NoFilter || ctx.Icons ? PitcherFilters(item) : null;
                 body = Rules.WaterLines(ctx.S, w, ctx.D, filters);
                 if (ctx.Icons && filters != null) status = MachineLogic.PitcherStatus(GeneralHelper.IsItemOwned(item), filters);
             }
@@ -318,6 +321,13 @@ namespace ProbablyStolenItemQuickInfo
                 // 自製反應爐：沒有電池槽、沒有視窗，算其他物品（名稱照「顯示其他物品名稱」）。「顯示反應爐」關著時三行與 ⚠ 都沒有
                 if (ctx.Reactor) body = Rules.ReactorLines(ctx.S, ReadReactor(item));
                 status = ReactorStatus(item, ctx);
+            }
+            else if (IsBonusModule(item))
+            {
+                // 模組：泛用模組與神經核心最高的那項加成（目前值），跟著「顯示模組加成」。沒有視窗，算其他物品（名稱照「顯示其他物品名稱」）。
+                // 資訊框擺在形狀最長的那一橫排，LabelRenderer 看那一行的種類（LineKind.ModuleBonus）自己找形狀
+                if (ctx.D.ModuleBonus)
+                    body = ModuleRules.Lines(ctx.S, ctx.D, TagInt(item, ModulePerformanceTag), TagInt(item, ModuleEfficiencyTag), TagInt(item, ModuleQualityTag));
             }
             // 箱子上的圖示：和「顯示箱子名稱」同一類（有自己視窗、不是機器）。水罐也有自己的視窗（濾材格），照上面看濾材、不當箱子
             if (w == null && kind == NameKind.Container) status = BoxStatus(item, ctx);
@@ -378,6 +388,22 @@ namespace ProbablyStolenItemQuickInfo
             return cfg.BoxStatus(box);
         }
 
+        /// <summary>模組的 tag（ModuleHelper.MODULE_TAG；節點也有，所以另外看 identifier 的白名單）。</summary>
+        const string ModuleTag = "MODULE_TAG";
+        /// <summary>
+        /// 模組三項加成的目前值（ModuleHelper.TEMP_PERCENTAGE_*_INT；裝在模組格時算進相鄰效果，拿出來重設成基礎值，和遊戲提示框的主數字一樣）。
+        /// 基礎值（遊戲提示框括號裡的「基礎」）不讀。
+        /// </summary>
+        const string ModulePerformanceTag = "TEMP_PERCENTAGE_PERFORMANCE_INT";
+        const string ModuleEfficiencyTag = "TEMP_PERCENTAGE_EFFICIENCY_INT";
+        const string ModuleQualityTag = "TEMP_PERCENTAGE_QUALITY_INT";
+
+        /// <summary>
+        /// 要畫加成的模組：遊戲提示框畫加成的條件（ModuleHelper.CreateModuleTooltip：有 MODULE_TAG），而且 identifier 在白名單裡
+        /// （ModuleRules.IsBonusModule：泛用模組與神經核心；機器專用的、報廢、空白、節點不算）。隨機形狀的（random_*_module）identifier 照舊是 system_module_*。
+        /// </summary>
+        static bool IsBonusModule(GameItem item) => ModuleRules.IsBonusModule(item.identifier) && item.IsTag(ModuleTag);
+
         /// <summary>充能器的 identifier（MachineRecharger.Recharger；沒有電池槽，在 mod 裡算箱子）。</summary>
         const string RechargerId = "recharger";
         /// <summary>充能器裡每顆電池的電量（RechargerEnergies 每次重用，不每台配置一個清單）。</summary>
@@ -403,14 +429,17 @@ namespace ProbablyStolenItemQuickInfo
 
         /// <summary>
         /// 裝濾材的東西（FILTER_CONTAINER_TAG，正式版只有水罐）裡的濾材；不是裝濾材的東西回 null。
-        /// 找法照遊戲倒水時的 WaterHelper.GetFilterItem（子物品裡第一個 WATER_FILTER；唯讀）。水罐的格子不收紫外線燈，
-        /// 萬一第一個是沒有耐久的濾材也照 AddFilter 不算（寫「沒濾材」）。
+        /// 子物品（遊戲 WaterHelper.GetFilterItem 用的同一個 FindAllChildItems；唯讀）裡每個算數的濾材都照 AddFilter 加總，
+        /// 和循環水養殖系統一樣：原版水罐只有一格，結果和遊戲倒水時只用第一個 WATER_FILTER 一樣；
+        /// 別的 mod 給容器加了好幾個濾材槽、一個用完換下一個時，第一個用完了也不會寫「濾材 0」加 ⚠。
+        /// 紫外線燈也有 WATER_FILTER，但沒有耐久，AddFilter 不算（排在濾材前面也不會擋住）。
         /// </summary>
         static FilterInfo PitcherFilters(GameItem item)
         {
             if (!item.IsTag(FilterContainerTag)) return null;
             var f = new FilterInfo();
-            AddFilter(f, WaterHelper.GetFilterItem(item));
+            foreach (var child in item.FindAllChildItems())
+                AddFilter(f, child);
             return f;
         }
 
@@ -669,6 +698,11 @@ namespace ProbablyStolenItemQuickInfo
         /// 所以和 MineralWarning 一樣另外給（完整資訊、常駐的圖示都照 Settings）。
         /// </summary>
         public bool Reactor;
+        /// <summary>
+        /// 「忽略沒裝電池的冰箱」：開著時電池槽空著的冰箱沒有原因、沒有狀態圖示（MachineLogic.Judge）。和 MineralWarning 一樣，
+        /// 完整資訊、常駐的圖示、全店快照讀全店機器的狀態（StoreScan.Build，全店核對也是它）都照 Settings 給，箱子上的圖示才會跟著。
+        /// </summary>
+        public bool IgnoreFridgesWithoutBattery;
 
         /// <summary>這一輪重建的快照；沒重建（直接用現在那份、或沒用到全店）是 null。</summary>
         internal StoreScan Rebuilt => ScanRebuilt ? Scan : null;

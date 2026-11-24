@@ -32,15 +32,18 @@ cfg_water_volume_tip,"Affiche la quantité de liquide d'un récipient, par exemp
 cfg_water_purity,Afficher la pureté
 # {0}, {1}, {2} = la ligne de la pureté telle qu'elle est affichée pour Nombre entier, 1 décimale et 2 décimales (« 98% », « 98.5% », « 98.52% » : la part du composant principal) ; les choix sont opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Affiche la part du liquide que représente son composant principal. Pour l'eau, c'est la pureté de l'eau. Pas pour les récipients vides.\nNe pas afficher = pas de ligne de pureté\nNombre entier = {0} (impossible de repérer l'eau pure)\n1 décimale = {1}\n2 décimales = {2}"
+cfg_no_filter,Afficher « Sans filtre » sur les récipients
+# {0} = la ligne de l'encadré quand il n'y a pas de filtre (info_reason_no_filter)
+cfg_no_filter_tip,"Les récipients qui acceptent un filtre, comme la carafe, affichent « {0} » quand ils n'en ont pas. Le système de circuit recirculé n'est pas concerné."
 cfg_machine_water,Afficher le liquide dans les machines
 cfg_machine_water_tip,Affiche le liquide à l'intérieur d'une machine. Les deux lignes suivent aussi « Afficher le volume de liquide » et « Afficher la pureté ».
 cfg_battery_charge,Afficher la charge des batteries
-cfg_battery_charge_tip,"Affiche l'énergie qu'il reste dans une batterie, par exemple 8kJ. Une Station de recharge affiche aussi la charge de chaque batterie qu'elle contient."
+cfg_battery_charge_tip,"Affiche l'énergie qu'il reste dans une batterie, par exemple 8kJ. Une station de recharge affiche aussi la charge de chaque batterie qu'elle contient."
 cfg_battery_tonight_charge,Afficher la recharge de cette nuit
 cfg_battery_tonight_charge_tip,"Affiche en vert de combien une batterie sera rechargée cette nuit, par exemple +4kJ. Masqué quand elle est pleine ou ne sera pas rechargée."
 cfg_machine_power,Afficher l'énergie des machines
 # {0} = la ligne de la batterie d'une machine telle qu'affichée (« 41kJ » ; la ligne de l'énergie n'a pas de préfixe), {1} = avec un Convertisseur de courant, la facture de cette nuit (« -6 » et l'icône de crédit), {2} = le prix d'une utilisation (« -6/8/14 » et l'icône de crédit)
-cfg_machine_power_tip,"Affiche l'énergie qu'il reste dans la batterie d'une machine, par exemple {0}. La ligne passe au rouge quand l'énergie ne suffit pas pour cette nuit. Avec un Convertisseur de courant, affiche plutôt le coût de l'électricité : la facture de cette nuit pour les machines qui tournent la nuit, par exemple {1}, ou le prix d'une utilisation pour les machines utilisées en journée, par exemple {2}."
+cfg_machine_power_tip,"Affiche l'énergie qu'il reste dans la batterie d'une machine, par exemple {0}. La ligne passe au rouge quand l'énergie ne suffit pas pour cette nuit. Avec un convertisseur de courant, affiche plutôt le coût de l'électricité : la facture de cette nuit pour les machines qui tournent la nuit, par exemple {1}, ou le prix d'une utilisation pour les machines utilisées en journée, par exemple {2}."
 cfg_machine_tonight_net,Afficher le bilan d'énergie de cette nuit
 cfg_machine_tonight_net_tip,"Affiche de combien la batterie d'une machine va changer cette nuit (recharge moins consommation), sous la ligne d'énergie.\nHausse : en vert, par exemple +4kJ\nBaisse : en orange, par exemple -8kJ (10j), le nombre entre parenthèses indiquant combien de jours la batterie tiendra à ce rythme\nMasqué quand rien ne change ou que la ligne d'énergie est rouge."
 cfg_machine_reason,Afficher pourquoi une machine ne tournera pas
@@ -69,14 +72,14 @@ cfg_warning_icon,Afficher l'icône d'avertissement
 cfg_warning_icon_tip,"Affiche le panneau d'avertissement quand une machine a du travail mais est bloquée (par exemple « {0} »), ou que le filtre d'une carafe est usé."
 cfg_idle_icon,Afficher l'icône d'inactivité
 # {0}, {1} = deux des raisons ci-dessous (info_reason_no_input, info_reason_no_seed) ; les choix sont opt_icons_off, opt_except_empty, opt_all
-cfg_idle_icon_tip,"Affiche Zz quand une machine ne tournera pas cette nuit tant que vous n'aurez rien ajouté, par exemple « {0} » ou « {1} ».\nDésactivées = pas de Zz\nSauf vides = pas quand les entrées de la machine sont vides (par exemple pas de récipient, ou un Réfrigérateur vide)\nToutes = même quand les entrées sont vides"
+cfg_idle_icon_tip,"Affiche Zz quand une machine ne tournera pas cette nuit tant que vous n'aurez rien ajouté, par exemple « {0} » ou « {1} ».\nDésactivées = pas de Zz\nSauf vides = pas quand les entrées de la machine sont vides (par exemple pas de récipient, ou un réfrigérateur vide)\nToutes = même quand les entrées sont vides"
 cfg_done_icon,Afficher l'icône de fin
 cfg_done_icon_tip,"Affiche une coche quand une machine a quelque chose à récupérer, comme des objets dans sa sortie (les trémies d'entrée et de sortie ne comptent pas) ou de l'eau qu'elle a collectée ou fini de purifier."
 # Minéraux du Système hydroponique (nouveau en 1.4.0). {0}, {1} = les deux lignes de l'encadré d'infos ci-dessous (info_mineral_low, info_mineral_high)
 cfg_mineral_warning,Alerte de plage de minéraux (hydroponie)
-cfg_mineral_warning_tip,"Quand les minéraux de l'eau d'un Système hydroponique sont hors de la Plage optimale de nutriments de la graine, affiche le panneau d'avertissement, et l'encadré d'infos indique « {0} » ou « {1} »."
+cfg_mineral_warning_tip,"Quand les minéraux de l'eau d'un système hydroponique sont hors de la plage optimale de nutriments de la graine, affiche le panneau d'avertissement, et l'encadré d'infos indique « {0} » ou « {1} »."
 cfg_container_icons,Icônes sur les conteneurs
-cfg_container_icons_tip,"Affiche les icônes d'état sur un conteneur (comme un Casier de machiniste) pour les machines qu'il contient. Quand le panneau d'avertissement et Zz s'appliquent tous les deux, seul le panneau d'avertissement s'affiche ; la coche s'ajoute si au moins une machine a quelque chose à récupérer.\nDésactivées = pas d'icônes sur les conteneurs\nAvertissement seul = seulement le panneau d'avertissement\nAvertissement et inactivité = le panneau d'avertissement ou Zz\nToutes = la coche aussi"
+cfg_container_icons_tip,"Affiche les icônes d'état sur un conteneur (comme un casier de machiniste) pour les machines qu'il contient. Quand le panneau d'avertissement et Zz s'appliquent tous les deux, seul le panneau d'avertissement s'affiche ; la coche s'ajoute si au moins une machine a quelque chose à récupérer.\nDésactivées = pas d'icônes sur les conteneurs\nAvertissement seul = seulement le panneau d'avertissement\nAvertissement et inactivité = le panneau d'avertissement ou Zz\nToutes = la coche aussi"
 cfg_stolen_heat,Afficher le danger des objets volés
 # {0} = ligne du danger avec le préfixe court (« R 45% »), {1} = avec le préfixe long (« Dang 45% »)
 cfg_stolen_heat_tip,Affiche en rouge le danger d'un objet volé.\nCourts : {0}\nLongs : {1}
@@ -92,6 +95,12 @@ cfg_ingot_purity_tip,"Affiche le niveau de pureté d'un lingot de métal, par ex
 # Pureté des médicaments (nouveau en 1.4.0). {0} = la ligne de l'encadré (« 88% »)
 cfg_drug_purity,Afficher la pureté des médicaments
 cfg_drug_purity_tip,"Affiche la pureté des médicaments, par exemple {0}."
+# Bonus des modules (nouveau en 1.5.0). {0} = la ligne de l'encadré d'un module de performance (« Perf +16% » ; info_prefix_performance plus bas)
+cfg_module_bonus,Afficher les bonus des modules
+cfg_module_bonus_tip,"Affiche le plus élevé des bonus d'un module (performance, efficacité ou qualité), par exemple {0}. Les modules conçus pour un seul type de machine ne sont pas affichés."
+# Onglet Spécial (nouveau en 1.5.0). {0} = une des raisons ci-dessous (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Ignorer les réfrigérateurs sans batterie
+cfg_ignore_fridges_without_battery_tip,Un réfrigérateur sans batterie n'affiche ni icônes d'état ni raison comme « {0} ». Pratique si vous utilisez des réfrigérateurs comme rangement.
 cfg_key_mode,Mode de la touche
 cfg_key_mode_tip,"Choisissez s'il faut maintenir la touche « Afficher les infos des objets » ou appuyer dessus pour basculer.\nMaintenir = affiche tant qu'elle est maintenue, masque quand vous la relâchez\nBasculer = appuyez une fois pour afficher, encore une fois pour masquer ; se désactive quand vous chargez une sauvegarde ou revenez au menu principal"
 cfg_text_size,Taille du texte
@@ -145,6 +154,7 @@ ui_tab_batteries,Batteries
 ui_tab_machines,Machines
 ui_tab_icons,Icônes d'état
 ui_tab_items,Objets
+ui_tab_special,Spécial
 ui_reset,Réinitialiser l'onglet
 ui_reset_sure,Sûr ?
 ui_reset_tip,Remet tous les réglages de cet onglet à leur valeur par défaut. Cliquez à nouveau pour confirmer.
@@ -182,6 +192,11 @@ info_prefix_filter_long,Filtre
 # Intégrité du réacteur (« Intégrité 60/100 », le mot du jeu). Court : jusqu'à 3 lettres.
 info_prefix_integrity_short,Int
 info_prefix_integrity_long,Intégrité
+# Bonus d'un module (nouveau en 1.5.0) : le plus élevé de ses trois bonus (« Perf +16% », les mots du jeu mech_module_stat_*).
+# Un seul mot fixe pour chacun, utilisé avec les préfixes courts et longs : 3 à 5 lettres.
+info_prefix_performance,Perf
+info_prefix_efficiency,Eff
+info_prefix_quality,Qual
 
 # Progression d'une machine : nombre de jours avant la fin. Pas de préfixe : c'est toute la ligne. {0} = nombre de jours.
 # info_days_short : forme la plus courte, la même pour tous les nombres (« 3j »). info_days_long : en toutes lettres, .one (0 et 1) et .other.

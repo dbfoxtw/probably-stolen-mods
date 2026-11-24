@@ -133,6 +133,15 @@ namespace ProbablyStolenItemQuickInfo
             /// 每幀的 Place 只在要的和它不一樣時才讀、改 sibling 的順序；Put 每一輪重設成 -1（框可能新建、重用），確認一次。
             /// </summary>
             public int Stack = -1;
+            /// <summary>
+            /// 這一輪的資訊框有模組那一行（LineKind.ModuleBonus）：資訊框不貼物品外框的左下角，改貼形狀裡選到的那一塊（Block）的左下角。
+            /// Put 每一輪照行重設；HasBlock＝形狀讀得到、選得出那一塊（讀不到時照舊貼物品外框）。
+            /// </summary>
+            public bool Module, HasBlock;
+            public ModuleBlock Block;
+            /// <summary>選那一塊時物品的方向與翻轉（UpdateBlock 記下）：每幀的 Place 比這兩個，物品在兩次重算之間轉向、翻轉時重選。</summary>
+            public int BlockOrientation;
+            public bool BlockFlipped;
         }
 
         /// <summary>
@@ -186,6 +195,12 @@ namespace ProbablyStolenItemQuickInfo
         /// 只有名稱一行的框的 Key：不會和 Key() 組出來的字串一樣（那些以字級的數字開頭），所以完整資訊換過來一定重排，換回名稱也一定重排。
         /// </summary>
         const string SingleNameKey = "\u0002name";
+        /// <summary>
+        /// 模組的形狀讀成的格子（UpdateBlock，ModuleRules.LongestRow 讀）：重用、不每次配置；比它大的形狀才換一個大的
+        /// （泛用模組最多 2×3、神經核心 2×2，一般不會換）。超過 MaxModuleCells 格的不選（照舊貼物品外框）。
+        /// </summary>
+        static bool[] _cells = new bool[16];
+        const int MaxModuleCells = 64;
 
         /// <summary>這一輪重算開始：每個圖層從第 0 個標籤開始重用。</summary>
         internal static void Begin()
@@ -316,9 +331,15 @@ namespace ProbablyStolenItemQuickInfo
             label.Place = style.Place;
             label.IconWidth = iconWidth;
             label.Stack = -1; // 框可能新建、重用：這一輪的 Place 確認一次前後
+            label.Module = HasModuleLine(_info);
+            label.HasBlock = false;
             try
             {
+                // 模組：這一輪選一次形狀裡的那一塊（每 0.25 秒；每幀的 Place 只用存好的，轉向、翻轉了才重選）
+                if (label.Module) UpdateBlock(label);
                 ItemSize(layer, item, out float width, out float height);
+                // 資訊框放不放得下照它貼的那一塊的寬（模組是選到的那一塊），名稱框照舊照物品的寬
+                float infoWidth = label.HasBlock ? ModuleRules.BlockWidth(width, label.Block) : width;
                 // 名稱框先排：充能器的電池要不要兩顆一行看上緣名稱框的高。兩個框各排各的，先後不影響內容；
                 // 前後順序由 Place 的 Stack 每一輪確認
                 float nameHeight = 0f;
@@ -337,7 +358,7 @@ namespace ProbablyStolenItemQuickInfo
                     // 先啟用框再排字：重用的框可能上一輪被藏起來（停用中新增的 TMP 不跑 Awake，量字寬會出錯；審查發現）
                     label.Info ??= NewBox(layer, Vector2.zero);
                     SetUsed(label.Info, true);
-                    FillInfo(layer, label.Info, _info, style, width, height, nameHeight);
+                    FillInfo(layer, label.Info, _info, style, infoWidth, height, nameHeight);
                     SetBack(label.Info, style.BackAlpha);
                 }
                 else SetUsed(label.Info, false);
@@ -1040,8 +1061,53 @@ namespace ProbablyStolenItemQuickInfo
             else width = height = float.PositiveInfinity;
         }
 
+        /// <summary>這一輪資訊框的行裡有模組那一行（LineKind.ModuleBonus）。</summary>
+        static bool HasModuleLine(List<Line> lines)
+        {
+            foreach (var l in lines)
+                if (l.Kind == LineKind.ModuleBonus) return true;
+            return false;
+        }
+
         /// <summary>
-        /// 把框擺到物品上（ItemRect）：資訊框的左下角對齊物品的左下角；名稱框 Top 時上緣中點對齊物品上緣的中點，
+        /// 模組的形狀選一次那一塊（ModuleRules.LongestRow）：照遊戲的釘選圖示（GameItemElement.UpdatePinOverlay）的讀法，
+        /// 在 modifiedShape 的 minX..maxX、minY..maxY 逐格叫 Get（全域座標：已經轉過、翻過，和畫面上的一樣；Get 是 GridShape 介面的預設方法），
+        /// 不是 0 就算佔。記下這時的方向與翻轉，Place 比對用。讀不到形狀、格數不對、一格都沒佔時 HasBlock 是 false（照舊貼物品外框）。
+        /// 格子讀進重用的 _cells，不配置記憶體（每幀的 Place 在物品轉向時也叫）。
+        /// </summary>
+        static void UpdateBlock(Label label)
+        {
+            label.HasBlock = false;
+            var shape = label.Item.modifiedShape;
+            if (shape == null) return;
+            label.BlockOrientation = shape.orientation;
+            label.BlockFlipped = shape.flipped;
+            int w = shape.globalWidth, h = shape.globalHeight;
+            if (w <= 0 || h <= 0 || w * h > MaxModuleCells) return;
+            if (_cells.Length < w * h) _cells = new bool[w * h];
+            int x0 = shape.minX, y0 = shape.minY;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    _cells[y * w + x] = shape.Get(x0 + x, y0 + y) != 0;
+            label.HasBlock = ModuleRules.LongestRow(_cells, w, h, out label.Block);
+        }
+
+        /// <summary>
+        /// 資訊框的左下角：模組選得出那一塊時是那一塊的左下角（ModuleRules.BlockCorner，物品外框照格數切），其他物品是物品外框的左下角。
+        /// 每幀叫：物品在兩次重算之間轉向、翻轉了（方向或翻轉和選的時候不同）就重選那一塊，其他時候只算幾個數。
+        /// </summary>
+        static void InfoCorner(Label label, float minX, float minY, float maxX, float maxY, out float x, out float y)
+        {
+            x = minX;
+            y = minY;
+            if (!label.Module) return;
+            var shape = label.Item.modifiedShape;
+            if (shape != null && (shape.orientation != label.BlockOrientation || shape.flipped != label.BlockFlipped)) UpdateBlock(label);
+            if (label.HasBlock) ModuleRules.BlockCorner(minX, minY, maxX, maxY, label.Block, out x, out y, out _);
+        }
+
+        /// <summary>
+        /// 把框擺到物品上（ItemRect）：資訊框的左下角對齊物品的左下角（模組對齊形狀裡選到的那一塊的左下角，InfoCorner）；名稱框 Top 時上緣中點對齊物品上緣的中點，
         /// 疊到右上角的狀態圖示時閃開（Rules.DodgeIcons：左邊放得下就在物品左緣到圖示框左緣之間置中，放不下移到圖示下面；
         /// 用排好的名稱框寬判斷，這裡不換行；完整資訊、有資訊框時放不下的在 FillSingleName 已經照左邊那段斷窄、這裡在那段置中）；
         /// Center 時中心對齊物品的中心（旋轉過的物品也是外接矩形的中心）。
@@ -1054,8 +1120,12 @@ namespace ProbablyStolenItemQuickInfo
             if (!ItemRect(layer, label.Item, out float minX, out float minY, out float maxX, out float maxY)) return;
             bool skipSame = Perf.SkipSamePosition; // 效能的對照組「位置沒變不重設」；平常是 false
             bool info = label.Info != null && label.Info.Used;
+            float ix = minX, iy = minY;
             if (info)
-                SetPosition(label.Info, new Vector3(minX, minY, 0f), skipSame);
+            {
+                InfoCorner(label, minX, minY, maxX, maxY, out ix, out iy);
+                SetPosition(label.Info, new Vector3(ix, iy, 0f), skipSame);
+            }
             if (label.Name != null && label.Name.Used)
             {
                 var size = label.Name.Rt.sizeDelta;
@@ -1066,10 +1136,11 @@ namespace ProbablyStolenItemQuickInfo
                 SetPosition(label.Name, new Vector3(x, y, 0f), skipSame);
                 if (info)
                 {
-                    // 名稱框 pivot (0.5,1)（Top；Center 時 dodge 是 None、沒斷窄，InfoAboveName 本來就回 false）、資訊框 pivot (0,0) 在物品左下角
+                    // 名稱框 pivot (0.5,1)（Top；Center 時 dodge 是 None、沒斷窄，InfoAboveName 本來就回 false）、資訊框 pivot (0,0) 在 (ix, iy)
+                    // （物品左下角；模組是選到的那一塊的左下角）
                     var box = label.Info.Rt.sizeDelta;
                     Stack(label, Rules.InfoAboveName(Rules.NameMoved(dodge, label.Name.Narrowed), x - size.x * 0.5f, x + size.x * 0.5f, y - size.y, y,
-                                                     minX, minX + box.x, minY, minY + box.y));
+                                                     ix, ix + box.x, iy, iy + box.y));
                 }
             }
         }

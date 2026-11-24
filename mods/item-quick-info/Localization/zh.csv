@@ -30,6 +30,9 @@ cfg_water_volume_tip,显示容器里装了多少液体，例如{0}。
 cfg_water_purity,显示纯度
 # {0}、{1}、{2}＝整数、一位小数、两位小数时信息框上纯度那行实际画的字（98%、98.5%、98.52%：主要成分占了多少）；选项的字是 opt_dont_show、opt_whole_number、opt_one_decimal、opt_two_decimals
 cfg_water_purity_tip,显示主要成分占了多少；装水时就是水质。空的容器不显示。\n不显示＝不显示纯度\n整数＝{0}（分不出纯水）\n一位小数＝{1}\n两位小数＝{2}
+cfg_no_filter,显示液体容器的“没滤材”
+# {0}＝信息框的“没滤材”（info_reason_no_filter）
+cfg_no_filter_tip,能装滤材的液体容器（例如水罐）没装滤材时，显示“{0}”。不含循环水养殖系统。
 cfg_machine_water,显示机器里的液体
 cfg_machine_water_tip,显示机器里面的液体。这两行另外按“显示液体量”“显示纯度”两个设置显示。
 cfg_battery_charge,显示电池电量
@@ -90,6 +93,12 @@ cfg_ingot_purity_tip,在金属锭上显示纯度的等级，例如“{0}”。
 # 药品纯度（1.4.0 加）。{0}＝信息框那行（88%）
 cfg_drug_purity,显示药品纯度
 cfg_drug_purity_tip,显示药品的纯度，例如{0}。
+# 模组加成（1.5.0 加）。{0}＝性能模组信息框那行（性能 +16%；下面的 info_prefix_performance）
+cfg_module_bonus,显示模组加成
+cfg_module_bonus_tip,显示模组在性能、效率、质量三项里最高的加成，例如{0}。机器专用的模组不显示。
+# 特殊分页（1.5.0 加）。{0}＝下面的一个原因（info_reason_no_power）
+cfg_ignore_fridges_without_battery,忽略没装电池的冰箱
+cfg_ignore_fridges_without_battery_tip,没装电池的冰箱不显示状态图标，也不显示{0}这类原因。适合把冰箱当仓库用的时候。
 cfg_key_mode,按键方式
 cfg_key_mode_tip,选择“显示物品信息”这个键要按住，还是按一下切换。\n按住＝按住时显示，放开就消失\n切换＝按一下显示，再按一下消失；读档、回主菜单时自动关闭
 cfg_text_size,文字大小
@@ -142,6 +151,7 @@ ui_tab_batteries,电池
 ui_tab_machines,机器
 ui_tab_icons,状态图标
 ui_tab_items,物品
+ui_tab_special,特殊
 ui_reset,恢复默认
 ui_reset_sure,确定？
 ui_reset_tip,把这一页的设置全部恢复成默认值。按一下后再按一次才会恢复。
@@ -179,6 +189,10 @@ info_prefix_filter_long,滤材
 # 反应堆的完好度（完好度 60/100；游戏的用语）
 info_prefix_integrity_short,完
 info_prefix_integrity_long,完好度
+# 模组三项加成里最高的那项（1.5.0 加；性能 +16%，游戏的 mech_module_stat_*）。固定一个词，长短前缀都用它。
+info_prefix_performance,性能
+info_prefix_efficiency,效率
+info_prefix_quality,质量
 
 # 机器还要几天完成（没有前缀，整行就是这个）。{0}＝天数。短的不分单复数；长的照单复数分，中文只有 .other。
 info_days_short,{0}天

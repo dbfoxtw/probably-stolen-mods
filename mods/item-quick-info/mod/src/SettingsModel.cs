@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace ProbablyStolenItemQuickInfo
 {
     /// <summary>
-    /// 店內設定視窗的 7 個分頁：1.3.0 以前 ModConfig 的段落，順序照舊（General、Names、Water containers、Batteries、
-    /// Machines、Status icons、Items）。分頁名稱的字在 csv（ui_tab_*）。Water 這頁決定 179 改名「液體」（Liquids），enum 名稱與 key 照舊。
+    /// 店內設定視窗的 8 個分頁：1.3.0 以前 ModConfig 的段落，順序照舊（General、Names、Water containers、Batteries、
+    /// Machines、Status icons、Items），1.5.0 在最後加 Special（特殊，特殊用法的設定）。分頁名稱的字在 csv（ui_tab_*）。
+    /// Water 這頁決定 179 改名「液體」（Liquids），enum 名稱與 key 照舊。數字存進 settings.json 的 window.tab：只能往後加，不要插在中間。
     /// </summary>
-    enum SettingPage { General, Names, Water, Batteries, Machines, Icons, Items }
+    enum SettingPage { General, Names, Water, Batteries, Machines, Icons, Items, Special }
 
     /// <summary>
     /// 設定鈕放在畫面的哪個角（遊戲「選項 → 按鍵綁定」的下拉）：Hidden＝不顯示。存名稱，不要改；
@@ -141,8 +142,8 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 37 個設定（存 ModData，key 與選項名稱照舊；1.4.0 加兩個不透明度，箱子上的圖示，水培礦物質範圍警告，
-    /// 藥品純度，顯示反應爐）與分頁的字。
+    /// 40 個設定（存 ModData，key 與選項名稱照舊；1.4.0 加兩個不透明度，箱子上的圖示，水培礦物質範圍警告，
+    /// 藥品純度，顯示反應爐，1.5.0 加忽略沒裝電池的冰箱，顯示模組加成，顯示「沒濾材」）與分頁的字。
     /// 順序就是視窗裡每頁由上往下的順序（定的段落內順序）。
     /// </summary>
     static class SettingDefs
@@ -211,16 +212,21 @@ namespace ProbablyStolenItemQuickInfo
         internal static readonly SettingDef ShowItemName = Toggle("ShowItemName", SettingPage.Names, true,
             () => Loc.Get("cfg_item_name"), _ => Loc.Get("cfg_item_name_tip"));
 
-        // 液體（1.4.0 第⑦段以前叫 Water containers「水容器」）：顯示液體量、顯示純度、顯示機器裡的液體（從機器頁搬來，排在兩個設定後面）。
+        // 液體（1.4.0 第⑦段以前叫 Water containers「水容器」）：顯示液體量、顯示純度、顯示「沒濾材」、
+        // 顯示機器裡的液體（從機器頁搬來，排在單獨的容器的設定後面）。
         // key 照舊（ShowWaterVolume、ShowWaterPurity、ShowMachineWater），玩家的設定才不會被重設
         internal static readonly SettingDef ShowWaterVolume = Toggle("ShowWaterVolume", SettingPage.Water, true,
             () => Loc.Get("cfg_water_volume"), Tips.WaterVolume);
         // 顯示純度（第⑧段以前是開關）：不顯示／整數／小數一位（新裝的預設）／小數兩位。key 照舊；舊的 true 換成小數兩位
-        // （主人：1.3.0 升上來的照舊兩位小數，畫面不變）、false 換成不顯示。
+        // （1.3.0 升上來的照舊兩位小數，畫面不變）、false 換成不顯示。
         // 「不顯示」用自己的 opt_dont_show（和其他下拉一樣是「不顯示」；opt_icons_off 在西、法、波蘭文是配「圖示」的複數形）
         internal static readonly SettingDef ShowWaterPurity = ChoiceFromToggle("ShowWaterPurity", SettingPage.Water, PurityFormat.OneDecimal,
             PurityFormat.TwoDecimals, PurityFormat.Off, () => Loc.Get("cfg_water_purity"), Tips.WaterPurity,
             () => Loc.Get("opt_dont_show"), () => Loc.Get("opt_whole_number"), () => Loc.Get("opt_one_decimal"), () => Loc.Get("opt_two_decimals"));
+        // 顯示「沒濾材」（1.5.0）：液體容器沒裝濾材時的橘字，預設開（更新後畫面不變）。
+        // 設定檔沒有這個 key 時照「顯示耐久度」的值（SettingValues.Parse），之後兩個各自獨立
+        internal static readonly SettingDef ShowNoFilter = Toggle("ShowNoFilter", SettingPage.Water, true,
+            () => Loc.Get("cfg_no_filter"), Tips.NoFilter);
         internal static readonly SettingDef ShowMachineWater = Toggle("ShowMachineWater", SettingPage.Water, true,
             () => Loc.Get("cfg_machine_water"), _ => Loc.Get("cfg_machine_water_tip"));
 
@@ -276,7 +282,7 @@ namespace ProbablyStolenItemQuickInfo
             () => Loc.Get("cfg_container_icons"), _ => Loc.Get("cfg_container_icons_tip"),
             () => Loc.Get("opt_icons_off"), () => Loc.Get("opt_warning_only"), () => Loc.Get("opt_warning_and_idle"), () => Loc.Get("opt_all"));
 
-        // Items：熱度、使用次數、耐久度、金屬錠純度、藥品純度
+        // Items：熱度、使用次數、耐久度、金屬錠純度、藥品純度、模組加成
         internal static readonly SettingDef ShowStolenHeat = Toggle("ShowStolenHeat", SettingPage.Items, true,
             () => Loc.Get("cfg_stolen_heat"), Tips.StolenHeat);
         internal static readonly SettingDef ShowUseCount = Toggle("ShowUseCount", SettingPage.Items, true,
@@ -288,16 +294,24 @@ namespace ProbablyStolenItemQuickInfo
         // 顯示藥品純度：金屬錠純度後面，預設開。舊的 ModConfig 沒有這個 key，搬的時候用預設
         internal static readonly SettingDef ShowDrugPurity = Toggle("ShowDrugPurity", SettingPage.Items, true,
             () => Loc.Get("cfg_drug_purity"), Tips.DrugPurity);
+        // 顯示模組加成（1.5.0）：藥品純度後面（物品頁最後），預設開。舊的 ModConfig 與 1.4.0 的 settings.json 沒有這個 key，用預設
+        internal static readonly SettingDef ShowModuleBonus = Toggle("ShowModuleBonus", SettingPage.Items, true,
+            () => Loc.Get("cfg_module_bonus"), Tips.ModuleBonus);
 
-        /// <summary>全部 37 個，照分頁、頁裡由上往下的順序（上面的欄位都初始化完才建這個清單：靜態欄位照宣告順序初始化）。</summary>
+        // Special：忽略沒裝電池的冰箱，預設關（更新後畫面不變）。舊的 ModConfig 沒有這個 key，搬的時候用預設
+        internal static readonly SettingDef IgnoreFridgesWithoutBattery = Toggle("IgnoreFridgesWithoutBattery", SettingPage.Special, false,
+            () => Loc.Get("cfg_ignore_fridges_without_battery"), Tips.IgnoreFridges);
+
+        /// <summary>全部 40 個，照分頁、頁裡由上往下的順序（上面的欄位都初始化完才建這個清單：靜態欄位照宣告順序初始化）。</summary>
         internal static readonly IReadOnlyList<SettingDef> All = Build(
             KeyMode, Prefix, TextSize, InfoBoxOpacity,
             AlwaysShowNames, IdleNamePosition, NamePosition, NameTextSize, WrapLongNames, ShowContainerName, ShowMachineName, ShowItemName,
-            ShowWaterVolume, ShowWaterPurity, ShowMachineWater,
+            ShowWaterVolume, ShowWaterPurity, ShowNoFilter, ShowMachineWater,
             ShowBatteryCharge, ShowBatteryTonightCharge,
             ShowMachinePower, ShowMachineTonightNet, ShowMachineReason, MineralWarning, ShowMachineProgress, ShowMachineOutput, ShowReactor,
             StatusIcons, StatusIconPosition, StatusIconBackground, StatusIconOpacity, ShowWarningIcon, ShowIdleIcon, ShowDoneIcon, ContainerIcons,
-            ShowStolenHeat, ShowUseCount, ShowDurability, ShowIngotPurity, ShowDrugPurity);
+            ShowStolenHeat, ShowUseCount, ShowDurability, ShowIngotPurity, ShowDrugPurity, ShowModuleBonus,
+            IgnoreFridgesWithoutBattery);
 
         static IReadOnlyList<SettingDef> Build(params SettingDef[] defs)
         {
@@ -305,8 +319,21 @@ namespace ProbablyStolenItemQuickInfo
             return defs;
         }
 
-        /// <summary>分頁的數量（SettingPage 的個數）。</summary>
-        internal const int PageCount = 7;
+        /// <summary>分頁的數量（SettingPage 的個數；1.5.0 加 Special 變 8）。</summary>
+        internal const int PageCount = 8;
+
+        /// <summary>
+        /// settings.json 的 window.tab 讀得回來的分頁（0～PageCount-1；Settings 讀檔時照它，不收的從第一頁開）。
+        /// 1.4.0 存的 0～6 照讀；之後減少分頁時，超出的舊值也照這裡不收。
+        /// </summary>
+        internal static bool IsValidTab(int tab) => tab >= 0 && tab < PageCount;
+
+        /// <summary>
+        /// 改了會讓全店快照存的機器狀態過時的設定（Settings.Set、ResetPage 改到時丟掉快照，箱子上的圖示馬上照新設定）：
+        /// 「水培礦物質範圍警告」（水耕機的 ⚠）、「忽略沒裝電池的冰箱」（被忽略的冰箱在箱子表裡是沒有狀態的一台）。
+        /// 其他設定只影響畫的時候怎麼換算（IconSettings.BoxStatus）或資訊框的行，快照存的原始台數不用重算。
+        /// </summary>
+        internal static bool AffectsSnapshot(SettingDef d) => ReferenceEquals(d, MineralWarning) || ReferenceEquals(d, IgnoreFridgesWithoutBattery);
 
         /// <summary>分頁的名稱。</summary>
         internal static string PageLabel(SettingPage page)
@@ -319,6 +346,7 @@ namespace ProbablyStolenItemQuickInfo
                 case SettingPage.Batteries: return Loc.Get("ui_tab_batteries");
                 case SettingPage.Machines: return Loc.Get("ui_tab_machines");
                 case SettingPage.Icons: return Loc.Get("ui_tab_icons");
+                case SettingPage.Special: return Loc.Get("ui_tab_special");
                 default: return Loc.Get("ui_tab_items");
             }
         }
@@ -347,7 +375,7 @@ namespace ProbablyStolenItemQuickInfo
     }
 
     /// <summary>
-    /// 37 個設定目前的值（存 ModData 的 settings.json 的 "settings"）。讀值不配置記憶體（Runner 每幀讀幾個）。
+    /// 40 個設定目前的值（存 ModData 的 settings.json 的 "settings"）。讀值不配置記憶體（Runner 每幀讀幾個）。
     /// 不碰 Unity，離線測試也編這個檔：讀寫來回、缺 key 與壞值用預設、從 1.3.0 以前的 ModConfig 搬過來（含兩個舊值轉換，與顯示純度的 true／false）、恢復一頁的預設。
     /// </summary>
     sealed class SettingValues
@@ -393,6 +421,9 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>
         /// 從 settings.json 的 "settings" 讀（key → 存的字；開關的 JSON true／false 也先轉成字）。沒有的 key、空字串用預設（不算問題）；
         /// 讀不懂的用預設，problems 記「key＝值」（log 一行）。多出來的 key 不理（寫回時由呼叫的人保留）。
+        /// 沒寫 ShowNoFilter（1.4.0 的 settings.json、1.3.0 以前的 ModConfig 經 FromOldConfig 搬過來的）時照 ShowDurability 讀到的值：
+        /// 1.4.0 以前液體容器的「沒濾材」跟著「顯示耐久度」，把它關掉的人那時看不到「沒濾材」，升級後不要突然冒出來。
+        /// 有寫的（含讀不懂、退回預設的壞值）照它自己的值，不看耐久度。
         /// </summary>
         internal static SettingValues Parse(IReadOnlyDictionary<string, string> raw, List<string> problems)
         {
@@ -400,12 +431,18 @@ namespace ProbablyStolenItemQuickInfo
             if (raw == null) return v;
             foreach (var d in SettingDefs.All)
             {
-                if (!raw.TryGetValue(d.Key, out var s) || s == null || s.Trim().Length == 0) continue;
+                if (!Has(raw, d.Key, out var s)) continue;
                 if (d.TryParse(s, out int value)) v._v[d.Index] = value;
                 else problems?.Add($"{d.Key}＝{s}");
             }
+            if (!Has(raw, SettingDefs.ShowNoFilter.Key, out _))
+                v._v[SettingDefs.ShowNoFilter.Index] = v._v[SettingDefs.ShowDurability.Index];
             return v;
         }
+
+        /// <summary>raw 有沒有寫這個 key：沒有 key、null、空白字串都算沒寫（用預設）。</summary>
+        static bool Has(IReadOnlyDictionary<string, string> raw, string key, out string s) =>
+            raw.TryGetValue(key, out s) && s != null && s.Trim().Length > 0;
 
         /// <summary>
         /// 從 1.3.0 以前的 ModConfig 搬過來（Settings 用探測讀出 ModConfigs\dbfoxtw.item-quick-info.json 存的原始字串，

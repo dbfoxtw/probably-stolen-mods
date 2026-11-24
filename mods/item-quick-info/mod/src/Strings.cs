@@ -43,6 +43,12 @@ namespace ProbablyStolenItemQuickInfo
         /// <summary>水耕機的礦物質不在種子的範圍內：太少、太多，橘字、沒有前綴、長短一樣。不是原因（不在 Reason 裡）。</summary>
         public string MineralLow, MineralHigh;
         /// <summary>
+        /// 模組那一行的前綴（1.5.0）：性能、效率、品質。固定一份、不跟「前綴長短」換（英文一律 Perf），
+        /// 所以長短兩份是同一個字（WithLongPrefixes 不換）；那一塊放不下時照決定 48 拆成「前綴」「數值」兩行。
+        /// 英文 Perf／Eff／Qual，中文照遊戲的 mech_module_stat_*（性能／效率／质量；繁中品質）。
+        /// </summary>
+        public string ModulePerformance, ModuleEfficiency, ModuleQuality;
+        /// <summary>
         /// 金屬錠純度的等級名稱，順序同 Rules.IngotPurityConstants（完美、極高、高、中等、低、極低）。
         /// 以遊戲字串表的 mech_condition_*_purity（遊戲提示框「[標籤] 金屬純度：高純度」那個名稱）為基礎，不加前綴，長短一樣。
         /// 西文只寫等級（High，不寫 High Purity）：框畫在金屬錠上，整句會伸出物品欄邊框。中文、日文照遊戲的字。
@@ -137,6 +143,9 @@ namespace ProbablyStolenItemQuickInfo
                 NoFilter = Loc.Get("info_reason_no_filter"),
                 MineralLow = Loc.Get("info_mineral_low"),
                 MineralHigh = Loc.Get("info_mineral_high"),
+                ModulePerformance = Loc.Get("info_prefix_performance"),
+                ModuleEfficiency = Loc.Get("info_prefix_efficiency"),
+                ModuleQuality = Loc.Get("info_prefix_quality"),
                 IngotPurities = new[]
                 {
                     Loc.Get("info_ingot_perfect"),

@@ -36,6 +36,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
     /// 水耕機的礦物質（判斷的邊界、狀態圖示、行序、新設定與說明）與它們碰 Unity 那一半的原始碼。
     /// 1.4.0 第⑧段：液體只寫液量和主成分的比例（零寬空格、100%）、藥品純度、閒置圖示三選一與每台機器的空機器、
     /// 箱子的三選一組合、電流轉換器的錢與服務的預測、超科技、反應爐、新設定與說明，和它們碰 Unity 那一半的原始碼（第⑥段的主成分名稱拿掉了）。
+    /// 1.5.0：「特殊」分頁與忽略沒裝電池的冰箱（冰箱的電池槽 × 空的／有東西 × 設定 × 閒置三選一、販賣機照舊、資訊框的行、箱子上的圖示、
+    /// 會影響全店快照的設定與原始碼、新 key 的讀寫與搬法、window.tab 0～7、9 種語言的說明、中文 8 個分頁照估的字寬一排）。
+    /// 1.5.0 模組顯示最高的加成：白名單、取哪一項（正負號、0 不算、平手、全負、全 0）、9 種語言的前綴、放不下時拆兩行、
+    /// 形狀裡選哪一塊（6 種形狀 × 四個方向 × 翻轉、平手的規則）、換成圖層座標、設定的讀寫與搬法、說明，和碰 Unity 那一半的原始碼。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify -c Release
     /// </summary>
     static class Program
@@ -108,6 +112,9 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Power189();
             Settings8();
             Part8Source();
+            IgnoreFridges192();
+            ModuleBonus200();
+            NoFilter210();
             SettingsOrder();
             SettingsStore();
             SettingsMigration();
@@ -1861,13 +1868,18 @@ namespace ProbablyStolenItemQuickInfo.Verify
         static void Icon(MachineKind kind, MachineFacts f, StatusIcon icon, bool done, string what, bool insufficient = false)
         {
             var info = new MachineInfo { Insufficient = insufficient };
-            var progress = MachineLogic.Judge(info, kind, f, true);
+            var progress = MachineLogic.Judge(info, kind, f, true, false);
             var st = info.Status;
             Check(st.Icon == icon && st.Done == done, $"{what}：預期「{new ItemStatus(icon, done)}」，實際「{st}」（原因 {info.Reason}）");
             Check(progress == MachineLogic.Decide(kind, f).progress, $"{what}：Judge 回傳 Decide 的進度");
             var off = new MachineInfo { Insufficient = insufficient };
-            MachineLogic.Judge(off, kind, f, false);
+            MachineLogic.Judge(off, kind, f, false, false);
             Check(off.Status.IsEmpty && off.Reason == info.Reason, $"{what}：不畫圖示的一輪（icons 關）原因照算、圖示不填");
+            // 「忽略沒裝電池的冰箱」開著也照舊：這裡的案例都不是電池槽空著的冰箱（BatteryEmpty 預設 false），結果要和關著一模一樣
+            var ignoreOn = new MachineInfo { Insufficient = insufficient };
+            var progressOn = MachineLogic.Judge(ignoreOn, kind, f, true, true);
+            Check(ignoreOn.Reason == info.Reason && ignoreOn.Status.Equals(info.Status) && progressOn == progress,
+                $"{what}：「忽略沒裝電池的冰箱」開著時照舊（不是電池槽空著的冰箱）");
         }
 
         static FilterInfo FiltersOf(params (int value, int max)[] filters)
@@ -2140,7 +2152,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(new IconSettings().BoxStatus(one).ToString(), "警告", "箱子：有 ⚠ 就畫 ⚠（💤 不畫）");
             Eq(new IconSettings().BoxStatus(default).ToString(), "無", "箱子：一台都沒有 → 不畫");
 
-            // 今晚會爆炸的反應爐（2026-11-22 主人定：機器區塞得進反應爐，算進箱子上的 ⚠）：「顯示反應爐」開著才算，照樣跟著警告圖示與下拉
+            // 今晚會爆炸的反應爐（2026-11-22 定：機器區塞得進反應爐，算進箱子上的 ⚠）：「顯示反應爐」開著才算，照樣跟著警告圖示與下拉
             var reactorOnly = new BoxSummary();
             reactorOnly.AddReactor();
             Eq((reactorOnly.Reactors, reactorOnly.Machines, reactorOnly.Warning), (1, 0, 0), "箱子：反應爐另外記，不算進機器台數與機器的 ⚠");
@@ -2275,7 +2287,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
         /// <summary>
         /// 濾材那行：沒裝橘字「沒濾材」、耐久加總、0 紅、≤ 上限加總的 1/4 橘（循環水養殖系統看加總，不看任何一個）、三語 × 長短，
-        /// 水罐接在水量、水質下面、任何物品都有的行上面，循環水養殖系統接在機器裡的水後面（⚠ 的時候移到原因後面，ReasonFirst 測）；開關照「顯示耐久度」；警告圖示的條件。
+        /// 水罐接在水量、水質下面、任何物品都有的行上面，循環水養殖系統接在機器裡的水後面（⚠ 的時候移到原因後面，ReasonFirst 測）；開關照「顯示耐久度」（1.5.0 起水罐沒裝濾材時改看「顯示「沒濾材」」，NoFilter210 測）；警告圖示的條件。
         /// </summary>
         static void Filters()
         {
@@ -2308,6 +2320,15 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Check(zero.Warning && zero.UsedUp, "耐久 0：警告、用完");
             Eq(Rules.FilterLine(HantL, FiltersOf((-5, 400))).Text, "濾材 0", "負數當 0");
 
+            // 液體容器有好幾個濾材槽（別的 mod 加的，一個用完換下一個）：和循環水養殖系統一樣加總
+            var twoTank = FiltersOf((400, 400), (200, 400));
+            Eq(Rules.FilterLine(HantL, twoTank).Text, "濾材 600", "液體容器兩個濾材：400＋200 加總");
+            var firstUsed = FiltersOf((0, 400), (200, 400));
+            Eq(Rules.FilterLine(HantL, firstUsed).Text, "濾材 200", "第一個用完、第二個還有：濾材 200（不寫濾材 0）");
+            Check(!firstUsed.UsedUp, "第一個用完、第二個還有：不算用完（水罐的 ⚠ 不畫）");
+            Eq(MachineLogic.PitcherStatus(true, firstUsed).Icon, StatusIcon.None, "自己的容器、第一個用完、第二個還有：不畫 ⚠");
+            Eq(MachineLogic.PitcherStatus(true, FiltersOf((0, 400), (0, 400))).Icon, StatusIcon.Warning, "兩個都用完：⚠");
+
             // 循環水養殖系統：加總，橘字看「加總 ≤ 上限加總的 1/4」（第一格耗得最快，不看任何一個）
             var ras = FiltersOf((10, 400), (400, 400), (400, 400), (400, 400));
             Eq(ras.Count, 4, "四個濾材");
@@ -2319,7 +2340,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Rules.FilterLine(HantL, FiltersOf((0, 400), (0, 400))).Color, LineColor.Red, "全部用完（加總 0）：紅");
             Check(!FiltersOf((0, 400), (1, 400)).Warning, "加總 1：不警告");
 
-            // 水罐：水量、水質下面；任何物品都有的行（熱度…）在它下面；開關照「顯示耐久度」
+            // 水罐：水量、水質下面；任何物品都有的行（熱度…）在它下面；裝了濾材時開關照「顯示耐久度」（沒裝時看「顯示「沒濾材」」，NoFilter210 測）
             var w = Water(2000000, 9852);
             Eq(Join(Rules.WaterLines(HantL, w, All, one)), "2000ml / 98.5% / 濾材 400", "水罐：水量、水質、濾材");
             Eq(Join(Rules.WaterLines(HantL, w, All, none)), "2000ml / 98.5% / 沒濾材", "水罐沒裝：沒濾材");
@@ -2389,7 +2410,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             string rules = File.ReadAllText(Path.Combine(root, "mod", "src", "MachineRules.cs"));
             Check(rules.Contains("if (ctx.D.MachineOutput || icons)") && rules.Contains("if (kind == MachineKind.Other && !net && !noPower && !icons) return info;")
                 && rules.Contains("if (!ctx.D.MachineReason && !ctx.D.MachineProgress && !net && !icons) return info;")
-                && rules.Contains("var progress = MachineLogic.Judge(info, kind, facts, icons);"),
+                && rules.Contains("var progress = MachineLogic.Judge(info, kind, facts, icons, ctx.IgnoreFridgesWithoutBattery);"),
                 "MachineRules：要畫圖示時照樣讀判斷用的事實與成品數");
             Check(rules.Contains("d.MachineTonightNet || ctx.Icons ? ctx.ChargeOf(b) : default"), "MachineRules：要畫圖示時建充電表（缺電的 ⚠ 看早充後的紅字）");
         }
@@ -2466,7 +2487,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 ("cfg_water_volume", "Show liquid volume", "显示液体量", "顯示液體量"),
                 ("cfg_water_volume_tip", "Show how much liquid a container holds, for example {0}.", "显示容器里装了多少液体，例如{0}。", "顯示容器裡裝了多少液體，例如{0}。"),
                 ("cfg_water_purity", "Show purity", "显示纯度", "顯示純度"),
-                // 決定 191（整數那行補「分不出純水」：優質水 99% 以上、純水 99.9% 以上，整數都寫 99%；主人要的，簡短）：顯示純度改成四選一（關、整數、小數一位、小數兩位），說明一行說明＋一個選項一行
+                // 決定 191（整數那行補「分不出純水」：優質水 99% 以上、純水 99.9% 以上，整數都寫 99%；簡短）：顯示純度改成四選一（關、整數、小數一位、小數兩位），說明一行說明＋一個選項一行
                 ("cfg_water_purity_tip",
                     "Show how much of the liquid is its main component. For water, it's the water purity. Not shown for empty containers.\nOff = don't show\nWhole number = {0} (can't spot Pure Water)\n1 decimal = {1}\n2 decimals = {2}",
                     "显示主要成分占了多少；装水时就是水质。空的容器不显示。\n不显示＝不显示纯度\n整数＝{0}（分不出纯水）\n一位小数＝{1}\n两位小数＝{2}",
@@ -2891,7 +2912,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 兩顆一行看上緣名稱框的高：Put 先排名稱框（Top 時記它的高），再排資訊框；Key 在有充能器的電池時記物品的高與名稱框的高
             var put = Body("internal static bool Put(") ?? "";
             int putNameAt = put.IndexOf("FillName(layer, label.Name, name.Value, style, width, iconWidth, _info.Count > 0);", StringComparison.Ordinal);
-            int putInfo = put.IndexOf("FillInfo(layer, label.Info, _info, style, width, height, nameHeight);", StringComparison.Ordinal);
+            int putInfo = put.IndexOf("FillInfo(layer, label.Info, _info, style, infoWidth, height, nameHeight);", StringComparison.Ordinal);
             Check(putNameAt > 0 && putInfo > putNameAt && put.Contains("if (style.Place == NamePlace.Top) nameHeight = label.Name.Rt.sizeDelta.y;"),
                 "Put：名稱框先排（Top 時記下名稱框的高），資訊框照它判斷兩顆一行");
             var keySrc = Body("static string Key(") ?? "";
@@ -2903,7 +2924,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
 
             // 框色和排版分開套：資訊框、名稱框排好以後各套一次黑底的 alpha；排版的快取（Key、FillSingleName 的比對）不看它，
             // 所以拖滑桿時不重排，SetBack 自己比上次的 alpha
-            Check(src.Contains("FillInfo(layer, label.Info, _info, style, width, height, nameHeight);\n                    SetBack(label.Info, style.BackAlpha);")
+            Check(src.Contains("FillInfo(layer, label.Info, _info, style, infoWidth, height, nameHeight);\n                    SetBack(label.Info, style.BackAlpha);")
                 && src.Contains("FillName(layer, label.Name, name.Value, style, width, iconWidth, _info.Count > 0);\n                    SetBack(label.Name, style.BackAlpha);"), "資訊框、名稱框排好後套黑底的 alpha");
             var setBack = Body("static void SetBack(");
             Check(setBack != null && setBack.Contains("if (box.BackAlpha == alpha") && setBack.Contains("box.Back.enabled != on"), "SetBack：alpha 一樣不動、0 時停用 Image");
@@ -2937,7 +2958,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 整串參數一起比：座標換錯（左右、上下、名稱框和資訊框對調）也抓得到
             Check(place != null && place.Contains("var dodge = NameDodge.None;")
                 && place.Contains("Stack(label, Rules.InfoAboveName(Rules.NameMoved(dodge, label.Name.Narrowed), x - size.x * 0.5f, x + size.x * 0.5f, y - size.y, y,\n"
-                                  + "                                                     minX, minX + box.x, minY, minY + box.y));"),
+                                  + "                                                     ix, ix + box.x, iy, iy + box.y));"),
                 "Place：照這一幀的位置與名稱有沒有被移動排兩個框的前後");
             Check(!src.Contains("KeepNameAbove"), "名稱一律在上（KeepNameAbove）拿掉了");
             var stack = Body("static void Stack(");
@@ -3939,29 +3960,34 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 (SettingPage.General, "KeyMode,Prefix,TextSize,InfoBoxOpacity"),
                 // 總是顯示名稱排在 Names 最前面；名稱位置未顯示時在顯示時前面、長名稱換行接在名稱文字大小後面
                 (SettingPage.Names, "AlwaysShowNames,IdleNamePosition,NamePosition,NameTextSize,WrapLongNames,ShowContainerName,ShowMachineName,ShowItemName"),
-                // 液體頁：顯示機器裡的液體從機器頁搬來，排在兩個開關後面
-                (SettingPage.Water, "ShowWaterVolume,ShowWaterPurity,ShowMachineWater"),
+                // 液體頁：顯示機器裡的液體從機器頁搬來，排在單獨的容器的設定後面；顯示「沒濾材」（1.5.0）排在顯示純度後面
+                (SettingPage.Water, "ShowWaterVolume,ShowWaterPurity,ShowNoFilter,ShowMachineWater"),
                 (SettingPage.Batteries, "ShowBatteryCharge,ShowBatteryTonightCharge"),
                 // 水培礦物質範圍警告搬到「顯示原因」下面；顯示反應爐在機器頁最後
                 (SettingPage.Machines, "ShowMachinePower,ShowMachineTonightNet,ShowMachineReason,MineralWarning,ShowMachineProgress,ShowMachineOutput,ShowReactor"),
                 // 狀態圖示：Machines 後面、Items 前面；圖示底色不透明度排在圖示底色下面
                 // 箱子上的圖示排在這一頁最後（三個開關下面）
                 (SettingPage.Icons, "StatusIcons,StatusIconPosition,StatusIconBackground,StatusIconOpacity,ShowWarningIcon,ShowIdleIcon,ShowDoneIcon,ContainerIcons"),
-                // 顯示藥品純度排在金屬錠純度後面
-                (SettingPage.Items, "ShowStolenHeat,ShowUseCount,ShowDurability,ShowIngotPurity,ShowDrugPurity"),
+                // 顯示藥品純度排在金屬錠純度後面；顯示模組加成（1.5.0）排在物品頁最後
+                (SettingPage.Items, "ShowStolenHeat,ShowUseCount,ShowDurability,ShowIngotPurity,ShowDrugPurity,ShowModuleBonus"),
+                // 特殊：1.5.0 加在最後一頁，忽略沒裝電池的冰箱
+                (SettingPage.Special, "IgnoreFridgesWithoutBattery"),
             };
             var all = SettingDefs.All;
-            Eq(all.Count, 37, "設定共 37 個（1.4.0 加 6 個狀態圖示、2 個不透明度、箱子上的圖示、礦物質、藥品純度、反應爐，拿掉 ShowRealPurity）");
-            Eq(SettingDefs.PageCount, 7, "7 個分頁");
+            Eq(all.Count, 40, "設定共 40 個（1.4.0 加 6 個狀態圖示、2 個不透明度、箱子上的圖示、礦物質、藥品純度、反應爐，拿掉 ShowRealPurity；1.5.0 加忽略沒裝電池的冰箱、顯示模組加成、顯示「沒濾材」）");
+            Eq(SettingDefs.PageCount, 8, "8 個分頁（1.5.0 加特殊）");
+            Eq(Enum.GetNames(typeof(SettingPage)).Length, SettingDefs.PageCount, "PageCount 和 SettingPage 的個數一樣");
+            Eq(all[all.Count - 1].Key, "IgnoreFridgesWithoutBattery", "忽略沒裝電池的冰箱排最後（特殊頁是最後一頁）");
             Eq(string.Join(",", all.Select(d => d.Page).Distinct()), string.Join(",", expected.Select(x => x.page)), "分頁的順序（照原本的段落）");
             Eq(string.Join(",", all.Select(d => d.Key)), string.Join(",", expected.Select(x => x.keys)), "全部的順序（分頁一頁接一頁）");
             foreach (var (page, keys) in expected)
                 Eq(string.Join(",", all.Where(d => d.Page == page).Select(d => d.Key)), keys, $"{page} 頁裡的順序");
             for (int i = 0; i < all.Count; i++) Eq(all[i].Index, i, $"{all[i].Key} 的 Index");
-            Eq(all.Select(d => d.Key).Distinct().Count(), 37, "key 不重複");
+            Eq(all.Select(d => d.Key).Distinct().Count(), 40, "key 不重複");
 
             // 預設值：開關
-            var offByDefault = new[] { "AlwaysShowNames" }; // WrapLongNames 1.4.0 起預設開
+            // WrapLongNames 1.4.0 起預設開；忽略沒裝電池的冰箱預設關（更新後畫面不變）
+            var offByDefault = new[] { "AlwaysShowNames", "IgnoreFridgesWithoutBattery" };
             foreach (var d in all.Where(d => d.IsToggle))
                 Eq(d.NameOf(d.Default), offByDefault.Contains(d.Key) ? "false" : "true", $"{d.Key} 的預設");
             // 有選項的：存的名稱、順序（下拉選單照這個順序）、預設
@@ -3996,7 +4022,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             // 百分比（滑桿）：兩個，預設 90、80，沒有選項的字
             var percents = new (string key, SettingPage page, string def)[] { ("InfoBoxOpacity", SettingPage.General, "90"), ("StatusIconOpacity", SettingPage.Icons, "80") };
             Eq(string.Join(",", all.Where(d => d.IsPercent).Select(d => d.Key)), "InfoBoxOpacity,StatusIconOpacity", "百分比的設定兩個");
-            Eq(all.Count(d => d.IsToggle) + all.Count(d => d.IsChoice) + all.Count(d => d.IsPercent), 37, "每個設定都是開關、下拉、百分比其中一種");
+            Eq(all.Count(d => d.IsToggle) + all.Count(d => d.IsChoice) + all.Count(d => d.IsPercent), 40, "每個設定都是開關、下拉、百分比其中一種");
             foreach (var (key, page, def) in percents)
             {
                 var d = all.FirstOrDefault(x => x.Key == key);
@@ -4083,8 +4109,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
                     Eq(name, value.ToString(), $"{key} 的名稱就是數字");
                 }
             }
-            Eq(written.Count, 37, "寫出 37 個");
-            Eq(toggles, 23, "開關 23 個");
+            Eq(written.Count, 40, "寫出 40 個");
+            Eq(toggles, 26, "開關 26 個");
             Eq(percentCount, 2, "百分比 2 個");
             Eq(written["InfoBoxOpacity"], "45", "百分比寫數字");
             Eq(written["KeyMode"], "Toggle", "寫出去的是名稱（照 enum 的大小寫）");
@@ -4512,6 +4538,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 ("ui_tab_machines", "Machines", "机器", "機器"),
                 ("ui_tab_icons", "Status icons", "状态图标", "狀態圖示"),
                 ("ui_tab_items", "Items", "物品", "物品"),
+                ("ui_tab_special", "Special", "特殊", "特殊"),
                 ("ui_reset", "Reset tab", "恢复默认", "恢復預設"),
                 ("ui_reset_sure", "Sure?", "确定？", "確定？"),
                 ("ui_reset_tip", "Set every setting on this tab back to its default. Click again to confirm.",
@@ -4579,7 +4606,8 @@ namespace ProbablyStolenItemQuickInfo.Verify
                     Eq(opts.Distinct().Count(), opts.Count, $"{lang} {d.Key} 的選項不重複：{string.Join("／", opts)}");
                 }
                 var pages = Enumerable.Range(0, SettingDefs.PageCount).Select(i => SettingDefs.PageLabel((SettingPage)i)).ToList();
-                Eq(pages.Distinct().Count(), 7, $"{lang} 7 個分頁的名稱不重複：{string.Join("／", pages)}");
+                Eq(pages.Distinct().Count(), 8, $"{lang} 8 個分頁的名稱不重複：{string.Join("／", pages)}");
+                Check(pages.All(x => !string.IsNullOrWhiteSpace(x) && !x.StartsWith("ui_tab_", StringComparison.Ordinal)), $"{lang} 每個分頁都有名稱");
                 Check(SettingDefs.OnOff(true) != SettingDefs.OnOff(false), $"{lang} 開、關的字不一樣");
                 var corners = SettingDefs.CornerLabels();
                 Eq(corners.Count, 5, $"{lang} 設定鈕位置 5 個選項");
@@ -5131,18 +5159,18 @@ namespace ProbablyStolenItemQuickInfo.Verify
             foreach (var (kind, f, what, expectAll, expectExcept) in cases)
             {
                 var info = new MachineInfo();
-                MachineLogic.Judge(info, kind, f, true);
+                MachineLogic.Judge(info, kind, f, true, false);
                 Eq(all.Visible(info.Status).ToString(), expectAll, $"{what}：全部");
                 Eq(except.Visible(info.Status).ToString(), expectExcept, $"{what}：空機器除外");
                 Eq(off.Visible(info.Status).ToString(), expectAll.Replace("閒置＋", "").Replace("閒置", "無"), $"{what}：不顯示");
             }
             // ⚠ 不受影響：空機器又缺電（照理空的機器不會缺電：沒有原因才補缺電），⚠ 照畫
             var warn = new MachineInfo { Insufficient = true };
-            MachineLogic.Judge(warn, MachineKind.Other, new MachineFacts { InputsEmpty = true }, true);
+            MachineLogic.Judge(warn, MachineKind.Other, new MachineFacts { InputsEmpty = true }, true, false);
             Eq(except.Visible(warn.Status).ToString(), "警告", "只看電的機器缺電：⚠ 照畫（空機器只管 💤）");
             // 不在店裡的照舊不畫
             var guest = new MachineInfo();
-            MachineLogic.Judge(guest, MachineKind.Fridge, new MachineFacts { RunsTonight = false, InputsEmpty = true }, true);
+            MachineLogic.Judge(guest, MachineKind.Fridge, new MachineFacts { RunsTonight = false, InputsEmpty = true }, true, false);
             Check(guest.Status.IsEmpty, "客人的冰箱：不畫");
 
             // 箱子：空機器的 💤 另外記（IdleEmpty），換算照三選一
@@ -5331,7 +5359,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
             foreach (var (power, what) in new[] { (PowerKind.Empty, "電池槽空"), (PowerKind.Converter, "轉換器今晚沒電"), (PowerKind.NoStorage, "超科技、別的 mod 的容量 0 電源供不了") })
             {
                 var noLine = new MachineInfo { Power = power, Insufficient = true };
-                MachineLogic.Judge(noLine, MachineKind.Other, new MachineFacts { RunsTonight = true }, true);
+                MachineLogic.Judge(noLine, MachineKind.Other, new MachineFacts { RunsTonight = true }, true, false);
                 Check(noLine.Reason == Reason.NoPower && noLine.Status.Icon == Warn, $"{what}：原因缺電、⚠");
                 Eq(Join(Rules.MachineLines(EnL, noLine, All)), "No power", $"{what}：資訊框只有缺電");
                 Check(Rules.StopsTonight(noLine), $"{what}：今晚不會動（藏剩幾天）");
@@ -5341,14 +5369,14 @@ namespace ProbablyStolenItemQuickInfo.Verify
             foreach (var (power, what) in new[] { (PowerKind.NoStorage, "超科技供得了、白天按次的機器接超科技"), (PowerKind.Converter, "白天按次的機器接關著的轉換器") })
             {
                 var quiet = new MachineInfo { Power = power };
-                MachineLogic.Judge(quiet, MachineKind.Other, new MachineFacts(), true);
+                MachineLogic.Judge(quiet, MachineKind.Other, new MachineFacts(), true, false);
                 Check(quiet.Reason == Reason.None && quiet.Status.Icon == StatusIcon.None, $"{what}：沒有缺電、沒有 ⚠");
                 Eq(Rules.MachineLines(EnL, quiet, All).Count, 0, $"{what}：資訊框沒有電那行");
             }
             Eq(Rules.MachineLines(EnL, Converter("6"), new Display { MachinePower = false }).Count, 0, "跟著「顯示機器電量」");
             // 缺電的原因、⚠ 照舊走 Insufficient
             var noPowerInfo = new MachineInfo { Power = PowerKind.Converter, Insufficient = true };
-            MachineLogic.Judge(noPowerInfo, MachineKind.Other, new MachineFacts(), true);
+            MachineLogic.Judge(noPowerInfo, MachineKind.Other, new MachineFacts(), true, false);
             Check(noPowerInfo.Reason == Reason.NoPower && noPowerInfo.Status.Icon == Warn, "轉換器沒電：原因缺電、⚠");
             // 量字寬：Rich 的行用打開格式標籤的量法（假的量法：打開時圖示算 4 寬、關著時照字數）
             float Measure(string s, bool rich) => rich ? s.Replace(C, "").Length * 2.25f + 4f : s.Length * 2.25f;
@@ -5781,18 +5809,901 @@ namespace ProbablyStolenItemQuickInfo.Verify
             Eq(Regex.Matches(runner, @"MineralWarning = Settings\.MineralWarning").Count, 2, "Runner：完整資訊與常駐的圖示兩條路都照設定給");
             Check(runner.Contains("Rules.MineralNote(ctx.Mineral)"), "Runner：除錯 log 的水耕機接礦物質");
             string scan = Src("StoreScan.cs");
-            Check(scan.Contains("var ctx = new ReadContext { D = Display.AllOff(), Icons = true, Scan = s, MineralWarning = Settings.MineralWarning };"),
+            Check(Regex.IsMatch(scan, @"var ctx = new ReadContext\s*\{\s*D = Display\.AllOff\(\), Icons = true, Scan = s, MineralWarning = Settings\.MineralWarning,"),
                 "StoreScan.Build：全店機器的狀態（箱子上的圖示、全店核對）照設定讀礦物質");
             string settings = Src("Settings.cs");
-            Check(settings.Contains("if (ReferenceEquals(d, SettingDefs.MineralWarning)) DropSnapshot();")
-                && settings.Contains("if (mineral != On(SettingDefs.MineralWarning)) DropSnapshot();")
-                && Regex.IsMatch(settings, @"static void DropSnapshot\(\)\s*\{\s*StoreSnapshot\.Reset\(\);"),
-                "Settings：改礦物質的設定（Set、恢復一頁的預設）時丟掉全店快照");
+            Check(settings.Contains("if (SettingDefs.AffectsSnapshot(d)) DropSnapshot(d.Key);")
+                && settings.Contains("if (Get(d) != value) { DropSnapshot(d.Key); break; }")
+                && Regex.IsMatch(settings, @"static void DropSnapshot\(string key\)\s*\{\s*StoreSnapshot\.Reset\(\);"),
+                "Settings：改會影響快照的設定（礦物質、1.5.0 起加忽略沒裝電池的冰箱；Set、恢復一頁的預設）時丟掉全店快照");
             string reader = Src("ItemReader.cs");
             Check(reader.Contains("MachineHelper.GetBodyStorage(recharger, 0) is GameInventory inv") && reader.Contains("else if (item.IsID(RechargerId))")
                 && reader.Contains("if (ctx.D.BatteryCharge) body = Rules.RechargerLines(RechargerEnergies(item), ctx.D);"),
                 "ItemReader：充能器照 PowerReader 的讀法（儲存區 0 的 childItems），跟著顯示電池電量");
             Check(reader.Contains("ctx.Mineral = m.Mineral;") && Regex.Matches(reader, @"ctx\.Mineral = default;").Count == 2, "ItemReader：除錯 log 的礦物質每個物品先清掉");
+        }
+
+        /// <summary>
+        /// 照 MachineRules.Read 的流程判斷一台機器（Judge → 判出 💤 才看輸入區、帶空機器的記號重算圖示）：inputsEmpty＝輸入區真的全空
+        /// （Read 的 MachineRules.InputsEmpty）。只用在 1.5.0 的忽略沒裝電池的冰箱。
+        /// </summary>
+        static MachineInfo JudgeLikeRead(MachineKind kind, MachineFacts f, PowerKind power, bool insufficient, bool ignoreFridges, bool inputsEmpty, string name = null)
+        {
+            var info = new MachineInfo { Name = name, Power = power, Insufficient = insufficient, Energy = power == PowerKind.Battery && insufficient ? 0 : 41 };
+            var progress = MachineLogic.Judge(info, kind, f, true, ignoreFridges);
+            Check(progress == ProgressKind.None, $"{kind}：冰箱、販賣機這類沒有進度");
+            if (info.Status.Icon == StatusIcon.Idle && inputsEmpty)
+            {
+                f.InputsEmpty = true;
+                info.Status = MachineLogic.Status(kind, f, info.Reason);
+            }
+            return info;
+        }
+
+        /// <summary>
+        /// 1.5.0：「特殊」分頁與「忽略沒裝電池的冰箱」。
+        /// - 判斷（MachineLogic.IgnoresFridge、Judge）：冰箱的電池槽（空／電池電量夠／電量 0／電流轉換器有電、今晚沒電／超科技供得了、供不了／放的不是電源）
+        ///   × 空的、有東西 × 設定開關 × 閒置圖示三選一。設定關時和改之前一樣；開時只有電池槽空的那幾格沒有原因、沒有圖示。
+        ///   販賣機、只看電的機器照舊。
+        /// - 資訊框（Rules.MachineLines）：被忽略的冰箱沒有原因那行，名稱照舊；關著時有缺電、缺料。
+        /// - 箱子上的圖示（BoxSummary、IconSettings.BoxStatus）：被忽略的冰箱是沒有狀態的一台（台數照算）。
+        /// - 全店快照作廢（SettingDefs.AffectsSnapshot）與碰 Unity 那一半的原始碼（Settings、Runner、StoreScan、MachineRules）。
+        /// - settings.json：新 key 的讀寫、壞值、舊 ModConfig 搬過來時用預設；window.tab 0～7 讀得回來、8 不收。
+        /// - 說明：9 種語言填好以後含那個語言資訊框的「缺電」；en、zh、zh-Hant 照定稿。
+        /// - 分頁列（TabStrip）：中文 8 個分頁照估的字寬在內容寬 560 時一排，520 時放不下。
+        /// </summary>
+        static void IgnoreFridges192()
+        {
+            var off = new IconSettings { Idle = IdleIconMode.Off };
+            var except = new IconSettings { Idle = IdleIconMode.ExceptEmpty };
+            var all = new IconSettings { Idle = IdleIconMode.All };
+            var F = MachineKind.Fridge;
+            Eq(MachineLogic.KindOf("fridge"), F, "identifier fridge 是冰箱");
+
+            // ── 判斷本身 ──
+            Check(MachineLogic.IgnoresFridge(F, new MachineFacts { BatteryEmpty = true }, true), "設定開、冰箱、電池槽空：忽略");
+            Check(!MachineLogic.IgnoresFridge(F, new MachineFacts { BatteryEmpty = true }, false), "設定關：不忽略");
+            Check(!MachineLogic.IgnoresFridge(F, new MachineFacts(), true), "電池槽有東西：不忽略");
+            Check(!new MachineFacts().BatteryEmpty, "MachineFacts.BatteryEmpty 預設是 false（有東西）");
+            foreach (MachineKind k in Enum.GetValues(typeof(MachineKind)))
+                if (k != F) Check(!MachineLogic.IgnoresFridge(k, new MachineFacts { BatteryEmpty = true }, true), $"{k}：只有冰箱會被忽略");
+
+            // ── 冰箱每一格：電池槽 × 空的／有東西 × 設定 × 閒置圖示三選一 ──
+            // 電池槽空：MachineRules.ReadPower 設 PowerKind.Empty、紅字的條件成立（冰箱每晚耗電）；放的不是電源也是 PowerKind.Empty，但不紅、BatteryEmpty 是 false
+            var slots = new (string what, bool batteryEmpty, PowerKind power, bool insufficient)[]
+            {
+                ("電池槽空", true, PowerKind.Empty, true),
+                ("電池電量夠", false, PowerKind.Battery, false),
+                ("電池電量 0", false, PowerKind.Battery, true),
+                ("電流轉換器有電", false, PowerKind.Converter, false),
+                ("電流轉換器今晚沒電", false, PowerKind.Converter, true),
+                ("超科技能源單元供得了", false, PowerKind.NoStorage, false),
+                ("超科技能源單元供不了", false, PowerKind.NoStorage, true),
+                ("放的不是電源", false, PowerKind.Empty, false),
+            };
+            int cells = 0;
+            foreach (var (what, batteryEmpty, power, insufficient) in slots)
+                foreach (bool hasItems in new[] { false, true })
+                    foreach (bool on in new[] { false, true })
+                    {
+                        string where = $"冰箱{what}、{(hasItems ? "有東西" : "空的")}、設定{(on ? "開" : "關")}";
+                        var f = new MachineFacts { BatteryEmpty = batteryEmpty, UsableCount = hasItems ? 2 : 0 };
+                        var info = JudgeLikeRead(F, f, power, insufficient, on, inputsEmpty: !hasItems);
+                        bool ignored = on && batteryEmpty;
+                        // 預期另外寫：被忽略的什麼都沒有；空的冰箱是缺料＋💤（空機器）；有東西又缺電是缺電＋⚠；其他沒有
+                        Reason reason = ignored ? Reason.None : !hasItems ? Reason.NoInput : insufficient ? Reason.NoPower : Reason.None;
+                        string allIcon = ignored ? "無" : !hasItems ? "閒置" : insufficient ? "警告" : "無";
+                        string exceptIcon = allIcon == "閒置" ? "無" : allIcon;
+                        Eq(info.Reason, reason, $"{where}：原因");
+                        Eq(all.Visible(info.Status).ToString(), allIcon, $"{where}：閒置圖示全部");
+                        Eq(except.Visible(info.Status).ToString(), exceptIcon, $"{where}：閒置圖示空機器除外");
+                        Eq(off.Visible(info.Status).ToString(), exceptIcon, $"{where}：閒置圖示不顯示");
+                        Check(!ignored || info.Status.IsEmpty && !info.Status.EmptyIdle, $"{where}：狀態圖示整個是空的（不帶空機器的記號）");
+                        Eq(info.Insufficient, insufficient, $"{where}：Insufficient 不清（電池槽空時本來就沒有電那行）");
+                        // 不畫圖示的一輪（icons 關）：原因一樣
+                        var noIcons = new MachineInfo { Power = power, Insufficient = insufficient };
+                        MachineLogic.Judge(noIcons, F, new MachineFacts { BatteryEmpty = batteryEmpty, UsableCount = hasItems ? 2 : 0 }, false, on);
+                        Check(noIcons.Reason == reason && noIcons.Status.IsEmpty, $"{where}：不畫圖示的一輪原因一樣、圖示不填");
+                        cells++;
+                    }
+            Eq(cells, 32, "冰箱：電池槽 8 種 × 空的／有東西 × 設定開關");
+            // 「有東西但不是電源」在事實這一層就是 BatteryEmpty=false：設定開著也照舊（缺料＋💤）
+            var notPower = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = false }, PowerKind.Empty, false, true, inputsEmpty: false);
+            Check(notPower.Reason == Reason.NoInput && all.Visible(notPower.Status).ToString() == "閒置", "電池槽放的不是電源（事實這一層 BatteryEmpty=false）、冰箱空的、設定開：照舊缺料＋💤");
+            // 空機器的記號：電池槽空、冰箱空、InputsEmpty 已經是 true、設定開 → 什麼都沒有
+            var emptyBoth = new MachineInfo { Power = PowerKind.Empty, Insufficient = true };
+            MachineLogic.Judge(emptyBoth, F, new MachineFacts { BatteryEmpty = true, InputsEmpty = true }, true, true);
+            Check(emptyBoth.Reason == Reason.None && emptyBoth.Status.IsEmpty && !emptyBoth.Status.EmptyIdle, "電池槽空、冰箱空、InputsEmpty、設定開：沒有原因、沒有圖示");
+            var emptyBothOff = new MachineInfo { Power = PowerKind.Empty, Insufficient = true };
+            MachineLogic.Judge(emptyBothOff, F, new MachineFacts { BatteryEmpty = true, InputsEmpty = true }, true, false);
+            Check(emptyBothOff.Reason == Reason.NoInput && emptyBothOff.Status.EmptyIdle, "同一台設定關：缺料＋空機器的 💤（和改之前一樣）");
+            // 客人的冰箱：本來就什麼都沒有
+            var guest = new MachineInfo { Power = PowerKind.Empty, Insufficient = true };
+            MachineLogic.Judge(guest, F, new MachineFacts { RunsTonight = false, BatteryEmpty = true, UsableCount = 2 }, true, true);
+            Check(guest.Reason == Reason.None && guest.Status.IsEmpty, "客人的冰箱：設定開也一樣什麼都沒有");
+
+            // ── 販賣機、只看電的機器：電池槽空、設定開也照舊 ──
+            foreach (bool on in new[] { false, true })
+            {
+                var vmEmpty = JudgeLikeRead(MachineKind.VendingMachine, new MachineFacts { BatteryEmpty = true }, PowerKind.Empty, true, on, inputsEmpty: true);
+                Check(vmEmpty.Reason == Reason.NoInput && vmEmpty.Status.EmptyIdle, $"販賣機電池槽空、庫存空（設定{on}）：缺料＋空機器的 💤");
+                var vmItems = JudgeLikeRead(MachineKind.VendingMachine, new MachineFacts { BatteryEmpty = true, UsableCount = 3 }, PowerKind.Empty, true, on, inputsEmpty: false);
+                Check(vmItems.Reason == Reason.NoPower && vmItems.Status.Icon == Warn, $"販賣機電池槽空、有庫存（設定{on}）：缺電＋⚠");
+                var other = JudgeLikeRead(MachineKind.Other, new MachineFacts { BatteryEmpty = true }, PowerKind.Empty, true, on, inputsEmpty: false);
+                Check(other.Reason == Reason.NoPower && other.Status.Icon == Warn, $"只看電的機器電池槽空（設定{on}）：缺電＋⚠");
+                foreach (var k in new[] { MachineKind.VendingFountain, MachineKind.WineRack })
+                {
+                    var x = JudgeLikeRead(k, new MachineFacts { BatteryEmpty = true, UsableCount = 1 }, PowerKind.Empty, true, on, inputsEmpty: false);
+                    Check(x.Reason == Reason.NoPower && x.Status.Icon == Warn, $"{k} 電池槽空、有東西（設定{on}）：缺電＋⚠");
+                }
+            }
+
+            // ── 資訊框的行（Rules.MachineLines）──
+            var named = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true, UsableCount = 2 }, PowerKind.Empty, true, true, inputsEmpty: false, name: "Storage");
+            Eq(Join(Rules.MachineLines(EnL, named, All)), "Storage", "被忽略的冰箱（有東西）：只剩名稱，沒有缺電");
+            var namedEmpty = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true }, PowerKind.Empty, true, true, inputsEmpty: true, name: "Storage");
+            Eq(Join(Rules.MachineLines(EnL, namedEmpty, All)), "Storage", "被忽略的冰箱（空的）：只剩名稱，沒有缺料");
+            Eq(Rules.MachineLines(EnL, JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true, UsableCount = 2 }, PowerKind.Empty, true, true, inputsEmpty: false), All).Count, 0,
+                "被忽略、沒取名的冰箱：沒有資訊框（沒有電那行、沒有原因）");
+            var shown = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true, UsableCount = 2 }, PowerKind.Empty, true, false, inputsEmpty: false, name: "Storage");
+            Eq(Join(Rules.MachineLines(EnL, shown, All)), "Storage / No power", "設定關：名稱＋缺電（和改之前一樣）");
+            var shownEmpty = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true }, PowerKind.Empty, true, false, inputsEmpty: true, name: "Storage");
+            Eq(Join(Rules.MachineLines(EnL, shownEmpty, All)), $"Storage / {EnL.NoInput}", "設定關、空的：名稱＋缺料");
+            var battery0 = JudgeLikeRead(F, new MachineFacts { UsableCount = 2 }, PowerKind.Battery, true, true, inputsEmpty: false, name: "Cold");
+            Eq(Join(Rules.MachineLines(EnL, battery0, All)), "Cold / No power / " + Rules.Kj(0), "設定開、裝了電量 0 的電池：照舊缺電＋紅字 0kJ");
+
+            // ── 箱子上的圖示：被忽略的冰箱是沒有狀態的一台 ──
+            var ignoredStatus = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true, UsableCount = 2 }, PowerKind.Empty, true, true, inputsEmpty: false).Status;
+            var warnStatus = JudgeLikeRead(F, new MachineFacts { BatteryEmpty = true, UsableCount = 2 }, PowerKind.Empty, true, false, inputsEmpty: false).Status;
+            Check(ignoredStatus.Equals(default(ItemStatus)), "被忽略的冰箱的狀態是「無」");
+            var others = new[] { new ItemStatus(Idle, false), new ItemStatus(NoIcon, true), new ItemStatus(Idle, false, true) };
+            var withIgnored = new BoxSummary();
+            var without = new BoxSummary();
+            withIgnored.Add(ignoredStatus);
+            withIgnored.Add(ignoredStatus);
+            foreach (var o in others) { withIgnored.Add(o); without.Add(o); }
+            Eq(withIgnored.Machines, without.Machines + 2, "箱子：被忽略的冰箱照樣算進台數");
+            Check(withIgnored.Warning == without.Warning && withIgnored.Idle == without.Idle && withIgnored.IdleEmpty == without.IdleEmpty && withIgnored.Done == without.Done,
+                "箱子：被忽略的冰箱不算 ⚠、💤、✓");
+            var onlyIgnored = new BoxSummary();
+            onlyIgnored.Add(ignoredStatus);
+            onlyIgnored.Add(ignoredStatus);
+            var warnBox = new BoxSummary();
+            warnBox.Add(warnStatus);
+            foreach (IdleIconMode idle in Enum.GetValues(typeof(IdleIconMode)))
+                foreach (ContainerIconMode mode in Enum.GetValues(typeof(ContainerIconMode)))
+                {
+                    var cfg = new IconSettings { Idle = idle, Containers = mode };
+                    Eq(cfg.BoxStatus(withIgnored).ToString(), cfg.BoxStatus(without).ToString(), $"箱子（{idle}、{mode}）：加了被忽略的冰箱，圖示和沒有它一樣");
+                    Eq(cfg.BoxStatus(onlyIgnored).ToString(), "無", $"箱子（{idle}、{mode}）：只有被忽略的冰箱什麼都不畫");
+                    Eq(cfg.BoxStatus(warnBox).ToString(), mode == ContainerIconMode.Off ? "無" : "警告", $"箱子（{idle}、{mode}）：設定關時同一台冰箱照舊 ⚠");
+                }
+
+            // ── 全店快照作廢：會影響快照的設定只有兩個 ──
+            foreach (var d in SettingDefs.All)
+                Eq(SettingDefs.AffectsSnapshot(d), d.Key == "MineralWarning" || d.Key == "IgnoreFridgesWithoutBattery", $"{d.Key} 會不會影響全店快照");
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            string Src(string name) => File.ReadAllText(Path.Combine(root, "mod", "src", name));
+            string Body(string code, string signature)
+            {
+                int at = code.IndexOf(signature, StringComparison.Ordinal);
+                if (at < 0) return "";
+                int open = code.IndexOf('{', at);
+                int depth = 0;
+                for (int i = open; i >= 0 && i < code.Length; i++)
+                {
+                    if (code[i] == '{') depth++;
+                    else if (code[i] == '}' && --depth == 0) return code.Substring(open, i - open + 1);
+                }
+                return "";
+            }
+            string settings = Src("Settings.cs");
+            string set = Body(settings, "internal static bool Set(SettingDef d, int value)");
+            string reset = Body(settings, "internal static int ResetPage(SettingPage page)");
+            Check(set.Contains("if (SettingDefs.AffectsSnapshot(d)) DropSnapshot(d.Key);") && !set.Contains("MineralWarning"), "Settings.Set：照 AffectsSnapshot 丟快照（不寫死哪個設定）");
+            Check(reset.Contains("if (SettingDefs.AffectsSnapshot(d)) before.Add((d, Get(d)));") && reset.Contains("if (Get(d) != value) { DropSnapshot(d.Key); break; }")
+                && reset.IndexOf("before.Add", StringComparison.Ordinal) < reset.IndexOf("_values.ResetPage(page)", StringComparison.Ordinal)
+                && !reset.Contains("MineralWarning"),
+                "Settings.ResetPage：恢復前記下會影響快照的設定、有變才丟快照");
+            Eq(Regex.Matches(settings, @"\bDropSnapshot\(").Count, 3, "DropSnapshot 只在定義、Set、ResetPage 出現");
+            Check(Regex.IsMatch(Body(settings, "static void DropSnapshot(string key)"), @"\{\s*StoreSnapshot\.Reset\(\);\s*ItemQuickInfoMod\.DebugLog\(\$""\{key\} 改了："),
+                "DropSnapshot：丟快照、除錯 log 寫是哪個設定");
+            Check(settings.Contains("internal static bool IgnoreFridgesWithoutBattery => On(SettingDefs.IgnoreFridgesWithoutBattery);"), "Settings：忽略沒裝電池的冰箱的屬性");
+            Check(settings.Contains("if (SettingDefs.IsValidTab(n)) _windowTab = n;") && !settings.Contains("n < SettingDefs.PageCount"), "Settings：window.tab 照 IsValidTab 讀");
+            // 三個建 ReadContext 的地方都照設定給
+            string runner = Src("Runner.cs");
+            Eq(Regex.Matches(runner, @"new ReadContext\s*\{[^}]*\bIgnoreFridgesWithoutBattery = Settings\.IgnoreFridgesWithoutBattery,[^}]*\}").Count, 2,
+                "Runner：完整資訊與常駐的圖示兩條路都給忽略沒裝電池的冰箱");
+            Eq(Regex.Matches(runner, @"new ReadContext\b").Count, 2, "Runner 只有兩個 ReadContext");
+            string scan = Src("StoreScan.cs");
+            Check(Regex.IsMatch(Body(scan, "internal static StoreScan Build(ScanReason reason)"),
+                @"new ReadContext\s*\{[^}]*\bScan = s\b[^}]*\bIgnoreFridgesWithoutBattery = Settings\.IgnoreFridgesWithoutBattery,[^}]*\}"),
+                "StoreScan.Build：全店機器的狀態（箱子上的圖示、全店核對）照設定忽略冰箱");
+            Eq(Regex.Matches(scan, @"new ReadContext\b").Count, 1, "StoreScan 只有一個 ReadContext");
+            // MachineRules.Read：facts 的 BatteryEmpty 從電池槽的 childItem 填、在 Fill 與 Judge 之前；把 ctx 的值交給 Judge
+            string rules = Src("MachineRules.cs");
+            string read = Body(rules, "internal static MachineInfo Read(GameItem m, ReadContext ctx)");
+            int fillAt = read.IndexOf("facts.BatteryEmpty = battery.childItem == null;", StringComparison.Ordinal);
+            int fill = read.IndexOf("if (facts.RunsTonight && !MachineLogic.IgnoresFridge(kind, facts, ctx.IgnoreFridgesWithoutBattery)) Fill(kind, m, facts, ctx);", StringComparison.Ordinal);
+            int judge = read.IndexOf("var progress = MachineLogic.Judge(info, kind, facts, icons, ctx.IgnoreFridgesWithoutBattery);", StringComparison.Ordinal);
+            Check(fillAt > 0 && fill > fillAt && judge > fill, "MachineRules.Read：BatteryEmpty 照電池槽的 childItem 填 → 被忽略的不 Fill → Judge 拿 ctx 的設定");
+            Check(read.Contains("var battery = MachineHelper.GetBatterySlot(m);") && Body(rules, "static (int Max, long Income, int Use) ReadPower(").Contains("var b = slot.childItem;"),
+                "電池槽空的判斷和 ReadPower 同一個（GetBatterySlot 的 childItem）");
+            int judgeCalls = 0;
+            foreach (var file in Directory.GetFiles(Path.Combine(root, "mod", "src"), "*.cs"))
+                judgeCalls += Regex.Matches(File.ReadAllText(file), @"MachineLogic\.Judge\(").Count;
+            Eq(judgeCalls, 1, "mod 裡只有 MachineRules.Read 叫 Judge");
+            Check(Src("ItemReader.cs").Contains("public bool IgnoreFridgesWithoutBattery;"), "ReadContext 有忽略沒裝電池的冰箱");
+
+            // ── settings.json ──
+            var def = SettingDefs.IgnoreFridgesWithoutBattery;
+            Check(def.IsToggle && def.Default == 0 && def.Page == SettingPage.Special && def.Key == "IgnoreFridgesWithoutBattery", "忽略沒裝電池的冰箱：開關、預設關、特殊頁、key 定了不改");
+            var problems = new List<string>();
+            Check(SettingValues.Parse(new Dictionary<string, string> { ["IgnoreFridgesWithoutBattery"] = "true" }, problems).On(def) && problems.Count == 0, "讀 true：開");
+            Check(!SettingValues.Parse(new Dictionary<string, string> { ["IgnoreFridgesWithoutBattery"] = "False" }, problems).On(def) && problems.Count == 0, "讀 False：關");
+            Check(!SettingValues.Parse(new Dictionary<string, string> { ["KeyMode"] = "Hold" }, problems).On(def) && problems.Count == 0, "沒有這個 key（1.4.0 的檔）：預設關、不記 log");
+            var badV = SettingValues.Parse(new Dictionary<string, string> { ["IgnoreFridgesWithoutBattery"] = "maybe" }, problems);
+            Check(!badV.On(def), "讀不懂：預設關");
+            Eq(string.Join("、", problems), "IgnoreFridgesWithoutBattery＝maybe", "讀不懂：記一行");
+            foreach (bool value in new[] { false, true })
+            {
+                var v = new SettingValues();
+                v.Set(def, value ? 1 : 0);
+                var written = v.Entries().First(e => e.key == def.Key);
+                Check(written.kind == SettingKind.Toggle && written.name == (value ? "true" : "false"), $"寫出 {value}：開關寫 bool");
+                problems.Clear();
+                var back = SettingValues.Parse(new Dictionary<string, string> { [def.Key] = written.value != 0 ? "true" : "false" }, problems);
+                Check(back.On(def) == value && problems.Count == 0, $"寫出 {value} 再讀回來一樣");
+            }
+            // 恢復特殊頁的預設
+            var sv = new SettingValues();
+            sv.Set(def, 1);
+            Check(!sv.PageIsDefault(SettingPage.Special) && sv.PageIsDefault(SettingPage.Items), "改了特殊頁：特殊頁不是預設、物品頁是");
+            Eq(sv.ResetPage(SettingPage.Special), 1, "特殊頁恢復了 1 個");
+            Check(!sv.On(def) && sv.PageIsDefault(SettingPage.Special), "特殊頁回到預設（關）");
+            // 舊 ModConfig（1.3.0 以前）沒有這個 key：探測到 ""，或乾脆不在清單裡，都用預設、不記 log
+            var old = new Dictionary<string, string>();
+            foreach (var d in SettingDefs.All) old[d.Key] = "";
+            var notes = new List<string>();
+            problems.Clear();
+            var migrated = SettingValues.FromOldConfig(old, problems, notes);
+            Check(!migrated.On(def) && problems.Count == 0 && notes.Count == 0, "從舊 ModConfig 搬（探測到 \"\"）：預設關、不記 log");
+            old.Remove(def.Key);
+            migrated = SettingValues.FromOldConfig(old, problems, notes);
+            Check(!migrated.On(def) && problems.Count == 0 && notes.Count == 0, "從舊 ModConfig 搬（沒有這個 key）：預設關、不記 log");
+            // window.tab：0～7 讀得回來（1.4.0 存的 0～6 照讀），8 與負的不收
+            for (int tab = 0; tab < 8; tab++) Check(SettingDefs.IsValidTab(tab), $"window.tab {tab} 讀得回來");
+            Check(!SettingDefs.IsValidTab(8) && !SettingDefs.IsValidTab(-1) && !SettingDefs.IsValidTab(int.MaxValue), "window.tab 8、-1 不收");
+            Eq((int)SettingPage.Special, 7, "特殊頁是第 7 頁（從 0 數；存進 window.tab）");
+
+            // ── 說明：9 種語言，{0}＝那個語言資訊框的「缺電」 ──
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ru", "de", "ja", "fr", "es", "pl" })
+            {
+                var s = LangStrings.For(lang);
+                Loc.Use(lang);
+                string tip = Tips.IgnoreFridges(s);
+                Check(!string.IsNullOrWhiteSpace(s.NoPower) && tip.Contains(s.NoPower) && !tip.Contains('{') && !tip.Contains('}'), $"{lang} 忽略沒裝電池的冰箱的說明：含資訊框的「{s.NoPower}」、沒有殘留的佔位符");
+                Eq(def.Tip(s), tip, $"{lang} 設定的說明就是 Tips.IgnoreFridges");
+                string label = def.Label(), page = SettingDefs.PageLabel(SettingPage.Special);
+                Check(!string.IsNullOrWhiteSpace(label) && label != "cfg_ignore_fridges_without_battery", $"{lang} 忽略沒裝電池的冰箱的名稱：{label}");
+                Check(!string.IsNullOrWhiteSpace(page) && page != "ui_tab_special", $"{lang} 特殊頁的名稱：{page}");
+            }
+            var en = LangStrings.For(Lang.En);
+            Eq(Tips.IgnoreFridges(en), "A Fridge with no battery shows no status icons and no reason such as No power. Useful when you keep Fridges as storage.", "en 說明填好的樣子");
+            var hans = LangStrings.For(Lang.ZhHans);
+            Eq(Tips.IgnoreFridges(hans), "没装电池的冰箱不显示状态图标，也不显示缺电这类原因。适合把冰箱当仓库用的时候。", "zh 說明填好的樣子");
+            var hant = LangStrings.For(Lang.ZhHant);
+            Eq(Tips.IgnoreFridges(hant), "沒裝電池的冰箱不顯示狀態圖示，也不顯示缺電這類原因。適合把冰箱當倉庫用的時候。", "zh-Hant 說明填好的樣子");
+            string locDir = Loc.LocalizationDir;
+            var finals = new (string lang, string label, string tab)[]
+            {
+                ("en", "Ignore Fridges without a battery", "Special"), ("zh", "忽略没装电池的冰箱", "特殊"), ("zh-Hant", "忽略沒裝電池的冰箱", "特殊"),
+            };
+            foreach (var (lang, label, tab) in finals)
+            {
+                var csv = ReadCsv(Path.Combine(locDir, lang + ".csv"));
+                Eq(csv.TryGetValue("cfg_ignore_fridges_without_battery", out var l) ? l : null, label, $"{lang} 名稱的定稿");
+                Eq(csv.TryGetValue("ui_tab_special", out var t) ? t : null, tab, $"{lang} 分頁的定稿");
+            }
+
+            // ── 分頁列：中文 8 個分頁，7 個兩個字＋1 個四個字 ──
+            string ui = Src("SettingsUI.cs");
+            float Const(string name)
+            {
+                var m = Regex.Match(ui, $@"\b{name} = (\d+)f");
+                Check(m.Success, $"SettingsUI 有 {name}");
+                return m.Success ? float.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0f;
+            }
+            float minContent = Const("MinContentWidth"), padding = Const("ButtonPadding"), spacing = Const("Spacing");
+            Eq((minContent, padding, spacing), (560f, 26f, 8f), "內容最窄 560、按鈕內距 26、間距 8");
+            Check(ui.Contains("TabStrip.Fit(_tabWidths, _contentWidth - Spacing, _arrowWidth, Spacing, page, _firstTab)"), "分頁能用的寬＝內容寬－間距");
+            foreach (var lang in new[] { Lang.ZhHans, Lang.ZhHant })
+            {
+                Loc.Use(lang);
+                var lens = Enumerable.Range(0, SettingDefs.PageCount).Select(i => SettingDefs.PageLabel((SettingPage)i).Length).ToList();
+                Eq(string.Join(",", lens.OrderBy(x => x)), "2,2,2,2,2,2,2,4", $"{lang} 分頁的字數（估寬的前提：7 個兩個字、1 個四個字）");
+            }
+            float arrow = (float)Math.Ceiling(IconArt.ArrowLeft[0].Length * IconArt.GearUnitsPerPixel + padding);
+            foreach (var (glyph, total) in new[] { (14f, 516f), (15f, 534f), (16f, 552f) })
+            {
+                // 照繁中的順序：一般、名稱、液體、電池、機器、狀態圖示、物品、特殊
+                var widths = new[] { 2, 2, 2, 2, 2, 4, 2, 2 }.Select(n => n * glyph + padding).ToArray();
+                Eq(widths.Sum() + spacing * (widths.Length - 1), total, $"每個字 {glyph} 寬：8 個分頁一排 {total}");
+                for (int selected = 0; selected < 8; selected++)
+                    Eq(TabStrip.Fit(widths, minContent - spacing, arrow, spacing, selected, 0), (0, 7, false), $"每個字 {glyph} 寬、選第 {selected} 頁：內容 560 放得下、沒有箭頭");
+                if (glyph == 14f)
+                    Check(TabStrip.Fit(widths, 520f - spacing, arrow, spacing, 7, 0).arrows, "每個字 14 寬：1.4.0 的 520（能用 512）放不下 516，會出現箭頭（所以放寬）");
+            }
+            Loc.Use(Lang.En);
+            LangStrings.For(Lang.En);
+        }
+
+        /// <summary>
+        /// 模組顯示最高的加成（1.5.0）：白名單、取哪一項（正負號、0 不算、平手、全負、全 0）、那一行的字與顏色（9 種語言的前綴）、
+        /// 放不下時拆兩行、形狀裡選哪一塊（每種形狀 × 四個方向 × 翻轉，格子照遊戲 GridShape.Get 的轉法產生；平手的規則）、
+        /// 那一塊換成圖層座標與寬、設定（物品頁、預設開、讀寫與搬法）、說明（9 種語言，{0}＝資訊框的字），和碰 Unity 那一半的原始碼。
+        /// </summary>
+        static void ModuleBonus200()
+        {
+            // ── 白名單──
+            foreach (var id in new[] { "system_module_performance", "system_module_efficiancy", "system_module_quality", "system_module_overclock", "system_module_eco",
+                "system_module_fineness", "system_module_streamlining", "system_module_corrupt", "system_uncapped_neural_core", "system_capped_neural_core" })
+                Check(ModuleRules.IsBonusModule(id), $"{id} 要畫");
+            Eq(ModuleRules.BonusModuleIds.Length, 10, "白名單 10 個：泛用模組 8 種裡有加成的 7 種＋損壞……（性能、效率、品質、超頻、環保、精煉、優化、損壞）與神經核心兩種");
+            foreach (var id in new[] { "system_module_ruined", "blank_module", "node_small", "node_medium", "farm_module_nutrifruit", "farm_module_dream_cap",
+                "furnace_module_blast", "furnace_module_junk", "printer_module_metal", "printer_module_cnc", "printer_module_melee_batch",
+                "dna_manipulator_module_precision", "alarm_module_transmitter", "crypto_module_sec", "evaporator_module_solvent_recovery", "chem_module",
+                "module_extractor", "module_bay_expansion_kit", "random_performance_module", "random_node", "system_module_efficiency", "System_Module_Performance", "", null })
+                Check(!ModuleRules.IsBonusModule(id), $"{id ?? "null"} 不畫（報廢、空白、節點、機器專用、不是物品的 id、拼對的 efficiency、大小寫不同）");
+
+            // ── 取哪一項──
+            var picks = new (int p, int e, int q, bool found, ModuleStat stat, int value, string what)[]
+            {
+                (16, 0, 0, true, ModuleStat.Performance, 16, "性能模組"),
+                (0, 16, 0, true, ModuleStat.Efficiency, 16, "效率模組"),
+                (0, 0, 8, true, ModuleStat.Quality, 8, "品質模組"),
+                (36, -44, 0, true, ModuleStat.Performance, 36, "超頻：照正負號取最大，不照絕對值"),
+                (-16, 32, 0, true, ModuleStat.Efficiency, 32, "環保"),
+                (-8, -15, 25, true, ModuleStat.Quality, 25, "精煉"),
+                (8, 25, -16, true, ModuleStat.Efficiency, 25, "優化"),
+                (-8, -5, 0, true, ModuleStat.Efficiency, -5, "損壞：全負時取最大的負數，0 的那項不算"),
+                (200, -100, 100, true, ModuleStat.Performance, 200, "無限制神經核心"),
+                (100, -100, 50, true, ModuleStat.Performance, 100, "受限神經核心"),
+                (15, 15, 0, true, ModuleStat.Performance, 15, "平手（夢菇）：照性能→效率→品質"),
+                (0, 15, 15, true, ModuleStat.Efficiency, 15, "效率、品質平手：效率"),
+                (7, 3, 7, true, ModuleStat.Performance, 7, "性能、品質平手：性能"),
+                (5, 5, 5, true, ModuleStat.Performance, 5, "三項平手：性能"),
+                (-75, -75, 0, true, ModuleStat.Performance, -75, "負的平手（DNA 精準）：性能"),
+                (0, -2, -2, true, ModuleStat.Efficiency, -2, "負的平手、性能是 0：效率"),
+                (-5, -2, -2, true, ModuleStat.Efficiency, -2, "全負、後兩項平手：效率"),
+                (0, 0, -7, true, ModuleStat.Quality, -7, "只有品質、是負的"),
+                (-3, 0, 0, true, ModuleStat.Performance, -3, "只有性能、是負的"),
+                (0, 0, 0, false, ModuleStat.Performance, 0, "三項都是 0（報廢、空白、節點）：不畫"),
+                (int.MinValue, 0, 0, true, ModuleStat.Performance, int.MinValue, "int 最小值"),
+            };
+            foreach (var (p, e, q, found, stat, value, what) in picks)
+            {
+                bool got = ModuleRules.PickBonus(p, e, q, out var s, out int v);
+                Eq((got, s, v), (found, stat, value), $"{what}（{p}/{e}/{q}）");
+            }
+
+            // ── 數值的字──
+            Eq(ModuleRules.BonusText(16), "+16%", "正數加 +");
+            Eq(ModuleRules.BonusText(-5), "-5%", "負數用 ASCII 的 -（和 -8kJ、-6₡ 一樣）");
+            Eq(ModuleRules.BonusText(0), "0%", "0（不會出現）不加號");
+            Eq(ModuleRules.BonusText(int.MinValue), "-2147483648%", "int 最小值不溢位");
+
+            // ── 那一行──
+            var line = ModuleRules.BonusLine(EnL, 16, 0, 0);
+            Check(line.HasValue, "性能模組有那一行");
+            if (line.HasValue)
+            {
+                var l = line.Value;
+                Eq((l.Text, l.Short, l.Prefix, l.Value, l.Color, l.Kind), ("Perf +16%", "Perf +16%", "Perf", "+16%", LineColor.White, LineKind.ModuleBonus),
+                    "en：Perf +16%，長短一樣、拆兩行是 Perf／+16%、白字、種類 ModuleBonus");
+            }
+            Eq(ModuleRules.BonusLine(En, 16, 0, 0)?.Text, "Perf +16%", "en 短前綴的設定也是 Perf（不跟前綴長短換）");
+            var neg = ModuleRules.BonusLine(EnL, -8, -5, 0);
+            Eq((neg?.Text, neg?.Color), ("Eff -5%", (LineColor?)LineColor.Orange), "en 損壞：Eff -5%、橘字");
+            Eq(ModuleRules.BonusLine(EnL, 0, 0, 25)?.Text, "Qual +25%", "en 品質：Qual");
+            Eq(ModuleRules.BonusLine(HansL, 36, -44, 0)?.Text, "性能 +36%", "zh 超頻：性能 +36%");
+            Eq(ModuleRules.BonusLine(HansL, 0, 0, 8)?.Text, "质量 +8%", "zh 品質：质量（遊戲的 mech_module_stat_quality）");
+            Eq(ModuleRules.BonusLine(Hans, 0, 16, 0)?.Text, "效率 +16%", "zh 短前綴的設定：效率");
+            Eq(ModuleRules.BonusLine(HantL, 0, 0, 8)?.Text, "品質 +8%", "zh-Hant 品質");
+            Eq(ModuleRules.BonusLine(HantL, -8, -5, 0)?.Text, "效率 -5%", "zh-Hant 損壞：效率 -5%");
+            Check(!ModuleRules.BonusLine(EnL, 0, 0, 0).HasValue, "三項都是 0：沒有那一行");
+            Eq(Join(ModuleRules.Lines(EnL, All, 36, -44, 0)), "Perf +36%", "Lines：一行");
+            Check(ModuleRules.Lines(EnL, All, 0, 0, 0) == null, "Lines：三項都是 0 回 null（不是要畫的那一種）");
+            Check(ModuleRules.Lines(EnL, new Display { ModuleBonus = false }, 16, 0, 0) == null, "Lines：「顯示模組加成」關著回 null");
+            Check(new Display().ModuleBonus && !Display.AllOff().ModuleBonus, "Display：預設開、全關的那份是關");
+            // 名稱與任何物品都有的行照舊接（取了名的神經核心、贓物的熱度）
+            var named = Rules.WithName("Core", true, ModuleRules.Lines(EnL, All, 200, -100, 100));
+            Eq(Join(Rules.WithExtras(named, EnL, new ItemExtras { Stolen = true, Heat = 45 }, All)), "Core / Perf +200% / Heat 45%", "取了名、贓物的神經核心：名稱、加成、熱度");
+            // 9 種語言的前綴：固定一份（長短一樣）、三個不一樣、長度照 csv 的註解（英文這類 3～5 個字母，日文、中文 1～2 個字）
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ru", "de", "ja", "fr", "es", "pl" })
+            {
+                var s = LangStrings.For(lang);
+                var words = new[] { s.ModulePerformance, s.ModuleEfficiency, s.ModuleQuality };
+                Check(words.Distinct().Count() == 3, $"{lang} 三個前綴不一樣：{string.Join("／", words)}");
+                Check(s.Short.ModulePerformance == s.ModulePerformance && s.Short.ModuleEfficiency == s.ModuleEfficiency && s.Short.ModuleQuality == s.ModuleQuality,
+                    $"{lang} 前綴長短一樣");
+                bool cjk = lang == "ja" || lang.StartsWith("zh", StringComparison.Ordinal);
+                foreach (var w in words)
+                {
+                    int letters = w.Count(char.IsLetter);
+                    Check(cjk ? w.Length >= 1 && w.Length <= 2 : letters >= 3 && letters <= 5 && w.Length <= 6, $"{lang} 前綴「{w}」的長度");
+                }
+                Eq(ModuleRules.BonusLine(s, 16, 0, 0)?.Text, s.ModulePerformance + " +16%", $"{lang} 那一行是「前綴 +16%」");
+            }
+            LangStrings.For(Lang.En);
+
+            // ── 放不下時：長短一樣，不換短；那一塊放不下時拆兩行 ──
+            var only = new List<Line> { ModuleRules.BonusLine(EnL, 16, 0, 0).Value };
+            var measure = FakeMeasure(4.5f); // 「Perf +16%」約 20
+            Eq(Rules.ChooseForm(only, 30f, measure), LabelForm.Normal, "2×2 模組（可用約 30）放得下：照原樣");
+            Eq(Rules.ChooseForm(only, 12f, measure), LabelForm.Split, "放不下：沒有長短不同的寫法，直接拆兩行");
+            Eq(string.Join("|", Rules.Rows(only, LabelForm.Split).Select(r => r.Text + ":" + r.Kind)), "Perf:ModuleBonus|+16%:ModuleBonus", "拆成「前綴」「數值」兩行，種類跟著");
+            var withHeat = new List<Line> { only[0], Line.Prefixed(EnL.Heat, En.Heat, "1000%", LineColor.Red) };
+            Eq(Rules.ChooseForm(withHeat, 21f, measure), LabelForm.Short, "熱度的長寫法放不下：整個換短的（模組那行一樣、放得下）");
+            Eq(string.Join("|", Rules.Rows(withHeat, LabelForm.Short).Select(r => r.Text)), "Perf +16%|H 1000%", "換短：模組那行不變");
+
+            // ── 形狀裡選哪一塊──
+            // 本地形狀照遊戲 SetSpriteAndShape 從貼圖切出來的（一格 16 px，有不透明像素就算佔），全域格子照 GridShape.InverseTransform（Get 用的轉法）產生；
+            // 期望值是畫出來的格子：A＝選到的那一塊、#＝其他有佔的格、.＝空的
+            var local = new Dictionary<string, string>
+            {
+                ["l"] = "###/..#", ["t"] = ".#/##/.#", ["c"] = "##/.#", ["s"] = "##/.#/##", ["h"] = "##/##/.#", ["square"] = "##/##",
+            };
+            var expected = new (string shape, int o, bool flipped, string grid)[]
+            {
+                ("l", 0, false, "AAA/..#"), ("l", 1, false, "AA/#./#."), ("l", 2, false, "#../AAA"), ("l", 3, false, ".#/.#/AA"),
+                ("l", 0, true, "AAA/#.."), ("l", 1, true, "#./#./AA"), ("l", 2, true, "..#/AAA"), ("l", 3, true, "AA/.#/.#"),
+                ("t", 0, false, ".#/AA/.#"), ("t", 1, false, "AAA/.#."), ("t", 2, false, "#./AA/#."), ("t", 3, false, ".#./AAA"),
+                ("t", 0, true, "#./AA/#."), ("t", 1, true, ".#./AAA"), ("t", 2, true, ".#/AA/.#"), ("t", 3, true, "AAA/.#."),
+                ("c", 0, false, "AA/.#"), ("c", 1, false, "AA/#."), ("c", 2, false, "#./AA"), ("c", 3, false, ".#/AA"),
+                ("c", 0, true, "AA/#."), ("c", 1, true, "#./AA"), ("c", 2, true, ".#/AA"), ("c", 3, true, "AA/.#"),
+                ("s", 0, false, "##/.#/AA"), ("s", 1, false, "AAA/#.#"), ("s", 2, false, "##/#./AA"), ("s", 3, false, "#.#/AAA"),
+                ("s", 0, true, "##/#./AA"), ("s", 1, true, "#.#/AAA"), ("s", 2, true, "##/.#/AA"), ("s", 3, true, "AAA/#.#"),
+                ("h", 0, false, "AA/AA/.#"), ("h", 1, false, "AAA/##."), ("h", 2, false, "#./AA/AA"), ("h", 3, false, ".##/AAA"),
+                ("h", 0, true, "AA/AA/#."), ("h", 1, true, "##./AAA"), ("h", 2, true, ".#/AA/AA"), ("h", 3, true, "AAA/.##"),
+                ("square", 0, false, "AA/AA"), ("square", 1, false, "AA/AA"), ("square", 2, false, "AA/AA"), ("square", 3, false, "AA/AA"),
+                ("square", 0, true, "AA/AA"), ("square", 1, true, "AA/AA"), ("square", 2, true, "AA/AA"), ("square", 3, true, "AA/AA"),
+            };
+            Eq(expected.Length, 48, "6 種形狀 × 四個方向 × 翻轉");
+            foreach (var (shape, o, flipped, grid) in expected)
+            {
+                var g = GlobalGrid(local[shape], o, flipped, out int w, out int h);
+                Eq(Unmark(grid), Draw(g, w, h, default, false), $"{shape} 方向 {o}{(flipped ? " 翻轉" : "")}：照 GridShape 的轉法產生的格子");
+                bool ok = ModuleRules.LongestRow(g, w, h, out var b);
+                Check(ok, $"{shape} 方向 {o}{(flipped ? " 翻轉" : "")}：選得出來");
+                Eq(Draw(g, w, h, b, ok), grid, $"{shape} 方向 {o}{(flipped ? " 翻轉" : "")}：選到的那一塊");
+                Check(!ok || b.GridWidth == w && b.GridHeight == h, $"{shape} 方向 {o}{(flipped ? " 翻轉" : "")}：記下整個物品的格數");
+            }
+            // 規格裡的例子（全域格子直接寫）與平手的規則
+            var direct = new (string grid, string what)[]
+            {
+                ("AAA/..#", "L 橫放：上排 3 格"),
+                ("#./#./AA", "L 直放：下排 2 格"),
+                (".#/AA/.#", "T 直放：中間 2 格"),
+                ("AAA/.#.", "T 橫放：上排 3 格"),
+                ("AA/AA", "2×2：整塊"),
+                ("AA/.#", "_c：上排"),
+                ("##/.#/AA", "_s：上下兩排一樣長、一樣高，選最下面的"),
+                ("AA/AA/.#", "_h：上面 2×2"),
+                ("##./AAA/AAA", "最長的那排往上下延伸：兩列"),
+                ("AAA/AAA/.#./###", "一樣長時延伸得高的贏，就算比較上面"),
+                ("###/.#./AAA", "一樣長、一樣高：最下面的"),
+                ("AA.##", "同一列分開的兩段一樣長：左邊的（Claude 定的）"),
+                ("#./AA/.#", "最長的在中間"),
+                ("A/A/A/A", "1×4 直放：一格寬，整條"),
+                ("AAAA", "1×4 橫放：整排"),
+                ("A", "1×1"),
+            };
+            foreach (var (grid, what) in direct)
+            {
+                var g = ParseGrid(Unmark(grid), out int w, out int h);
+                bool ok = ModuleRules.LongestRow(g, w, h, out var b);
+                Eq(Draw(g, w, h, b, ok), grid, what);
+            }
+            Check(!ModuleRules.LongestRow(ParseGrid("../..", out int ew, out int eh), ew, eh, out _), "一格都沒佔：選不出來（照舊貼物品外框）");
+            Check(!ModuleRules.LongestRow(null, 2, 2, out _) && !ModuleRules.LongestRow(new bool[3], 2, 2, out _) && !ModuleRules.LongestRow(new bool[4], 0, 2, out _),
+                "格子是 null、比寬×高少、寬是 0：選不出來");
+            Check(ModuleRules.LongestRow(new[] { false, true, true, false, true, true, true, true, true }, 3, 2, out var big) && big.ToString() == "1-2,0-1",
+                "格子比寬×高多（重用的緩衝）：只看前面的寬×高");
+            {
+                var cells = new[] { true, true, true, false, false, true };
+                ModuleRules.LongestRow(cells, 3, 2, out _); // 先跑一次（JIT）
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                for (int i = 0; i < 100; i++) ModuleRules.LongestRow(cells, 3, 2, out _);
+                Eq(GC.GetAllocatedBytesForCurrentThread() - before, 0L, "LongestRow 不配置記憶體（每幀轉向時也叫）");
+            }
+            var lb = new ModuleBlock(1, 2, 0, 1, 3, 2);
+            Eq((lb.Columns, lb.Rows, lb.ToString()), (2, 2, "1-2,0-1"), "ModuleBlock 的寬、高、除錯的字");
+
+            // ── 換成圖層座標（評估報告的公式；框的左下角對齊那一塊的左下角）──
+            void Corner(string grid, float minX, float minY, float maxX, float maxY, float left, float bottom, float width, string what)
+            {
+                var g = ParseGrid(grid, out int w, out int h);
+                ModuleRules.LongestRow(g, w, h, out var b);
+                ModuleRules.BlockCorner(minX, minY, maxX, maxY, b, out float x, out float y, out float bw);
+                Check(Near(x, left) && Near(y, bottom) && Near(bw, width), $"{what}：預期 ({left}, {bottom}) 寬 {width}，實際 ({x}, {y}) 寬 {bw}");
+                Check(Near(ModuleRules.BlockWidth(maxX - minX, b), width), $"{what}：BlockWidth 和 BlockCorner 的寬一樣");
+            }
+            Corner("###/..#", 0f, 0f, 48f, 32f, 0f, 16f, 48f, "L 橫放（3×2 格、一格 16）：上排的左下角是 (0, 16)");
+            Corner("#./#./##", 0f, 0f, 32f, 48f, 0f, 0f, 32f, "L 直放：下排就是物品的左下角");
+            Corner(".#/##/.#", 0f, 0f, 32f, 48f, 0f, 16f, 32f, "T 直放：中間那排的左下角往上一格");
+            Corner("..#/###", 0f, 0f, 48f, 32f, 0f, 0f, 48f, "L 轉 180 度：下排");
+            Corner("#./##", 100f, -50f, 132f, -18f, 100f, -50f, 32f, "負座標、偏移：下排");
+            Corner("##/.#/##", 0f, 0f, 20f, 30f, 0f, 0f, 20f, "一格 10（圖層有縮放）：_s 下排");
+            Corner("##/##/.#", -10f, -15f, 10f, 15f, -10f, -5f, 20f, "_h：上面 2×2 的左下角在中間那列的下緣");
+            Corner("#../###", 0f, 0f, 48f, 32f, 0f, 0f, 48f, "左右不對稱：選到的從第 0 欄開始");
+            Corner(".##/###", 0f, 0f, 48f, 32f, 0f, 0f, 48f, "_h 轉 270 度：下排 3 格");
+            Corner("##./###/.#.", 0f, 0f, 48f, 48f, 0f, 16f, 48f, "中間那排 3 格");
+            Corner(".#./.##", 0f, 0f, 48f, 32f, 16f, 0f, 32f, "選到的從第 1 欄開始：左緣往右一格");
+            Check(float.IsPositiveInfinity(ModuleRules.BlockWidth(float.PositiveInfinity, lb)), "拿不到物品寬（無限大）：那一塊也是無限大");
+            Check(Near(ModuleRules.BlockWidth(48f, new ModuleBlock(0, 0, 0, 2, 3, 3)), 16f), "一格寬的那一塊：物品寬的 1/3");
+
+            // ── 設定──
+            var def = SettingDefs.ShowModuleBonus;
+            Check(def.IsToggle && def.Default == 1 && def.Page == SettingPage.Items && def.Key == "ShowModuleBonus", "顯示模組加成：開關、預設開、物品頁、key 定了不改");
+            var items = SettingDefs.All.Where(d => d.Page == SettingPage.Items).ToList();
+            Eq(items[items.Count - 1].Key, "ShowModuleBonus", "物品頁最後一個（藥品純度後面）");
+            var problems = new List<string>();
+            Check(!SettingValues.Parse(new Dictionary<string, string> { ["ShowModuleBonus"] = "false" }, problems).On(def) && problems.Count == 0, "讀 false：關");
+            Check(SettingValues.Parse(new Dictionary<string, string> { ["ShowModuleBonus"] = "True" }, problems).On(def) && problems.Count == 0, "讀 True：開");
+            Check(SettingValues.Parse(new Dictionary<string, string> { ["KeyMode"] = "Hold" }, problems).On(def) && problems.Count == 0, "沒有這個 key（1.4.0 的檔）：預設開、不記 log");
+            var bad = SettingValues.Parse(new Dictionary<string, string> { ["ShowModuleBonus"] = "maybe" }, problems);
+            Check(bad.On(def), "讀不懂：預設開");
+            Eq(string.Join("、", problems), "ShowModuleBonus＝maybe", "讀不懂：記一行");
+            foreach (bool value in new[] { false, true })
+            {
+                var v = new SettingValues();
+                v.Set(def, value ? 1 : 0);
+                var written = v.Entries().First(e => e.key == def.Key);
+                Check(written.kind == SettingKind.Toggle && written.name == (value ? "true" : "false"), $"寫出 {value}：開關寫 bool");
+                problems.Clear();
+                var back = SettingValues.Parse(new Dictionary<string, string> { [def.Key] = written.value != 0 ? "true" : "false" }, problems);
+                Check(back.On(def) == value && problems.Count == 0, $"寫出 {value} 再讀回來一樣");
+            }
+            var sv = new SettingValues();
+            sv.Set(def, 0);
+            Check(!sv.PageIsDefault(SettingPage.Items) && sv.PageIsDefault(SettingPage.Special), "關掉它：物品頁不是預設、特殊頁是");
+            Eq(sv.ResetPage(SettingPage.Items), 1, "物品頁恢復了 1 個");
+            Check(sv.On(def), "物品頁回到預設（開）");
+            var old = new Dictionary<string, string>();
+            foreach (var d in SettingDefs.All) old[d.Key] = "";
+            var notes = new List<string>();
+            problems.Clear();
+            Check(SettingValues.FromOldConfig(old, problems, notes).On(def) && problems.Count == 0 && notes.Count == 0, "從舊 ModConfig 搬（探測到 \"\"）：預設開、不記 log");
+            old.Remove(def.Key);
+            Check(SettingValues.FromOldConfig(old, problems, notes).On(def) && problems.Count == 0 && notes.Count == 0, "從舊 ModConfig 搬（沒有這個 key）：預設開、不記 log");
+            Check(!SettingDefs.AffectsSnapshot(def), "不影響全店快照（模組不是機器）");
+
+            // ── 說明：9 種語言，{0}＝那個語言資訊框的「性能 +16%」 ──
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ru", "de", "ja", "fr", "es", "pl" })
+            {
+                var s = LangStrings.For(lang);
+                Loc.Use(lang);
+                string example = s.ModulePerformance + " +16%";
+                string tip = Tips.ModuleBonus(s);
+                Check(tip.Contains(example) && !tip.Contains('{') && !tip.Contains('}') && !tip.Contains('\n'), $"{lang} 顯示模組加成的說明：一段、含資訊框的「{example}」、沒有殘留的佔位符");
+                Eq(def.Tip(s), tip, $"{lang} 設定的說明就是 Tips.ModuleBonus");
+                string label = def.Label();
+                Check(!string.IsNullOrWhiteSpace(label) && label != "cfg_module_bonus", $"{lang} 顯示模組加成的名稱：{label}");
+            }
+            Eq(Tips.ModuleBonus(LangStrings.For(Lang.En)),
+                "Show a module's highest bonus among Performance, Efficiency and Quality, for example Perf +16%. Modules made for one kind of machine aren't shown.", "en 說明填好的樣子");
+            Eq(Tips.ModuleBonus(LangStrings.For(Lang.ZhHans)), "显示模组在性能、效率、质量三项里最高的加成，例如性能 +16%。机器专用的模组不显示。", "zh 說明填好的樣子");
+            Eq(Tips.ModuleBonus(LangStrings.For(Lang.ZhHant)), "顯示模組在性能、效率、品質三項裡最高的加成，例如性能 +16%。機器專用的模組不顯示。", "zh-Hant 說明填好的樣子");
+            string locDir = Loc.LocalizationDir;
+            foreach (var (lang, label, p, e, q) in new[]
+            {
+                ("en", "Show module bonuses", "Perf", "Eff", "Qual"), ("zh", "显示模组加成", "性能", "效率", "质量"), ("zh-Hant", "顯示模組加成", "性能", "效率", "品質"),
+            })
+            {
+                var csv = ReadCsv(Path.Combine(locDir, lang + ".csv"));
+                Eq(csv.TryGetValue("cfg_module_bonus", out var lv) ? lv : null, label, $"{lang} 名稱的定稿");
+                Eq((csv.GetValueOrDefault("info_prefix_performance"), csv.GetValueOrDefault("info_prefix_efficiency"), csv.GetValueOrDefault("info_prefix_quality")), (p, e, q),
+                    $"{lang} 三個前綴的定稿");
+                Check(!csv.Keys.Any(k => k.StartsWith("info_prefix_performance_", StringComparison.Ordinal)), $"{lang}.csv 模組的前綴沒有 _short／_long（固定一份）");
+            }
+            Loc.Use(Lang.En);
+            LangStrings.For(Lang.En);
+
+            // ── 碰 Unity 那一半（原始碼）──
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            string Src(string name) => File.ReadAllText(Path.Combine(root, "mod", "src", name));
+            string Body(string code, string signature)
+            {
+                int at = code.IndexOf(signature, StringComparison.Ordinal);
+                if (at < 0) return "";
+                int open = code.IndexOf('{', at);
+                int depth = 0;
+                for (int i = open; i >= 0 && i < code.Length; i++)
+                {
+                    if (code[i] == '{') depth++;
+                    else if (code[i] == '}' && --depth == 0) return code.Substring(open, i - open + 1);
+                }
+                return "";
+            }
+            string reader = Src("ItemReader.cs");
+            Check(reader.Contains("static bool IsBonusModule(GameItem item) => ModuleRules.IsBonusModule(item.identifier) && item.IsTag(ModuleTag);")
+                && reader.Contains("const string ModuleTag = \"MODULE_TAG\";"), "ItemReader：白名單＋遊戲提示框的條件 MODULE_TAG");
+            Check(reader.Contains("const string ModulePerformanceTag = \"TEMP_PERCENTAGE_PERFORMANCE_INT\";")
+                && reader.Contains("const string ModuleEfficiencyTag = \"TEMP_PERCENTAGE_EFFICIENCY_INT\";")
+                && reader.Contains("const string ModuleQualityTag = \"TEMP_PERCENTAGE_QUALITY_INT\";") && !reader.Contains("BONUS_PERCENTAGE_"),
+                "ItemReader：讀目前值 TEMP_PERCENTAGE_*_INT，不讀基礎值");
+            string body = Body(reader, "static List<Line> ReadBody(GameItem item, ReadContext ctx, out ItemStatus status)");
+            Check(body.Contains("else if (IsBonusModule(item))")
+                && body.Contains("body = ModuleRules.Lines(ctx.S, ctx.D, TagInt(item, ModulePerformanceTag), TagInt(item, ModuleEfficiencyTag), TagInt(item, ModuleQualityTag));")
+                && body.IndexOf("ReactorHelper.IsReactor(item)", StringComparison.Ordinal) < body.IndexOf("IsBonusModule(item)", StringComparison.Ordinal),
+                "ReadBody：模組是和機器、液體容器、電池、充能器、反應爐同一層的另一種（else if），三項用 TagInt 讀");
+            Check(Src("Settings.cs").Contains("ModuleBonus = On(SettingDefs.ShowModuleBonus),"), "Settings.ReadDisplay：顯示模組加成");
+            string renderer = Src("LabelRenderer.cs");
+            string put = Body(renderer, "internal static bool Put(");
+            int tryAt = put.IndexOf("            try\n", StringComparison.Ordinal);
+            Check(put.Contains("label.Module = HasModuleLine(_info);") && put.Contains("label.HasBlock = false;")
+                && put.IndexOf("if (label.Module) UpdateBlock(label);", StringComparison.Ordinal) > tryAt && tryAt > 0,
+                "Put：每一輪照行重設、選那一塊（在 try 裡：讀形狀出錯時照舊藏起這個標籤）");
+            Check(put.Contains("float infoWidth = label.HasBlock ? ModuleRules.BlockWidth(width, label.Block) : width;")
+                && put.Contains("FillName(layer, label.Name, name.Value, style, width, iconWidth, _info.Count > 0);"),
+                "Put：資訊框照那一塊的寬選排法，名稱框照舊照物品的寬");
+            string update = Body(renderer, "static void UpdateBlock(Label label)");
+            Check(update.Contains("var shape = label.Item.modifiedShape;") && update.Contains("_cells[y * w + x] = shape.Get(x0 + x, y0 + y) != 0;")
+                && update.Contains("int x0 = shape.minX, y0 = shape.minY;") && update.Contains("int w = shape.globalWidth, h = shape.globalHeight;")
+                && update.Contains("label.BlockOrientation = shape.orientation;") && update.Contains("label.BlockFlipped = shape.flipped;")
+                && update.Contains("label.HasBlock = ModuleRules.LongestRow(_cells, w, h, out label.Block);"),
+                "UpdateBlock：照 UpdatePinOverlay 在 minX..maxX、minY..maxY 逐格叫 Get，記下方向與翻轉");
+            Check(Regex.Matches(update, @"\bnew\b").Count == 1 && update.Contains("if (_cells.Length < w * h) _cells = new bool[w * h];") && !update.Contains("=>"),
+                "UpdateBlock：只有形狀比緩衝大時才配置，沒有 lambda");
+            string corner = Body(renderer, "static void InfoCorner(");
+            Check(corner.Contains("if (shape != null && (shape.orientation != label.BlockOrientation || shape.flipped != label.BlockFlipped)) UpdateBlock(label);")
+                && corner.Contains("if (label.HasBlock) ModuleRules.BlockCorner(minX, minY, maxX, maxY, label.Block, out x, out y, out _);")
+                && !corner.Contains("=>") && !Regex.IsMatch(corner, @"\bnew\b"),
+                "InfoCorner：每幀比方向與翻轉、變了才重選，其他只算座標（不配置）");
+            string place = Body(renderer, "static void Place(");
+            Check(place.Contains("InfoCorner(label, minX, minY, maxX, maxY, out ix, out iy);") && place.Contains("SetPosition(label.Info, new Vector3(ix, iy, 0f), skipSame);"),
+                "Place：資訊框貼 InfoCorner 算的左下角");
+            Check(!place.Contains("UpdateBlock(") && !Body(renderer, "internal static void UpdatePositions()").Contains("UpdateBlock("), "每幀那條路只經過 InfoCorner 重選");
+        }
+
+        /// <summary>
+        /// 液體容器的「沒濾材」可以關（1.5.0）：設定（液體頁、顯示純度後面、預設開、開關）、水罐的濾材那行
+        /// （沒裝只看「顯示「沒濾材」」、有裝只看「顯示耐久度」）、循環水養殖系統照舊只看「顯示耐久度」、Display 的預設與全關、
+        /// 升級的搬法（沒寫這個 key 時照「顯示耐久度」）、9 種語言的名稱與說明（{0}＝資訊框的「沒濾材」），和 ItemReader 讀濾材的條件。預期值手寫。
+        /// </summary>
+        static void NoFilter210()
+        {
+            // ── 設定 ──
+            var def = SettingDefs.ShowNoFilter;
+            var all = SettingDefs.All;
+            Check(def.IsToggle && def.Default == 1 && def.Page == SettingPage.Water && def.Key == "ShowNoFilter", "顯示「沒濾材」：開關、預設開、液體頁、key 定了不改");
+            Eq(def.Index, SettingDefs.ShowWaterPurity.Index + 1, "排在顯示純度後面");
+            Eq(SettingDefs.ShowMachineWater.Index, def.Index + 1, "排在顯示機器裡的液體前面");
+            Eq(all.Count, 40, "設定共 40 個");
+            Check(!SettingDefs.AffectsSnapshot(def), "不影響全店快照（只少資訊框的一行，快照存的機器狀態不用重算）");
+            Check(new Display().NoFilter, "Display 的 NoFilter 預設開（更新後畫面不變）");
+            Check(!Display.AllOff().NoFilter, "全關的 Display 也關「沒濾材」");
+
+            // ── 水罐（液體容器）的濾材那行 ──
+            var w = Water(2000000, 9852);
+            var none = new FilterInfo();
+            foreach (bool noFilter in new[] { true, false })
+                foreach (bool durability in new[] { true, false })
+                {
+                    var d = new Display { NoFilter = noFilter, Durability = durability };
+                    string want = noFilter ? "2000ml / 98.5% / 沒濾材" : "2000ml / 98.5%";
+                    Eq(Join(Rules.WaterLines(HantL, w, d, none)), want,
+                        $"水罐沒裝濾材、顯示「沒濾材」{(noFilter ? "開" : "關")}、顯示耐久度{(durability ? "開" : "關")}：只看顯示「沒濾材」");
+                }
+            var noFilterLine = Rules.WaterLines(EnL, w, new Display { Durability = false }, none);
+            Check(noFilterLine.Count == 3 && noFilterLine[2].Text == "No filter" && noFilterLine[2].Color == LineColor.Orange,
+                "顯示耐久度關、顯示「沒濾材」開：照樣是橘字的 No filter");
+            foreach (var (filters, text, color, what) in new[]
+            {
+                (FiltersOf((400, 400)), "濾材 400", LineColor.White, "白"),
+                (FiltersOf((100, 400)), "濾材 100", LineColor.Orange, "橘"),
+                (FiltersOf((0, 400)), "濾材 0", LineColor.Red, "紅"),
+            })
+                foreach (bool noFilter in new[] { true, false })
+                    foreach (bool durability in new[] { true, false })
+                    {
+                        var lines = Rules.WaterLines(HantL, w, new Display { NoFilter = noFilter, Durability = durability }, filters);
+                        string tag = $"水罐裝了濾材（{what}）、顯示「沒濾材」{(noFilter ? "開" : "關")}、顯示耐久度{(durability ? "開" : "關")}：只看顯示耐久度";
+                        Eq(Join(lines), durability ? "2000ml / 98.5% / " + text : "2000ml / 98.5%", tag);
+                        if (durability && lines.Count == 3) Eq(lines[2].Color, color, tag + "（顏色）");
+                    }
+            foreach (bool noFilter in new[] { true, false })
+                Eq(Join(Rules.WaterLines(HantL, w, new Display { NoFilter = noFilter }, HiddenFiltersOf(1))), "2000ml / 98.5%",
+                    $"水罐裝的濾材看不到耐久、顯示「沒濾材」{(noFilter ? "開" : "關")}：照舊沒有那行（不寫沒濾材）");
+            Eq(Join(Rules.WaterLines(HantL, w, All, null)), "2000ml / 98.5%", "不是裝濾材的東西（null）：沒有那行");
+            Eq(Join(Rules.WaterLines(HantL, w, new Display { Durability = false, NoFilter = false }, null)), "2000ml / 98.5%", "null、兩個都關：沒有那行");
+
+            // ── 循環水養殖系統：沒裝、有裝都只看「顯示耐久度」（它的沒濾材是 ⚠ 的原因）──
+            MachineInfo Ras(FilterInfo f) => new MachineInfo { Water = Water(12000000, 9650, cap: 12000000), Filters = f, Reason = Reason.NoInput, Power = PowerKind.Battery, Energy = 3 };
+            var cases = new (FilterInfo f, string on, string off, string what)[]
+            {
+                (new FilterInfo(), "No input / No filter / 12000ml / 96.5% / 3kJ", "No input / 12000ml / 96.5% / 3kJ", "沒裝（⚠，移到原因後面）"),
+                (FiltersOf((0, 400), (0, 400), (0, 400), (0, 400)), "No input / Filter 0 / 12000ml / 96.5% / 3kJ", "No input / 12000ml / 96.5% / 3kJ", "加總 0（⚠，移到原因後面）"),
+                (FiltersOf((10, 400), (400, 400), (400, 400), (400, 400)), "No input / 12000ml / 96.5% / Filter 1210 / 3kJ", "No input / 12000ml / 96.5% / 3kJ", "有裝（接在水後面）"),
+                (HiddenFiltersOf(4), "No input / 12000ml / 96.5% / 3kJ", "No input / 12000ml / 96.5% / 3kJ", "四格都看不到耐久"),
+                (null, "No input / 12000ml / 96.5% / 3kJ", "No input / 12000ml / 96.5% / 3kJ", "讀不到濾水器格（null）"),
+            };
+            foreach (var (f, on, off, what) in cases)
+            {
+                var m = Ras(f);
+                Eq(Join(Rules.MachineLines(EnL, m, All)), on, $"循環水養殖系統{what}：全開");
+                Eq(Join(Rules.MachineLines(EnL, m, new Display { NoFilter = false })), on, $"循環水養殖系統{what}：顯示「沒濾材」關不影響");
+                Eq(Join(Rules.MachineLines(EnL, m, new Display { Durability = false })), off, $"循環水養殖系統{what}：顯示耐久度關照舊拿掉");
+                Eq(Join(Rules.MachineLines(EnL, m, new Display { Durability = false, NoFilter = true })), off, $"循環水養殖系統{what}：顯示耐久度關、顯示「沒濾材」開也沒有");
+            }
+
+            // ── 升級的搬法：沒寫 ShowNoFilter 時照 ShowDurability ──
+            var problems = new List<string>();
+            SettingValues P(Dictionary<string, string> raw) { problems.Clear(); return SettingValues.Parse(raw, problems); }
+            Check(P(new Dictionary<string, string> { ["ShowDurability"] = "true" }).On(def) && problems.Count == 0, "1.4.0 的檔、顯示耐久度開：顯示「沒濾材」開");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "false" }).On(def) && problems.Count == 0, "1.4.0 的檔、顯示耐久度關：顯示「沒濾材」關（那時看不到，升級後不冒出來）");
+            Check(P(new Dictionary<string, string> { ["KeyMode"] = "Hold" }).On(def) && problems.Count == 0, "顯示耐久度也沒寫：預設開");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "false", ["ShowNoFilter"] = "" }).On(def) && problems.Count == 0, "ShowNoFilter 空字串當沒寫：照顯示耐久度（關）");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "false", ["ShowNoFilter"] = "  " }).On(def) && problems.Count == 0, "ShowNoFilter 空白當沒寫：照顯示耐久度（關）");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "false", ["ShowNoFilter"] = null }).On(def) && problems.Count == 0, "ShowNoFilter 是 null 當沒寫：照顯示耐久度（關）");
+            Check(P(new Dictionary<string, string> { ["ShowDurability"] = "false", ["ShowNoFilter"] = "true" }).On(def) && problems.Count == 0, "有寫 true：照自己（開），不看顯示耐久度（關）");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "true", ["ShowNoFilter"] = "False" }).On(def) && problems.Count == 0, "有寫 False：照自己（關），不看顯示耐久度（開）");
+            var badV = P(new Dictionary<string, string> { ["ShowDurability"] = "false", ["ShowNoFilter"] = "maybe" });
+            Check(badV.On(def), "有寫但讀不懂：退回預設開，不看顯示耐久度（關）");
+            Eq(string.Join("、", problems), "ShowNoFilter＝maybe", "讀不懂：記一行");
+            var badDur = P(new Dictionary<string, string> { ["ShowDurability"] = "nope" });
+            Check(badDur.On(SettingDefs.ShowDurability) && badDur.On(def), "顯示耐久度讀不懂（退回預設開）、沒寫 ShowNoFilter：跟著開");
+            Check(!P(new Dictionary<string, string> { ["ShowDurability"] = "false" }).On(SettingDefs.ShowDurability), "搬法不改顯示耐久度自己的值");
+            Check(SettingValues.Parse(null, null).On(def), "沒有 \"settings\"：預設開");
+            // 1.3.0 以前的 ModConfig（FromOldConfig 經過 Parse）：探測到 ""（沒有這個 key）或不在清單裡，都照顯示耐久度
+            var notes = new List<string>();
+            foreach (bool durability in new[] { true, false })
+            {
+                var old = SettingDefs.All.ToDictionary(x => x.Key, x => x.NameOf(x.Default));
+                old["ShowDurability"] = durability ? "true" : "false";
+                old["ShowNoFilter"] = "";
+                problems.Clear();
+                notes.Clear();
+                var migrated = SettingValues.FromOldConfig(old, problems, notes);
+                Check(migrated.On(def) == durability && problems.Count == 0 && notes.Count == 0, $"舊 ModConfig、顯示耐久度{(durability ? "開" : "關")}（探測到 \"\"）：顯示「沒濾材」跟著{(durability ? "開" : "關")}、不記 log");
+                old.Remove("ShowNoFilter");
+                migrated = SettingValues.FromOldConfig(old, problems, notes);
+                Check(migrated.On(def) == durability && problems.Count == 0 && notes.Count == 0, $"舊 ModConfig、顯示耐久度{(durability ? "開" : "關")}（沒有這個 key）：顯示「沒濾材」跟著{(durability ? "開" : "關")}");
+            }
+            Check(SettingValues.FromOldConfig(SettingDefs.All.ToDictionary(x => x.Key, x => ""), problems, notes).On(def), "沒有舊設定（全部 \"\"）：預設開");
+            // 寫出去讀回來：兩個各自獨立（耐久度關、沒濾材開 這種搬法本身做不出來的組合也留得住）
+            foreach (var (dur, nf) in new[] { (false, true), (true, false), (false, false), (true, true) })
+            {
+                var v = new SettingValues();
+                v.Set(SettingDefs.ShowDurability, dur ? 1 : 0);
+                v.Set(def, nf ? 1 : 0);
+                var written = v.Entries().ToDictionary(e => e.key, e => e.kind == SettingKind.Toggle ? (e.value != 0 ? "true" : "false") : e.name);
+                Check(written.TryGetValue("ShowNoFilter", out var wv) && wv == (nf ? "true" : "false"), $"寫出 ShowNoFilter（耐久度 {dur}、沒濾材 {nf}）");
+                var back = P(written);
+                Check(back.On(def) == nf && back.On(SettingDefs.ShowDurability) == dur && problems.Count == 0, $"讀回來一樣（耐久度 {dur}、沒濾材 {nf}）");
+            }
+            // 恢復液體頁的預設：回到開（不看顯示耐久度）
+            var sv = new SettingValues();
+            sv.Set(SettingDefs.ShowDurability, 0);
+            sv.Set(def, 0);
+            Check(!sv.PageIsDefault(SettingPage.Water), "顯示「沒濾材」關：液體頁不是預設");
+            Eq(sv.ResetPage(SettingPage.Water), 1, "液體頁恢復了 1 個");
+            Check(sv.On(def) && !sv.On(SettingDefs.ShowDurability), "液體頁回到預設：顯示「沒濾材」開，物品頁的顯示耐久度照舊關");
+
+            // ── 文字：9 種語言，名稱與說明裡的字＝那個語言資訊框的「沒濾材」 ──
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ru", "de", "ja", "fr", "es", "pl" })
+            {
+                var s = LangStrings.For(lang);
+                Loc.Use(lang);
+                string label = def.Label(), tip = Tips.NoFilter(s);
+                Check(!string.IsNullOrWhiteSpace(s.NoFilter) && label != "cfg_no_filter" && label.Contains(s.NoFilter), $"{lang} 名稱「{label}」含資訊框的「{s.NoFilter}」");
+                Check(tip.Contains(s.NoFilter) && !tip.Contains('{') && !tip.Contains('}') && tip != "cfg_no_filter_tip", $"{lang} 說明含資訊框的「{s.NoFilter}」、沒有殘留的佔位符");
+                Eq(def.Tip(s), tip, $"{lang} 設定的說明就是 Tips.NoFilter");
+                Check(!tip.Contains('\n'), $"{lang} 說明一行");
+                foreach (var word in new[] { "default", "Default", "默认", "預設", "预设" })
+                    Check(!tip.Contains(word) && !label.Contains(word), $"{lang} 名稱與說明不寫「{word}」");
+            }
+            Eq(Tips.NoFilter(LangStrings.For(Lang.En)), "Liquid containers that take a filter, such as the Water Pitcher, show \"No filter\" when they have none. The Recirculating Aquaculture System isn't included.", "en 說明填好的樣子");
+            Eq(Tips.NoFilter(LangStrings.For(Lang.ZhHans)), "能装滤材的液体容器（例如水罐）没装滤材时，显示“没滤材”。不含循环水养殖系统。", "zh 說明填好的樣子");
+            Eq(Tips.NoFilter(LangStrings.For(Lang.ZhHant)), "裝得了濾材的液體容器（例如水罐）沒裝濾材時，顯示「沒濾材」。不含循環水養殖系統。", "zh-Hant 說明填好的樣子");
+            string locDir = Loc.LocalizationDir;
+            foreach (var (lang, label) in new[] { ("en", "Show \"No filter\" on liquid containers"), ("zh", "显示液体容器的“没滤材”"), ("zh-Hant", "顯示液體容器的「沒濾材」") })
+            {
+                var csv = ReadCsv(Path.Combine(locDir, lang + ".csv"));
+                Eq(csv.TryGetValue("cfg_no_filter", out var l) ? l : null, label, $"{lang} 名稱的定稿（名稱裡的 \" 是字面的）");
+            }
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ru", "de", "ja", "fr", "es", "pl" })
+            {
+                // csv 裡的順序和設定一樣：顯示純度的說明後面、顯示機器裡的液體前面
+                var keys = File.ReadAllLines(Path.Combine(locDir, lang + ".csv")).Where(x => x.Length > 0 && !x.StartsWith("#") && x.Contains(','))
+                    .Select(x => x.Substring(0, x.IndexOf(','))).ToList();
+                int at = keys.IndexOf("cfg_no_filter");
+                Check(at > 0 && keys[at - 1] == "cfg_water_purity_tip" && at + 2 < keys.Count && keys[at + 1] == "cfg_no_filter_tip" && keys[at + 2] == "cfg_machine_water",
+                    $"{lang}.csv 的 cfg_no_filter、cfg_no_filter_tip 在 cfg_water_purity_tip 後面、cfg_machine_water 前面");
+            }
+            Loc.Use(Lang.En);
+            LangStrings.For(Lang.En);
+
+            // ── 原始碼：水罐讀濾材的條件含 NoFilter（顯示耐久度關時也要讀到才知道沒裝）、Settings 讀成 Display ──
+            string root = Path.GetFullPath(Path.Combine(SourceDir(), "..", ".."));
+            string Src(string name) => File.ReadAllText(Path.Combine(root, "mod", "src", name));
+            Check(Src("ItemReader.cs").Contains("var filters = ctx.D.Durability || ctx.D.NoFilter || ctx.Icons ? PitcherFilters(item) : null;"),
+                "ItemReader：水罐在顯示耐久度、顯示「沒濾材」、狀態圖示任一個要用時讀濾材");
+            Check(Src("Settings.cs").Contains("NoFilter = On(SettingDefs.ShowNoFilter),"), "Settings.ReadDisplay 讀顯示「沒濾材」");
+            {
+                // 決定 216：液體容器的濾材加總（別的 mod 加了好幾個濾材槽時，第一個用完不誤報），不只看遊戲 GetFilterItem 的第一個
+                string reader = Src("ItemReader.cs");
+                int at = reader.IndexOf("static FilterInfo PitcherFilters(GameItem item)", StringComparison.Ordinal);
+                string body = at < 0 ? "" : reader.Substring(at, Math.Min(400, reader.Length - at));
+                Check(body.Contains("foreach (var child in item.FindAllChildItems())") && body.Contains("AddFilter(f, child);") && !body.Contains("GetFilterItem("),
+                    "ItemReader.PitcherFilters：每個子物品照 AddFilter 加總，不用 GetFilterItem 只看第一個");
+                // 設定鈕的字型照建的時候的語言挑：換了語言要重建，只重填字的話英文字型畫不出中文（2026-11-24 實機看到）
+                Check(Src("SettingsUI.cs").Contains("if (_button != null && !string.Equals(locale, _buttonBuiltLocale, StringComparison.Ordinal)) DestroyButton();"),
+                    "SettingsUI：設定鈕換了語言就拆掉重建（和提示一樣）");
+            }
+            string rules = Src("Rules.cs");
+            Check(rules.Contains("AddFilter(lines, s, filters, d, FilterOwner.Container);") && Regex.Matches(rules, @"AddFilter\(lines, s, m\.Filters, d, FilterOwner\.Machine\);").Count == 2,
+                "Rules：水罐走液體容器的規則、循環水養殖系統的兩條（⚠ 往上移與平常）都走機器的規則");
+        }
+
+        /// <summary>「###/..#」這種字（# 佔格、. 空的，/ 分列，第 0 列是最上面）→ 格子。</summary>
+        static bool[] ParseGrid(string s, out int w, out int h)
+        {
+            var rows = s.Split('/');
+            h = rows.Length;
+            w = rows[0].Length;
+            var cells = new bool[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    cells[y * w + x] = rows[y][x] == '#';
+            return cells;
+        }
+
+        /// <summary>期望值的 A（選到的那一塊）換回 #。</summary>
+        static string Unmark(string grid) => grid.Replace('A', '#');
+
+        /// <summary>格子畫回字：選到的那一塊（ok 時）是 A，那一塊裡沒佔的格是 ?（不應該出現），其他照 # 與 .。</summary>
+        static string Draw(bool[] cells, int w, int h, ModuleBlock b, bool ok)
+        {
+            var sb = new StringBuilder();
+            for (int y = 0; y < h; y++)
+            {
+                if (y > 0) sb.Append('/');
+                for (int x = 0; x < w; x++)
+                {
+                    bool inBlock = ok && x >= b.X0 && x <= b.X1 && y >= b.Y0 && y <= b.Y1;
+                    bool on = cells[y * w + x];
+                    sb.Append(inBlock ? (on ? 'A' : '?') : on ? '#' : '.');
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 本地形狀（沒轉過）照遊戲 GridShape.Get（InverseTransform，minX = minY = 0）轉成全域格子：orientation 奇數時寬高對調（GridShapeBuilder.globalWidth）。
+        /// 照抄遊戲的轉法，LabelRenderer.UpdateBlock 叫的 Get 就是這樣把全域格換回本地格。
+        /// </summary>
+        static bool[] GlobalGrid(string localShape, int orientation, bool flipped, out int gw, out int gh)
+        {
+            var local = ParseGrid(localShape, out int w, out int h);
+            gw = orientation % 2 != 0 ? h : w;
+            gh = orientation % 2 != 0 ? w : h;
+            var cells = new bool[gw * gh];
+            for (int y = 0; y < gh; y++)
+                for (int x = 0; x < gw; x++)
+                {
+                    int lx = x, ly = y;
+                    switch (orientation % 4)
+                    {
+                        case 1: (lx, ly) = (-y + gh - 1, x); break;
+                        case 2: (lx, ly) = (-x + gw - 1, -y + gh - 1); break;
+                        case 3: (lx, ly) = (y, -x + gw - 1); break;
+                    }
+                    if (flipped) lx = w - 1 - lx;
+                    cells[y * gw + x] = lx >= 0 && lx < w && ly >= 0 && ly < h && local[ly * w + lx];
+                }
+            return cells;
         }
 
         /// <summary>三語字串：每個欄位都有字、估計七段都有字、每個原因都有字、純度六級都有字（長短兩份都測）。</summary>
@@ -5842,7 +6753,10 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 string key = line.Substring(0, comma).Trim();
                 string value = line.Substring(comma + 1).Trim();
                 if (value.Length >= 2 && value.StartsWith("\"") && value.EndsWith("\"")) value = value.Substring(1, value.Length - 2).Replace("\"\"", "\"");
-                else Check(!value.StartsWith("\"") && !value.EndsWith("\""), $"{Path.GetFileName(path)} {key} 的雙引號成對");
+                // 沒包引號的值可以用字面的 " 結尾（en 的 Show "No filter"，遊戲只在頭尾都是 " 時才拿掉）：
+                // 這種值裡的 " 是一對一對的；只有一邊的（開頭有 "、結尾沒有，或結尾的 " 落單）才是漏了引號。
+                // 沒包引號又寫了 ""（照 CSV 跳脫、卻忘了外層引號）也擋：遊戲不會把它換回 "，畫面上會出現兩個引號
+                else Check(!value.StartsWith("\"") && !value.Contains("\"\"") && (!value.EndsWith("\"") || value.Count(c => c == '"') % 2 == 0), $"{Path.GetFileName(path)} {key} 的雙引號成對");
                 Check(!dict.ContainsKey(key), $"{Path.GetFileName(path)} {key} 只出現一次");
                 dict[key] = value.Replace("\\n", "\n");
             }
@@ -5884,7 +6798,7 @@ namespace ProbablyStolenItemQuickInfo.Verify
                 Check(!src.Contains("ModHelper.GetLocalized"), $"{file} 取字都經過 Loc（最長字串模式也涵蓋設定）");
             // 設定與遊戲選項那幾列的名稱都有說明（選項、分頁、視窗的字 opt_、ui_ 沒有）
             var labels = used.Where(k => (k.StartsWith("cfg_", StringComparison.Ordinal) || k.StartsWith("key_", StringComparison.Ordinal)) && !k.EndsWith("_tip")).ToList();
-            Eq(labels.Count, 40, "設定的名稱數（37 個設定＋遊戲選項的三列：兩個鍵、設定鈕的位置）");
+            Eq(labels.Count, 43, "設定的名稱數（40 個設定＋遊戲選項的三列：兩個鍵、設定鈕的位置）");
             foreach (var k in labels)
             {
                 Check(used.Contains(k + "_tip"), $"Settings 的 {k} 有說明");

@@ -31,15 +31,18 @@ cfg_water_volume_tip,"Muestra cuánto líquido tiene un recipiente, por ejemplo,
 cfg_water_purity,Mostrar pureza
 # {0}, {1}, {2} = the purity line as drawn on the info box for Whole number, 1 decimal and 2 decimals ("98%", "98.5%", "98.52%": how much of the liquid is its main component); the choices are opt_dont_show, opt_whole_number, opt_one_decimal, opt_two_decimals
 cfg_water_purity_tip,"Muestra cuánto del líquido es su componente principal. En el agua, es la pureza del agua. No se muestra en recipientes vacíos.\nNo mostrar = sin la línea de pureza\nNúmero entero = {0} (no se distingue el aguapura)\n1 decimal = {1}\n2 decimales = {2}"
+cfg_no_filter,Mostrar «Sin filtro» en recipientes para líquidos
+# {0} = the info box's no-filter line (info_reason_no_filter)
+cfg_no_filter_tip,"Los recipientes para líquidos que admiten filtro, como la jarra de agua, muestran «{0}» si no tienen ninguno. No incluye el sistema de acuicultura recirculante."
 cfg_machine_water,Mostrar líquido en máquinas
 cfg_machine_water_tip,Muestra el líquido dentro de una máquina. Las dos líneas también dependen de «Mostrar volumen de líquido» y «Mostrar pureza».
 cfg_battery_charge,Mostrar carga de baterías
-cfg_battery_charge_tip,"Muestra cuánta energía le queda a una batería, por ejemplo, 8kJ. Un Cargador también muestra la carga de cada batería que tiene dentro."
+cfg_battery_charge_tip,"Muestra cuánta energía le queda a una batería, por ejemplo, 8kJ. Un cargador también muestra la carga de cada batería que tiene dentro."
 cfg_battery_tonight_charge,Mostrar carga de esta noche
 cfg_battery_tonight_charge_tip,"Muestra en verde cuánto se cargará una batería esta noche, por ejemplo, +4kJ. No aparece si está llena o no se va a cargar."
 cfg_machine_power,Mostrar energía de máquinas
 # {0} = a machine's battery line as drawn on the info box ("41kJ"; the power line has no prefix), {1} = with a Current Converter, tonight's bill ("-6" and the credit icon), {2} = the price of one use ("-6/8/14" and the credit icon)
-cfg_machine_power_tip,"Muestra la energía que le queda a la batería de una máquina, por ejemplo, {0}. La línea se pone roja si no basta para esta noche. Con un Convertidor de corriente, muestra en su lugar el coste de la electricidad: la factura de esta noche para las máquinas que funcionan de noche, por ejemplo, {1}, o el precio de un uso para las máquinas que se usan de día, por ejemplo, {2}."
+cfg_machine_power_tip,"Muestra la energía que le queda a la batería de una máquina, por ejemplo, {0}. La línea se pone roja si no basta para esta noche. Con un convertidor de corriente, muestra en su lugar el coste de la electricidad: la factura de esta noche para las máquinas que funcionan de noche, por ejemplo, {1}, o el precio de un uso para las máquinas que se usan de día, por ejemplo, {2}."
 cfg_machine_tonight_net,Mostrar energía neta de esta noche
 cfg_machine_tonight_net_tip,"Muestra cuánto cambiará esta noche la batería de una máquina (lo que se carga menos lo que se gasta), debajo de la línea de energía.\nSube: en verde, por ejemplo, +4kJ\nBaja: en naranja, por ejemplo, -8kJ (10d), donde el número entre paréntesis indica cuántos días aguanta la batería a este ritmo\nNo aparece si no va a cambiar o si la línea de energía está en rojo."
 cfg_machine_reason,Mostrar por qué no funcionará esta noche
@@ -47,7 +50,7 @@ cfg_machine_reason,Mostrar por qué no funcionará esta noche
 cfg_machine_reason_tip,"Muestra en naranja un motivo breve cuando una máquina no va a funcionar esta noche, por ejemplo, «{0}», «{1}» o «{2}»."
 cfg_machine_progress,Mostrar progreso de máquinas
 # {0} = 3 days left in the short form ("3d"), {1} = in the long form ("3 días")
-cfg_machine_progress_tip,"Muestra cuántos días le faltan a una máquina, según su Velocidad del progreso actual. No se prevén cambios posteriores por efectos de módulos como Sobrecarga o Deterioro. No aparece si no va a funcionar esta noche.\nCortas: {0}\nLargas: {1}"
+cfg_machine_progress_tip,"Muestra cuántos días le faltan a una máquina, según su velocidad del progreso actual. No se prevén cambios posteriores por efectos de módulos como «Sobrecarga» o «Deterioro». No aparece si no va a funcionar esta noche.\nCortas: {0}\nLargas: {1}"
 cfg_machine_output,Mostrar cantidad en la salida
 # {0} = the output line with the short prefix ("Sal 7"), {1} = with the long prefix ("Salida 7")
 cfg_machine_output_tip,Muestra cuántos objetos hay en la salida de una máquina («Resultado»; las tolvas de entrada y de salida no cuentan).\nCortas: {0}\nLargas: {1}
@@ -68,14 +71,14 @@ cfg_warning_icon,Mostrar icono de aviso
 cfg_warning_icon_tip,"Muestra la señal de aviso cuando una máquina tiene trabajo pero está atascada (por ejemplo, «{0}») o el filtro de una jarra de agua se ha gastado."
 cfg_idle_icon,Mostrar icono de inactividad
 # {0}, {1} = two of the reasons below (info_reason_no_input, info_reason_no_seed); the choices are opt_icons_off, opt_except_empty, opt_all
-cfg_idle_icon_tip,"Muestra Zz cuando una máquina no va a funcionar esta noche hasta que le añadas algo, por ejemplo, «{0}» o «{1}».\nDesactivados = no mostrar Zz\nExcepto vacías = no cuando las entradas de la máquina están vacías (por ejemplo, sin recipiente o una Nevera vacía)\nTodos = también cuando las entradas están vacías"
+cfg_idle_icon_tip,"Muestra Zz cuando una máquina no va a funcionar esta noche hasta que le añadas algo, por ejemplo, «{0}» o «{1}».\nDesactivados = no mostrar Zz\nExcepto vacías = no cuando las entradas de la máquina están vacías (por ejemplo, sin recipiente o una nevera vacía)\nTodos = también cuando las entradas están vacías"
 cfg_done_icon,Mostrar icono de terminado
 cfg_done_icon_tip,"Muestra una marca de verificación cuando una máquina tiene algo que recoger, como objetos en su salida (las tolvas de entrada y de salida no cuentan) o agua que ha recogido o terminado de purificar."
 # Hydroponic System minerals (new in 1.4.0). {0}, {1} = the two info box lines below (info_mineral_low, info_mineral_high)
 cfg_mineral_warning,Aviso de rango de minerales (hidroponía)
-cfg_mineral_warning_tip,"Cuando los minerales del agua de un Sistema de hidroponía están fuera del Nivel óptimo de nutrientes de la semilla, muestra la señal de aviso y el cuadro de información indica «{0}» o «{1}»."
+cfg_mineral_warning_tip,"Cuando los minerales del agua de un sistema de hidroponía están fuera del nivel óptimo de nutrientes de la semilla, muestra la señal de aviso y el cuadro de información indica «{0}» o «{1}»."
 cfg_container_icons,Iconos en contenedores
-cfg_container_icons_tip,"Muestra iconos de estado en un contenedor (como un Depósito de maquinaria) para las máquinas que tiene dentro. Cuando corresponden tanto la señal de aviso como Zz, solo se muestra la señal de aviso; la marca de verificación se añade si alguna máquina tiene algo que recoger.\nDesactivados = sin iconos en los contenedores\nSolo aviso = solo la señal de aviso\nAviso e inactividad = la señal de aviso o Zz\nTodos = también la marca de verificación"
+cfg_container_icons_tip,"Muestra iconos de estado en un contenedor (como un depósito de maquinaria) para las máquinas que tiene dentro. Cuando corresponden tanto la señal de aviso como Zz, solo se muestra la señal de aviso; la marca de verificación se añade si alguna máquina tiene algo que recoger.\nDesactivados = sin iconos en los contenedores\nSolo aviso = solo la señal de aviso\nAviso e inactividad = la señal de aviso o Zz\nTodos = también la marca de verificación"
 cfg_stolen_heat,Mostrar riesgo de objetos robados
 # {0} = the heat line with the short prefix ("R 45%"), {1} = with the long prefix ("Riesgo 45%")
 cfg_stolen_heat_tip,Muestra en rojo el riesgo de un objeto robado.\nCortas: {0}\nLargas: {1}
@@ -91,6 +94,12 @@ cfg_ingot_purity_tip,"Muestra el grado de pureza de un lingote de metal, por eje
 # Drug purity (new in 1.4.0). {0} = the info box line ("88%")
 cfg_drug_purity,Mostrar pureza de fármacos
 cfg_drug_purity_tip,"Muestra la pureza de los fármacos, por ejemplo, {0}."
+# Module bonuses (new in 1.5.0). {0} = the info box line of a Performance Module ("Rend +16%"; info_prefix_performance below)
+cfg_module_bonus,Mostrar bonificaciones de módulos
+cfg_module_bonus_tip,"Muestra la bonificación más alta de un módulo entre rendimiento, eficiencia y calidad, por ejemplo, {0}. Los módulos hechos para un solo tipo de máquina no se muestran."
+# Special tab (new in 1.5.0). {0} = one of the reasons below (info_reason_no_power)
+cfg_ignore_fridges_without_battery,Ignorar neveras sin batería
+cfg_ignore_fridges_without_battery_tip,Una nevera sin batería no muestra iconos de estado ni motivos como «{0}». Útil si usas las neveras como almacén.
 cfg_key_mode,Modo de la tecla
 cfg_key_mode_tip,Elige si hay que mantener pulsada la tecla «Mostrar información de objetos» o pulsarla para alternar.\nMantener = se muestra mientras la mantienes pulsada y se oculta al soltarla\nAlternar = pulsa una vez para mostrar y otra para ocultar; se desactiva al cargar una partida o volver al menú principal
 cfg_text_size,Tamaño del texto
@@ -144,6 +153,7 @@ ui_tab_batteries,Baterías
 ui_tab_machines,Máquinas
 ui_tab_icons,Iconos de estado
 ui_tab_items,Objetos
+ui_tab_special,Especial
 ui_reset,Restablecer pestaña
 ui_reset_sure,¿Seguro?
 ui_reset_tip,Devuelve todos los ajustes de esta pestaña a su valor predeterminado. Haz clic otra vez para confirmar.
@@ -179,6 +189,11 @@ info_prefix_filter_long,Filtro
 # Integrity of the Makeshift Micro Nuclear Reactor ("Integrity 60/100", the game's word). Short is up to 5 letters here.
 info_prefix_integrity_short,Int
 info_prefix_integrity_long,Integridad
+# Module bonus (new in 1.5.0): the highest of a module's three bonuses ("Rend +16%", the game's mech_module_stat_*).
+# One fixed word each, used with both short and long prefixes: 3 to 5 letters (Japanese and Chinese: one or two characters).
+info_prefix_performance,Rend
+info_prefix_efficiency,Efic
+info_prefix_quality,Cal
 
 # Machine progress: days until the machine finishes. {0} = number of days.
 info_days_short,{0}d
