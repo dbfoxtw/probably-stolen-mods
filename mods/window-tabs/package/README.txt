@@ -31,6 +31,7 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 - 合併：抓著一個視窗的標題列拖，讓滑鼠停在另一個視窗的標題列或分頁條上放開。滑鼠移過去時會先出現虛線的預告分頁；
   停在標題列上＝加在最後，停在兩個分頁中間＝插在那裡。拖過來的變成目前那頁，位置用目標那組的；
   拖的視窗本身就有分頁時整組一起併過去。抓標題列以外的地方拖只會移動，不會合併。
+  停在標題列或分頁條上時，被拖的視窗會變透明（不透明度 40%），看得到預告分頁插在哪裡（可以在設定關掉）。
 - 切換：點分頁，位置不變。沒在看的分頁其實是關著的視窗，一整組只算一個視窗。
 - 重排：在分頁條裡拖分頁。拆開：把分頁拖到空的地方。移到別組：拖到別的視窗的標題列或分頁條上。
   只剩一頁時分頁條消失。
@@ -51,10 +52,11 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有兩欄按鍵（預設都是空白，留空＝不使用）：
-- 下一個分頁：把滑鼠底下那組切到下一頁，最後一頁之後回到第一頁。
-- 上一個分頁：切到上一頁，第一頁之前是最後一頁。
-寫法例如 Ctrl+Tab、Ctrl+Shift+Tab、F5；修飾鍵要完全一樣才算。
+在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有三個設定：
+- 下一個分頁（預設空白，留空＝不使用）：把滑鼠底下那組切到下一頁，最後一頁之後回到第一頁。
+- 上一個分頁（預設空白，留空＝不使用）：切到上一頁，第一頁之前是最後一頁。
+- 合併時視窗變透明（預設開）：抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗會變透明。
+按鍵的寫法例如 Ctrl+Tab、Ctrl+Shift+Tab、F5；修飾鍵要完全一樣才算。
 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：Mouse4、Mouse5（例如 Mouse4、Ctrl+Mouse5）。
 主要的鍵（Ctrl+Tab 的 Tab）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵。
 按了沒反應可能是被別的程式攔走了，請換一個鍵。
@@ -128,6 +130,8 @@ Features
   A dashed preview tab shows where it will go: over the title bar = at the end, between two tabs = right there.
   The dragged window becomes the current tab, at the target's position; if it already has tabs,
   the whole set joins. Dragging a window by anywhere else just moves it.
+  While it's over a title bar or tab strip, the dragged window fades (40% opacity) so you can see where the
+  preview tab goes (you can turn this off in the settings).
 - Switch: click a tab; the window stays in place. Tabs you aren't looking at are really closed windows,
   so a whole set counts as one window.
 - Reorder: drag a tab along the tab strip. Split off: drop a tab on an empty spot. Move: drop it on another
@@ -155,10 +159,13 @@ The tab strips come from this mod, not the base game; please report problems to 
 developers.
 
 Settings
-Open this mod's settings on the Mods screen of the main menu. There are two key fields (both empty by default;
-empty = not used):
-- Next tab: switches the tab set under the mouse to the next tab; after the last tab comes the first.
-- Previous tab: switches to the previous tab; before the first tab comes the last.
+Open this mod's settings on the Mods screen of the main menu. There are three settings:
+- Next tab (empty by default; empty = not used): switches the tab set under the mouse to the next tab;
+  after the last tab comes the first.
+- Previous tab (empty by default; empty = not used): switches to the previous tab; before the first tab
+  comes the last.
+- Fade window when merging (on by default): when you drag a window by its title bar over another window's
+  title bar or tab strip, the dragged window fades.
 Write keys like Ctrl+Tab, Ctrl+Shift+Tab or F5; modifiers must match exactly. Mouse side buttons work too,
 named as in the game's Key Binds: Mouse4 and Mouse5 (e.g. Mouse4, Ctrl+Mouse5). If the main key (the Tab in
 Ctrl+Tab) is also used in the game's Key Binds, that game action happens too; pick another key. If a key does

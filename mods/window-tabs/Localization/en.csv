@@ -3,3 +3,5 @@ cfg_next,Next tab
 cfg_next_tip,Key that switches the tab set under the mouse to its next tab (after the last one comes the first); also works while dragging items.\nE.g. Ctrl+Tab, or the mouse side button Mouse5; empty = not used
 cfg_prev,Previous tab
 cfg_prev_tip,Key that switches the tab set under the mouse to its previous tab (before the first one comes the last); also works while dragging items.\nE.g. Ctrl+Shift+Tab, or the mouse side button Mouse4; empty = not used
+cfg_fade,Fade window when merging
+cfg_fade_tip,When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades so you can see where its tabs will go.

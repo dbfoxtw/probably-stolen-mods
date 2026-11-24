@@ -311,6 +311,9 @@ namespace ProbablyStolenWindowTabs
                 _rightModePrev = GameWindows.InRightClickMode(out _rightModePrevWhy);
                 // 拖分頁的擋板留著會擋掉遊戲所有的滑鼠操作：不是在拖分頁卻還有影子（不管哪條路漏掉），這一幀就收掉
                 if (_ghost != null && _mode != Mode.DragTab) DestroyGhost();
+                // 變透明也一樣（2.7.0 起）：以後有路離開 DragWindow 卻沒經過 EndDrag，也不會留下淡掉的視窗。
+                // 關窗只是把 GameObject 關掉，重開會沿用同一個視窗，留著就一直是淡的。沒在淡的時候 Restore 馬上回來
+                if (_mode != Mode.DragWindow) DragFade.Restore();
             }
         }
 
@@ -534,8 +537,18 @@ namespace ProbablyStolenWindowTabs
                     {
                         if (WindowTabsMod.Debug)
                             WindowTabsMod.DebugLog($"放開視窗：{(_target != null ? $"併到「{GameWindows.Title(_target.Window)}」" : _blockedBy != null ? $"停在鎖住的組上（被擋），只移動：{Describe(_blockedBy)}" : "沒有目標，不合併")}");
+                        // 放開就先恢復透明度（2.7.0 起）：合併時被拖的視窗馬上變成那組目前那頁、擺到這組的位置並拉到最上面，
+                        // 要以原本的樣子出現；DropWindow 出錯時下面的 EndDrag 也會恢復
+                        DragFade.Restore();
                         try { DropWindow(r); }
                         finally { EndDrag(); }
+                    }
+                    else
+                    {
+                        // 有合併目標、畫著預告分頁時被拖的視窗變透明，看得到會插在哪（2.7.0 起）；
+                        // 移開沒目標了就恢復。設定每幀讀，按套用就生效。
+                        // 走到這裡 _seekTarget 一定是 true（不找目標的上面已經 break），照樣傳進去是為了和 Rules 的真值表一致
+                        DragFade.Update(_dragWindow, Rules.FadeWhileDragging(FadeSetting(), _seekTarget, _target != null));
                     }
                     break;
                 case Mode.DragItem:
@@ -683,9 +696,27 @@ namespace ProbablyStolenWindowTabs
             }
         }
 
-        /// <summary>放掉拖曳的狀態、影子、預告分頁。</summary>
+        /// <summary>
+        /// 合併時變透明的設定（2.7.0 起）。讀設定出錯時當作關著、只記一次：不能讓例外一路丟到 Tick 的 catch，
+        /// 那裡會 EndDrag，變成每次拖視窗都被取消。
+        /// </summary>
+        static bool FadeSetting()
+        {
+            try { return Settings.FadeWhileMerging; }
+            catch (Exception e)
+            {
+                LogOnce("讀合併時變透明的設定", e);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 放掉拖曳的狀態、影子、預告分頁，恢復被拖的視窗的透明度（2.7.0 起：所有結束拖曳的路都經過這裡，
+        /// 失去焦點取消、視窗不見、出例外、不能動作、外出、離開店鋪畫面）。
+        /// </summary>
         static void EndDrag()
         {
+            DragFade.End();
             _mode = Mode.Idle;
             _pressStrip = null;
             _pressId = 0;
@@ -1358,8 +1389,8 @@ namespace ProbablyStolenWindowTabs
             catch (Exception e) { LogOnce("畫分頁條", e); }
         }
 
-        /// <summary>同一種錯誤只記一次（每幀都會跑，出錯時不要洗版），不同種的各記一次。</summary>
-        static void LogOnce(string what, Exception e)
+        /// <summary>同一種錯誤只記一次（每幀都會跑，出錯時不要洗版），不同種的各記一次。DragFade 也用（2.7.0 起）。</summary>
+        internal static void LogOnce(string what, Exception e)
         {
             if (!_errorsLogged.Add(what)) return;
             WindowTabsMod.Log.Error($"{what}出錯（之後同類錯誤不再記）：{e}");

@@ -1,5 +1,17 @@
 # 版本紀錄（Changelog）
 
+## v2.7.0（2026-11-24）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 新增「合併時視窗變透明」：抓著標題列把視窗拖到別的視窗的標題列或分頁條上時，被拖的視窗會變透明（不透明度 40%），看得到分頁會插在哪裡。預設開，可以在設定關掉。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- New: Fade window when merging. When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades (40% opacity) so you can see where its tabs will go. On by default; you can turn it off in the settings.
+
 ## v2.6.0（2026-11-22）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）

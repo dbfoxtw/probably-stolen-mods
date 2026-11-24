@@ -9,6 +9,7 @@ namespace ProbablyStolenWindowTabs
     /// 寫法照視窗群組（Ctrl+Tab、Ctrl+Shift+F1；Hotkey.Parse）；2.4.0 起另外收滑鼠側鍵 Mouse4～Mouse7（遊戲按鍵綁定的名稱）。不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：
     /// 它一列只存一個 KeyCode，表達不了 Ctrl+Tab 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart，照視窗群組）。
+    /// 2.7.0 起加一個開關：合併時被拖的視窗變透明（FadeWhileMerging，預設開），排在兩個按鍵欄後面（舊設定在設定視窗的位置不變）。
     /// </summary>
     static class Settings
     {
@@ -20,8 +21,11 @@ namespace ProbablyStolenWindowTabs
         const string Section = "Window Tabs";
         /// <summary>設定檔裡的 key（存的值只看 key；設定視窗照定義的順序排，下一頁在前）。</summary>
         internal const string NextEntry = "NextTab", PrevEntry = "PreviousTab";
+        /// <summary>合併時變透明的開關的 key（2.7.0 起）。</summary>
+        internal const string FadeEntry = "FadeWhileMerging";
 
         static ConfigEntry<string> _next, _prev;
+        static ConfigEntry<bool> _fade;
         /// <summary>上次讀成按鍵時的值（和現在的不同就重建）。</summary>
         static string _nextBuilt, _prevBuilt;
         static bool _built;
@@ -33,7 +37,15 @@ namespace ProbablyStolenWindowTabs
             var cfg = ModConfig.For(WindowTabsMod.ModId);
             _next = cfg.Define(NextEntry, "", Section, () => Loc.Get("cfg_next"), choices: null, tooltip: () => Loc.Get("cfg_next_tip"));
             _prev = cfg.Define(PrevEntry, "", Section, () => Loc.Get("cfg_prev"), choices: null, tooltip: () => Loc.Get("cfg_prev_tip"));
+            // 2.7.0 新增的排在最後：兩個按鍵欄在設定視窗裡的位置不變
+            _fade = cfg.Define(FadeEntry, true, Section, () => Loc.Get("cfg_fade"), () => Loc.Get("cfg_fade_tip"));
         }
+
+        /// <summary>
+        /// 合併時被拖的視窗變透明（2.7.0 起，預設開）：拖視窗時每幀讀（Tabs 的 DragWindow），玩家在設定視窗按套用就生效。
+        /// 關掉就完全不變透明。還沒讀設定（Init 之前）時當作開著。
+        /// </summary>
+        internal static bool FadeWhileMerging => _fade == null || _fade.Value;
 
         /// <summary>
         /// 這一幀按下的切頁鍵：+1＝下一頁、−1＝上一頁、0＝沒有。修飾鍵要完全相同才算；左右兩邊都算（照視窗群組的 Keys.Pressed）。
@@ -105,11 +117,11 @@ namespace ProbablyStolenWindowTabs
             return k.ToString();
         }
 
-        /// <summary>目前的切頁鍵，給 log 看（Init 與進店鋪時寫一次；寫錯的在這裡第一次讀時警告）。</summary>
+        /// <summary>目前的切頁鍵與合併時變不變透明，給 log 看（Init 與進店鋪時寫一次；寫錯的在這裡第一次讀時警告）。</summary>
         internal static string Describe()
         {
             Refresh();
-            return Text();
+            return $"{Text()}；合併時變透明：{(FadeWhileMerging ? "開" : "關")}";
         }
 
         static string Text()

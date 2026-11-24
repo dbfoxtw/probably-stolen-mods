@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ProbablyStolenWindowTabs
 {
-    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁、鎖住整組時擋什麼（2.6.0 起）。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁、鎖住整組時擋什麼（2.6.0 起）、拖視窗時變不變透明（2.7.0 起）。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>拖著物品停在分頁上多久切過去（秒）。</summary>
@@ -504,5 +504,55 @@ namespace ProbablyStolenWindowTabs
         /// </summary>
         internal static bool StillFrozen(int frozenId, int tabUnderMouse, bool mouseMoved) =>
             frozenId == UnknownTab || tabUnderMouse == frozenId || !mouseMoved;
+
+        // ---------------- 拖視窗時變透明（2.7.0 起） ----------------
+
+        /// <summary>
+        /// 變透明時乘上的比例（不透明度 40%）：透過被拖的視窗看得到預告分頁與對方的分頁，被拖的視窗也還認得出是哪個。
+        /// 原本定 30%，2026-11-24 實機測試時覺得太淡（被拖的視窗只剩一層很淡的影子）；試了 50%、40%，三種並排比過後定 40%
+        /// （50% 時預告分頁的字和被拖視窗的標題列疊在一起比較明顯）。
+        /// 固定值，不做滑桿（設定只有開關）。
+        /// </summary>
+        internal const float MergeFadeFactor = 0.4f;
+
+        /// <summary>
+        /// 這一幀被拖的視窗要不要變透明：設定開著（FadeWhileMerging）、這次拖視窗會找合併的目標（從標題列開始、那組沒鎖，
+        /// WindowDragSeeksTarget）、而且這一幀有目標（滑鼠在別組的分頁條或標題列上、畫著預告分頁）才變。
+        /// 從內容區抓、拖鎖住的組或停在鎖住的組上（那時沒有目標）、移開沒目標了都不透明；
+        /// 透明本身也是「放開會合併」的提示。拖分頁不經過這裡（影子在分頁條上本來就只剩外框）。
+        /// </summary>
+        internal static bool FadeWhileDragging(bool enabled, bool seekTarget, bool hasTarget) => enabled && seekTarget && hasTarget;
+
+        /// <summary>變透明時要設的 alpha：原本的值乘上 MergeFadeFactor（原本已經是半透明的，例如別的 mod 調過，照比例再淡）。</summary>
+        internal static float FadedAlpha(float original) => original * MergeFadeFactor;
+
+        /// <summary>
+        /// 恢復時要不要把 alpha 還原（「Claude 定的細節」）：現在的值還是我們設的（容許浮點誤差）才還原；
+        /// 已經被別人改掉了（例如也改視窗透明度的 mod 在拖的途中自己設了）就不動、照它的，只清掉我們的紀錄。
+        /// 容許的誤差比 Mathf.Approximately 寬一點（萬分之一）：alpha 只在 0～1，這樣也分得出別人設的值。
+        /// </summary>
+        internal static bool FadeStillOurs(float current, float setByUs) => Math.Abs(current - setByUs) < 0.0001f;
+
+        /// <summary>恢復時怎麼處理（UndoFade 的結果）。</summary>
+        internal enum FadeUndo
+        {
+            /// <summary>alpha 還是我們設的：還原成原本的值，我們加的元件拿掉。</summary>
+            Restore,
+            /// <summary>alpha 還是原本的值：我們還沒設成功就出錯了，不用還原，我們加的元件照樣拿掉。</summary>
+            NotApplied,
+            /// <summary>alpha 被別人改了：不動、照它的，只清掉紀錄。</summary>
+            Changed,
+        }
+
+        /// <summary>
+        /// 恢復時看現在的 alpha 決定怎麼做：先比我們設的（原本是 0 時兩個一樣，算 Restore），再比原本的，都不是才算別人改了。
+        /// 例外剛好丟在設 alpha 之前時，現在的值還是原本的，不能當成別人改了而留下我們加的元件。
+        /// </summary>
+        internal static FadeUndo UndoFade(float current, float original, float setByUs)
+        {
+            if (FadeStillOurs(current, setByUs)) return FadeUndo.Restore;
+            if (FadeStillOurs(current, original)) return FadeUndo.NotApplied;
+            return FadeUndo.Changed;
+        }
     }
 }

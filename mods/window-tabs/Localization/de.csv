@@ -3,3 +3,5 @@ cfg_next,Nächster Reiter
 cfg_next_tip,Taste, die im Fenster unter der Maus zum nächsten Reiter wechselt (nach dem letzten kommt der erste); funktioniert auch beim Ziehen von Gegenständen.\nZ. B. Ctrl+Tab oder die Maus-Seitentaste Mouse5; leer = nicht belegt
 cfg_prev,Vorheriger Reiter
 cfg_prev_tip,Taste, die im Fenster unter der Maus zum vorherigen Reiter wechselt (vor dem ersten kommt der letzte); funktioniert auch beim Ziehen von Gegenständen.\nZ. B. Ctrl+Shift+Tab oder die Maus-Seitentaste Mouse4; leer = nicht belegt
+cfg_fade,Transparenz beim Zusammenführen
+cfg_fade_tip,Ziehst du ein Fenster an seiner Titelleiste über die Titelleiste oder Reiterleiste eines anderen Fensters, wird das gezogene Fenster durchsichtig, damit du siehst, wo seine Reiter landen.

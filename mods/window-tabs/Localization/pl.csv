@@ -3,3 +3,5 @@ cfg_next,Następna zakładka
 cfg_next_tip,Klawisz, który przełącza okno z zakładkami pod kursorem na następną zakładkę (po ostatniej jest pierwsza); działa też podczas przeciągania przedmiotów.\nNp. Ctrl+Tab albo boczny przycisk myszy Mouse5; puste = nieużywane
 cfg_prev,Poprzednia zakładka
 cfg_prev_tip,Klawisz, który przełącza okno z zakładkami pod kursorem na poprzednią zakładkę (przed pierwszą jest ostatnia); działa też podczas przeciągania przedmiotów.\nNp. Ctrl+Shift+Tab albo boczny przycisk myszy Mouse4; puste = nieużywane
+cfg_fade,Przezroczystość przy łączeniu
+cfg_fade_tip,Gdy przeciągasz okno za pasek tytułu nad paskiem tytułu lub paskiem zakładek innego okna, przeciągane okno staje się przezroczyste, aby było widać, gdzie trafią jego zakładki.

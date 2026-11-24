@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 namespace ProbablyStolenWindowTabs.Verify
@@ -13,7 +14,8 @@ namespace ProbablyStolenWindowTabs.Verify
     /// 切頁鍵的寫法（含滑鼠側鍵）、切到哪頁與設定欄的文字（2.5.0 起在 Localization\*.csv）、
     /// 介面字串挑語言（LocPick：最長字串模式、中文時用不用 zh-Hant）、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）、
-    /// 鎖住整組（2.6.0 起，各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收。
+    /// 鎖住整組（2.6.0 起，各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收、
+    /// 拖視窗時變透明（2.7.0 起，什麼時候變、alpha 怎麼算、恢復時還不還原，設定與恢復時機讀原始碼查）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -48,6 +50,8 @@ namespace ProbablyStolenWindowTabs.Verify
             CommaKeyTest();
             SwitchOrderTest();
             LockRulesTest();
+            FadeRulesTest();
+            FadeSourceTest();
             LockRecordTest();
             ChainLayoutTest();
             StringsTest();
@@ -825,22 +829,23 @@ namespace ProbablyStolenWindowTabs.Verify
 
         /// <summary>
         /// 設定欄的文字（2.5.0 起放 public/Localization/*.csv，用和遊戲一樣的解析規則讀）：
-        /// 每一份都剛好四個 key、說明欄有兩行，第二行是例子與「留空」；英文、簡中、繁中的定稿一字不差。
+        /// 每一份都剛好這幾個 key、切頁鍵的說明欄有兩行，第二行是例子與「留空」；英文、簡中、繁中的定稿一字不差。
         /// 之後加的語言也跑同樣的檢查：按鍵名稱與 Mouse4、Mouse5 不翻。
+        /// 2.7.0 起多了合併時變透明的開關（cfg_fade、cfg_fade_tip）：每份都有、非空、說明只有一行；英文、簡中、繁中照定稿。
         /// </summary>
         static void StringsTest()
         {
             var dir = FindLocalizationDir();
             Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
             if (dir == null) return;
-            var keys = new[] { "cfg_next", "cfg_next_tip", "cfg_prev", "cfg_prev_tip" };
+            var keys = new[] { "cfg_next", "cfg_next_tip", "cfg_prev", "cfg_prev_tip", "cfg_fade", "cfg_fade_tip" };
             var tables = new Dictionary<string, Dictionary<string, string>>();
             foreach (var path in Directory.GetFiles(dir, "*.csv").OrderBy(p => p, StringComparer.Ordinal))
                 tables[Path.GetFileNameWithoutExtension(path)] = ReadCsv(path);
             Check(tables.ContainsKey("en") && tables.ContainsKey("zh") && tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
             foreach (var (lang, t) in tables)
             {
-                Eq(string.Join(",", t.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", keys.OrderBy(k => k, StringComparer.Ordinal)), $"{lang}：剛好這四個 key");
+                Eq(string.Join(",", t.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", keys.OrderBy(k => k, StringComparer.Ordinal)), $"{lang}：剛好這六個 key");
                 if (!keys.All(t.ContainsKey)) continue;
                 Check(t["cfg_next"].Length > 0 && t["cfg_prev"].Length > 0, $"{lang}：兩欄都有標籤");
                 Eq(t["cfg_next_tip"].Split('\n').Length, 2, $"{lang}：下一頁的說明是兩行");
@@ -850,6 +855,9 @@ namespace ProbablyStolenWindowTabs.Verify
                 // 2.4.0：第二行的例子加滑鼠側鍵，下一頁 Mouse5、上一頁 Mouse4（照瀏覽器的前進、後退）
                 Check(t["cfg_next_tip"].Split('\n')[1].Contains("Mouse5") && !t["cfg_next_tip"].Contains("Mouse4"), $"{lang}：下一頁的例子有側鍵 Mouse5");
                 Check(t["cfg_prev_tip"].Split('\n')[1].Contains("Mouse4") && !t["cfg_prev_tip"].Contains("Mouse5"), $"{lang}：上一頁的例子有側鍵 Mouse4");
+                // 2.7.0：合併時變透明的開關，標籤與一句說明（不加換行）
+                Check(t["cfg_fade"].Trim().Length > 0 && t["cfg_fade_tip"].Trim().Length > 0, $"{lang}：變透明的開關有標籤與說明");
+                Check(!t["cfg_fade"].Contains('\n') && !t["cfg_fade_tip"].Contains('\n'), $"{lang}：變透明的標籤與說明都只有一行");
             }
             if (!tables.TryGetValue("en", out var en) || !tables.TryGetValue("zh", out var zh) || !tables.TryGetValue("zh-Hant", out var hant)) return;
             string Line2(Dictionary<string, string> t, string key) => t.TryGetValue(key, out var v) && v.Contains('\n') ? v.Split('\n')[1] : null;
@@ -863,6 +871,13 @@ namespace ProbablyStolenWindowTabs.Verify
             Eq(zh.GetValueOrDefault("cfg_prev"), "上一个标签页", "簡中的標籤");
             Eq(en.GetValueOrDefault("cfg_next"), "Next tab", "英文的標籤");
             Eq(en.GetValueOrDefault("cfg_prev"), "Previous tab", "英文上一頁的標籤");
+            // 2.7.0 合併時變透明（作者看過的定稿）
+            Eq(en.GetValueOrDefault("cfg_fade"), "Fade window when merging", "英文變透明的標籤（定稿）");
+            Eq(en.GetValueOrDefault("cfg_fade_tip"), "When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades so you can see where its tabs will go.", "英文變透明的說明（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_fade"), "合并时窗口变透明", "簡中變透明的標籤（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_fade_tip"), "抓着标题栏把窗口拖到另一个窗口的标题栏或标签栏上时，被拖的窗口会变透明，看得到标签页会插在哪里。", "簡中變透明的說明（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_fade"), "合併時視窗變透明", "繁中變透明的標籤（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_fade_tip"), "抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗會變透明，看得到分頁會插在哪裡。", "繁中變透明的說明（定稿）");
         }
 
         /// <summary>
@@ -1021,6 +1036,135 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(!Rules.LockHolds(true, 1) && !Rules.LockHolds(true, 0), "鎖住、只剩一頁活著（其他賣掉、丟掉）：不算數");
             Check(Rules.LockHolds(true, -1), "鎖住、店裡的物品清單抓不到（不知道）：照樣算");
             Check(!Rules.LockHolds(false, 3) && !Rules.LockHolds(false, -1), "沒鎖：不算");
+        }
+
+        // ── 拖視窗時變透明（2.7.0） ──
+
+        /// <summary>Rules 裡不碰 Unity 的判斷：什麼時候變透明、設多少、恢復時還不還原。</summary>
+        static void FadeRulesTest()
+        {
+            // 什麼時候變：設定開 × 會找目標 × 有目標，只有三個都成立才變
+            foreach (var enabled in new[] { false, true })
+                foreach (var seek in new[] { false, true })
+                    foreach (var hasTarget in new[] { false, true })
+                        Eq(Rules.FadeWhileDragging(enabled, seek, hasTarget), enabled && seek && hasTarget,
+                           $"變透明：設定{(enabled ? "開" : "關")}、{(seek ? "會" : "不會")}找目標、{(hasTarget ? "有" : "沒有")}目標");
+            Check(Rules.FadeWhileDragging(true, true, true), "抓標題列拖到別組的分頁條或標題列上（有目標）：變透明");
+            Check(!Rules.FadeWhileDragging(true, true, false), "移開、沒有目標（含停在鎖住的組上）：恢復");
+            Check(!Rules.FadeWhileDragging(true, false, true), "從內容區抓、拖鎖住的組：不變");
+            Check(!Rules.FadeWhileDragging(false, true, true), "設定關掉：完全不變");
+
+            // 設多少（不透明度 40%，乘在原本的值上；原本 30%，2026-11-24 實測太淡，試過 50%、40% 後定 40%）
+            Eq(Rules.MergeFadeFactor, 0.4f, "不透明度 40%");
+            Check(Math.Abs(Rules.FadedAlpha(1f) - 0.4f) < 1e-6f, $"原本 1 → 0.4（實際 {Rules.FadedAlpha(1f)}）");
+            Check(Math.Abs(Rules.FadedAlpha(0.5f) - 0.2f) < 1e-6f, $"原本 0.5（別人調過）→ 0.2（實際 {Rules.FadedAlpha(0.5f)}）");
+            Check(Rules.FadedAlpha(0f) == 0f, "原本 0 → 0");
+
+            // 恢復時還不還原：還是我們設的才還原，被別人改了就不動
+            Check(Rules.FadeStillOurs(Rules.FadedAlpha(1f), Rules.FadedAlpha(1f)), "alpha 還是我們設的：還原");
+            Check(Rules.FadeStillOurs(0.4f + 1e-6f, 0.4f), "浮點誤差（差一百萬分之一）：算我們設的、還原");
+            Check(Rules.FadeStillOurs((float)(0.5 * 0.4), Rules.FadedAlpha(0.5f)), "double 算的 0.2 和 float 算的：算同一個");
+            Check(!Rules.FadeStillOurs(1f, 0.4f), "被改回 1：不動");
+            Check(!Rules.FadeStillOurs(0.8f, 0.4f), "被別的 mod 改成 0.8：不動");
+            Check(!Rules.FadeStillOurs(0.41f, 0.4f), "被改成 0.41（只差一點）：不動");
+            Check(!Rules.FadeStillOurs(0f, 0.2f), "被改成 0：不動");
+
+            // 恢復時怎麼做：我們設的 → 還原；還是原本的（還沒設成功）→ 不用還原、我們加的照樣拿掉；其他 → 別人改了
+            Eq(Rules.UndoFade(0.4f, 1f, 0.4f), Rules.FadeUndo.Restore, "alpha 是我們設的 0.4：還原");
+            Eq(Rules.UndoFade(0.2f + 1e-6f, 0.5f, Rules.FadedAlpha(0.5f)), Rules.FadeUndo.Restore, "alpha 是我們設的 0.2，有浮點誤差：還原");
+            Eq(Rules.UndoFade(1f, 1f, 0.4f), Rules.FadeUndo.NotApplied, "alpha 還是原本的 1：還沒設成功，不算別人改的");
+            Eq(Rules.UndoFade(0.5f, 0.5f, 0.2f), Rules.FadeUndo.NotApplied, "alpha 還是原本的 0.5：還沒設成功");
+            Eq(Rules.UndoFade(0f, 0f, 0f), Rules.FadeUndo.Restore, "原本是 0：設的也是 0，算還原");
+            Eq(Rules.UndoFade(0.8f, 1f, 0.4f), Rules.FadeUndo.Changed, "alpha 被改成 0.8：別人改的，不動");
+            Eq(Rules.UndoFade(0.41f, 1f, 0.4f), Rules.FadeUndo.Changed, "alpha 被改成 0.41：別人改的，不動");
+        }
+
+        /// <summary>
+        /// 讀原始碼查（Settings、Tabs、DragFade 碰 Unity，編不進離線測試）：設定排在兩個按鍵欄後面、預設開；
+        /// 放開視窗時先恢復透明度再 DropWindow；所有結束拖曳的路都恢復：EndDrag 第一句、Tick 的 finally 保險、Reset 經過 EndDrag；
+        /// DragWindow 裡不直接改 _mode，免得繞過 EndDrag；恢復時先設回 alpha 再拿掉元件；變淡時先找既有的 CanvasGroup。
+        /// 比對前先拿掉整行的註解，註解掉的程式不算。
+        /// </summary>
+        static void FadeSourceTest()
+        {
+            var root = FindModRoot();
+            Check(root != null, "找得到 mod 的資料夾，裡面有 mod/src");
+            if (root == null) return;
+            // 讀進來、去掉整行的註解：// 與 /// 開頭的行
+            string Read(string name) => string.Join("\n", File.ReadAllText(Path.Combine(root, "mod", "src", name)).Replace("\r\n", "\n")
+                .Split('\n').Where(l => !l.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+            // 從 signature 開始到它的結尾：八格縮排的 }
+            string Body(string src, string signature)
+            {
+                int i = src.IndexOf(signature, StringComparison.Ordinal);
+                if (i < 0) return "";
+                int j = src.IndexOf("\n        }\n", i, StringComparison.Ordinal);
+                return j < 0 ? src.Substring(i) : src.Substring(i, j - i);
+            }
+            // 方法本體的第一句：第一個 { 之後第一個不是空白的那行
+            string FirstStatement(string body)
+            {
+                int brace = body.IndexOf('{');
+                if (brace < 0) return "";
+                return body.Substring(brace + 1).Split('\n').Select(l => l.Trim()).FirstOrDefault(l => l.Length > 0) ?? "";
+            }
+            // 兩段文字在 src 裡都有、而且 first 在 second 前面
+            bool Before(string src, string first, string second)
+            {
+                int a = src.IndexOf(first, StringComparison.Ordinal), b = src.IndexOf(second, StringComparison.Ordinal);
+                return a >= 0 && b > a;
+            }
+
+            var settings = Read("Settings.cs");
+            Check(settings.Contains("internal const string FadeEntry = \"FadeWhileMerging\";"), "Settings：開關的 key 是 FadeWhileMerging");
+            var init = Body(settings, "internal static void Init()");
+            int next = init.IndexOf("cfg.Define(NextEntry,", StringComparison.Ordinal);
+            int prev = init.IndexOf("cfg.Define(PrevEntry,", StringComparison.Ordinal);
+            int fade = init.IndexOf("cfg.Define(FadeEntry, true,", StringComparison.Ordinal);
+            Check(next >= 0 && prev > next && fade > prev, "Settings.Init：變透明的開關定義在兩個按鍵欄後面、預設 true，舊設定的位置不變");
+            Check(init.Contains("Loc.Get(\"cfg_fade\")") && init.Contains("Loc.Get(\"cfg_fade_tip\")"), "Settings.Init：標籤與說明用 cfg_fade、cfg_fade_tip");
+            Check(!init.Contains("requiresRestart"), "Settings.Init：不標 requiresRestart，按套用就生效");
+
+            var tabs = Read("Tabs.cs");
+            int caseAt = tabs.IndexOf("case Mode.DragWindow:", StringComparison.Ordinal);
+            int caseEnd = caseAt >= 0 ? tabs.IndexOf("case Mode.DragItem:", caseAt, StringComparison.Ordinal) : -1;
+            var dragCase = caseAt >= 0 && caseEnd > caseAt ? tabs.Substring(caseAt, caseEnd - caseAt) : "";
+            Check(dragCase.Length > 0, "Tabs：找得到 DragWindow 的 case");
+            Check(Before(dragCase, "DragFade.Restore();", "DropWindow(r);"), "Tabs 的 DragWindow：放開時先恢復透明度再 DropWindow");
+            var compact = Regex.Replace(dragCase, @"\s+", "");
+            Check(compact.Contains("DragFade.Update(_dragWindow,Rules.FadeWhileDragging(FadeSetting(),_seekTarget,_target!=null))"),
+                  "Tabs 的 DragWindow：按著時照 Rules.FadeWhileDragging 變透明：設定、會不會找目標、有沒有目標");
+            Check(!dragCase.Contains("_mode ="), "Tabs 的 DragWindow：不直接改 _mode，結束拖曳一律經過 EndDrag");
+            var fadeSetting = Body(tabs, "static bool FadeSetting()");
+            Check(fadeSetting.Contains("Settings.FadeWhileMerging") && fadeSetting.Contains("catch") && fadeSetting.Contains("return false;"),
+                  "Tabs.FadeSetting：讀設定出錯時當作不變透明，不讓例外取消拖曳");
+            Eq(FirstStatement(Body(tabs, "static void EndDrag()")), "DragFade.End();", "Tabs.EndDrag 的第一句：恢復透明度");
+            Check(Body(tabs, "internal static void Reset()").Contains("EndDrag();"), "Tabs.Reset：換場景時經過 EndDrag");
+            var tick = Body(tabs, "internal static void Tick()");
+            int fin = tick.IndexOf("finally", StringComparison.Ordinal);
+            Check(fin >= 0 && tick.Substring(fin).Contains("if (_mode != Mode.DragWindow) DragFade.Restore();"),
+                  "Tabs.Tick 的 finally：不是 DragWindow 就恢復透明度，漏掉 EndDrag 的路也收得回來");
+            int tabAt = tabs.IndexOf("case Mode.DragTab:", StringComparison.Ordinal);
+            int tabEnd = tabAt >= 0 ? tabs.IndexOf("case Mode.PressWindow:", tabAt, StringComparison.Ordinal) : -1;
+            Check(tabAt >= 0 && tabEnd > tabAt && !tabs.Substring(tabAt, tabEnd - tabAt).Contains("DragFade"), "拖分頁 DragTab 不變透明");
+
+            var fadeSrc = Read("DragFade.cs");
+            Check(Body(fadeSrc, "internal static void End()").Contains("Restore();"), "DragFade.End：呼叫 Restore");
+            var restoreBody = Body(fadeSrc, "internal static void Restore()");
+            Check(restoreBody.Contains("Rules.UndoFade("), "DragFade.Restore：照 Rules.UndoFade 決定怎麼恢復");
+            Check(Before(restoreBody, "group.alpha = original", "Destroy(group)"), "DragFade.Restore：先設回 alpha 再拿掉我們加的 CanvasGroup");
+            var begin = Body(fadeSrc, "static void Begin(PixelWindow w)");
+            Check(Before(begin, "GetComponent<CanvasGroup>", "AddComponent<CanvasGroup>"), "DragFade.Begin：先找既有的 CanvasGroup，沒有才加");
+            Check(begin.Contains("Rules.FadedAlpha("), "DragFade.Begin：alpha 照 Rules.FadedAlpha 算");
+        }
+
+        static string FindModRoot()
+        {
+            foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
+                for (var d = new DirectoryInfo(start); d != null; d = d.Parent)
+                    if (Directory.Exists(Path.Combine(d.FullName, "mod", "verify")) && File.Exists(Path.Combine(d.FullName, "mod", "src", "Tabs.cs")))
+                        return d.FullName;
+            return null;
         }
 
         /// <summary>TabRecord 守住鎖：合併、拆開擋住，重排照常；鎖跟著組，解散時消失。</summary>

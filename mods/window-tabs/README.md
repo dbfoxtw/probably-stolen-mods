@@ -14,6 +14,7 @@
 
 - **合併**：抓著一個視窗的標題列拖，讓滑鼠停在另一個視窗的標題列或分頁條上放開，兩個就疊成分頁。滑鼠移過去時會先出現一個虛線的預告分頁，寫著拖過來那個的名稱：停在標題列上＝加在最後；停在分頁條上兩個分頁中間，就插在那裡。停在視窗的其他地方只是普通的移動。
   - 抓標題列以外的地方拖（遊戲的視窗整塊都拖得動）只會移動，不出現預告分頁，放開也不合併。
+  - 停在標題列或分頁條上、出現預告分頁時，被拖的視窗會變透明（不透明度 40%），看得到預告分頁插在哪裡；移開或放開就恢復。拖整組時連它的分頁條一起變透明。不想要可以在設定關掉「合併時視窗變透明」。
   - 拖過來的變成目前那頁，位置用目標那組的。
   - 拖的視窗本身就有分頁時（分頁條跟著視窗走），整組一起併過去。
 - **切換**：點分頁就換成那個箱子，位置不變。沒在看的分頁其實是關著的視窗，所以一整組只算一個視窗。
@@ -43,14 +44,15 @@
 
 ## 設定
 
-在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，有兩欄按鍵，每欄旁邊的 i 有說明。設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.window-tabs.json`。
+在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，有三個設定，每個旁邊的 i 有說明。設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.window-tabs.json`。
 
 | 設定 | 預設 | 內容 |
 |---|---|---|
 | 下一個分頁（`NextTab`） | 空白 | 把滑鼠底下那組切到下一頁的鍵，最後一頁之後回到第一頁 |
 | 上一個分頁（`PreviousTab`） | 空白 | 切到上一頁的鍵，第一頁之前是最後一頁 |
+| 合併時視窗變透明（`FadeWhileMerging`） | 開 | 抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗變透明，看得到分頁會插在哪裡 |
 
-- 寫法例如 `Ctrl+Tab`、`Ctrl+Shift+Tab`、`F5`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
+- 按鍵的寫法例如 `Ctrl+Tab`、`Ctrl+Shift+Tab`、`F5`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
 - 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：`Mouse4`、`Mouse5`（例如 `Mouse4`、`Ctrl+Mouse5`）。左鍵、右鍵、中鍵不行。
 - 主要的鍵（`Ctrl+Tab` 的 Tab）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵；別的 mod 也用到同一個鍵時一樣兩邊都會動作。
 - 按了沒反應可能是被別的程式攔走了（例如 Steam 覆蓋介面預設是 Shift+Tab），請換一個鍵。
@@ -137,6 +139,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
 
 - **Merge**: drag a window by its title bar and release it with the mouse over another window's title bar or tab strip; the two become tabs. A dashed preview tab with the dragged window's name shows where it will go: over the title bar = at the end; between two tabs on the tab strip = right there. Releasing anywhere else on the window just moves your window as usual.
   - Dragging a window by anywhere other than its title bar (the game lets you drag a window by any part of it) just moves it: no preview tab, and no merge when you release.
+  - While it's over a title bar or tab strip and a preview tab shows, the dragged window fades (40% opacity) so you can see where the preview tab goes; it comes back when you move away or release. A whole set fades together with its tab strip. You can turn this off with the Fade window when merging setting.
   - The window you dragged becomes the current tab, at the target's position.
   - If the dragged window already has tabs (the tab strip moves with it), the whole set joins.
 - **Switch**: click a tab to show that container in the same spot. Tabs you aren't looking at are really closed windows, so a whole set counts as one window.
@@ -164,12 +167,13 @@ The code was written by AI (Claude); the feature design and in-game testing were
 
 The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
-**Settings:** open this mod's settings on the Mods screen of the main menu; there are two key fields, each with an i that explains it. Settings are stored in `ModConfigs\dbfoxtw.window-tabs.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
+**Settings:** open this mod's settings on the Mods screen of the main menu; there are three settings, each with an i that explains it. Settings are stored in `ModConfigs\dbfoxtw.window-tabs.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
 | Setting | Default | What it does |
 |---|---|---|
 | Next tab (`NextTab`) | empty | Key that switches the tab set under the mouse to the next tab; after the last tab comes the first |
 | Previous tab (`PreviousTab`) | empty | Key that switches to the previous tab; before the first tab comes the last |
+| Fade window when merging (`FadeWhileMerging`) | on | When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades so you can see where its tabs will go |
 
 - Write keys like `Ctrl+Tab`, `Ctrl+Shift+Tab` or `F5`; modifiers (Ctrl, Shift, Alt) must match exactly, either the left or the right one. Empty = not used; a field with a key name that isn't recognized is not used.
 - Mouse side buttons work too, named as in the game's Key Binds: `Mouse4` and `Mouse5` (e.g. `Mouse4`, `Ctrl+Mouse5`). The left, right and middle buttons can't be used.
