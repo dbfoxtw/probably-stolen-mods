@@ -5,3 +5,9 @@ cfg_prev,Vorheriger Reiter
 cfg_prev_tip,Taste, die im Fenster unter der Maus zum vorherigen Reiter wechselt (vor dem ersten kommt der letzte); funktioniert auch beim Ziehen von Gegenständen.\nZ. B. Ctrl+Shift+Tab oder die Maus-Seitentaste Mouse4; leer = nicht belegt
 cfg_fade,Transparenz beim Zusammenführen
 cfg_fade_tip,Ziehst du ein Fenster an seiner Titelleiste über die Titelleiste oder Reiterleiste eines anderen Fensters, wird das gezogene Fenster durchsichtig, damit du siehst, wo seine Reiter landen.
+cfg_drop,Direktes Ablegen in Reiter
+cfg_drop_tip,Beim Ziehen von Gegenständen wechselt das Verweilen über einem Reiter nicht mehr zu ihm; lässt du sie über dem Reiter los, landen sie direkt darin.\nUm beim Ziehen den Reiter zu wechseln, belege die Tasten zum Reiterwechsel.
+cfg_side,Position der Reiterleiste
+cfg_side_tip,Auf welcher Seite des Fensters die Reiterleiste sitzt.\nTop = über dem Fenster\nLeft = links neben dem Fenster
+cfg_maxw,Max. Reiterbreite links
+cfg_maxw_tip,Wie breit ein Reiter werden darf, wenn die Reiterleiste links sitzt. Längere Namen werden mit „…“ abgekürzt. Oben richten sich die Reiter stattdessen nach der Fensterbreite.

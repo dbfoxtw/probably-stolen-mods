@@ -15,7 +15,9 @@ namespace ProbablyStolenWindowTabs.Verify
     /// 介面字串挑語言（LocPick：最長字串模式、中文時用不用 zh-Hant）、讀檔後失效的編號、
     /// 資料檔（含編號、舊版格式、Demo 版 System.Text.Json 寫的檔；讀寫函式用記憶體代替 ModHelper）、
     /// 鎖住整組（2.6.0 起，各種拖法的結果、鏈條小分頁的排法與插入位置、資料檔的 locked）、鍵名含逗號不收、
-    /// 拖視窗時變透明（2.7.0 起，什麼時候變、alpha 怎麼算、恢復時還不還原，設定與恢復時機讀原始碼查）。
+    /// 拖視窗時變透明（2.7.0 起，什麼時候變、alpha 怎麼算、恢復時還不還原，設定與恢復時機讀原始碼查）、
+    /// 物品直接放進分頁（2.8.0 起，能不能放、出不出提示框、放開時放不放、每個物品跳不跳過，設定與接法讀原始碼查）、
+    /// 分頁條放左邊與放上面時鎖住的新排法（2.8.0 起，排法、插入位置、範圍、夾住、設定）。
     /// 任何一項失敗就回傳非 0。執行：dotnet run --project mod\verify
     /// </summary>
     static class Program
@@ -52,8 +54,14 @@ namespace ProbablyStolenWindowTabs.Verify
             LockRulesTest();
             FadeRulesTest();
             FadeSourceTest();
+            DropRulesTest();
+            DropSourceTest();
             LockRecordTest();
             ChainLayoutTest();
+            TopChainFixedTest();
+            LeftLayoutTest();
+            SideSettingTest();
+            LeftWidthTest();
             StringsTest();
             LocPickTest();
             StaleTest();
@@ -832,20 +840,23 @@ namespace ProbablyStolenWindowTabs.Verify
         /// 每一份都剛好這幾個 key、切頁鍵的說明欄有兩行，第二行是例子與「留空」；英文、簡中、繁中的定稿一字不差。
         /// 之後加的語言也跑同樣的檢查：按鍵名稱與 Mouse4、Mouse5 不翻。
         /// 2.7.0 起多了合併時變透明的開關（cfg_fade、cfg_fade_tip）：每份都有、非空、說明只有一行；英文、簡中、繁中照定稿。
+        /// 2.8.0 起多了物品直接放進分頁的開關（cfg_drop、cfg_drop_tip）：每份都有、標籤一行、說明兩行；英文、簡中、繁中逐字照定稿。
+        /// 2.8.0 還有分頁條位置（cfg_side、cfg_side_tip）與左側分頁最寬（cfg_maxw、cfg_maxw_tip）。
         /// </summary>
         static void StringsTest()
         {
             var dir = FindLocalizationDir();
             Check(dir != null, "找得到 Localization（public/Localization 或 Localization）");
             if (dir == null) return;
-            var keys = new[] { "cfg_next", "cfg_next_tip", "cfg_prev", "cfg_prev_tip", "cfg_fade", "cfg_fade_tip" };
+            var keys = new[] { "cfg_next", "cfg_next_tip", "cfg_prev", "cfg_prev_tip", "cfg_fade", "cfg_fade_tip", "cfg_drop", "cfg_drop_tip", "cfg_side", "cfg_side_tip",
+                               "cfg_maxw", "cfg_maxw_tip" };
             var tables = new Dictionary<string, Dictionary<string, string>>();
             foreach (var path in Directory.GetFiles(dir, "*.csv").OrderBy(p => p, StringComparer.Ordinal))
                 tables[Path.GetFileNameWithoutExtension(path)] = ReadCsv(path);
             Check(tables.ContainsKey("en") && tables.ContainsKey("zh") && tables.ContainsKey("zh-Hant"), "有 en、zh、zh-Hant 三份");
             foreach (var (lang, t) in tables)
             {
-                Eq(string.Join(",", t.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", keys.OrderBy(k => k, StringComparer.Ordinal)), $"{lang}：剛好這六個 key");
+                Eq(string.Join(",", t.Keys.OrderBy(k => k, StringComparer.Ordinal)), string.Join(",", keys.OrderBy(k => k, StringComparer.Ordinal)), $"{lang}：剛好這十二個 key");
                 if (!keys.All(t.ContainsKey)) continue;
                 Check(t["cfg_next"].Length > 0 && t["cfg_prev"].Length > 0, $"{lang}：兩欄都有標籤");
                 Eq(t["cfg_next_tip"].Split('\n').Length, 2, $"{lang}：下一頁的說明是兩行");
@@ -858,7 +869,45 @@ namespace ProbablyStolenWindowTabs.Verify
                 // 2.7.0：合併時變透明的開關，標籤與一句說明（不加換行）
                 Check(t["cfg_fade"].Trim().Length > 0 && t["cfg_fade_tip"].Trim().Length > 0, $"{lang}：變透明的開關有標籤與說明");
                 Check(!t["cfg_fade"].Contains('\n') && !t["cfg_fade_tip"].Contains('\n'), $"{lang}：變透明的標籤與說明都只有一行");
+                // 2.8.0：物品直接放進分頁的開關，標籤一行、說明兩行（第二行講拖著時要切頁請設定切頁鍵）。不寫哪個是預設
+                Check(t["cfg_drop"].Trim().Length > 0 && !t["cfg_drop"].Contains('\n'), $"{lang}：直接放進分頁的標籤有字、只有一行");
+                Eq(t["cfg_drop_tip"].Split('\n').Length, 2, $"{lang}：直接放進分頁的說明是兩行");
+                Check(t["cfg_drop_tip"].Split('\n').All(l => l.Trim().Length > 0), $"{lang}：直接放進分頁的說明兩行都有字");
+                // 2.8.0：分頁條位置（下拉）。標籤一行；說明開頭一行講做什麼，接著一個選項一行、行首是字面的 Top／Left（選項不翻，
+                // 說明頁寫法.md「遊戲內的設定說明（tooltip）」：選項＝意思）
+                Check(t["cfg_side"].Trim().Length > 0 && !t["cfg_side"].Contains('\n'), $"{lang}：分頁條位置的標籤有字、只有一行");
+                var side = t["cfg_side_tip"].Split('\n');
+                Eq(side.Length, 3, $"{lang}：分頁條位置的說明是三行（開頭一行＋兩個選項）");
+                if (side.Length == 3)
+                {
+                    Check(side[0].Trim().Length > 0 && !side[0].Contains("Top") && !side[0].Contains("Left"), $"{lang}：分頁條位置的說明第一行講做什麼");
+                    Check(side[1].StartsWith("Top", StringComparison.Ordinal) && side[1].Length > 4, $"{lang}：第二行是 Top 的意思");
+                    Check(side[2].StartsWith("Left", StringComparison.Ordinal) && side[2].Length > 5, $"{lang}：第三行是 Left 的意思");
+                }
+                // 不寫哪個是預設（設定視窗有還原預設的按鈕）
+                Check(!new[] { "default", "Default", "預設", "默认", "默認" }.Any(w => t["cfg_side_tip"].Contains(w)), $"{lang}：分頁條位置的說明不寫預設");
+                // 2.8.0：左側分頁最寬（整數滑桿）。標籤與說明各一行；說明講截成「…」（每種語言都有這個字）、不寫預設與數字
+                // （滑桿不顯示數字，寫了玩家也對不上）
+                Check(t["cfg_maxw"].Trim().Length > 0 && !t["cfg_maxw"].Contains('\n'), $"{lang}：左側分頁最寬的標籤有字、只有一行");
+                Check(t["cfg_maxw_tip"].Trim().Length > 0 && !t["cfg_maxw_tip"].Contains('\n'), $"{lang}：左側分頁最寬的說明有字、只有一行");
+                Check(t["cfg_maxw_tip"].Contains('…'), $"{lang}：左側分頁最寬的說明提到截成「…」");
+                Check(!new[] { "default", "Default", "預設", "默认", "默認", "112", "48", "240" }.Any(w => t["cfg_maxw_tip"].Contains(w)), $"{lang}：左側分頁最寬的說明不寫預設與數字");
             }
+            // 手寫繁中沒有簡體字（繁中 mod 才不會再轉）、簡中沒有繁體字（照交易所預覽的檢查；只列兩邊寫法不同的字）
+            const string simplifiedOnly = "们这会过还说个里么为后对没换获见纯级标显红声间报写进结画洁东贴纸条灯盖状闪开单笔销丢变宽边页栏键时设动视组";
+            const string traditionalOnly = "們這會過還說個裡麼為後對沒換獲見純級標顯紅聲間報寫進結畫潔東貼紙條燈蓋狀閃開單筆銷丟變寬邊頁欄鍵時設動視組";
+            if (tables.TryGetValue("zh-Hant", out var hantAll))
+                foreach (var (k, v) in hantAll)
+                {
+                    var ch = v.FirstOrDefault(simplifiedOnly.Contains);
+                    Check(ch == default(char), $"zh-Hant.{k} 有簡體字「{ch}」：{v}");
+                }
+            if (tables.TryGetValue("zh", out var hansAll))
+                foreach (var (k, v) in hansAll)
+                {
+                    var ch = v.FirstOrDefault(traditionalOnly.Contains);
+                    Check(ch == default(char), $"zh.{k} 有繁體字「{ch}」：{v}");
+                }
             if (!tables.TryGetValue("en", out var en) || !tables.TryGetValue("zh", out var zh) || !tables.TryGetValue("zh-Hant", out var hant)) return;
             string Line2(Dictionary<string, string> t, string key) => t.TryGetValue(key, out var v) && v.Contains('\n') ? v.Split('\n')[1] : null;
             Eq(Line2(en, "cfg_next_tip"), "E.g. Ctrl+Tab, or the mouse side button Mouse5; empty = not used", "英文下一頁的第二行（定稿）");
@@ -878,6 +927,27 @@ namespace ProbablyStolenWindowTabs.Verify
             Eq(zh.GetValueOrDefault("cfg_fade_tip"), "抓着标题栏把窗口拖到另一个窗口的标题栏或标签栏上时，被拖的窗口会变透明，看得到标签页会插在哪里。", "簡中變透明的說明（定稿）");
             Eq(hant.GetValueOrDefault("cfg_fade"), "合併時視窗變透明", "繁中變透明的標籤（定稿）");
             Eq(hant.GetValueOrDefault("cfg_fade_tip"), "抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗會變透明，看得到分頁會插在哪裡。", "繁中變透明的說明（定稿）");
+            // 2.8.0 物品直接放進分頁（csv 裡的 \n 讀進來是換行）
+            Eq(en.GetValueOrDefault("cfg_drop"), "Drop items straight into tabs", "英文直接放進分頁的標籤（定稿）");
+            Eq(en.GetValueOrDefault("cfg_drop_tip"), "While dragging items, hovering over a tab no longer switches to it; releasing on the tab puts them straight into it.\nTo switch tabs while dragging, set the tab-switching hotkeys.", "英文直接放進分頁的說明（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_drop"), "物品直接放进标签页", "簡中直接放進分頁的標籤（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_drop_tip"), "拖着物品停在标签页上不再切页，松开就直接放进那一页。\n拖着时要切页，请设置切页快捷键。", "簡中直接放進分頁的說明（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_drop"), "物品直接放進分頁", "繁中直接放進分頁的標籤（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_drop_tip"), "拖著物品停在分頁上不再切頁，放開就直接放進那一頁。\n拖著時要切頁，請設定切頁快速鍵。", "繁中直接放進分頁的說明（定稿）");
+            // 2.8.0 分頁條位置（作者看過的定稿）
+            Eq(en.GetValueOrDefault("cfg_side"), "Tab strip position", "英文分頁條位置的標籤（定稿）");
+            Eq(en.GetValueOrDefault("cfg_side_tip"), "Which side of the window the tab strip goes on.\nTop = above the window\nLeft = to the left of the window", "英文分頁條位置的說明（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_side"), "标签栏位置", "簡中分頁條位置的標籤（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_side_tip"), "标签栏放在窗口的哪一边。\nTop＝上面\nLeft＝左边", "簡中分頁條位置的說明（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_side"), "分頁條位置", "繁中分頁條位置的標籤（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_side_tip"), "分頁條放在視窗的哪一邊。\nTop＝上面\nLeft＝左邊", "繁中分頁條位置的說明（定稿）");
+            // 2.8.0 左側分頁最寬。英文的半形雙引號照原樣：遊戲只在值的頭尾都是引號時才去掉引號，中間的照字面顯示
+            Eq(en.GetValueOrDefault("cfg_maxw"), "Left tab max width", "英文左側分頁最寬的標籤（定稿）");
+            Eq(en.GetValueOrDefault("cfg_maxw_tip"), "How wide a tab can get when the tab strip is on the left. Longer names are cut off with \"…\". On top, tabs follow the window's width instead.", "英文左側分頁最寬的說明（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_maxw"), "左侧标签最大宽度", "簡中左側分頁最寬的標籤（定稿）");
+            Eq(zh.GetValueOrDefault("cfg_maxw_tip"), "标签栏放在左边时，一个标签最宽多少；名字更长的会截成“…”。放在上面时，标签照窗口宽度排，不看这个。", "簡中左側分頁最寬的說明（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_maxw"), "左側分頁最寬", "繁中左側分頁最寬的標籤（定稿）");
+            Eq(hant.GetValueOrDefault("cfg_maxw_tip"), "分頁條放左邊時，一個分頁最寬多少；名字比這長的截成「…」。放上面時分頁照視窗寬度排，不看這個。", "繁中左側分頁最寬的說明（定稿）");
         }
 
         /// <summary>
@@ -1121,7 +1191,7 @@ namespace ProbablyStolenWindowTabs.Verify
             int next = init.IndexOf("cfg.Define(NextEntry,", StringComparison.Ordinal);
             int prev = init.IndexOf("cfg.Define(PrevEntry,", StringComparison.Ordinal);
             int fade = init.IndexOf("cfg.Define(FadeEntry, true,", StringComparison.Ordinal);
-            Check(next >= 0 && prev > next && fade > prev, "Settings.Init：變透明的開關定義在兩個按鍵欄後面、預設 true，舊設定的位置不變");
+            Check(next >= 0 && prev > next && fade > prev, "Settings.Init：變透明的開關定義在兩個按鍵欄後面、預設 true");
             Check(init.Contains("Loc.Get(\"cfg_fade\")") && init.Contains("Loc.Get(\"cfg_fade_tip\")"), "Settings.Init：標籤與說明用 cfg_fade、cfg_fade_tip");
             Check(!init.Contains("requiresRestart"), "Settings.Init：不標 requiresRestart，按套用就生效");
 
@@ -1156,6 +1226,237 @@ namespace ProbablyStolenWindowTabs.Verify
             var begin = Body(fadeSrc, "static void Begin(PixelWindow w)");
             Check(Before(begin, "GetComponent<CanvasGroup>", "AddComponent<CanvasGroup>"), "DragFade.Begin：先找既有的 CanvasGroup，沒有才加");
             Check(begin.Contains("Rules.FadedAlpha("), "DragFade.Begin：alpha 照 Rules.FadedAlpha 算");
+        }
+
+        // ── 物品直接放進分頁（2.8.0） ──
+
+        /// <summary>Rules 裡不碰 Unity 的判斷：能不能放、出不出提示框、提示框收不收、沿不沿用上一幀的提示框、放開時放不放（拖一組另外看放開那一幀的游標）、放開時每個物品跳不跳過。</summary>
+        static void DropRulesTest()
+        {
+            // 一個物品放不放得進去：有格子、不是本來就在裡面
+            foreach (var slot in new[] { false, true })
+                foreach (var inside in new[] { false, true })
+                    Eq(Rules.ItemFitsTab(slot, inside), slot && !inside, $"物品放得進：{(slot ? "有" : "沒有")}放得進的格子、{(inside ? "本來就在裡面" : "在別處")}");
+
+            // 那頁能不能放（「Claude 定的細節」）：四個都成立才能放
+            foreach (var dragged in new[] { false, true })
+                foreach (var canOpen in new[] { false, true })
+                    foreach (var mayInsert in new[] { false, true })
+                        foreach (var fits in new[] { false, true })
+                            Eq(Rules.TabAcceptsDrop(dragged, canOpen, mayInsert, fits), !dragged && canOpen && mayInsert && fits,
+                               $"能放：{(dragged ? "被拖的箱子" : "別的箱子")}、{(canOpen ? "打得開" : "上鎖")}、{(mayInsert ? "遊戲讓放" : "遊戲不讓放")}、{(fits ? "有放得進的" : "都放不進")}");
+            Check(!Rules.TabAcceptsDrop(true, true, true, true), "被拖的箱子自己那頁：不能放");
+            Check(!Rules.TabAcceptsDrop(false, false, true, true), "上鎖的容器：不能放");
+            Check(!Rules.TabAcceptsDrop(false, true, false, true), "遊戲不讓玩家放進去（MayPlayerInsertInto）：不能放");
+            Check(!Rules.TabAcceptsDrop(false, true, true, false), "根本不收這種物品、或本來就在裡面：不能放");
+            Check(Rules.TabAcceptsDrop(false, true, true, true), "別的箱子、打得開、讓放、放得進：能放");
+            // 一組：至少一個放得進就算（呼叫的人用 ItemFitsTab 一個個看，有一個成立就傳 true）
+            var groupFits = new[] { (false, false), (true, true), (true, false) }.Any(p => Rules.ItemFitsTab(p.Item1, p.Item2));
+            Check(Rules.TabAcceptsDrop(false, true, true, groupFits), "一組裡有一個放得進（其他放不進或本來就在裡面）：能放");
+            var noneFit = new[] { (false, false), (true, true) }.Any(p => Rules.ItemFitsTab(p.Item1, p.Item2));
+            Check(!Rules.TabAcceptsDrop(false, true, true, noneFit), "一組裡一個都放不進：不能放");
+            // 鎖住整組、目前那頁都不影響：判斷根本不看它們
+            var ps = typeof(Rules).GetMethod("TabAcceptsDrop", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?.GetParameters()
+                .Select(p => p.Name).ToList();
+            Eq(ps == null ? "" : string.Join(",", ps), "beingDragged,canOpen,mayPlayerInsert,anyItemFits",
+               "能不能放只看這四個：鎖住的組照樣能放、目前那頁也算（沒有鎖、目前那頁的參數）");
+
+            // 提示框：只有拖單一物品而且能放
+            foreach (var single in new[] { false, true })
+                foreach (var accepts in new[] { false, true })
+                    Eq(Rules.ShowDropTooltip(single, accepts), single && accepts, $"提示框：{(single ? "拖單一物品" : "拖一組")}、{(accepts ? "能放" : "不能放")}");
+            Check(!Rules.ShowDropTooltip(false, true), "拖一組時只標亮、不出提示框");
+
+            // 收提示框：我們上一幀顯示的、這一幀不顯示、滑鼠沒動才收
+            foreach (var shown in new[] { false, true })
+                foreach (var show in new[] { false, true })
+                    foreach (var moved in new[] { false, true })
+                        Eq(Rules.HideDropTooltip(shown, show, moved), shown && !show && !moved,
+                           $"收提示框：上一幀{(shown ? "是我們顯示的" : "不是我們顯示的")}、這一幀{(show ? "照樣顯示" : "不顯示")}、滑鼠{(moved ? "動了" : "沒動")}");
+            Check(!Rules.HideDropTooltip(false, false, false), "我們沒顯示過：不收（不蓋掉遊戲自己的提示框）");
+            Check(!Rules.HideDropTooltip(true, false, true), "滑鼠動了（遊戲這一幀自己重算過提示框）：不收");
+            Check(Rules.HideDropTooltip(true, false, false), "滑鼠沒動、游標底下換了分頁（按切頁鍵後重排）：收一次");
+
+            // 提示框沿用上一幀的（不每幀重算）：上一幀是我們顯示的、這一幀照樣要顯示、滑鼠沒動、箱子物品數量都一樣
+            foreach (var shown in new[] { false, true })
+                foreach (var show in new[] { false, true })
+                    foreach (var moved in new[] { false, true })
+                        foreach (var same in new[] { false, true })
+                            Eq(Rules.KeepDropTooltip(shown, show, moved, same), shown && show && !moved && same,
+                               $"沿用提示框：上一幀{(shown ? "是我們顯示的" : "不是我們顯示的")}、這一幀{(show ? "要顯示" : "不顯示")}、滑鼠{(moved ? "動了" : "沒動")}、{(same ? "箱子物品數量都一樣" : "換了箱子、物品或數量")}");
+            Check(Rules.KeepDropTooltip(true, true, false, true), "游標停著不動、什麼都沒變：什麼都不叫（提示框還在畫面上）");
+            Check(!Rules.KeepDropTooltip(true, true, true, true), "滑鼠動了（遊戲在 Update 收掉了）：重算重顯示");
+            Check(!Rules.KeepDropTooltip(true, true, false, false), "滑鼠沒動、按切頁鍵後游標底下換了分頁（箱子變了）：重算");
+            Check(!Rules.KeepDropTooltip(false, true, false, true), "上一幀不是我們顯示的：重算");
+
+            // 放開時放不放：放開左鍵＋上一幀標亮的那頁＋遊戲有焦點；拖一組另外要放開那一幀游標還在那頁上
+            foreach (var focused in new[] { false, true })
+                foreach (var was in new[] { false, true })
+                    foreach (var held in new[] { false, true })
+                        foreach (var target in new[] { 0, 7 })
+                            foreach (var group in new[] { false, true })
+                                foreach (var now in new[] { 0, 7, 8 })
+                                {
+                                    var expect = !focused ? Rules.DropRelease.LostFocus
+                                        : !was || held ? Rules.DropRelease.Cancelled
+                                        : target == 0 ? Rules.DropRelease.NoTarget
+                                        : group && now != target ? Rules.DropRelease.MovedOff : Rules.DropRelease.Drop;
+                                    Eq(Rules.OnRelease(was, held, focused, target, group, now), expect,
+                                       $"放開時：{(focused ? "有焦點" : "失去焦點")}、上一幀{(was ? "按著" : "沒按")}、這一幀{(held ? "按著" : "放開")}、目標 {target}、{(group ? "拖一組" : "拖單一物品")}、放開那一幀在 {now}");
+                                }
+            Eq(Rules.OnRelease(true, false, true, 7, false, 0), Rules.DropRelease.Drop, "放開左鍵、上一幀標亮的那頁能放：放進去");
+            Eq(Rules.OnRelease(true, true, true, 7, false, 7), Rules.DropRelease.Cancelled, "拖曳被取消（Esc、AbortDrag，左鍵還按著）：不放");
+            Eq(Rules.OnRelease(true, false, true, 0, false, 0), Rules.DropRelease.NoTarget, "上一幀沒標亮（不能放的頁）：不放");
+            Eq(Rules.OnRelease(true, false, false, 7, false, 7), Rules.DropRelease.LostFocus, "遊戲失去焦點（按鍵狀態歸零像放開）：不放");
+            Eq(Rules.OnRelease(true, false, true, 7, false, 8), Rules.DropRelease.Drop, "拖單一物品：照上一幀的目標（遊戲 EndDrag 也用上一幀的 lastItem／lastInventory），不看放開那一幀");
+            Eq(Rules.OnRelease(true, false, true, 7, true, 7), Rules.DropRelease.Drop, "拖一組、放開那一幀游標還在同一頁上：放進去");
+            Eq(Rules.OnRelease(true, false, true, 7, true, 0), Rules.DropRelease.MovedOff, "拖一組、放開那一幀游標移到格子或物品上（遊戲 EndGroupDrag 用這一幀的游標，自己會動作）：不放");
+            Eq(Rules.OnRelease(true, false, true, 7, true, 8), Rules.DropRelease.MovedOff, "拖一組、放開那一幀游標換到別的分頁：不放");
+
+            // 放開時每個物品跳不跳過（照遊戲的 EndDrag／EndGroupDrag）
+            Eq(Rules.ItemSkip(false, false, false, true, false, false, true), Rules.DropSkip.None, "拖單一物品、放得進：放");
+            Eq(Rules.ItemSkip(false, true, false, true, false, false, true), Rules.DropSkip.Gone, "物品銷毀或不在格子裡：不放");
+            Eq(Rules.ItemSkip(false, false, true, true, false, false, true), Rules.DropSkip.MovedByGame, "遊戲已經把物品放到別處（換格子或數量變了）：不放，免得重複搬");
+            Eq(Rules.ItemSkip(false, false, false, false, false, false, true), Rules.DropSkip.None, "拖單一物品不看拿不拿得起（遊戲開始拖時看過了）");
+            Eq(Rules.ItemSkip(false, false, false, true, false, true, true), Rules.DropSkip.AlreadyInside, "本來就在那個箱子裡：不放");
+            Eq(Rules.ItemSkip(false, false, false, true, false, false, false), Rules.DropSkip.DoesNotFit, "放不進去：不放");
+            Eq(Rules.ItemSkip(true, false, false, true, false, false, true), Rules.DropSkip.None, "一組裡的一個、放得進：放");
+            Eq(Rules.ItemSkip(true, false, false, false, false, false, true), Rules.DropSkip.NotRemovable, "一組裡拿不起來的（!MayRemove、MaxNumRemove < 1）：跳過");
+            Eq(Rules.ItemSkip(true, false, false, true, true, false, true), Rules.DropSkip.IsTarget, "一組裡的就是那頁的箱子：跳過");
+            Eq(Rules.ItemSkip(true, false, false, true, false, true, true), Rules.DropSkip.AlreadyInside, "一組裡本來就在那個箱子的：跳過");
+            Eq(Rules.ItemSkip(true, true, true, false, true, true, false), Rules.DropSkip.Gone, "銷毀的最先看（其他條件都不準）");
+        }
+
+        /// <summary>
+        /// 讀原始碼查（Settings、Tabs、ItemDrop 碰 Unity，編不進離線測試）：開關排在 FadeWhileMerging 後面、預設關；
+        /// 私有欄位的反射都用 typeof 直接指定遊戲的型別（官方掃描不算 reflection-external）；不攔遊戲的方法、不用 System.IO；
+        /// DragItem 怎麼接（開關打開才走直接放進分頁、拖曳結束時放、停留切頁不動）；能不能放的判斷不看鎖與目前那頁。
+        /// 比對前先拿掉整行的註解，註解掉的程式不算。
+        /// </summary>
+        static void DropSourceTest()
+        {
+            var root = FindModRoot();
+            Check(root != null, "找得到 mod 的資料夾，裡面有 mod/src");
+            if (root == null) return;
+            string Read(string name) => string.Join("\n", File.ReadAllText(Path.Combine(root, "mod", "src", name)).Replace("\r\n", "\n")
+                .Split('\n').Where(l => !l.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+            string Body(string src, string signature)
+            {
+                int i = src.IndexOf(signature, StringComparison.Ordinal);
+                if (i < 0) return "";
+                int j = src.IndexOf("\n        }\n", i, StringComparison.Ordinal);
+                return j < 0 ? src.Substring(i) : src.Substring(i, j - i);
+            }
+            bool Before(string src, string first, string second)
+            {
+                int a = src.IndexOf(first, StringComparison.Ordinal), b = src.IndexOf(second, StringComparison.Ordinal);
+                return a >= 0 && b > a;
+            }
+
+            // 設定：key、排在變透明的開關後面、預設關、標籤與說明的 key、按套用就生效
+            var settings = Read("Settings.cs");
+            Check(settings.Contains("internal const string DropEntry = \"DropIntoTabs\";"), "Settings：開關的 key 是 DropIntoTabs");
+            var init = Body(settings, "internal static void Init()");
+            int prev = init.IndexOf("cfg.Define(PrevEntry,", StringComparison.Ordinal);
+            int fade = init.IndexOf("cfg.Define(FadeEntry,", StringComparison.Ordinal);
+            int drop = init.IndexOf("cfg.Define(DropEntry, false,", StringComparison.Ordinal);
+            Check(prev >= 0 && fade > prev && drop > fade, "Settings.Init：直接放進分頁的開關定義在 FadeWhileMerging 後面、預設 false");
+            Check(init.Contains("Loc.Get(\"cfg_drop\")") && init.Contains("Loc.Get(\"cfg_drop_tip\")"), "Settings.Init：標籤與說明用 cfg_drop、cfg_drop_tip");
+            Check(!init.Contains("requiresRestart"), "Settings.Init：不標 requiresRestart，按套用就生效");
+            Check(Regex.Replace(settings, @"\s+", "").Contains("internalstaticboolDropIntoTabs=>_drop!=null&&_drop.Value;"),
+                  "Settings.DropIntoTabs：還沒讀設定時當作關著（照預設）");
+            Check(Body(settings, "internal static string Describe()").Contains("物品直接放進分頁"), "Settings.Describe：log 寫出這個開關的狀態");
+
+            // 不攔遊戲的方法、不宣告權限：src 裡沒有 [HarmonyPatch]、不用 System.IO
+            foreach (var path in Directory.GetFiles(Path.Combine(root, "mod", "src"), "*.cs"))
+            {
+                var src = Read(Path.GetFileName(path));
+                Check(!src.Contains("HarmonyPatch"), $"{Path.GetFileName(path)}：沒有 [HarmonyPatch]");
+                Check(!src.Contains("System.IO"), $"{Path.GetFileName(path)}：不用 System.IO");
+            }
+
+            // 私有欄位的反射：兩個欄位、型別用 typeof 直接寫在 GetField 前面；沒有別的反射寫法
+            var drop2 = Read("ItemDrop.cs");
+            Check(drop2.Contains("typeof(ItemMouseDragHandler).GetField(\"currentRemove\","), "ItemDrop：拖著的數量讀 ItemMouseDragHandler.currentRemove，型別用 typeof 指定");
+            Check(drop2.Contains("typeof(ItemMultiSelectHandler).GetField(\"selectedItems\","), "ItemDrop：拖著的一組讀 ItemMultiSelectHandler.selectedItems，型別用 typeof 指定");
+            int getField = Regex.Matches(drop2, @"\.GetField\(").Count, typedGetField = Regex.Matches(drop2, @"typeof\(\w+\)\.GetField\(").Count;
+            Check(getField == 2 && typedGetField == 2, $"ItemDrop：GetField 只有這兩個、都用 typeof（共 {getField} 個，typeof 的 {typedGetField} 個）");
+            Check(!drop2.Contains("AccessTools") && !drop2.Contains("GetMethod(") && !drop2.Contains("GetProperty("), "ItemDrop：沒有別的反射");
+            var capture = Body(drop2, "internal static bool Capture(");
+            Check(capture.Contains("return false;") && capture.Contains("Log.Warning("), "ItemDrop.Capture：讀不到就回傳 false、log 警告");
+
+            // 能不能放：照 Rules.TabAcceptsDrop，不看鎖住整組、不看目前那頁
+            var accepts = Body(drop2, "internal static bool Accepts(");
+            Check(accepts.Contains("Rules.TabAcceptsDrop(") && accepts.Contains("Rules.ItemFitsTab("), "ItemDrop.Accepts：照 Rules.TabAcceptsDrop、ItemFitsTab");
+            Check(accepts.Contains("GameWindows.IsBeingDragged(box)") && accepts.Contains("GameWindows.CanOpen(box)") &&
+                  accepts.Contains("GeneralHelper.MayPlayerInsertInto(box)") && accepts.Contains("box.MayHaveValidInventorySlot("),
+                  "ItemDrop.Accepts：看被不被拖、打不打得開、讓不讓放、有沒有放得進的格子");
+            Check(!accepts.Contains("Lock") && !accepts.Contains(".Active"), "ItemDrop.Accepts：不看鎖住整組、不看目前那頁");
+            Check(accepts.Contains("{ anyFits = true; break; }"), "ItemDrop.Accepts：一組裡任一個放得進就算能放");
+            var place = Body(drop2, "internal static Result Place(");
+            Check(place.Contains("Rules.ItemSkip(") && place.Contains("GraphUtils.TryAcceptAll(box, item, amount)"), "ItemDrop.Place：照 Rules.ItemSkip 跳過、用遊戲的 TryAcceptAll 放");
+            Check(place.Contains("!ReferenceEquals(item.parentInventory, e.Home) || item.unitCount != e.Units"),
+                  "ItemDrop.Place：換了格子或數量變了＝遊戲已經動過（MovedByGame），不重複搬");
+            Check(place.Contains("Math.Min(count, item.unitCount)"), "ItemDrop.Place：拖單一物品放拖著的數量，夾到物品現有的數量");
+            Check(place.Contains("res.Why = Rules.DropSkip.NoAmount;") && place.Contains("res.Why = Rules.DropSkip.Failed;"),
+                  "ItemDrop.Place：拖單一物品數量不夠、出錯時記下原因（log 不寫成放進去 0 個）");
+            var tip = Body(drop2, "internal static bool ShowTooltip(");
+            Check(tip.Contains("RichTextGenerator.InsertItemInOtherItem(item, box, canInsert, _builder)") && tip.Contains("tooltipTranslation"),
+                  "ItemDrop.ShowTooltip：用遊戲把物品拖到箱子上的同一個提示框與位置");
+
+            // Tabs 怎麼接
+            var tabs = Read("Tabs.cs");
+            int caseAt = tabs.IndexOf("case Mode.DragItem:", StringComparison.Ordinal);
+            int caseEnd = caseAt >= 0 ? tabs.IndexOf("case Mode.PressChain:", caseAt, StringComparison.Ordinal) : -1;
+            var itemCase = caseAt >= 0 && caseEnd > caseAt ? tabs.Substring(caseAt, caseEnd - caseAt) : "";
+            Check(itemCase.Length > 0, "Tabs：找得到 DragItem 的 case");
+            Check(Before(itemCase, "ReleaseDrop(r, held, mouse);", "_mode = Mode.Idle;"), "Tabs 的 DragItem：拖曳結束時先看要不要放進分頁（帶這一幀的游標），再回 Idle");
+            Check(itemCase.Contains("DragItemFrame(r, mouse);"), "Tabs 的 DragItem：拖著時交給 DragItemFrame");
+            var frame = Body(tabs, "static void DragItemFrame(");
+            Check(Before(frame, "DropSetting()", "HoverForDrop(r, mouse)") && Before(frame, "HoverForDrop(r, mouse)", "HoverWhileDraggingItem(r, mouse)"),
+                  "Tabs.DragItemFrame：開關打開走 HoverForDrop，關著照舊停留切頁");
+            var dropSetting = Body(tabs, "static bool DropSetting()");
+            Check(dropSetting.Contains("Settings.DropIntoTabs") && dropSetting.Contains("catch") && dropSetting.Contains("return false;"),
+                  "Tabs.DropSetting：讀設定出錯時當作關著，不讓例外取消拖曳");
+            var hover = Body(tabs, "static void HoverForDrop(");
+            var tabAt = Body(tabs, "static int DropTabAt(");
+            Check(hover.Contains("DropTabAt(mouse)") && tabAt.Contains("RaycastTab(mouse, true)"), "Tabs.HoverForDrop：游標底下的分頁照 DropTabAt，射線跳過拖曳中物品那幾層");
+            Check(hover.Contains("_dropTargetId = accepts ? id : 0;") && hover.Contains("_hoverId = _dropTargetId;"),
+                  "Tabs.HoverForDrop：只有能放的分頁才是放開時的目標、才標亮");
+            Check(hover.Contains("Rules.KeepDropTooltip(_dropTooltipShown, want, moved, sameTip) || (want && ItemDrop.ShowTooltip("),
+                  "Tabs.HoverForDrop：沿用得了就不叫 ShowTooltip（先看 KeepDropTooltip）");
+            Check(hover.Contains("ReferenceEquals(box, _tipBox)") && hover.Contains("ReferenceEquals(tipItem, _tipItem)") && hover.Contains("_dropCount == _tipCount"),
+                  "Tabs.HoverForDrop：沿用提示框要箱子、物品、拖著的數量都和上一幀顯示時一樣");
+            Check(hover.Contains("_tipBox = show ? box : null;") && Body(tabs, "static void ForgetDropTooltip()").Contains("_tipBox = null;"),
+                  "Tabs：記下提示框顯示的是哪個箱子，不再記著時一起清掉");
+            Check(!hover.Contains("Switch(") && !hover.Contains("HoverSwitchSeconds") && !hover.Contains("FreezeHover"), "Tabs.HoverForDrop：不計時、不切頁、不凍住");
+            Check(!hover.Contains("Lock") && !hover.Contains(".Active"), "Tabs.HoverForDrop：不看鎖住整組、不看目前那頁");
+            Check(hover.Contains("Rules.ShowDropTooltip(!group, accepts)") && hover.Contains("Rules.HideDropTooltip(_dropTooltipShown, show, moved)"),
+                  "Tabs.HoverForDrop：提示框照 Rules.ShowDropTooltip／HideDropTooltip");
+            var release = Body(tabs, "static void ReleaseDrop(");
+            Check(release.Contains("Rules.OnRelease(_wasHeld, held, Application.isFocused, target, group, releaseTab)"), "Tabs.ReleaseDrop：照 Rules.OnRelease 看是不是真的放開左鍵");
+            Check(release.Contains("int releaseTab = group ? DropTabAt(mouse) : 0;"), "Tabs.ReleaseDrop：拖一組時用放開那一幀的游標再找一次分頁（拖單一物品照上一幀的）");
+            Check(Before(release, "ClearDrop();", "if (over == 0) return;"), "Tabs.ReleaseDrop：每次都先清乾淨，再看上一幀在不在分頁上");
+            Check(release.Contains("bool debug = WindowTabsMod.Debug;") && release.Contains("string tab = debug ?"), "Tabs.ReleaseDrop：分頁名稱的字串只在除錯模式組");
+            Check(release.Contains("ItemDrop.Place(") && !release.Contains("Switch("), "Tabs.ReleaseDrop：放進去、不切頁");
+            Check(Before(release, "ItemDrop.Place(", "BringGroupToFront(g);"), "Tabs.ReleaseDrop：放進去以後把那組的視窗拉到最上面");
+            Check(Body(tabs, "static void EndDrag()").Contains("ClearDrop();"), "Tabs.EndDrag：清掉直接放進分頁的狀態");
+            Check(Body(tabs, "static void FreezeHover()").Contains("_dropTargetId = 0;"), "Tabs.FreezeHover：按切頁鍵切完頁，這一幀算好的放進目標作廢");
+            Check(hover.Contains("string key = now == null ? null : $\"{id}|{now}\";") && hover.Contains("if (key != _dropLogged)"),
+                  "Tabs.HoverForDrop：除錯 log 換了分頁也記（不只比狀態）");
+            // 決定 85：目前那頁能放時也標亮（2.8.0 實測後）；停留切頁時照舊不亮
+            Check(Body(tabs, "static void ApplyDragState(").Contains("if (spec.Hover == spec.Active && _hoverId != _dropTargetId) spec.Hover = -1;"),
+                  "Tabs.ApplyDragState：直接放進分頁時目前那頁也標亮，停留切頁時不亮");
+            Check(frame.Contains("ClearDrop();"),"Tabs.DragItemFrame：開關關著時每幀清掉放進目標（目前那頁才不會被當成標亮）");
+            var strip = Read("TabStrip.cs");
+            Check(strip.Contains("connect, s.Row == 0, active && i == spec.Hover);"), "TabStrip.Show：目前那頁同時是標亮的分頁時傳 lit");
+            var style = Body(strip, "static void Style(View v, TabPalette p, TabLook look, bool connect, bool onWindow, bool lit = false)");
+            Check(style.Contains("var paint = lit ? TabLook.Hover : look;") && style.Contains("StyleBevel(v, p, look, paint, fill, connect, onWindow)"),
+                  "TabStrip.Style：lit 時顏色照標亮、形狀照目前那頁");
+            var tick = Body(tabs, "internal static void Tick()");
+            int fin = tick.IndexOf("finally", StringComparison.Ordinal);
+            Check(fin >= 0 && tick.Substring(fin).Contains("if (_mode != Mode.DragItem) ForgetDropTooltip();"),
+                  "Tabs.Tick 的 finally：不在拖物品了就不再記著我們顯示的提示框");
         }
 
         static string FindModRoot()
@@ -1218,8 +1519,10 @@ namespace ProbablyStolenWindowTabs.Verify
         }
 
         /// <summary>
-        /// 鏈條小分頁：13×5 的圖示、寬 19；在分頁條的第一格，和其他分頁一起排（換行、多排拉長），
-        /// 多排時在貼著視窗那排的最左邊；插入位置、重排的索引換算跳過它（lead）；鎖住的組的分頁拖曳中夾在分頁條裡。
+        /// 鏈條小分頁：13×5 的圖示、寬 19；鎖住時在分頁條的第一格，插入位置、重排的索引換算跳過它（lead）；
+        /// 鎖住的組的分頁拖曳中夾在分頁條裡。
+        /// 2.8.0 起放上面也照 5B 排：鏈條固定 19×16 在第 0 排最左邊、不換行不拉長，其他分頁在「視窗寬減 18」裡排、往右移 18
+        /// （TopChainFixedTest）。這裡的期望值照新的排法；2.6.0 的版本鏈條是 Layout 的第一格、和其他分頁一起換行與拉長。
         /// </summary>
         static void ChainLayoutTest()
         {
@@ -1227,56 +1530,57 @@ namespace ProbablyStolenWindowTabs.Verify
             Check(Rules.ChainIcon.All(row => row.Length == 13 && row.All(c => c == '#' || c == '.')), "鏈條圖示每列 13 格、只有 # 與 .");
             Eq(Rules.ChainTabWidth, 19f, "鏈條小分頁寬 19（圖示 13＋左右各 3）");
 
-            float c = Rules.ChainTabWidth;
             // 一排：鏈條小分頁在最左邊，後面的分頁照常接上（相鄰重疊 1）
-            var s = Rules.Layout(new[] { c, 40f, 40f }, 100, 1);
+            var s = Rules.LayoutTop(new[] { 40f, 40f }, 100, 1, true);
             Check(s[0].Row == 0 && s[0].X == 0 && s[0].Width == 19, "鏈條小分頁是第一格（第 0 排最左邊、寬 19）");
             Check(s[1].X == 18 && s[2].X == 57 && s.All(x => x.Row == 0), "後面的分頁接在它後面：18、57");
-            // 它佔位置：沒鎖時放得下的，鎖住後換行
-            Eq(Rules.RowCount(Rules.Layout(new[] { 50f, 50f }, 100, 1)), 1, "沒鎖：50＋50 一排放得下");
-            s = Rules.Layout(new[] { c, 50f, 50f }, 100, 1);
-            Check(Rules.RowCount(s) == 2 && s[0].Row == 0 && s[1].Row == 0 && s[2].Row == 1, "鎖住：多了 19 寬，最後一個換到上面一排");
-            // 多排拉長：和其他分頁一起照比例拉長，還在第 0 排最左邊
-            s = Rules.Layout(new[] { c, 60f, 110f }, 120, 0);
-            Check(s[0].Row == 0 && s[0].X == 0 && s[0].Width == 26 && s[1].X == 26 && s[1].Width == 84 && s[2].Row == 1,
-                $"多排時第 0 排拉長到 110：鏈條小分頁 26、第一頁 84（{s[0].Width},{s[1].Width}）");
+            // 它佔位置：沒鎖時放得下的，鎖住後換行；上面的排也從 18 開始（鏈條上面空著）
+            Eq(Rules.RowCount(Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, false)), 1, "沒鎖：50＋50 一排放得下");
+            s = Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, true);
+            Check(Rules.RowCount(s) == 2 && s[0].Row == 0 && s[1].Row == 0 && s[2].Row == 1 && s[2].X == 18,
+                $"鎖住：多了 18 寬，最後一個換到上面一排、從 18 開始（{s[2].X}）");
+            // 多排拉長：只拉其他分頁，鏈條固定 19（2.6.0 時被一起拉到 26）
+            s = Rules.LayoutTop(new[] { 60f, 110f }, 120, 1, true);
+            Check(s[0].Width == 19 && s[1].X == 18 && s[1].Width == 102 && s[2].Row == 1 && s[2].X == 18 && s[2].Width == 102,
+                $"多排時：鏈條 19 不拉長；110 夾到 102（120−18）自己一排，第 0 排的 60 拉到 102（{s[0].Width},{s[1].Width},{s[2].Width}）");
 
-            // 插入位置跳過它：分頁 [50, 50]，第 0 排是 鏈條(0～19)＋第一頁(18～68)，第 1 排是第二頁(0～50)
-            s = Rules.Layout(new[] { c, 50f, 50f }, 100, 1);
+            // 插入位置跳過它：分頁 [50, 50]，第 0 排是 鏈條(0～19)＋第一頁(18～68)，第 1 排是第二頁(18～68)
+            s = Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, true);
             Eq(Rules.InsertIndex(s, 0, 5, 1), 0, "拖到鏈條小分頁的左半邊：插在第一頁前面");
             Eq(Rules.InsertIndex(s, 0, 15, 1), 0, "拖到鏈條小分頁的右半邊：還是第一頁前面");
             Eq(Rules.InsertIndex(s, 0, 30, 1), 0, "第一頁的左半邊：第一頁前面");
             Eq(Rules.InsertIndex(s, 0, 60, 1), 1, "第一頁的右半邊：第二頁前面");
-            Eq(Rules.InsertIndex(s, 1, 10, 1), 1, "第 1 排左半邊：第二頁前面");
-            Eq(Rules.InsertIndex(s, 1, 40, 1), 2, "第 1 排右半邊：最後（分頁數 2，不算鏈條小分頁）");
+            Eq(Rules.InsertIndex(s, 1, 10, 1), 1, "第 1 排鏈條上面的空處：第二頁前面");
+            Eq(Rules.InsertIndex(s, 1, 50, 1), 2, "第 1 排右半邊（中線 43 右邊）：最後（分頁數 2，不算鏈條小分頁）");
             Eq(Rules.InsertIndex(s, 0, 5, 0), 0, "（對照）lead 0 時照原本的算法");
 
-            // 重排（拿掉被拖那頁之後的位置）也跳過它：鏈條＋[40,40,40,30]，寬 100、重疊 2，拖第 1 頁（widths 的第 2 個）
-            var widths = new[] { c, 40f, 40f, 40f, 30f };
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 5, 1), 0, "重排：鏈條小分頁上＝第一頁前面");
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 30, 1), 0, "重排：第一頁左半邊＝第一頁前面");
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 50, 1), 1, "重排：拖回原位附近＝拿掉之後的第 1 個前面");
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 99, 1), 2, "重排：第 0 排最右邊");
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 1, 99, 1), 3, "重排：最後（剩下 3 頁）");
-            Eq(Rules.LiftedInsertIndex(widths, 2, 100, 2, 5, 5, 1), 3, "重排：高於剩下的最上排＝放最後（不算鏈條小分頁）");
+            // 重排（拿掉被拖那頁之後的位置）也跳過它：分頁 [40,40,40,30]，寬 100、重疊 2，拖第 1 頁
+            // 剩下 [40,40,30] 在 100−17＝83 裡排：第 0 排 鏈條＋17～57＋55～95，第 1 排 17～47
+            var widths = new[] { 40f, 40f, 40f, 30f };
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 5, true), 0, "重排：鏈條小分頁上＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 30, true), 0, "重排：第一頁左半邊＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 50, true), 1, "重排：拖回原位附近＝拿掉之後的第 1 個前面");
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 99, true), 2, "重排：第 0 排最右邊");
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 1, 99, true), 3, "重排：最後（剩下 3 頁）");
+            Eq(Rules.LiftedInsertIndex(widths, 1, 100, 2, 5, 5, true), 3, "重排：高於剩下的最上排＝放最後（不算鏈條小分頁）");
             // 換算成 Reorder：組員的位置不因為鏈條小分頁位移（它不在 ids 裡）
             var ids = new[] { 10, 20, 30, 40 };
-            int at = Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 5, 1);
+            int at = Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 5, true);
             Check(Rules.ReorderPlan(ids, 20, 1, at, out var before) && before == 10, "拖到鏈條小分頁上放開：插在第一頁（10）前面");
             DragCase("鎖住的組：拖到最前面", ids, 20, at, new[] { 20, 10, 30, 40 }, true);
-            at = Rules.LiftedInsertIndex(widths, 2, 100, 2, 0, 50, 1);
+            at = Rules.LiftedInsertIndex(widths, 1, 100, 2, 0, 50, true);
             Check(!Rules.ReorderPlan(ids, 20, 1, at, out _), "鎖住的組：拖回原位不重排");
 
             // 鎖住的組的分頁拖不出分頁條：滑鼠夾回分頁條的範圍，影子（半寬 20、半高 8）整個留在裡面
-            var b = Rules.Layout(new[] { c, 40f, 40f }, 100, 1); // 右緣 97、一排（上緣 16）
+            var b = Rules.LayoutTop(new[] { 40f, 40f }, 100, 1, true); // 右緣 97、一排（上緣 16）
             Rules.ClampToStrip(b, 15, 1, 20, 8, 50, 8, out var cx, out var cy);
             Check(cx == 50 && cy == 8, "在分頁條裡：不動");
             Rules.ClampToStrip(b, 15, 1, 20, 8, -30, 50, out cx, out cy);
             Check(cx == 20 && cy == 8, $"拖到左上外面：停在左邊（{cx},{cy}）");
             Rules.ClampToStrip(b, 15, 1, 20, 8, 500, -40, out cx, out cy);
             Check(cx == 77 && cy == 8, $"拖到右下外面（視窗內容區）：停在右邊（{cx},{cy}）");
-            Eq(Rules.LiftedInsertIndex(new[] { c, 40f, 40f }, 1, 100, 1, (int)Math.Floor(cy / 15), cx, 1), 1, "夾在右邊放開：放最後");
-            b = Rules.Layout(new[] { c, 50f, 50f }, 100, 1); // 兩排：上緣 31
+            Eq(Rules.LiftedInsertIndex(new[] { 40f, 40f }, 0, 100, 1, (int)Math.Floor(cy / 15), cx, true), 1, "夾在右邊放開：放最後");
+            b = Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, true); // 兩排：上緣 31
             Rules.ClampToStrip(b, 15, 1, 25, 8, 30, 200, out cx, out cy);
             Check(cy == 23 && (int)Math.Floor(cy / 15) == 1, $"兩排、拖到上面外面：停在最上排（y {cy}）");
             Rules.ClampToStrip(b, 15, 1, 25, 8, 30, -200, out cx, out cy);
@@ -1285,35 +1589,412 @@ namespace ProbablyStolenWindowTabs.Verify
             Eq(cx, 15f, "範圍比影子窄：放正中間");
 
             // 插入位置用只夾、不內縮的點（審查後改）：寬的分頁拖得到最前面
-            var wideW = new[] { c, 30f, 100f };
-            b = Rules.Layout(wideW, 200, 1); // 一排：鏈條 0～19、30 在 18～48、100 在 47～147
+            var wideW = new[] { 30f, 100f };
+            b = Rules.LayoutTop(wideW, 200, 1, true); // 一排：鏈條 0～19、30 在 18～48、100 在 47～147
             Rules.ClampToStrip(b, 15, 1, 50, 8, -40, 8, out cx, out cy);
-            Eq(Rules.LiftedInsertIndex(wideW, 2, 200, 1, 0, cx, 1), 1, "（對照）用影子內縮過的點：100 寬的那頁插不到第 0 個");
+            Eq(Rules.LiftedInsertIndex(wideW, 1, 200, 1, 0, cx, true), 1, "（對照）用影子內縮過的點：100 寬的那頁插不到第 0 個");
             Rules.ClampForInsert(b, 15, -40, 8, out var ix, out var iy);
             Check(ix == 0 && iy == 8, $"插入用的點：x 夾到 0（{ix},{iy}）");
-            Eq(Rules.LiftedInsertIndex(wideW, 2, 200, 1, (int)Math.Floor(iy / 15), ix, 1), 0, "寬的分頁拖到最左邊放開＝第 0 個");
+            Eq(Rules.LiftedInsertIndex(wideW, 1, 200, 1, (int)Math.Floor(iy / 15), ix, true), 0, "寬的分頁拖到最左邊放開＝第 0 個");
             Rules.ClampForInsert(b, 15, 999, 999, out ix, out iy);
             Check(ix == 147 && iy < 15 && iy > 14.9f, $"插入用的點：右上夾到最寬那排的右緣、最上排以內（{ix},{iy}）");
-            Eq(Rules.LiftedInsertIndex(wideW, 1, 200, 1, (int)Math.Floor(iy / 15), ix, 1), 1, "拖到右邊外面放開＝最後");
-            Rules.ClampForInsert(Rules.Layout(new[] { c, 50f, 50f }, 100, 1), 15, 30, 500, out _, out iy);
+            Eq(Rules.LiftedInsertIndex(wideW, 0, 200, 1, (int)Math.Floor(iy / 15), ix, true), 1, "拖到右邊外面放開＝最後");
+            Rules.ClampForInsert(Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, true), 15, 30, 500, out _, out iy);
             Eq((int)Math.Floor(iy / 15), 1, "兩排：拖到上面外面＝最上排");
-            Rules.ClampForInsert(Rules.Layout(new[] { c, 50f, 50f }, 100, 1), 15, 30, -500, out _, out iy);
+            Rules.ClampForInsert(Rules.LayoutTop(new[] { 50f, 50f }, 100, 1, true), 15, 30, -500, out _, out iy);
             Eq(iy, 0f, "拖到下面外面＝貼著視窗那排");
 
-            // 鏈條自己佔第 0 排（窄視窗、第一頁寬到擠不下）：Layout([19,120],100,1) 第 0 排只有鏈條（被拉到 100）、第 1 排是那頁
-            s = Rules.Layout(new[] { c, 120f }, 100, 1);
-            Check(s[0].Row == 0 && s[0].Width == 100 && s[1].Row == 1, $"鏈條自己在第 0 排、被拉長到 100（{s[0].Width}）");
-            Eq(Rules.InsertIndex(s, 0, 10, 1), 0, "鏈條自己一排：第 0 排左邊＝第一頁前面");
-            Eq(Rules.InsertIndex(s, 0, 90, 1), 0, "鏈條自己一排：第 0 排右邊也是第一頁前面");
-            Eq(Rules.InsertIndex(s, 1, 10, 1), 0, "第 1 排左半邊＝第一頁前面");
-            Eq(Rules.InsertIndex(s, 1, 90, 1), 1, "第 1 排右半邊＝最後");
-            var loneW = new[] { c, 120f, 40f };
-            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 0, 50, 1), 0, "重排（拖 40 那頁、剩下鏈條自己一排）：第 0 排＝第一頁前面");
-            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 1, 10, 1), 0, "重排：第 1 排左半邊＝第一頁前面");
-            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 1, 90, 1), 1, "重排：第 1 排右半邊＝最後");
-            Eq(Rules.LiftedInsertIndex(loneW, 2, 100, 1, 2, 10, 1), 1, "重排：高於剩下的最上排＝最後");
-            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 5, 1), 0, "重排（拖 120 那頁、剩下一排）：鏈條上＝第一頁前面");
-            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 50, 1), 1, "重排（拖 120 那頁）：40 那頁的右半邊＝最後");
+            // 窄視窗、第一頁寬到和鏈條擠不下：2.6.0 時鏈條自己佔第 0 排、被拉到 100；T1 起鏈條固定 19，第一頁夾到 82 和它同一排
+            s = Rules.LayoutTop(new[] { 120f }, 100, 1, true);
+            Check(s[0].Row == 0 && s[0].Width == 19 && s[1].Row == 0 && s[1].X == 18 && s[1].Width == 82,
+                $"鏈條不再自己佔一排：第一頁夾到 82、在 18（{s[1].X},{s[1].Width}）");
+            Eq(Rules.InsertIndex(s, 0, 10, 1), 0, "第 0 排左邊（鏈條與第一頁的左半邊）＝第一頁前面");
+            Eq(Rules.InsertIndex(s, 0, 90, 1), 1, "第 0 排右邊（第一頁的右半邊，中線 59）＝最後");
+            var loneW = new[] { 120f, 40f }; // 第 0 排 鏈條＋82，第 1 排 40（18～58）
+            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 50, true), 0, "重排（拖 40 那頁、剩下一排）：50 在第一頁左半邊＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 0, 90, true), 1, "重排（拖 40 那頁）：第一頁右半邊＝最後");
+            Eq(Rules.LiftedInsertIndex(loneW, 1, 100, 1, 1, 10, true), 1, "重排（拖 40 那頁）：高於剩下的最上排＝最後");
+            Eq(Rules.LiftedInsertIndex(loneW, 0, 100, 1, 0, 5, true), 0, "重排（拖 120 那頁、剩下一排）：鏈條上＝第一頁前面");
+            Eq(Rules.LiftedInsertIndex(loneW, 0, 100, 1, 0, 50, true), 1, "重排（拖 120 那頁）：40 那頁的右半邊＝最後");
+        }
+
+        /// <summary>
+        /// 放上面時鎖住的組照新排法（2.8.0）：鏈條固定、上排從 18 開始、比「視窗寬減 18」還寬的夾到那個寬度；
+        /// 沒鎖時和舊排法完全一樣（Layout 與 2.7.0 的 LiftedInsertIndex 照抄一份對照）。
+        /// </summary>
+        static void TopChainFixedTest()
+        {
+            float c = Rules.ChainTabWidth;
+            var cases = new[]
+            {
+                (new[] { 40f, 40f, 40f, 30f }, 100f, 2f),
+                (new[] { 97f, 65f, 65f, 65f, 75f, 65f, 70f, 97f }, 150f, 1f),
+                (new[] { 97f, 70f, 70f, 70f, 88f, 70f, 69f, 94f }, 528f, 1f),
+                (new[] { 30f, 150f, 30f }, 100f, 1f),
+                (new[] { 110f, 40f, 80f }, 120f, 1f),
+                (new[] { 120f, 40f }, 100f, 1f),
+                (new float[0], 100f, 1f),
+            };
+            foreach (var (w, max, ov) in cases)
+            {
+                string name = $"[{string.Join(",", w)}] 寬 {max}";
+                // 沒鎖：和 Layout 一模一樣
+                var plain = Rules.Layout(w, max, ov);
+                var top = Rules.LayoutTop(w, max, ov, false);
+                Check(plain.Count == top.Count && plain.Zip(top, (a, b) => a.Row == b.Row && a.X == b.X && a.Width == b.Width).All(x => x),
+                    $"沒鎖時 LayoutTop＝Layout：{name}");
+                // 沒鎖：LiftedInsertIndex 和 2.7.0 的版本一樣
+                for (int lifted = 0; lifted < w.Length; lifted++)
+                    foreach (var (row, x) in new[] { (0, 5f), (0, 50f), (1, 20f), (1, 99f), (2, 60f), (4, 10f) })
+                        Eq(Rules.LiftedInsertIndex(w, lifted, max, ov, row, x), OldLiftedInsertIndex(w, lifted, max, ov, row, x),
+                            $"沒鎖時重排的位置和 2.7.0 一樣：{name} 拖第 {lifted} 個到 ({row},{x})");
+
+                // 鎖住：第 0 格是鏈條（0, 0, 19），其他是「視窗寬減 18」的 Layout 往右移 18
+                float shift = c - ov;
+                var locked = Rules.LayoutTop(w, max, ov, true);
+                var inner = Rules.Layout(w, max - shift, ov);
+                Check(locked.Count == w.Length + 1 && locked[0].Row == 0 && locked[0].X == 0 && locked[0].Width == c, $"鎖住：第 0 格是固定 19 的鏈條：{name}");
+                Check(inner.Select((s, i) => locked[i + 1].Row == s.Row && locked[i + 1].X == s.X + shift && locked[i + 1].Width == s.Width).All(x => x),
+                    $"鎖住：其他分頁＝在 {max - shift} 寬裡排、往右移 {shift}：{name}");
+                Check(locked.Skip(1).All(s => s.X >= shift && s.X + s.Width <= max + 0.001f), $"鎖住：分頁都在 {shift}～{max} 之間（上排也跳過鏈條那一格）：{name}");
+            }
+            // 長名字（作者知道的代價）：比「視窗寬減 18」還寬的單獨一排、夾到那個寬度
+            var s2 = Rules.LayoutTop(new[] { 40f, 200f, 30f }, 120, 1, true);
+            Check(s2[2].Row == 1 && s2[2].X == 18 && s2[2].Width == 102, $"長名字夾到 102、單獨一排（{s2[2].Row},{s2[2].X},{s2[2].Width}）");
+            Check(s2[1].Row == 0 && s2[1].Width == 102, $"第 0 排照比例拉到 102（{s2[1].Width}）");
+            Eq(s2[0].Width, 19f, "鏈條照樣 19");
+            // 12 頁排三排（top_fixed.png 的情況）：只有第 0 排最左邊是鏈條，第 1、2 排的第一頁都在 18
+            var twelve = Enumerable.Repeat(40f, 12).ToArray();
+            var s3 = Rules.LayoutTop(twelve, 176, 1, true);
+            Eq(Rules.RowCount(s3), 3, "12 頁在 176 寬裡排三排");
+            Check(Enumerable.Range(0, 3).All(r => s3.Where(s => s.Row == r).Min(s => s.X) == (r == 0 ? 0 : 18)), "第 0 排從 0（鏈條），上面的排從 18");
+            // 插入位置扣掉鏈條：拖到上面的排的空處（x 小於 18）＝那排第一頁前面
+            int firstRow1 = s3.FindIndex(s => s.Row == 1);
+            Eq(Rules.InsertIndex(s3, 1, 3, 1), firstRow1 - 1, "上面的排在鏈條正上方的空處：那排第一頁前面");
+            // 鎖住時沒有分頁（理論上不會：組至少兩頁）：只有鏈條
+            Eq(Rules.LayoutTop(new float[0], 100, 1, true).Count, 1, "沒有分頁：只有鏈條一格");
+        }
+
+        /// <summary>2.7.0 的 LiftedInsertIndex（lead 0），對照「沒鎖時的排法完全不變」。</summary>
+        static int OldLiftedInsertIndex(IList<float> widths, int lifted, float maxWidth, float overlap, int row, float x)
+        {
+            var rest = new List<float>();
+            for (int i = 0; i < widths.Count; i++)
+                if (i != lifted) rest.Add(widths[i]);
+            var slots = Rules.Layout(rest, maxWidth, overlap);
+            if (row >= Rules.RowCount(slots)) return rest.Count;
+            return Rules.InsertIndex(slots, row, x);
+        }
+
+        /// <summary>
+        /// 分頁條放左邊（2.8.0）：第 0 欄貼著視窗、從頂端往下、排不下往左再開一欄（每欄至少一頁），
+        /// 每欄寬照那欄最寬的、夾到上限（是設定的左側分頁最寬，不是視窗寬；這裡多半給 176，比測試的名字都寬）；
+        /// 鎖住時鏈條在第 0 欄最上面、每欄從 15 開始。插入位置、重排、範圍、夾住照放上面換方向。
+        /// 單位：分頁高 16、共用外框 1（step 15）；u＝往左多遠、v＝往下多遠。
+        /// </summary>
+        static void LeftLayoutTest()
+        {
+            const float h = 16, ov = 1;
+            // 一欄放得下：從視窗頂端往下，相鄰共用一條線
+            var b = Rules.LayoutLeft(new[] { 40f, 60f, 30f }, false, h, ov, 149, 176);
+            Eq(b.Columns, 1, "一欄放得下");
+            Check(b.Slots.Select(s => (s.Row, s.X, s.Width)).SequenceEqual(new[] { (0, 0f, 16f), (0, 15f, 16f), (0, 30f, 16f) }),
+                $"從 v 0 往下排、step 15：{string.Join(" ", b.Slots.Select(s => $"({s.Row},{s.X})"))}");
+            Check(b.ColWidth[0] == 60 && b.ColStart[0] == 0 && b.Outer == 60 && b.Bottom == 46, $"欄寬照最寬的 60、整條 60×46（{b.Outer}×{b.Bottom}）");
+            Check(b.CellWidth(0) == 60 && b.CellWidth(2) == 60 && b.CellRight(1) == 0, "同一欄的分頁一樣寬、右緣貼著視窗");
+            Eq(b.Lead, 0, "沒鎖：沒有鏈條那一格");
+
+            // 換欄：視窗高 50，一欄放 3 頁（30＋16＝46 ≤ 50，45＋16 放不下）；每欄寬度各自照最寬的
+            var seven = new[] { 40f, 60f, 30f, 50f, 20f, 70f, 25f };
+            b = Rules.LayoutLeft(seven, false, h, ov, 50, 176);
+            Eq(b.Columns, 3, "七頁在高 50 的視窗：三欄");
+            Check(b.Slots.Select(s => s.Row).SequenceEqual(new[] { 0, 0, 0, 1, 1, 1, 2 }), $"每欄 3 頁：{string.Join(",", b.Slots.Select(s => s.Row))}");
+            Check(b.Slots.Select(s => s.X).SequenceEqual(new[] { 0f, 15f, 30f, 0f, 15f, 30f, 0f }), "每欄都從頂端開始");
+            Check(b.ColWidth.SequenceEqual(new[] { 60f, 70f, 25f }), $"欄寬各自照最寬的：{string.Join(",", b.ColWidth)}");
+            Check(b.ColStart.SequenceEqual(new[] { 0f, 59f, 128f }), $"往左排、相鄰共用一條線：{string.Join(",", b.ColStart)}");
+            Check(b.Outer == 153 && b.Bottom == 46, $"整條 153×46（{b.Outer}×{b.Bottom}）");
+            Check(b.CellWidth(3) == 70 && b.CellRight(3) == 59 && b.CellWidth(6) == 25 && b.CellRight(6) == 128, "第 1、2 欄的分頁照那欄的寬與位置");
+            // 寬度有上限（左側分頁最寬；固定上限的測試在 LeftWidthTest）
+            b = Rules.LayoutLeft(new[] { 300f, 40f }, false, h, ov, 149, 100);
+            Eq(b.ColWidth[0], 100f, "比上限寬的名字：欄寬夾到上限 100");
+            // 視窗矮到放不下一頁：每欄照放一頁
+            b = Rules.LayoutLeft(new[] { 40f, 50f }, false, h, ov, 10, 176);
+            Check(b.Columns == 2 && b.Slots[0].Row == 0 && b.Slots[1].Row == 1 && b.Slots[1].X == 0, "視窗比一頁矮：每欄一頁");
+            Eq(Rules.LayoutLeft(new float[0], false, h, ov, 50, 176).Columns, 0, "沒有分頁：沒有欄");
+
+            // 鎖住：鏈條 19×16 在第 0 欄最上面、右緣貼著視窗；每欄都從 15 開始，高 50 時一欄放 2 頁（15、30）
+            var five = new[] { 40f, 60f, 30f, 50f, 20f };
+            b = Rules.LayoutLeft(five, true, h, ov, 50, 176);
+            Eq(b.Lead, 1, "鎖住：第 0 格是鏈條");
+            Check(b.Slots[0].Row == 0 && b.Slots[0].X == 0 && b.CellWidth(0) == 19 && b.CellRight(0) == 0, "鏈條在 (−19, 0)～(0, 16)：寬 19、右緣貼著視窗");
+            Check(b.Slots.Skip(1).Select(s => (s.Row, s.X)).SequenceEqual(new[] { (0, 15f), (0, 30f), (1, 15f), (1, 30f), (2, 15f) }),
+                $"第 0 欄與第 1 欄起都從 15 開始：{string.Join(" ", b.Slots.Skip(1).Select(s => $"({s.Row},{s.X})"))}");
+            Check(b.ColWidth.SequenceEqual(new[] { 60f, 50f, 20f }), $"欄寬照分頁，鏈條不拉長：{string.Join(",", b.ColWidth)}");
+            Eq(Rules.LayoutLeft(new[] { 10f }, true, h, ov, 50, 176).ColWidth[0], 19f, "第 0 欄至少鏈條的寬");
+
+            // 插入位置（照原本的排法；沒鎖的七頁、高 50）：哪一欄看 u、欄裡看 v
+            b = Rules.LayoutLeft(seven, false, h, ov, 50, 176);
+            Eq(Rules.InsertIndexLeft(b, 10, 5), 0, "第 0 欄第一頁的上半：插在它前面");
+            Eq(Rules.InsertIndexLeft(b, 10, 20), 1, "第 0 欄第二頁的上半（中線 23）：插在第二頁前面");
+            Eq(Rules.InsertIndexLeft(b, 10, 45), 3, "第 0 欄最下面：插在這欄最後一個後面");
+            Eq(Rules.InsertIndexLeft(b, -5, 5), 0, "在視窗裡面（u < 0）算第 0 欄");
+            Eq(Rules.InsertIndexLeft(b, 59, 5), 0, "兩欄共用的那條線算內側那欄");
+            Eq(Rules.InsertIndexLeft(b, 70, 5), 3, "第 1 欄最上面：第四頁前面");
+            Eq(Rules.InsertIndexLeft(b, 140, 40), 7, "第 2 欄最下面：最後");
+            Eq(Rules.InsertIndexLeft(b, 500, 0), 6, "超出最外欄：夾回最外欄");
+            Eq(Rules.InsertIndexLeft(Rules.LayoutLeft(new float[0], false, h, ov, 50, 176), 5, 5), 0, "沒有分頁：插在 0");
+            // 鎖住：拖到鏈條上＝第一頁前面；第 1 欄鏈條旁邊的空處＝那欄第一頁前面
+            b = Rules.LayoutLeft(five, true, h, ov, 50, 176);
+            Eq(Rules.InsertIndexLeft(b, 5, 3), 0, "鎖住：拖到鏈條小分頁上＝第一頁前面");
+            Eq(Rules.InsertIndexLeft(b, 5, 20), 0, "鎖住：第一頁的上半＝第一頁前面");
+            Eq(Rules.InsertIndexLeft(b, 5, 40), 2, "鎖住：第 0 欄最下面＝第三頁前面（不算鏈條）");
+            Eq(Rules.InsertIndexLeft(b, 70, 5), 2, "鎖住：第 1 欄最上面的空處＝第三頁前面");
+            Eq(Rules.InsertIndexLeft(b, 200, 40), 5, "鎖住：超出最外欄的最下面＝最後（分頁數 5）");
+
+            // 在自己的分頁條裡重排：照拿掉被拖那頁之後的排法；超出剩下的最外欄＝放最後
+            var four = new[] { 40f, 60f, 30f, 50f };
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, 10, 5), 0, "重排：最上面＝第一頁前面");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, 10, 20), 1, "重排：拖回原位附近＝拿掉之後的第 1 個前面");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, 10, 46), 3, "重排：這欄最下面＝最後");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, 60, 5), 3, "重排：超出剩下的最外欄（剩下一欄、寬 50）＝放最後");
+            foreach (int from in new[] { 0, 2, 3 })
+                for (int to = 0; to < four.Length; to++)
+                    foreach (var (u, v) in new[] { (10f, 5f), (10f, 40f), (55f, 20f), (90f, 5f) })
+                        Check(Rules.LiftedInsertIndexLeft(Rules.MoveTo(four, from, to), to, false, h, ov, 50, 176, u, v) ==
+                              Rules.LiftedInsertIndexLeft(four, from, false, h, ov, 50, 176, u, v),
+                            $"沒有回饋：拖第 {from} 個畫在第 {to} 個，({u},{v}) 算出來一樣");
+            // 鎖住的重排：拖第 0 頁，剩下 [60,30｜50,20]（每欄從 15 開始）
+            Eq(Rules.LiftedInsertIndexLeft(five, 0, true, h, ov, 50, 176, 5, 3), 0, "鎖住重排：鏈條上＝第一頁前面");
+            Eq(Rules.LiftedInsertIndexLeft(five, 0, true, h, ov, 50, 176, 70, 20), 2, "鎖住重排：第 1 欄第一頁的上半＝拿掉之後的第 2 個前面");
+            Eq(Rules.LiftedInsertIndexLeft(five, 0, true, h, ov, 50, 176, 200, 20), 4, "鎖住重排：超出最外欄＝最後");
+
+            // 範圍（審查後改）：別人的分頁條逐欄判斷（那欄最後一頁的下緣以內）；自己的分頁條是外框再加容忍範圍：
+            // 左緣多一欄（被拖那頁自己的寬）、下緣到視窗底、往視窗裡多 20（標題列的高度）
+            b = Rules.LayoutLeft(seven, false, h, ov, 50, 176); // 153×46；第 2 欄（128～153）只有一頁，下緣 16
+            Check(Rules.InStripAreaLeft(b, 50, 40), "別人的分頁條：第 0 欄裡");
+            Check(Rules.InStripAreaLeft(b, 150, 10), "別人的分頁條：最外欄那一頁上");
+            Check(!Rules.InStripAreaLeft(b, 150, 40), "別人的分頁條：短的最外欄下面的空處不算（底下的視窗拖得到）");
+            Check(!Rules.InStripAreaLeft(b, 154, 10), "別人的分頁條：超出最外欄就不算");
+            Check(!Rules.InStripAreaLeft(b, 10, 47), "別人的分頁條：低於那欄最下面那頁就不算");
+            Check(!Rules.InStripAreaLeft(b, -1, 10), "別人的分頁條：在視窗裡面（u < 0）不算，沒有往裡的緩衝");
+            Check(Rules.InOwnStripAreaLeft(b, 50, 25, 20, 150, 40), "自己的分頁條：短的最外欄下面也算（外框）");
+            Check(Rules.InOwnStripAreaLeft(b, 50, 25, 20, 170, 48), "自己的分頁條：左緣多一欄、寬是被拖那頁的 25（到 177）、下緣到視窗底 50");
+            Check(!Rules.InOwnStripAreaLeft(b, 50, 25, 20, 178, 10), "自己的分頁條：再外面就不算");
+            Check(Rules.InOwnStripAreaLeft(b, 50, 70, 20, 200, 10), "自己的分頁條：被拖的是 70 寬那頁時多到 222");
+            Check(!Rules.InOwnStripAreaLeft(b, 50, 25, 20, 10, 51), "自己的分頁條：低於視窗底不算");
+            Check(Rules.InOwnStripAreaLeft(b, 50, 25, 20, -1, 20) && Rules.InOwnStripAreaLeft(b, 50, 25, 20, -19, 20),
+                "自己的分頁條：往視窗裡 1、19 還算（游標滑進視窗一點點不會變成拆出來）");
+            Check(!Rules.InOwnStripAreaLeft(b, 50, 25, 20, -21, 20), "自己的分頁條：往視窗裡 21 就不算");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, -1, 20), 1, "滑進視窗 1：照第 0 欄的高度重排（拖回原位附近）");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 176, -19, 5), 0, "滑進視窗 19：照第 0 欄的高度重排（最上面）");
+            // 10 頁、一欄 9 頁（視窗高 149）：第 1 欄只有一頁
+            var ten = Enumerable.Repeat(40f, 10).ToArray();
+            b = Rules.LayoutLeft(ten, false, h, ov, 149, 176);
+            Check(b.Columns == 2 && b.Slots.Count(x => x.Row == 0) == 9 && b.ColumnBottom(1) == 16, $"10 頁、一欄 9 頁：第 1 欄一頁（下緣 {b.ColumnBottom(1)}）");
+            Check(Rules.InStripAreaLeft(b, 60, 8), "別人的分頁條：第 1 欄第 1 頁上算");
+            Check(!Rules.InStripAreaLeft(b, 60, 30), "別人的分頁條：第 1 欄第 1 頁下面不算");
+            Check(Rules.InOwnStripAreaLeft(b, 149, 40, 20, 60, 30), "自己的分頁條：同一點算（外框）");
+
+            // 夾住（鎖住的組的分頁拖不出自己的分頁條）：鎖住的五頁，整條 128×46
+            b = Rules.LayoutLeft(five, true, h, ov, 50, 176);
+            Check(b.Outer == 128 && b.Bottom == 46, $"鎖住的五頁：整條 {b.Outer}×{b.Bottom}");
+            Rules.ClampToStripLeft(b, 30, 8, 50, 20, out var cu, out var cv);
+            Check(cu == 50 && cv == 20, "在分頁條裡：不動");
+            Rules.ClampToStripLeft(b, 30, 8, -50, 100, out cu, out cv);
+            Check(cu == 30 && cv == 38, $"拖到右下外面（視窗裡、比分頁條低）：影子停在邊上（{cu},{cv}）");
+            Rules.ClampToStripLeft(b, 30, 8, 500, -9, out cu, out cv);
+            Check(cu == 98 && cv == 8, $"拖到左上外面：影子停在邊上（{cu},{cv}）");
+            Rules.ClampForInsertLeft(b, -50, 100, out var iu, out var iv);
+            Check(iu == 0 && Math.Abs(iv - 45.99f) < 0.0001f, $"插入用的點只夾、不內縮（下緣少 0.01）（{iu},{iv}）");
+            Eq(Rules.LiftedInsertIndexLeft(five, 1, true, h, ov, 50, 176, iu, iv), 2, "夾在第 0 欄最下面放開：那欄的最後（拿掉第 1 頁後第 0 欄是 40、30，插在 50 前面）");
+            Rules.ClampForInsertLeft(b, 999, -5, out iu, out iv);
+            Check(Math.Abs(iu - 127.99f) < 0.0001f && iv == 0, $"插入用的點：左上夾到最外欄的左緣（少 0.01）、頂端（{iu},{iv}）");
+            Eq(Rules.LiftedInsertIndexLeft(five, 1, true, h, ov, 50, 176, iu, iv), 4, "拖到左邊外面放開：剩下的排法只有兩欄、128 超出最外欄＝最後");
+            Rules.ClampToStripLeft(Rules.LayoutLeft(new[] { 30f }, false, h, ov, 50, 176), 40, 8, 5, 8, out cu, out _);
+            Eq(cu, 15f, "範圍比影子窄：放正中間");
+            // 插入用的點夾到最外欄左緣少 0.01（審查後改）：拿掉被拖那頁後最外欄的左緣不變時，u＝Outer 照 v 算、不是放最後。
+            // 八頁 [七頁＋25]，拖最後一頁：剩下就是那七頁，最外欄左緣一樣是 153
+            var eight = seven.Concat(new[] { 25f }).ToArray();
+            b = Rules.LayoutLeft(eight, false, h, ov, 50, 176);
+            Eq(b.Outer, 153f, "八頁的最外欄左緣 153（和拿掉最後一頁後一樣）");
+            Eq(Rules.LiftedInsertIndexLeft(eight, 7, false, h, ov, 50, 176, 153.004f, 5), 7, "（對照）換算回來多一點點（153.004）：被當成超出最外欄、放最後");
+            Rules.ClampForInsertLeft(b, 153.004f, 5, out iu, out iv);
+            Check(iu < 153f, $"插入用的點夾在最外欄左緣以內（{iu}）");
+            Eq(Rules.LiftedInsertIndexLeft(eight, 7, false, h, ov, 50, 176, iu, iv), 6, "夾過的點：照 v 算，最外欄最上面＝第 7 頁前面");
+            Rules.ClampForInsertLeft(b, 153f, 5, out iu, out iv);
+            Eq(Rules.LiftedInsertIndexLeft(eight, 7, false, h, ov, 50, 176, iu, iv), 6, "u＝Outer 夾過：照 v 算");
+        }
+
+        /// <summary>
+        /// 設定「分頁條位置」（2.8.0）：下拉的選項是英文 Top、Left（存進設定檔），預設 Top、不認得的當 Top；
+        /// 定義是第一欄（第 26 輪以前是最後一欄）；Tabs 每幀讀、出錯當作放上面；分頁條換邊要重畫、跑出畫面左邊往右推。讀原始碼查。
+        /// </summary>
+        static void SideSettingTest()
+        {
+            Check(Rules.SideChoices.SequenceEqual(new[] { "Top", "Left" }), "選項是 Top、Left（照這個順序）");
+            Check(Rules.SideChoices.Contains(Rules.SideDefault) && Rules.SideDefault == "Top", "預設 Top，而且在選項裡（不然遊戲載入時換回預設）");
+            Eq(Rules.SideEntryName, "TabStripSide", "設定的 key");
+            Eq(Rules.ParseSide("Left"), Rules.StripSide.Left, "Left＝放左邊");
+            Eq(Rules.ParseSide("Top"), Rules.StripSide.Top, "Top＝放上面");
+            foreach (var v in new[] { null, "", "left", "Right", "Bottom", " Left" })
+                Eq(Rules.ParseSide(v), Rules.StripSide.Top, $"不認得的值「{v ?? "null"}」當成放上面");
+
+            var root = FindModRoot();
+            Check(root != null, "找得到 mod 的資料夾，裡面有 mod/src");
+            if (root == null) return;
+            string Read(string name) => string.Join("\n", File.ReadAllText(Path.Combine(root, "mod", "src", name)).Replace("\r\n", "\n")
+                .Split('\n').Where(l => !l.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+            string Body(string src, string signature)
+            {
+                int i = src.IndexOf(signature, StringComparison.Ordinal);
+                if (i < 0) return "";
+                int j = src.IndexOf("\n        }\n", i, StringComparison.Ordinal);
+                return j < 0 ? src.Substring(i) : src.Substring(i, j - i);
+            }
+
+            var settings = Read("Settings.cs");
+            var init = Body(settings, "internal static void Init()");
+            int side = init.IndexOf("cfg.Define(Rules.SideEntryName, Rules.SideDefault, Section, () => Loc.Get(\"cfg_side\"), Rules.SideChoices, () => Loc.Get(\"cfg_side_tip\"));", StringComparison.Ordinal);
+            Check(side >= 0, "Settings.Init：分頁條位置的選項 Rules.SideChoices、標籤與說明 cfg_side、cfg_side_tip");
+            // 設定視窗照 Define 的順序：分頁條位置 → 左側分頁最寬 → 下一頁 → 上一頁 → 合併時變透明 → 物品直接放進分頁
+            var order = new[] { "cfg.Define(Rules.SideEntryName,", "cfg.Define(Rules.LeftWidthEntryName,", "cfg.Define(NextEntry,", "cfg.Define(PrevEntry,",
+                                "cfg.Define(FadeEntry,", "cfg.Define(DropEntry," }
+                .Select(s => init.IndexOf(s, StringComparison.Ordinal)).ToArray();
+            Check(order.All(i => i >= 0) && order.Zip(order.Skip(1), (a, c) => a < c).All(x => x),
+                  $"Settings.Init：定義順序是分頁條位置、左側分頁最寬、下一頁、上一頁、變透明、直接放進分頁（{string.Join(",", order)}）");
+            Eq(Regex.Matches(init, @"cfg\.Define\(").Count, 6, "Settings.Init：剛好六個設定");
+            Check(order[0] >= 0 && init.IndexOf("cfg.Define(", StringComparison.Ordinal) == order[0], "Settings.Init：分頁條位置是第一欄");
+            Check(!init.Contains("requiresRestart"), "Settings.Init：不標 requiresRestart，按套用就生效");
+            Check(Regex.Replace(settings, @"\s+", "").Contains("internalstaticboolStripOnLeft=>Rules.ParseSide(_side!=null?_side.Value:Rules.SideDefault)==Rules.StripSide.Left;"),
+                  "Settings.StripOnLeft：照 Rules.ParseSide，還沒讀設定時當作放上面");
+            Check(Body(settings, "internal static string Describe()").Contains("分頁條位置"), "Settings.Describe：log 寫出分頁條的位置（Init 與進店鋪畫面）");
+
+            var tabs = Read("Tabs.cs");
+            var update = Body(tabs, "static void UpdateStrips(");
+            Check(update.Contains("bool left = SideSetting();") && Regex.Matches(update, @"spec\.Left = left;").Count == 2,
+                  "Tabs.UpdateStrips：每幀讀一次設定，兩種分頁條（組的、獨立視窗加預告的）都照它");
+            var sideSetting = Body(tabs, "static bool SideSetting()");
+            Check(sideSetting.Contains("Settings.StripOnLeft") && sideSetting.Contains("catch") && sideSetting.Contains("left = false;"),
+                  "Tabs.SideSetting：讀設定出錯時當作放上面");
+            Check(sideSetting.Contains("設定換了"), "Tabs.SideSetting：換邊時記一行除錯 log");
+            var show = Body(tabs, "static void ShowStrip(");
+            Check(show.Contains("strip.OverflowLeft()") && show.Contains("p.x + overLeft") && show.Contains("視窗往右推"),
+                  "Tabs.ShowStrip：分頁條跑出畫面左邊時把視窗往右推、記除錯 log");
+            Check(show.IndexOf("if (_mode != Mode.Idle || spec.PreviewAt >= 0 || g == null) return;", StringComparison.Ordinal) is int guard &&
+                  guard >= 0 && guard < show.IndexOf("strip.OverflowLeft()", StringComparison.Ordinal),
+                  "Tabs.ShowStrip：拖曳中、有預告分頁時不推（和往下推同一個條件）");
+
+            var strip = Read("TabStrip.cs");
+            var sig = Body(strip, "static string Signature(");
+            Check(sig.Contains("s.Left") && sig.Contains("maxHeight"), "TabStrip.Signature：含放左右與放左邊時的視窗高度（換了要重畫）");
+            Check(Body(strip, "internal float OverflowTop()").Contains("if (!Visible || _left) return 0f;"), "TabStrip.OverflowTop：放左邊時不往下推");
+            // 推不動（審查後加）：先看 PushBlocked、推完沒真的動就 MarkPushBlocked，不每幀 Place、不每幀記 log
+            Check(show.IndexOf("strip.PushBlocked(", StringComparison.Ordinal) is int blocked && blocked >= 0 &&
+                  blocked < show.IndexOf("strip.OverflowTop()", StringComparison.Ordinal), "Tabs.ShowStrip：推不動時先跳過，不再 Place");
+            Check(show.Contains("if (Math.Abs(q.y - p.y) < 0.5f) stuck = true;") && show.Contains("if (Math.Abs(q.x - p.x) < 0.5f) stuck = true;") &&
+                  show.Contains("strip.MarkPushBlocked("), "Tabs.ShowStrip：往下推、往右推完位置沒變（差不到 0.5）就記成推不動");
+            // 自己的分頁條的容忍範圍要知道被拖的是哪頁（左緣多一欄＝它的寬）；別組的分頁條逐欄判斷（Contains 也是）
+            Check(tabs.Contains("strip.ContainsBase(mouse, cam, true, _pressId)"), "Tabs.FindTarget：自己的分頁條把被拖的那頁傳給 ContainsBase");
+            var contains = Body(strip, "internal bool Contains(Vector2 screen, Camera cam)");
+            Check(contains.Contains("Rules.InStripAreaLeft(_leftSlots,"), "TabStrip.Contains：放左邊時照畫出來的排法逐欄判斷，不用根物件的矩形");
+            var containsBase = Body(strip, "internal bool ContainsBase(");
+            Check(containsBase.Contains("Rules.InOwnStripAreaLeft(") && containsBase.Contains("GameWindows.TitleBarHeight(Window)"),
+                  "TabStrip.ContainsBase：放左邊時自己的分頁條往視窗裡多標題列的高度");
+        }
+
+        /// <summary>
+        /// 設定「左側分頁最寬」（2.8.0）：放左邊時一欄最寬是固定的上限（48～240、預設 112），不看目前的視窗；
+        /// 讀設定時夾在範圍裡；放上面照舊看視窗寬。排法的部分測 Rules，接線（每幀讀、傳給分頁條、只在放左邊用）讀原始碼查。
+        /// </summary>
+        static void LeftWidthTest()
+        {
+            const float h = 16, ov = 1;
+            Eq(Rules.LeftWidthEntryName, "LeftTabMaxWidth", "設定的 key");
+            Check(Rules.LeftWidthDefault == 112 && Rules.LeftWidthMin == 48 && Rules.LeftWidthMax == 240, "範圍 48～240、預設 112");
+            // 夾值：範圍內不動、範圍外夾到邊上（設定檔可以手改）
+            foreach (var (v, want) in new[] { (112, 112), (48, 48), (240, 240), (100, 100), (47, 48), (0, 48), (-5, 48), (int.MinValue, 48), (241, 240), (1000, 240), (int.MaxValue, 240) })
+                Eq(Rules.ClampLeftWidth(v), want, $"讀設定夾值：{v} → {want}");
+
+            // 上限：放左邊是設定值、不看視窗寬；沒設（0）用預設；放上面是視窗寬
+            foreach (var ww in new[] { 64f, 112f, 300f })
+            {
+                Eq(Rules.StripMaxWidth(true, 112, ww), 112f, $"放左邊、視窗寬 {ww}：上限照設定 112");
+                Eq(Rules.StripMaxWidth(true, 0, ww), 112f, $"放左邊、沒設、視窗寬 {ww}：上限用預設 112");
+                Eq(Rules.StripMaxWidth(false, 112, ww), ww, $"放上面、視窗寬 {ww}：上限是視窗寬");
+            }
+            Eq(Rules.StripMaxWidth(true, 48, 300), 48f, "放左邊、設定 48：上限 48（視窗再寬也一樣）");
+            Eq(Rules.StripMaxWidth(true, 240, 64), 240f, "放左邊、設定 240：上限 240（窄視窗旁邊照樣這麼寬，接受的代價）");
+
+            // 同樣的分頁、不同的視窗寬（腰包 64、側背包（小）112、寬的 300）：排法完全一樣（換分頁時分頁條不跳）
+            var names = new[] { 30f, 90f, 150f, 40f };
+            string Shape(Rules.LeftStrip s) =>
+                $"{string.Join(" ", s.Slots.Select(x => $"({x.Row},{x.X})"))}|{string.Join(",", s.ColWidth)}|{string.Join(",", s.ColStart)}|{s.Outer}×{s.Bottom}";
+            var shapes = new[] { 64f, 112f, 300f }.Select(ww => Shape(Rules.LayoutLeft(names, false, h, ov, 149, Rules.StripMaxWidth(true, 112, ww)))).ToList();
+            Check(shapes.Distinct().Count() == 1, $"不同視窗寬的排法一樣：{string.Join(" ／ ", shapes)}");
+            // 對照舊做法（上限＝視窗寬）：這組名字在 64 和 112 寬時排得不一樣，上面的「排法一樣」才真的驗到上限不看視窗寬
+            Check(Shape(Rules.LayoutLeft(names, false, h, ov, 149, 64f)) != Shape(Rules.LayoutLeft(names, false, h, ov, 149, 112f)),
+                "對照：上限跟著視窗寬（舊做法）時，64 和 112 的排法不同");
+            var at112 = Rules.LayoutLeft(names, false, h, ov, 149, Rules.StripMaxWidth(true, 112, 64));
+            Eq(at112.ColWidth[0], 112f, "長名字（150）夾到上限 112，不是腰包的 64");
+            // 鎖住時也一樣
+            var lockedShapes = new[] { 64f, 300f }.Select(ww => Shape(Rules.LayoutLeft(names, true, h, ov, 149, Rules.StripMaxWidth(true, 112, ww)))).ToList();
+            Check(lockedShapes.Distinct().Count() == 1, "鎖住時不同視窗寬的排法也一樣");
+            // 一欄排幾頁照樣看視窗高：高 50 時一欄 3 頁，換欄了，但欄寬一樣照上限夾
+            var tall = Rules.LayoutLeft(names, false, h, ov, 50, 112);
+            Check(tall.Columns == 2 && tall.ColWidth[0] == 112 && tall.ColWidth[1] == 40, $"視窗矮一點換成兩欄、欄寬照上限夾：{string.Join(",", tall.ColWidth)}");
+
+            // 上限在範圍兩端的排法
+            var min = Rules.LayoutLeft(new[] { 30f, 60f, 300f }, false, h, ov, 50, Rules.LeftWidthMin);
+            Check(min.Columns == 1 && min.ColWidth[0] == 48 && min.Outer == 48, $"上限 48：60、300 都夾到 48（{min.ColWidth[0]}，整條 {min.Outer}）");
+            Eq(Rules.LayoutLeft(new[] { 30f, 40f }, false, h, ov, 50, Rules.LeftWidthMin).ColWidth[0], 40f, "上限 48：比它窄的名字照自然寬度（40）");
+            var max = Rules.LayoutLeft(new[] { 200f, 300f, 30f }, false, h, ov, 50, Rules.LeftWidthMax);
+            Check(max.ColWidth[0] == 240 && max.Outer == 240, $"上限 240：300 夾到 240（{max.ColWidth[0]}）");
+            Eq(Rules.LayoutLeft(new[] { 200f, 30f }, false, h, ov, 50, Rules.LeftWidthMax).ColWidth[0], 200f, "上限 240：200 照自然寬度");
+            var minTwo = Rules.LayoutLeft(new[] { 100f, 30f, 30f, 200f }, false, h, ov, 50, Rules.LeftWidthMin);
+            Check(minTwo.ColWidth.SequenceEqual(new[] { 48f, 48f }) && minTwo.ColStart.SequenceEqual(new[] { 0f, 47f }) && minTwo.Outer == 95,
+                  $"上限 48、兩欄：每欄 48、相鄰共用一條線（{string.Join(",", minTwo.ColStart)}，整條 {minTwo.Outer}）");
+            // 重排與插入位置也照上限：剩下 [40,30,50] 一欄，u 49 在上限 48 時超出最外欄（放最後），在上限 112 時（欄寬 50）落在第 0 欄
+            var four = new[] { 40f, 60f, 30f, 50f };
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 48, 49, 5), 3, "重排、上限 48：u 49 超出夾過的欄（48）＝放最後");
+            Eq(Rules.LiftedInsertIndexLeft(four, 1, false, h, ov, 50, 112, 49, 5), 0, "重排、上限 112：u 49 在欄寬 50 裡＝第一頁前面");
+
+            var root = FindModRoot();
+            Check(root != null, "找得到 mod 的資料夾，裡面有 mod/src");
+            if (root == null) return;
+            string Read(string name) => string.Join("\n", File.ReadAllText(Path.Combine(root, "mod", "src", name)).Replace("\r\n", "\n")
+                .Split('\n').Where(l => !l.TrimStart().StartsWith("//", StringComparison.Ordinal)));
+            string Body(string src, string signature)
+            {
+                int i = src.IndexOf(signature, StringComparison.Ordinal);
+                if (i < 0) return "";
+                int j = src.IndexOf("\n        }\n", i, StringComparison.Ordinal);
+                return j < 0 ? src.Substring(i) : src.Substring(i, j - i);
+            }
+            string Compact(string s) => Regex.Replace(s, @"\s+", "");
+
+            var settings = Read("Settings.cs");
+            var init = Body(settings, "internal static void Init()");
+            Check(init.Contains("cfg.Define(Rules.LeftWidthEntryName, Rules.LeftWidthDefault, Section, () => Loc.Get(\"cfg_maxw\"), Rules.LeftWidthMin, Rules.LeftWidthMax, () => Loc.Get(\"cfg_maxw_tip\"));"),
+                  "Settings.Init：整數設定給了 min、max（遊戲畫成滑桿），標籤與說明 cfg_maxw、cfg_maxw_tip");
+            Check(Compact(settings).Contains("internalstaticintLeftTabMaxWidth=>Rules.ClampLeftWidth(_leftWidth!=null?_leftWidth.Value:Rules.LeftWidthDefault);"),
+                  "Settings.LeftTabMaxWidth：讀的時候再夾一次，還沒讀設定時用預設");
+            Check(Body(settings, "internal static string Describe()").Contains("左側分頁最寬：{LeftTabMaxWidth}"), "Settings.Describe：log 寫出左側分頁最寬");
+
+            var tabs = Read("Tabs.cs");
+            var update = Body(tabs, "static void UpdateStrips(");
+            Check(update.Contains("float leftMax = LeftWidthSetting();") && Regex.Matches(update, @"spec\.LeftMaxWidth = leftMax;").Count == 2,
+                  "Tabs.UpdateStrips：每幀讀一次，兩種分頁條（組的、獨立視窗加預告的）都帶上");
+            var widthSetting = Body(tabs, "static float LeftWidthSetting()");
+            Check(widthSetting.Contains("Settings.LeftTabMaxWidth") && widthSetting.Contains("catch") && widthSetting.Contains("width = Rules.LeftWidthDefault;"),
+                  "Tabs.LeftWidthSetting：讀設定出錯時用預設");
+            Check(widthSetting.Contains("設定換了：左側分頁最寬"), "Tabs.LeftWidthSetting：值換了記一行除錯 log");
+
+            var strip = Read("TabStrip.cs");
+            var show = Body(strip, "internal void Show(StripSpec spec)");
+            Check(show.Contains("float maxWidth = Rules.StripMaxWidth(spec.Left, spec.LeftMaxWidth, GameWindows.Width(Window));"),
+                  "TabStrip.Show：上限照 Rules.StripMaxWidth（放左邊是設定值、放上面是視窗寬）");
+            Eq(Regex.Matches(strip, @"GameWindows\.Width\(").Count, 1, "TabStrip：視窗寬只在 Show 算上限時讀（放左邊的排法、範圍、插入位置都用 _maxWidth）");
+            Check(Body(strip, "static string Signature(").Contains("{maxWidth:0.#}"), "TabStrip.Signature：含上限（改了設定要重畫；放左邊換視窗寬不重畫）");
         }
 
         /// <summary>資料檔的 locked（與「Claude 定的細節」）：沒鎖不寫、舊檔沒有這欄讀成沒鎖、不認得的欄位照舊保留、不到兩頁的組連鎖一起拿掉。</summary>

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ProbablyStolenWindowTabs
 {
-    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁、鎖住整組時擋什麼（2.6.0 起）、拖視窗時變不變透明（2.7.0 起）。離線測試（mod\verify）直接測。</summary>
+    /// <summary>不碰 Unity 的規則：分頁名稱的編號、分頁條怎麼換行與拉長、拖到哪裡插在哪、讀檔後丟哪些編號、切頁鍵切到哪頁、鎖住整組時擋什麼（2.6.0 起）、拖視窗時變不變透明（2.7.0 起）、物品直接放進分頁時能不能放、放不放（2.8.0 起）、分頁條放左邊的排法與插入位置（2.8.0 起）。離線測試（mod\verify）直接測。</summary>
     static class Rules
     {
         /// <summary>拖著物品停在分頁上多久切過去（秒）。</summary>
@@ -135,7 +135,11 @@ namespace ProbablyStolenWindowTabs
             return result;
         }
 
-        /// <summary>一個分頁在分頁條裡的位置：第幾排（0＝貼著視窗的那排，往上數）、左緣、寬度（視窗的像素單位）。</summary>
+        /// <summary>
+        /// 一個分頁在分頁條裡的位置：第幾排（0＝貼著視窗的那排，往上數）、左緣、寬度（視窗的像素單位）。
+        /// 放左邊（2.8.0 起，LeftStrip）時沿用同一個結構、轉個方向：Row＝第幾欄（0＝貼著視窗，往左數）、X＝上緣離視窗頂端多遠（往下量）、
+        /// Width＝沿著欄的長度（分頁的高度）。這樣 InsertIndex（排＝欄、橫向位置＝高度）兩邊共用。
+        /// </summary>
         internal struct Slot
         {
             public int Row;
@@ -203,6 +207,30 @@ namespace ProbablyStolenWindowTabs
             }
         }
 
+        /// <summary>
+        /// 放上面時的排法。沒鎖：就是 Layout（2.8.0 以前的排法，一點都沒變）。
+        /// 鎖住（2.8.0 起）：鏈條小分頁固定 ChainTabWidth×分頁高，放在第 0 排最左邊（x 0～19），不參與換行與拉長；
+        /// 其他分頁在「視窗寬減 18」（19 減共用的一條外框線）的寬度裡照 Layout 換行、拉長，整體往右移 18，
+        /// 所以上面的排也從 x 18 開始、鏈條上面空著。比「視窗寬減 18」還寬的分頁照舊單獨一排、夾到那個寬度（名稱截成「…」）。
+        /// 2.6.0～2.7.0 鏈條是 Layout 的第一格、和其他分頁一起換行與拉長（窄視窗裡第一頁擠不下時鏈條自己一排、被拉成一長條）。
+        /// tabWidths 只有分頁（含預告分頁），不含鏈條；鎖住時回傳的第 0 格是鏈條小分頁（InsertIndex 的 lead＝1）。
+        /// </summary>
+        internal static List<Slot> LayoutTop(IList<float> tabWidths, float maxWidth, float overlap, bool locked)
+        {
+            if (!locked) return Layout(tabWidths, maxWidth, overlap);
+            float shift = ChainTabWidth - overlap;
+            // 視窗窄到扣掉鏈條就沒位置了（實際上不會有）：至少留 1，不要變成 0（Layout 把 0 以下當成不限寬）
+            float inner = maxWidth > 0 ? Math.Max(1f, maxWidth - shift) : maxWidth;
+            var slots = new List<Slot> { new Slot { Row = 0, X = 0, Width = ChainTabWidth } };
+            foreach (var s0 in Layout(tabWidths, inner, overlap))
+            {
+                var s = s0;
+                s.X += shift;
+                slots.Add(s);
+            }
+            return slots;
+        }
+
         /// <summary>分頁條有幾排。</summary>
         internal static int RowCount(IList<Slot> slots)
         {
@@ -234,22 +262,22 @@ namespace ProbablyStolenWindowTabs
 
         /// <summary>
         /// 在自己的分頁條裡重排時（像瀏覽器：被拖的那頁畫在要放的位置、其他分頁讓開），滑鼠在第 row 排、橫向 x 時
-        /// 插在「拿掉被拖那頁之後」的第幾個前面（0～widths.Count−1）。排法用拿掉它之後的（Layout，含拉長）：
+        /// 插在「拿掉被拖那頁之後」的第幾個前面（0～分頁數−1）。排法用拿掉它之後的（LayoutTop，含拉長）：
         /// 被拖的那頁畫在哪裡都不影響算出來的位置，不會像用畫出來的排法那樣互相影響、每幀來回跳。
-        /// widths 照分頁順序（被拖的那頁在第 lifted 個）。
-        /// lead：widths 最前面不是分頁的格數（鎖住時的鏈條小分頁）。它們照樣一起排（佔位置、影響換行），lifted 是含它們的位置，
-        /// 回傳的是分頁的位置（不算它們，0～分頁數−1）。
+        /// tabWidths 只有分頁、照分頁順序（被拖的那頁在第 lifted 個）。
+        /// locked：鎖住的組（鏈條小分頁固定在第 0 排最左邊，LayoutTop；2.8.0 起）。它照樣佔位置，
+        /// 回傳的是分頁的位置（不算它）；2.6.0～2.7.0 是把鏈條放在 widths 最前面、用 lead 扣掉。
         /// </summary>
-        internal static int LiftedInsertIndex(IList<float> widths, int lifted, float maxWidth, float overlap, int row, float x, int lead = 0)
+        internal static int LiftedInsertIndex(IList<float> tabWidths, int lifted, float maxWidth, float overlap, int row, float x, bool locked = false)
         {
             var rest = new List<float>();
-            for (int i = 0; i < widths.Count; i++)
-                if (i != lifted) rest.Add(widths[i]);
-            var slots = Layout(rest, maxWidth, overlap);
+            for (int i = 0; i < tabWidths.Count; i++)
+                if (i != lifted) rest.Add(tabWidths[i]);
+            var slots = LayoutTop(rest, maxWidth, overlap, locked);
             // 高於剩下那些分頁的最上排（自己的分頁條多算一排的容忍範圍，InStripArea）＝放最後：
             // 被拖的那頁移到最後時常常自己佔一排，滑鼠跟著它往上移也還是放最後
-            if (row >= RowCount(slots)) return Math.Max(0, rest.Count - lead);
-            return InsertIndex(slots, row, x, lead);
+            if (row >= RowCount(slots)) return rest.Count;
+            return InsertIndex(slots, row, x, locked ? 1 : 0);
         }
 
         /// <summary>
@@ -284,6 +312,226 @@ namespace ProbablyStolenWindowTabs
         /// <summary>v 夾到 lo～hi；hi 比 lo 小（範圍比影子窄）時放正中間。</summary>
         static float Clamp(float v, float lo, float hi) => hi < lo ? (lo + hi) / 2f : Math.Max(lo, Math.Min(hi, v));
 
+        // ---------------- 分頁條放左邊（2.8.0 起） ----------------
+
+        /// <summary>分頁條放在視窗的哪一邊（設定「分頁條位置」）。</summary>
+        internal enum StripSide { Top, Left }
+
+        /// <summary>
+        /// 設定「分頁條位置」的選項：遊戲的下拉選單照字面顯示、按套用時把選到的字串原樣存進設定檔，選項在 Init 就定、不能跟著語言
+        /// ，所以選項是英文、說明欄一個選項一行寫對照。字串存進設定檔，不要改。
+        /// </summary>
+        internal const string SideTop = "Top", SideLeft = "Left";
+        internal static readonly string[] SideChoices = { SideTop, SideLeft };
+        /// <summary>預設放上面（2.7.0 以前的樣子）。</summary>
+        internal const string SideDefault = SideTop;
+        /// <summary>設定「分頁條位置」的 ModConfig key（存進設定檔，不要改）。</summary>
+        internal const string SideEntryName = "TabStripSide";
+
+        /// <summary>設定的值 → 哪一邊；不認得的值（遊戲本來就會換回預設，這裡再保險一次）當成放上面（照視窗群組的 ParseListAgain）。</summary>
+        internal static StripSide ParseSide(string value) => value == SideLeft ? StripSide.Left : StripSide.Top;
+
+        /// <summary>
+        /// 設定「左側分頁最寬」（2.8.0 起）的 ModConfig key（存進設定檔，不要改）與範圍、預設（分頁條的單位，和分頁寬同一套）。
+        /// 放左邊時一欄最寬是這個固定的上限、不看目前的視窗：分頁的寬和視窗寬沒有關係，跟著視窗寬的話一換分頁整條就跳。
+        /// 48 約 3 個中文字加「…」、112 和側背包（小）一樣寬（約 11 個中文字）、240 約 25 個中文字（畫面寬的四分之一左右）。
+        /// 有上下限是因為藍色標籤印表機取名沒有字數上限，不設上限的話一個長名字就能把分頁條拉到畫面外。
+        /// </summary>
+        internal const string LeftWidthEntryName = "LeftTabMaxWidth";
+        internal const int LeftWidthDefault = 112, LeftWidthMin = 48, LeftWidthMax = 240;
+
+        /// <summary>
+        /// 設定值夾到 LeftWidthMin～LeftWidthMax。遊戲讀設定檔時有範圍就會夾，這裡再夾一次：設定檔可以手改、
+        /// 遊戲改版後夾的做法也可能變，排法不能因為一個怪值變成 0 寬或超寬。
+        /// </summary>
+        internal static int ClampLeftWidth(int value) => value < LeftWidthMin ? LeftWidthMin : value > LeftWidthMax ? LeftWidthMax : value;
+
+        /// <summary>
+        /// 分頁條排法的寬度上限（TabStrip.Show 傳給 LayoutTop／LayoutLeft 與拖曳時的判斷）：放上面是視窗寬（一排排到視窗寬就換行、
+        /// 照比例拉長）；放左邊是設定的左側分頁最寬，不看視窗寬，換到寬度不同的視窗時排法不變。
+        /// leftMaxWidth 沒設（0 以下）時用預設。
+        /// </summary>
+        internal static float StripMaxWidth(bool left, float leftMaxWidth, float windowWidth) =>
+            left ? (leftMaxWidth > 0 ? leftMaxWidth : LeftWidthDefault) : windowWidth;
+
+        /// <summary>
+        /// 放左邊時的排法（LayoutLeft 的結果）。座標從視窗左上角量：u＝往左多遠、v＝往下多遠（都是視窗的像素單位）。
+        /// Slots 沿用 Slot、轉個方向（Row＝第幾欄、X＝上緣的 v、Width＝分頁的高度），InsertIndex 和放上面共用；
+        /// 每格的寬度看它在哪一欄（CellWidth）。鎖住時 Slots[0] 是鏈條小分頁（Lead＝1）：固定 ChainTabWidth 寬、右緣貼著視窗，不跟著欄寬。
+        /// </summary>
+        internal sealed class LeftStrip
+        {
+            public readonly List<Slot> Slots = new List<Slot>();
+            /// <summary>每欄的寬度：那欄最寬的分頁的自然寬度，夾到設定的左側分頁最寬；鎖住時第 0 欄至少鏈條小分頁的寬。</summary>
+            public readonly List<float> ColWidth = new List<float>();
+            /// <summary>每欄右緣的 u：第 0 欄是 0（貼著視窗左緣），往外每欄和內側那欄共用一條外框線。</summary>
+            public readonly List<float> ColStart = new List<float>();
+            /// <summary>Slots 最前面不是分頁的格數（鎖住時 1）。</summary>
+            public int Lead;
+            public float Overlap;
+
+            public int Columns => ColWidth.Count;
+
+            /// <summary>最外欄左緣的 u（整條分頁條的寬度）。</summary>
+            public float Outer => Columns == 0 ? 0f : ColStart[Columns - 1] + ColWidth[Columns - 1];
+
+            /// <summary>最下面那格下緣的 v（整條分頁條的高度）。</summary>
+            public float Bottom
+            {
+                get
+                {
+                    float b = 0;
+                    foreach (var s in Slots) b = Math.Max(b, s.X + s.Width);
+                    return b;
+                }
+            }
+
+            /// <summary>第 c 欄最下面那格的下緣（v）：別組的分頁條逐欄判斷範圍用（鎖住時第 0 欄的鏈條那格也算）。</summary>
+            public float ColumnBottom(int c)
+            {
+                float b = 0;
+                foreach (var s in Slots)
+                    if (s.Row == c) b = Math.Max(b, s.X + s.Width);
+                return b;
+            }
+
+            /// <summary>第 i 格的寬度：鏈條小分頁固定 ChainTabWidth，分頁是它那欄的寬度。</summary>
+            public float CellWidth(int i) => i < Lead ? ChainTabWidth : ColWidth[Slots[i].Row];
+
+            /// <summary>第 i 格右緣的 u：鏈條小分頁貼著視窗（0），分頁是它那欄的右緣。</summary>
+            public float CellRight(int i) => i < Lead ? 0f : ColStart[Slots[i].Row];
+
+            /// <summary>
+            /// u 落在第幾欄：u ≤ 某欄的左緣就是那欄（相鄰兩欄共用的那條線算內側那欄）；在視窗裡面（u &lt; 0）算第 0 欄；
+            /// 超出最外欄回傳 Columns（呼叫的人決定要夾回最外欄還是當成「放最後」）。
+            /// </summary>
+            public int ColumnAt(float u)
+            {
+                if (u < 0) return 0;
+                for (int c = 0; c < Columns; c++)
+                    if (u <= ColStart[c] + ColWidth[c]) return c;
+                return Columns;
+            }
+        }
+
+        /// <summary>
+        /// 放左邊時的排法：第 0 欄貼著視窗左緣，從視窗頂端（標題列的上緣，v＝0）往下排，
+        /// 一頁的高度 h 和放上面時一樣、相鄰共用一條外框線（step＝h−overlap）。這欄排到視窗底（windowHeight）放不下就往左再開一欄；
+        /// 每欄至少放一頁（視窗矮到放不下一頁也照放）。每欄的寬度＝那欄最寬的分頁，夾到上限 maxWidth（名稱由 TMP 截成「…」）。
+        /// maxWidth 是設定「左側分頁最寬」，不是視窗寬：換分頁時分頁條不跟著視窗寬度跳；一欄排幾頁照樣看 windowHeight。
+        /// 分頁一樣高，一欄放幾頁是固定的，放上面時的「照比例拉長」用不到。
+        /// 鎖住：鏈條小分頁固定 ChainTabWidth×h，放在第 0 欄最上面、右緣貼著視窗；每一欄的分頁都從它下面開始（v＝step），
+        /// 第 1 欄起也跳過鏈條那一格。tabWidths 只有分頁（含預告分頁），不含鏈條。
+        /// </summary>
+        internal static LeftStrip LayoutLeft(IList<float> tabWidths, bool locked, float h, float overlap, float windowHeight, float maxWidth)
+        {
+            var b = new LeftStrip { Lead = locked ? 1 : 0, Overlap = overlap };
+            float step = h - overlap;
+            float start = locked ? step : 0f;
+            if (locked)
+            {
+                b.Slots.Add(new Slot { Row = 0, X = 0, Width = h });
+                b.ColWidth.Add(ChainTabWidth);
+            }
+            int col = 0;
+            float v = start;
+            bool any = false;
+            foreach (var w0 in tabWidths)
+            {
+                float w = maxWidth > 0 ? Math.Min(w0, maxWidth) : w0;
+                if (any && v + h > windowHeight + 0.01f)
+                {
+                    col++;
+                    v = start;
+                    any = false;
+                }
+                while (b.ColWidth.Count <= col) b.ColWidth.Add(0f);
+                b.ColWidth[col] = Math.Max(b.ColWidth[col], w);
+                b.Slots.Add(new Slot { Row = col, X = v, Width = h });
+                v += step;
+                any = true;
+            }
+            float u = 0;
+            foreach (var cw in b.ColWidth)
+            {
+                b.ColStart.Add(u);
+                u += cw - overlap;
+            }
+            return b;
+        }
+
+        /// <summary>
+        /// 放左邊時拖到分頁條上（u, v）插在第幾個分頁前面（0～分頁數，分頁數＝最後；照 InsertIndex 換方向）：
+        /// 看滑鼠在哪一欄（超出最外欄夾回最外欄）、在那欄裡第一個中線在滑鼠下面的分頁前面，都在上面就插在那欄最後一個的後面。
+        /// 鎖住時拖到鏈條小分頁上＝第一頁前面（Lead 扣掉）。
+        /// </summary>
+        internal static int InsertIndexLeft(LeftStrip b, float u, float v) =>
+            b == null || b.Slots.Count == 0 ? 0 : InsertIndex(b.Slots, b.ColumnAt(u), v, b.Lead);
+
+        /// <summary>
+        /// 放左邊時在自己的分頁條裡重排（照 LiftedInsertIndex 換方向）：插在「拿掉被拖那頁之後」的第幾個前面（0～分頁數−1），
+        /// 欄的範圍與高度都照拿掉它之後的排法算（被拖的那頁畫在哪裡都不影響，不會回饋）。
+        /// 滑鼠超出剩下那些分頁的最外欄（自己的分頁條多算一欄的容忍範圍，InOwnStripAreaLeft）＝放最後；在視窗裡面（往裡的容忍範圍）算第 0 欄。
+        /// </summary>
+        internal static int LiftedInsertIndexLeft(IList<float> tabWidths, int lifted, bool locked, float h, float overlap, float windowHeight, float maxWidth, float u, float v)
+        {
+            var rest = new List<float>();
+            for (int i = 0; i < tabWidths.Count; i++)
+                if (i != lifted) rest.Add(tabWidths[i]);
+            var b = LayoutLeft(rest, locked, h, overlap, windowHeight, maxWidth);
+            int col = b.ColumnAt(u);
+            if (col >= b.Columns) return rest.Count;
+            return InsertIndex(b.Slots, col, v, b.Lead);
+        }
+
+        /// <summary>
+        /// 放左邊時滑鼠（u, v）在不在別組（或沒在拖分頁時）的分頁條上，照排法 b 逐欄判斷（審查後改）：u 落在哪一欄（ColumnAt），
+        /// v 要在那欄最後一格的下緣以內。不用外接矩形：短的最外欄下面那塊是透明的空處，算成分頁條的話底下看得到的視窗的標題列反而拖不到。
+        /// 鎖住時第 0 欄的鏈條那格照算；第 1 欄起鏈條旁邊 v &lt; 15 的空處算在分頁條上（夾在兩欄之間，不另外挖掉）。在視窗裡面（u &lt; 0）不算。
+        /// </summary>
+        internal static bool InStripAreaLeft(LeftStrip b, float u, float v)
+        {
+            if (b == null || u < 0 || v < 0) return false;
+            int col = b.ColumnAt(u);
+            return col < b.Columns && v <= b.ColumnBottom(col);
+        }
+
+        /// <summary>
+        /// 放左邊時拖分頁、滑鼠在不在自己的分頁條上（照 InStripArea 的 own 換方向，審查後改）。照不受拖曳中畫法影響的排法 b 的外框，另給固定的容忍範圍：
+        /// - 左緣多一欄、寬是被拖那頁自己的寬 draggedWidth（減共用的一條線）：被拖到最後時自己多開的那一欄只有它；
+        ///   用最寬那欄的話，窄分頁的組也多出一大塊，那裡別組的標題列和分頁條都當不了目標。
+        /// - 下緣到視窗底 windowHeight（被拖的那頁移過去後最外欄可能變長）。
+        /// - 往視窗裡多 inside（標題列的高度）：上下重排時游標稍微滑進視窗、或在目前那頁接住視窗的那 2 單位上，不能變成拖出來拆開
+        ///   （放上面時往下拖過頭會落在自己的標題列上、算取消）。這塊照第 0 欄的高度重排（ColumnAt 在 u &lt; 0 算第 0 欄）。
+        /// </summary>
+        internal static bool InOwnStripAreaLeft(LeftStrip b, float windowHeight, float draggedWidth, float inside, float u, float v)
+        {
+            if (b == null) return false;
+            float outer = b.Outer + Math.Max(0f, draggedWidth - b.Overlap);
+            float bottom = Math.Max(b.Bottom, windowHeight);
+            return u >= -inside && u <= outer && v >= 0 && v <= bottom;
+        }
+
+        /// <summary>
+        /// 放左邊時鎖住的組的分頁拖不出自己的分頁條（照 ClampToStrip 換方向）：影子的中心夾回範圍裡，整個影子留在範圍裡；
+        /// halfW 是影子寬度（它那欄的寬）的一半、halfH 是分頁高度的一半。
+        /// </summary>
+        internal static void ClampToStripLeft(LeftStrip b, float halfW, float halfH, float u, float v, out float cu, out float cv)
+        {
+            cu = Clamp(u, halfW, b.Outer - halfW);
+            cv = Clamp(v, halfH, b.Bottom - halfH);
+        }
+
+        /// <summary>
+        /// 同上，但給算插入位置用（照 ClampForInsert）：只夾回分頁條、不往內縮影子的大小。上限各少 0.01（照 ClampForInsert 的 rows×step−0.01；審查後改）：
+        /// 這個點要經過 TransformPoint 換成螢幕座標、再換回來，夾在 Outer 剛好的話可能變成 Outer＋一點點，被 ColumnAt 當成超出最外欄、判成放最後。
+        /// </summary>
+        internal static void ClampForInsertLeft(LeftStrip b, float u, float v, out float iu, out float iv)
+        {
+            iu = Math.Max(0f, Math.Min(b.Outer - 0.01f, u));
+            iv = Math.Max(0f, Math.Min(b.Bottom - 0.01f, v));
+        }
+
         // ---------------- 鎖住整組（2.6.0 起） ----------------
 
         /// <summary>
@@ -299,7 +547,7 @@ namespace ProbablyStolenWindowTabs
             ".###.....###.",
         };
 
-        /// <summary>鏈條小分頁的寬度：圖示寬 13＋左右各留 3。高度和其他分頁一樣。</summary>
+        /// <summary>鏈條小分頁的寬度：圖示寬 13＋左右各留 3。高度和其他分頁一樣。2.8.0 起放上面、放左邊都固定這個大小、不拉長。</summary>
         internal const float ChainTabWidth = 13f + 3f * 2;
 
         /// <summary>拖分頁放開時，滑鼠在哪裡（Tabs.FindTarget 找到的）。</summary>
@@ -553,6 +801,120 @@ namespace ProbablyStolenWindowTabs
             if (FadeStillOurs(current, setByUs)) return FadeUndo.Restore;
             if (FadeStillOurs(current, original)) return FadeUndo.NotApplied;
             return FadeUndo.Changed;
+        }
+
+        // ---------------- 物品直接放進分頁（2.8.0 起） ----------------
+
+        /// <summary>
+        /// 一個拖著的物品放不放得進那頁的箱子：箱子有它放得進去的格子（遊戲的 MayHaveValidInventorySlot，只看種類與大小，不看現在有沒有空位），
+        /// 而且它不是本來就在那個箱子裡（放回自己原本的箱子不動作，照遊戲的倉庫分頁）。
+        /// </summary>
+        internal static bool ItemFitsTab(bool hasValidSlot, bool alreadyInside) => hasValidSlot && !alreadyInside;
+
+        /// <summary>
+        /// 開關打開時，拖著物品停在這個分頁上算不算「能放」（「Claude 定的細節」：能放才標亮、出提示框，放開時才放進去）：
+        /// 那頁的箱子不是正被拖著的（被拖的箱子自己那頁）、打得開（上鎖的容器不行）、遊戲讓玩家放進去（GeneralHelper.MayPlayerInsertInto），
+        /// 而且拖著的物品至少一個放得進去（ItemFitsTab；拖單一物品就是那一個）。
+        /// 鎖住整組只管成員、不擋放東西進去，目前那頁（正開著的）也算，所以兩個都不是參數。
+        /// </summary>
+        internal static bool TabAcceptsDrop(bool beingDragged, bool canOpen, bool mayPlayerInsert, bool anyItemFits) =>
+            !beingDragged && canOpen && mayPlayerInsert && anyItemFits;
+
+        /// <summary>
+        /// 要不要顯示遊戲的提示框：只有拖單一物品、而且那頁能放時。拖一組時只標亮（遊戲拖一組本來就沒有提示框）。
+        /// 放得下是綠字「將 X 放入 Y」、放不下（箱子滿了）是紅字，由遊戲的 RichTextGenerator.InsertItemInOtherItem 決定。
+        /// </summary>
+        internal static bool ShowDropTooltip(bool singleItem, bool accepts) => singleItem && accepts;
+
+        /// <summary>
+        /// 要不要把我們上一幀顯示的提示框收掉：上一幀是我們顯示的、這一幀不顯示了，而且滑鼠這一幀沒動。
+        /// 我們沒顯示時不收（不然會蓋掉遊戲自己的提示框）。滑鼠動了的那一幀也不收：遊戲拖物品時每次滑鼠移動都在 Update 重算提示框
+        /// （ItemMouseDragHandler.Drag：停在箱子上就換成它自己的、什麼都沒有就 HideTooltip），我們在 LateUpdate 再收，
+        /// 會把它剛顯示的那個收掉（例如從分頁直接移到別的視窗的箱子上）。滑鼠沒動、游標底下卻換了分頁（按切頁鍵後分頁條重排）時遊戲不會重算，才由我們收。
+        /// </summary>
+        internal static bool HideDropTooltip(bool shownByUsLastFrame, bool showNow, bool mouseMoved) =>
+            shownByUsLastFrame && !showNow && !mouseMoved;
+
+        /// <summary>
+        /// 這一幀要顯示提示框時，可不可以什麼都不叫、沿用上一幀我們顯示的那個：上一幀是我們顯示的、滑鼠這一幀沒動，
+        /// 而且箱子、物品、拖著的數量都和上一幀顯示時一樣（sameAsShown）。遊戲自己也只在滑鼠移動那幀重算（ItemMouseDragHandler.Drag），
+        /// 滑鼠沒動那幀它不會收，提示框還在畫面上；每幀重算會每幀找格子、組字（RichTextGenerator.InsertItemInOtherItem 會配置記憶體）、ToFront。
+        /// 滑鼠動了（遊戲在 Update 收掉了）、換了箱子（按切頁鍵後分頁條重排、游標底下換了分頁）、換了物品或數量，或上一幀不是我們顯示的，才重算重顯示。
+        /// </summary>
+        internal static bool KeepDropTooltip(bool shownByUsLastFrame, bool showNow, bool mouseMoved, bool sameAsShown) =>
+            shownByUsLastFrame && showNow && !mouseMoved && sameAsShown;
+
+        /// <summary>拖著物品的拖曳結束那一幀（開關打開、上一幀游標在分頁上）怎麼處理（OnRelease 的結果）。</summary>
+        internal enum DropRelease
+        {
+            /// <summary>放開左鍵、而且上一幀標亮的那頁能放（拖一組時放開那一幀游標也還在那頁上）：放進去。</summary>
+            Drop,
+            /// <summary>左鍵還按著：拖曳是被取消的（Esc、遊戲的 AbortDrag），不放。</summary>
+            Cancelled,
+            /// <summary>遊戲失去焦點（Alt+Tab）：Unity 失去焦點時按鍵的狀態可能歸零，看起來像放開，不放（照拖分頁、拖視窗的規則）。</summary>
+            LostFocus,
+            /// <summary>上一幀游標底下的分頁不能放（沒標亮）：不放。</summary>
+            NoTarget,
+            /// <summary>
+            /// 拖一組：放開那一幀游標底下已經不是上一幀標亮的那頁，不放。遊戲的 ItemMultiSelectHandler.EndGroupDrag 用放開那一幀的游標重新射線，
+            /// 游標剛好移到格子或物品上時遊戲自己會動作（同一格子裡精確擺放、對物品使用），我們再放會兩邊都動。
+            /// </summary>
+            MovedOff,
+        }
+
+        /// <summary>
+        /// 拖曳結束那一幀放不放：只有真的「放開左鍵」才放（上一幀按著、這一幀放開；剛按下、放開都和上一幀比，
+        /// 不用 GetMouseButtonDown／Up，理由見 Tabs._wasHeld），目標是上一幀標亮的那頁（targetId，0＝沒有）。
+        /// 失去焦點先看：那時左鍵的狀態不可信。
+        /// 拖一組（group）時另外要放開那一幀游標底下的分頁（releaseTabId，0＝不在分頁上）也是那頁：遊戲拖一組用這一幀的游標判斷；
+        /// 拖單一物品時遊戲用的是上一幀滑鼠移動時算好的目標（ItemMouseDragHandler 的 lastItem／lastInventory），和我們用上一幀的一致，不看 releaseTabId。
+        /// </summary>
+        internal static DropRelease OnRelease(bool leftWasHeld, bool leftHeld, bool focused, int targetId, bool group, int releaseTabId)
+        {
+            if (!focused) return DropRelease.LostFocus;
+            if (!leftWasHeld || leftHeld) return DropRelease.Cancelled;
+            if (targetId == 0) return DropRelease.NoTarget;
+            return group && releaseTabId != targetId ? DropRelease.MovedOff : DropRelease.Drop;
+        }
+
+        /// <summary>放開時某個物品為什麼不放（ItemSkip 的結果；None＝放）。</summary>
+        internal enum DropSkip
+        {
+            None,
+            /// <summary>物品已經銷毀、或不在任何格子裡（parentInventory 是 null）。</summary>
+            Gone,
+            /// <summary>
+            /// 物品在上一幀之後換了地方或數量變了：遊戲在 Update 處理放開時已經把它放到別處（例如放開那一幀游標底下剛好是遊戲的倉庫分頁），
+            /// 我們再放一次會重複搬。
+            /// </summary>
+            MovedByGame,
+            /// <summary>遊戲不讓拿起來（!MayRemove 或 MaxNumRemove &lt; 1；照 EndGroupDrag，只看拖一組的）。</summary>
+            NotRemovable,
+            /// <summary>物品就是那頁的箱子本身（照 EndGroupDrag，只看拖一組的；拖單一物品時被拖的箱子那頁本來就不能放）。</summary>
+            IsTarget,
+            /// <summary>本來就在那個箱子裡。</summary>
+            AlreadyInside,
+            /// <summary>遊戲不讓玩家放進去，或箱子沒有它放得進去的格子（MayPlayerInsertInto＋MayHaveValidInventorySlot，照遊戲把物品放到箱子上的那段）。</summary>
+            DoesNotFit,
+            /// <summary>要放的數量小於 1（拖著的數量或物品的 unitCount）。ItemSkip 不會回傳，ItemDrop.Place 自己設。</summary>
+            NoAmount,
+            /// <summary>判斷或放的時候出錯（例外已經 LogOnce）。ItemSkip 不會回傳，ItemDrop.Place 自己設。</summary>
+            Failed,
+        }
+
+        /// <summary>
+        /// 放開時這個物品要不要放進那頁的箱子。檢查照遊戲：拖一組照 ItemMultiSelectHandler.EndGroupDrag 對每個物品的跳過條件
+        /// （銷毀、不在格子裡、不能拿起、就是目標本身），拖單一物品照 ItemMouseDragHandler.EndDrag 把物品放到箱子上的那段（只看放不放得進去）；
+        /// 兩種都另外跳過本來就在裡面的、被遊戲動過的。
+        /// </summary>
+        internal static DropSkip ItemSkip(bool group, bool gone, bool movedByGame, bool removable, bool isTarget, bool alreadyInside, bool fits)
+        {
+            if (gone) return DropSkip.Gone;
+            if (movedByGame) return DropSkip.MovedByGame;
+            if (group && !removable) return DropSkip.NotRemovable;
+            if (group && isTarget) return DropSkip.IsTarget;
+            if (alreadyInside) return DropSkip.AlreadyInside;
+            return fits ? DropSkip.None : DropSkip.DoesNotFit;
         }
     }
 }

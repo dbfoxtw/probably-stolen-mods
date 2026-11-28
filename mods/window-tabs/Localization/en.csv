@@ -5,3 +5,9 @@ cfg_prev,Previous tab
 cfg_prev_tip,Key that switches the tab set under the mouse to its previous tab (before the first one comes the last); also works while dragging items.\nE.g. Ctrl+Shift+Tab, or the mouse side button Mouse4; empty = not used
 cfg_fade,Fade window when merging
 cfg_fade_tip,When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades so you can see where its tabs will go.
+cfg_drop,Drop items straight into tabs
+cfg_drop_tip,While dragging items, hovering over a tab no longer switches to it; releasing on the tab puts them straight into it.\nTo switch tabs while dragging, set the tab-switching hotkeys.
+cfg_side,Tab strip position
+cfg_side_tip,Which side of the window the tab strip goes on.\nTop = above the window\nLeft = to the left of the window
+cfg_maxw,Left tab max width
+cfg_maxw_tip,How wide a tab can get when the tab strip is on the left. Longer names are cut off with "…". On top, tabs follow the window's width instead.

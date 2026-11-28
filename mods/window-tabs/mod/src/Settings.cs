@@ -9,7 +9,11 @@ namespace ProbablyStolenWindowTabs
     /// 寫法照視窗群組（Ctrl+Tab、Ctrl+Shift+F1；Hotkey.Parse）；2.4.0 起另外收滑鼠側鍵 Mouse4～Mouse7（遊戲按鍵綁定的名稱）。不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：
     /// 它一列只存一個 KeyCode，表達不了 Ctrl+Tab 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart，照視窗群組）。
-    /// 2.7.0 起加一個開關：合併時被拖的視窗變透明（FadeWhileMerging，預設開），排在兩個按鍵欄後面（舊設定在設定視窗的位置不變）。
+    /// 2.7.0 起加一個開關：合併時被拖的視窗變透明（FadeWhileMerging，預設開），排在兩個按鍵欄後面（2.7.0 當時排在最後）。
+    /// 2.8.0 起再加一個開關：物品直接放進分頁（DropIntoTabs，預設關），排在 FadeWhileMerging 後面；
+    /// 和一個下拉：分頁條位置（TabStripSide，Top／Left，預設 Top）、一個整數滑桿：左側分頁最寬（LeftTabMaxWidth，48～240，預設 112）。
+    /// 2.8.0 的設定視窗順序：分頁條位置 → 左側分頁最寬 → 下一頁 → 上一頁 → 合併時變透明 → 物品直接放進分頁。
+    /// 分頁條位置是改變最大的一項、左側分頁最寬只跟著它有意義，放最上面兩格；設定檔只看 key，改順序不影響存著的值。
     /// </summary>
     static class Settings
     {
@@ -23,9 +27,12 @@ namespace ProbablyStolenWindowTabs
         internal const string NextEntry = "NextTab", PrevEntry = "PreviousTab";
         /// <summary>合併時變透明的開關的 key（2.7.0 起）。</summary>
         internal const string FadeEntry = "FadeWhileMerging";
+        /// <summary>物品直接放進分頁的開關的 key（2.8.0 起）。</summary>
+        internal const string DropEntry = "DropIntoTabs";
 
-        static ConfigEntry<string> _next, _prev;
-        static ConfigEntry<bool> _fade;
+        static ConfigEntry<string> _next, _prev, _side;
+        static ConfigEntry<bool> _fade, _drop;
+        static ConfigEntry<int> _leftWidth;
         /// <summary>上次讀成按鍵時的值（和現在的不同就重建）。</summary>
         static string _nextBuilt, _prevBuilt;
         static bool _built;
@@ -35,10 +42,17 @@ namespace ProbablyStolenWindowTabs
         internal static void Init()
         {
             var cfg = ModConfig.For(WindowTabsMod.ModId);
+            // 設定視窗照 Define 的順序排：分頁條位置與左側分頁最寬在最上面，其他照舊的相對順序
+            // 分頁條位置（2.8.0 起）。下拉的選項是英文（Rules.SideChoices，存進設定檔），說明欄一個選項一行寫對照
+            _side = cfg.Define(Rules.SideEntryName, Rules.SideDefault, Section, () => Loc.Get("cfg_side"), Rules.SideChoices, () => Loc.Get("cfg_side_tip"));
+            // 左側分頁最寬（2.8.0 起）：給了 min、max，遊戲的設定視窗畫成滑桿（不顯示數字），讀設定檔時也照範圍夾
+            _leftWidth = cfg.Define(Rules.LeftWidthEntryName, Rules.LeftWidthDefault, Section, () => Loc.Get("cfg_maxw"), Rules.LeftWidthMin, Rules.LeftWidthMax, () => Loc.Get("cfg_maxw_tip"));
             _next = cfg.Define(NextEntry, "", Section, () => Loc.Get("cfg_next"), choices: null, tooltip: () => Loc.Get("cfg_next_tip"));
             _prev = cfg.Define(PrevEntry, "", Section, () => Loc.Get("cfg_prev"), choices: null, tooltip: () => Loc.Get("cfg_prev_tip"));
-            // 2.7.0 新增的排在最後：兩個按鍵欄在設定視窗裡的位置不變
+            // 2.7.0 起：合併時變透明
             _fade = cfg.Define(FadeEntry, true, Section, () => Loc.Get("cfg_fade"), () => Loc.Get("cfg_fade_tip"));
+            // 2.8.0 起：物品直接放進分頁，排在變透明的開關後面。預設關（舊玩家更新後停在分頁上照樣切頁）
+            _drop = cfg.Define(DropEntry, false, Section, () => Loc.Get("cfg_drop"), () => Loc.Get("cfg_drop_tip"));
         }
 
         /// <summary>
@@ -46,6 +60,24 @@ namespace ProbablyStolenWindowTabs
         /// 關掉就完全不變透明。還沒讀設定（Init 之前）時當作開著。
         /// </summary>
         internal static bool FadeWhileMerging => _fade == null || _fade.Value;
+
+        /// <summary>
+        /// 物品直接放進分頁（2.8.0 起，預設關）：開＝拖著物品停在分頁上只標亮、不切頁，放開就放進那頁；關＝停留切頁。
+        /// 拖著物品時每幀讀（Tabs 的 DragItem），玩家在設定視窗按套用就生效。還沒讀設定（Init 之前）時當作關著（照預設）。
+        /// </summary>
+        internal static bool DropIntoTabs => _drop != null && _drop.Value;
+
+        /// <summary>
+        /// 分頁條放左邊（2.8.0 起，預設放上面）：畫分頁條時每幀讀（Tabs.UpdateStrips），玩家在設定視窗按套用就生效，
+        /// 開著的分頁條當場換邊、視窗本身不動。不認得的值當成放上面（Rules.ParseSide）；還沒讀設定（Init 之前）時也是。
+        /// </summary>
+        internal static bool StripOnLeft => Rules.ParseSide(_side != null ? _side.Value : Rules.SideDefault) == Rules.StripSide.Left;
+
+        /// <summary>
+        /// 放左邊時一欄最寬（2.8.0 起，分頁條的單位）：畫分頁條時每幀讀（Tabs.UpdateStrips），按套用就生效。
+        /// 照樣夾在 48～240（Rules.ClampLeftWidth）；還沒讀設定（Init 之前）時用預設 112。放上面時不看這個。
+        /// </summary>
+        internal static int LeftTabMaxWidth => Rules.ClampLeftWidth(_leftWidth != null ? _leftWidth.Value : Rules.LeftWidthDefault);
 
         /// <summary>
         /// 這一幀按下的切頁鍵：+1＝下一頁、−1＝上一頁、0＝沒有。修飾鍵要完全相同才算；左右兩邊都算（照視窗群組的 Keys.Pressed）。
@@ -117,11 +149,11 @@ namespace ProbablyStolenWindowTabs
             return k.ToString();
         }
 
-        /// <summary>目前的切頁鍵與合併時變不變透明，給 log 看（Init 與進店鋪時寫一次；寫錯的在這裡第一次讀時警告）。</summary>
+        /// <summary>目前的切頁鍵、合併時變不變透明、物品直接放不放進分頁、分頁條的位置與左側分頁最寬，給 log 看（Init 與進店鋪時寫一次；寫錯的在這裡第一次讀時警告）。</summary>
         internal static string Describe()
         {
             Refresh();
-            return $"{Text()}；合併時變透明：{(FadeWhileMerging ? "開" : "關")}";
+            return $"{Text()}；合併時變透明：{(FadeWhileMerging ? "開" : "關")}；物品直接放進分頁：{(DropIntoTabs ? "開" : "關")}；分頁條位置：{(StripOnLeft ? "左邊" : "上面")}；左側分頁最寬：{LeftTabMaxWidth}";
         }
 
         static string Text()

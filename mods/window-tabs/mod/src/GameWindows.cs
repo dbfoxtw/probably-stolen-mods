@@ -161,6 +161,9 @@ namespace ProbablyStolenWindowTabs
         /// <summary>視窗的寬度，用 handler 的單位（分頁條掛在 handler 底下）：widthPixels 就是部件用的單位。</summary>
         internal static float Width(PixelWindow w) => w.widthPixels;
 
+        /// <summary>視窗的高度（同上，heightPixels；分頁條放左邊時一欄排到這裡放不下就換欄，2.8.0 起）。</summary>
+        internal static float Height(PixelWindow w) => w.heightPixels;
+
         /// <summary>
         /// 標題列的高度（handler 的單位；0＝沒有標題列）。正式版的標題字、×、標題的底都是 private，照遊戲排版的公開數字算：
         /// - 機器樣式（玩家拿得到的箱子與機器都是）：MachineryValidate 把深灰的標題列畫在上面 MachineryStyle.HEADER_H（20）。

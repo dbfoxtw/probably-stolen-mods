@@ -20,7 +20,7 @@
 - **切換**：點分頁就換成那個箱子，位置不變。沒在看的分頁其實是關著的視窗，所以一整組只算一個視窗。
 - **重排**：在分頁條裡把分頁拖到想要的位置；拖的時候有一個分頁的影子跟著滑鼠。
 - **拆開、移到別組**：把分頁拖到空的地方放開，它就在那裡變回獨立的視窗；拖到別的視窗的標題列或分頁條上，就移到那一組。只剩一頁時分頁條消失。分頁上沒有 ×。
-- **鎖住整組**：右鍵點組裡任何一個分頁，整組就鎖住，分頁條最左邊多一個鏈條小分頁；再右鍵點任一頁（或鏈條小分頁）就解鎖。鎖住、解鎖時會「喀」一聲，右鍵不會切頁。
+- **鎖住整組**：右鍵點組裡任何一個分頁，整組就鎖住，分頁條貼著標題列那排的最左邊多一個鏈條小分頁，其他排從它右邊開始（分頁條放左邊時，在貼著視窗那欄的最上面）；再右鍵點任一頁（或鏈條小分頁）就解鎖。鎖住、解鎖時會「喀」一聲，右鍵不會切頁。
   - 別的視窗、整組或別組的分頁都併不進鎖住的組，拖過去也不出現預告分頁：視窗放開只是移到那裡，分頁放開會回到原本的位置。
   - 鎖住的組的分頁拖不出分頁條，只能在裡面左右重排；抓標題列拖只會移動，不會併到別人身上。
   - 左鍵點鏈條小分頁只會把視窗拉到最上面。
@@ -29,7 +29,15 @@
   - 目前那頁和深灰的標題列同色、接成一塊；沒在看的比較暗、字比較淡。
   - 一排放不下就換行成好幾排，名稱全部看得到；點上排的分頁只會變成目前那頁的顏色，不和標題列接起來。
   - 分頁條會跑出畫面上緣時，視窗會被往下推。
-- **拖著物品停在分頁上**（單一物品或框選的一組物品都可以）：分頁先變亮、字變黃，約半秒後切到那頁，接著把物品放進去。
+- **拖著物品停在分頁上**（「物品直接放進分頁」關著時；單一物品或框選的一組物品都可以）：分頁先變亮、字變黃，約半秒後切到那頁，接著把物品放進去。
+- **物品直接放進分頁**（設定打開時）：拖著物品（或框選的一組物品）停在分頁上，分頁變亮、字變黃，但不切頁；目前那頁也一樣變亮。拖單一物品時，游標旁邊會出現遊戲的提示框，說放不放得下。放開就放進那一頁：
+  - 放得下多少放多少，剩下的留在原處；放完不切頁，那組的視窗拉到最上面。
+  - 放不進去的分頁不變亮：被拖的箱子自己那頁、上鎖的、不收這種物品的。
+  - 鎖住的組照樣放得進去。
+  - 拖著時要切頁，用「下一個分頁」「上一個分頁」的按鍵。
+- **分頁條放左邊**：設定「分頁條位置」選 Left，分頁從視窗頂端沿著左邊往下排，名稱靠左，目前那頁和視窗接成一塊。
+  - 一欄放不下就往左多排一欄；一欄排幾頁跟著目前視窗的高度。每欄的寬度照那欄最長的名字，最寬到「左側分頁最寬」，名字更長的截成「…」。
+  - 分頁條會跑出畫面左緣時，視窗會被往右推。
 - **按鍵切頁**：在設定裡設好「下一個分頁」「上一個分頁」的鍵（下面「設定」），按下去就切換滑鼠底下那組：游標在那組的視窗或分頁條上才算，被別的視窗蓋住的部分不算，游標不在任何一組上就不動作。
   - 拖著物品或框選的一組物品時也能按，切過去照常放進去；拖著的箱子自己那頁跳過。
   - 暫時打不開的（例如上鎖的）跳過，切到再下一頁。
@@ -44,13 +52,16 @@
 
 ## 設定
 
-在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，有三個設定，每個旁邊的 i 有說明。設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.window-tabs.json`。
+在遊戲主選單的「Mods」（模組）畫面打開這個 mod 的設定，有六個設定，每個旁邊的 i 有說明。設定存在存檔資料夾（`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`）的 `ModConfigs\dbfoxtw.window-tabs.json`。
 
 | 設定 | 預設 | 內容 |
 |---|---|---|
+| 分頁條位置（`TabStripSide`） | Top | 分頁條放在視窗上面（Top）或左邊（Left） |
+| 左側分頁最寬（`LeftTabMaxWidth`） | 112 | 分頁條放左邊時一個分頁最寬多少（滑桿）；放上面時不看這個 |
 | 下一個分頁（`NextTab`） | 空白 | 把滑鼠底下那組切到下一頁的鍵，最後一頁之後回到第一頁 |
 | 上一個分頁（`PreviousTab`） | 空白 | 切到上一頁的鍵，第一頁之前是最後一頁 |
 | 合併時視窗變透明（`FadeWhileMerging`） | 開 | 抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗變透明，看得到分頁會插在哪裡 |
+| 物品直接放進分頁（`DropIntoTabs`） | 關 | 拖著物品停在分頁上不切頁，放開就放進那一頁 |
 
 - 按鍵的寫法例如 `Ctrl+Tab`、`Ctrl+Shift+Tab`、`F5`；修飾鍵（Ctrl、Shift、Alt）要完全一樣才算，左右兩邊的都可以。留空＝不使用；寫錯（認不得的鍵名）時那一欄不使用。
 - 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：`Mouse4`、`Mouse5`（例如 `Mouse4`、`Ctrl+Mouse5`）。左鍵、右鍵、中鍵不行。
@@ -92,7 +103,7 @@ Demo 版（v1.0.0，MelonLoader）在正式版不能用。
 
 ## 已知限制
 
-- 沒在看的分頁是關著的視窗：快速轉移（Ctrl＋點擊）只會放進目前那頁；拖物品進別頁要先停在分頁上切過去。
+- 沒在看的分頁是關著的視窗：快速轉移（Ctrl＋點擊）只會放進目前那頁；拖物品進別頁要先停在分頁上切過去，或打開「物品直接放進分頁」、在分頁上放開。
 - 大小不同的箱子切換時，視窗的左上角不動。
 - **儲物協調器**（遊戲的物品）的一個預設集裡有同一個分頁組的兩個以上的箱子時，按那個預設集的鍵只會開、不會關（要用 ESC 或 × 關）；打開時留下最後開的那頁，擺在分頁組的位置。
 - 拖著物品從 A 頁切到 B 頁、再切回 A 頁，拖著的物品圖案會消失、只剩選取的框，照樣放得下。用遊戲的儲物協調器把來源視窗關掉再打開也是這樣。
@@ -145,7 +156,7 @@ The code was written by AI (Claude); the feature design and in-game testing were
 - **Switch**: click a tab to show that container in the same spot. Tabs you aren't looking at are really closed windows, so a whole set counts as one window.
 - **Reorder**: drag a tab along the tab strip; a ghost tab follows the mouse.
 - **Split off or move**: drop a tab on an empty spot and it becomes a window of its own right there; drop it on another window's title bar or tab strip to move it to that set. When only one tab is left, the tab strip disappears. Tabs have no ×.
-- **Lock a tab set**: right-click any tab in a set to lock it; a small chain tab appears at the left end of the tab strip. Right-click any tab (or the chain tab) again to unlock. Locking and unlocking make a click sound; right-clicking doesn't switch tabs.
+- **Lock a tab set**: right-click any tab in a set to lock it; a small chain tab appears at the left end of the tab strip's row next to the title bar, and the other rows start to its right (with the tab strip on the left, it's at the top of the column next to the window). Right-click any tab (or the chain tab) again to unlock. Locking and unlocking make a click sound; right-clicking doesn't switch tabs.
   - Other windows, tab sets and tabs from other sets can't join a locked set, and no preview tab shows: a window you drop there just moves, and a tab goes back where it was.
   - A locked set's tabs can't be dragged out of its tab strip; you can only reorder them. Dragging the set by its title bar just moves it.
   - Left-clicking the chain tab only brings the window to the front.
@@ -154,7 +165,15 @@ The code was written by AI (Claude); the feature design and in-game testing were
   - The current tab is the same dark gray as the title bar and joins it; the others are darker, with dimmer text.
   - Tabs that don't fit in one row wrap into more rows, so every name shows; clicking a tab in an upper row gives it the current tab's color but doesn't join it to the title bar.
   - If the tab strip would go off the top of the screen, the window is pushed down.
-- **Hover with an item**: while dragging an item (or a box-selected group of items), hold it over a tab; the tab lights up with yellow text and switches after about half a second, so you can drop the item in.
+- **Hover with an item** (with Drop items straight into tabs off): while dragging an item (or a box-selected group of items), hold it over a tab; the tab lights up with yellow text and switches after about half a second, so you can drop the item in.
+- **Drop items straight into tabs** (with the setting on): while dragging an item (or a box-selected group of items), hold it over a tab; the tab lights up with yellow text but doesn't switch, and the current tab lights up too. For a single item, the game's tooltip next to the cursor shows whether it fits. Release to put it into that tab:
+  - As much as fits goes in, and the rest stays where it was; the tab doesn't switch, and the set's window comes to the front.
+  - Tabs that can't take it don't light up: the tab of the container you're dragging, locked containers, and ones that don't accept that item.
+  - Locked tab sets still take items.
+  - To switch tabs while dragging, use the Next tab and Previous tab keys.
+- **Tab strip on the left**: set Tab strip position to Left, and the tabs stack down the left side of the window from its top, names aligned left, with the current tab joined to the window.
+  - When they don't fit in one column, more columns are added to the left; how many tabs fit in a column follows the current window's height. Each column is as wide as its longest name, up to Left tab max width; longer names are cut off with "…".
+  - If the tab strip would go off the left edge of the screen, the window is pushed right.
 - **Switch with keys**: set Next tab and Previous tab keys in the settings (see Settings below) and press them to switch the tab set under the mouse: the mouse has to be over that set's window or tab strip, parts covered by another window don't count, and nothing happens when the mouse isn't over any set.
   - It also works while you're dragging an item or a box-selected group of items; drop it into the new tab as usual. The tab of the container you're dragging is skipped.
   - Tabs that can't be opened right now (e.g. locked) are skipped.
@@ -167,13 +186,16 @@ The code was written by AI (Claude); the feature design and in-game testing were
 
 The tab strips come from this mod, not the base game; please report problems to this mod, not to the game developers.
 
-**Settings:** open this mod's settings on the Mods screen of the main menu; there are three settings, each with an i that explains it. Settings are stored in `ModConfigs\dbfoxtw.window-tabs.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
+**Settings:** open this mod's settings on the Mods screen of the main menu; there are six settings, each with an i that explains it. Settings are stored in `ModConfigs\dbfoxtw.window-tabs.json` in the save folder (`%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen`).
 
 | Setting | Default | What it does |
 |---|---|---|
+| Tab strip position (`TabStripSide`) | Top | Puts the tab strip above the window (Top) or to its left (Left) |
+| Left tab max width (`LeftTabMaxWidth`) | 112 | How wide a tab can get when the tab strip is on the left (a slider); not used on top |
 | Next tab (`NextTab`) | empty | Key that switches the tab set under the mouse to the next tab; after the last tab comes the first |
 | Previous tab (`PreviousTab`) | empty | Key that switches to the previous tab; before the first tab comes the last |
 | Fade window when merging (`FadeWhileMerging`) | on | When you drag a window by its title bar over another window's title bar or tab strip, the dragged window fades so you can see where its tabs will go |
+| Drop items straight into tabs (`DropIntoTabs`) | off | Holding dragged items over a tab doesn't switch to it; releasing puts them into that tab |
 
 - Write keys like `Ctrl+Tab`, `Ctrl+Shift+Tab` or `F5`; modifiers (Ctrl, Shift, Alt) must match exactly, either the left or the right one. Empty = not used; a field with a key name that isn't recognized is not used.
 - Mouse side buttons work too, named as in the game's Key Binds: `Mouse4` and `Mouse5` (e.g. `Mouse4`, `Ctrl+Mouse5`). The left, right and middle buttons can't be used.
@@ -203,7 +225,7 @@ To update: close the game, delete the old `Mods\dbfoxtw.window-tabs` folder, and
 
 **Known limitations**
 
-- Tabs you aren't looking at are closed windows: Quick Transfer (Ctrl + Click) only goes into the current tab, and to drag an item into another tab, hold it over that tab first.
+- Tabs you aren't looking at are closed windows: Quick Transfer (Ctrl + Click) only goes into the current tab, and to drag an item into another tab, hold it over that tab first, or turn on Drop items straight into tabs and release it on the tab.
 - When containers of different sizes switch, the window's top-left corner stays put.
 - **Storage Coordinator** (an item in the game): if one of its presets has two or more containers from the same tab set, its key only opens, never closes (close with Esc or ×); the tab opened last stays, at the tab set's position.
 - If you drag an item from tab A to tab B and back to A, the dragged item's image disappears and only the selection highlight remains; you can still drop it. The same happens if you close and reopen the source window with the game's Storage Coordinator.

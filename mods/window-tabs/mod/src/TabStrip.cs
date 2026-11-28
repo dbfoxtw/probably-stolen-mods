@@ -19,7 +19,7 @@ namespace ProbablyStolenWindowTabs
         /// <summary>預告分頁插在第幾個前面（-1＝沒有）與它的名稱。</summary>
         public int PreviewAt = -1;
         public string PreviewLabel;
-        /// <summary>拖著物品停在上面的分頁（變亮，-1＝沒有）。</summary>
+        /// <summary>拖著物品停在上面的分頁（變亮，-1＝沒有）。直接放進分頁時可以是目前那頁（和 Active 相同）。</summary>
         public int Hover = -1;
         /// <summary>正被拖著的分頁（變淡；-1＝沒有）。</summary>
         public int Dim = -1;
@@ -33,6 +33,16 @@ namespace ProbablyStolenWindowTabs
         /// 上面這些位置（Active、PreviewAt、Hover、Dim、LiftedFrom）都照 Ids 算，不算它。
         /// </summary>
         public bool Locked;
+        /// <summary>
+        /// 分頁條放在視窗左邊（2.8.0 起，設定 TabStripSide）；false＝放上面。
+        /// 上面這些位置照樣照 Ids 算，只有排法、畫法、滑鼠位置的換算換方向。
+        /// </summary>
+        public bool Left;
+        /// <summary>
+        /// 放左邊時一欄最寬（2.8.0 起，設定 LeftTabMaxWidth）：固定的上限、不看目前的視窗，換分頁時分頁條不跟著跳。
+        /// 放上面時不用（照視窗寬度排）。0 以下（沒設）當成預設。
+        /// </summary>
+        public float LeftMaxWidth;
     }
 
     /// <summary>
@@ -120,6 +130,8 @@ namespace ProbablyStolenWindowTabs
     /// 單位是視窗的像素單位（× 按鈕是 16×16）。點擊與拖曳由 Tabs 用滑鼠位置判斷；每個分頁掛一個遊戲自己的 TreeNodeRender
     /// 擋住滑鼠（AddEventSink），不然遊戲會看穿分頁、去拿底下的物品。
     /// 2.6.0 起，鎖住的組在第一格多畫一個鏈條小分頁（StripSpec.Locked），它不是分頁，插入位置的換算跳過它。
+    /// 2.8.0 起可以放在視窗左邊（StripSpec.Left）：排法在 Rules.LayoutLeft，
+    /// 這裡只管畫和座標換算。兩邊的本地座標原點都是視窗左上角（放上面樞紐在左下角、往上長；放左邊樞紐在右上角、往左往下長）。
     /// </summary>
     sealed class TabStrip
     {
@@ -144,6 +156,11 @@ namespace ProbablyStolenWindowTabs
             public List<Image> Dashes;
             /// <summary>Go 的 GetInstanceID（物件被銷毀後還能從 ByGameObject 拿掉；銷毀後的 GameObject 拿來當鍵不可靠）。</summary>
             public int Id;
+            /// <summary>
+            /// 這個分頁畫在放左邊的分頁條上（2.8.0 起）：Style、StylePreview 照它換方向（接視窗的那邊在右、名稱靠左）。
+            /// 每次擺位置、重畫前由分頁條設好（影子的複本在 StyleDetached 設）。
+            /// </summary>
+            public bool SideLeft;
         }
 
         /// <summary>
@@ -165,10 +182,14 @@ namespace ProbablyStolenWindowTabs
         View _chain;
         Image _chainIcon;
         /// <summary>
-        /// 排法最前面不是分頁的格數：鎖住時 1（鏈條小分頁），沒鎖 0。_slots、_baseSlots、_baseWidths 都含這幾格（一起排、一起拉長），
-        /// _baseIds 不含；算插入位置時扣掉（Rules.InsertIndex 的 lead），組員的位置不會因為它位移。
+        /// 排法最前面不是分頁的格數：鎖住時 1（鏈條小分頁），沒鎖 0。_slots、_baseSlots 都含這一格（排法把它固定在最前面，
+        /// Rules.LayoutTop／LayoutLeft），_baseIds、_baseWidths 不含；算插入位置時扣掉（Rules.InsertIndex 的 lead），組員的位置不會因為它位移。
         /// </summary>
         int _lead;
+        /// <summary>這次畫的是放左邊的分頁條（2.8.0 起，StripSpec.Left）。</summary>
+        bool _left;
+        /// <summary>放左邊時畫出來的排法與不受拖曳中畫法影響的排法（_slots、_baseSlots 就是它們的 Slots；欄寬另外記在這裡）。放上面時是 null。</summary>
+        Rules.LeftStrip _leftSlots, _leftBase;
         /// <summary>預告分頁在 _slots 裡的位置（−1＝沒有）。</summary>
         int _previewSlot = -1;
         string _signature;
@@ -185,7 +206,11 @@ namespace ProbablyStolenWindowTabs
         List<Rules.Slot> _baseSlots = new List<Rules.Slot>();
         List<int> _baseIds = new List<int>();
         List<float> _baseWidths = new List<float>();
-        float _maxWidth;
+        /// <summary>
+        /// 寬度的上限與視窗的高：放上面時寬度是視窗寬（一排的上限）；放左邊時寬度是設定「左側分頁最寬」（一欄的上限，StripSpec.LeftMaxWidth，
+        /// 不看視窗寬）、高度是視窗高（一欄排到哪裡換欄）。
+        /// </summary>
+        float _maxWidth, _maxHeight;
         float _h = 16f, _step = 15f;
 
         internal StripSpec Spec { get; private set; }
@@ -198,6 +223,7 @@ namespace ProbablyStolenWindowTabs
         /// 目前那頁在分頁條上往下多 2 單位接住標題列，照它複製的影子會高 2；機器樣式那 2 單位又只有填色與左緣亮邊、
         /// 沒有左右外框，飄在半空中看起來多一截，只剩外框的虛線框也比別的分頁高。重畫後高度是分頁高度 _h，
         /// 樣子照它在分頁條上的（目前那頁或沒在看的、在不在貼著視窗那排）、寬度照實際寬度，只是不接住。
+        /// 放左邊時（2.8.0 起）接住視窗的那 2 單位在右邊：寬度改回它那欄的寬、高度照舊是 _h，樣子照它在不在貼著視窗那欄。
         /// 做不到（index 對不上、複本裡找不到部件）回傳 false，影子照原本的樣子。
         /// </summary>
         internal bool StyleDetached(GameObject copy, int index)
@@ -205,11 +231,14 @@ namespace ProbablyStolenWindowTabs
             if (copy == null || Spec == null || index < 0 || index >= Spec.Ids.Count || index >= _slotOfTab.Count) return false;
             var v = ViewOf(copy);
             if (v == null) return false;
-            var s = _slots[_slotOfTab[index]];
+            int slot = _slotOfTab[index];
+            var s = _slots[slot];
             var look = index == Spec.Active ? TabLook.Active : index == Spec.Hover ? TabLook.Hover : TabLook.Inactive;
-            // 只改高度、不管位置：影子接著把樞紐改到中心、每幀把中心放在滑鼠上（GhostTab.Move），大小在建的時候就定了，
+            // 只改大小、不管位置：影子接著把樞紐改到中心、每幀把中心放在滑鼠上（GhostTab.Move），大小在建的時候就定了，
             // 拖的期間影子相對滑鼠的位置不會變
-            v.Rt.sizeDelta = new Vector2(v.Rt.sizeDelta.x, _h);
+            v.SideLeft = _left;
+            float width = _left && _leftSlots != null ? _leftSlots.CellWidth(slot) : v.Rt.sizeDelta.x;
+            v.Rt.sizeDelta = new Vector2(width, _h);
             Style(v, Palette, look, false, s.Row == 0);
             return true;
         }
@@ -343,10 +372,13 @@ namespace ProbablyStolenWindowTabs
             float h = Window.titleHeight > 0 ? Window.titleHeight : 16f;
             float title = TitleFontSize(Window);
             float fontSize = title > 0 ? title * 0.9f : h * 0.6f;
-            float maxWidth = GameWindows.Width(Window); // handler 是大小 0 的定位點，寬度看視窗的 widthPixels
+            // 寬度的上限：放上面看視窗寬（handler 是大小 0 的定位點，寬度看視窗的 widthPixels）；放左邊是設定的固定值，
+            // 分頁的寬和視窗寬沒有關係，跟著視窗寬的話從窄的視窗換到寬的，整條分頁條會跳
+            float maxWidth = Rules.StripMaxWidth(spec.Left, spec.LeftMaxWidth, GameWindows.Width(Window));
+            float maxHeight = GameWindows.Height(Window); // 放左邊時一欄排到哪裡換欄（2.8.0 起；照樣跟著視窗高）
             // 配色照視窗的樣式（同一個視窗的樣式不會變；保險起見每次照樣式挑、放進 Signature，萬一變了就重畫）
             var palette = TabPalette.For(Window);
-            var sig = Signature(spec, h, fontSize, maxWidth, palette);
+            var sig = Signature(spec, h, fontSize, maxWidth, maxHeight, palette);
             Spec = spec;
             if (!_root.activeSelf) _root.SetActive(true);
             var parentT = _rootRt.parent;
@@ -357,7 +389,7 @@ namespace ProbablyStolenWindowTabs
             if (sig == _failedSignature && Time.unscaledTime < _retryAt) return;
             // 畫完才記簽名：建物件（NewView、NewChain）丟例外時簽名留著舊的，之後會重試，不會因為「內容一樣」就再也不畫
             _signature = null;
-            try { Draw(spec, h, fontSize, maxWidth, palette); }
+            try { Draw(spec, h, fontSize, maxWidth, maxHeight, palette); }
             catch
             {
                 _failedSignature = sig;
@@ -374,11 +406,12 @@ namespace ProbablyStolenWindowTabs
         const float RetrySeconds = 1f;
 
         /// <summary>Show 的後半：內容變了才重畫。</summary>
-        void Draw(StripSpec spec, float h, float fontSize, float maxWidth, TabPalette palette)
+        void Draw(StripSpec spec, float h, float fontSize, float maxWidth, float maxHeight, TabPalette palette)
         {
             _palette = palette;
             _h = h;
             _step = h - Overlap;
+            _left = spec.Left;
 
             // 字型照遊戲建標題字的挑法（TreeNodeRender.InstantiateText 的 ApplyLocaleFont）：正式版拿不到標題字的元件
             var font = GameState.FindFont();
@@ -389,17 +422,13 @@ namespace ProbablyStolenWindowTabs
             _lead = spec.Locked ? 1 : 0;
 
             // 寬度：名稱的自然寬度加左右留白；預告分頁插在它的位置一起排。
-            // 鎖住時鏈條小分頁是第一格：和其他分頁一起排（換行、多排拉長），多排時在貼著視窗那排的最左邊
+            // 鎖住時的鏈條小分頁不在寬度裡：排法（Rules.LayoutTop／LayoutLeft）把它固定在最前面一格、不換行也不拉長
+            // （2.8.0 起，2.6.0～2.7.0 放上面時它是第一格、和其他分頁一起換行與拉長）
             var widths = new List<float>();
             var tabWidths = new List<float>();
             _slotOfTab.Clear();
-            int slotIndex = 0;
+            int slotIndex = _lead;
             _previewSlot = -1;
-            if (spec.Locked)
-            {
-                widths.Add(Rules.ChainTabWidth);
-                slotIndex++;
-            }
             float previewWidth = 0;
             for (int i = 0; i <= n; i++)
             {
@@ -415,20 +444,39 @@ namespace ProbablyStolenWindowTabs
                 tabWidths.Add(w);
                 _slotOfTab.Add(slotIndex++);
             }
-            _slots = Rules.Layout(widths, maxWidth, Overlap);
             _maxWidth = maxWidth;
-            // 原本的順序：自己的分頁條裡重排時，把畫在 Dim 的被拖那頁放回 LiftedFrom（_baseSlots 的說明）。
-            // 鏈條小分頁照樣放在最前面（_lead 的說明）
+            _maxHeight = maxHeight;
+            // 原本的順序：自己的分頁條裡重排時，把畫在 Dim 的被拖那頁放回 LiftedFrom（_baseSlots 的說明）
             bool lifted = spec.LiftedFrom >= 0 && spec.Dim >= 0 && spec.Dim < n;
             _baseIds = lifted ? Rules.MoveTo(spec.Ids, spec.Dim, spec.LiftedFrom) : new List<int>(spec.Ids);
-            _baseWidths = new List<float>();
-            if (spec.Locked) _baseWidths.Add(Rules.ChainTabWidth);
-            _baseWidths.AddRange(lifted ? Rules.MoveTo(tabWidths, spec.Dim, spec.LiftedFrom) : tabWidths);
-            _baseSlots = spec.PreviewAt >= 0 || lifted ? Rules.Layout(_baseWidths, maxWidth, Overlap) : _slots;
-            int rows = Rules.RowCount(_slots);
-            float right = 0;
-            foreach (var s in _slots) right = Math.Max(right, s.X + s.Width);
-            _rootRt.sizeDelta = new Vector2(right, rows * _step + Overlap);
+            _baseWidths = lifted ? Rules.MoveTo(tabWidths, spec.Dim, spec.LiftedFrom) : new List<float>(tabWidths);
+            bool drawnIsBase = spec.PreviewAt < 0 && !lifted;
+            float sizeX, sizeY;
+            if (_left)
+            {
+                _leftSlots = Rules.LayoutLeft(widths, spec.Locked, h, Overlap, maxHeight, maxWidth);
+                _leftBase = drawnIsBase ? _leftSlots : Rules.LayoutLeft(_baseWidths, spec.Locked, h, Overlap, maxHeight, maxWidth);
+                _slots = _leftSlots.Slots;
+                _baseSlots = _leftBase.Slots;
+                sizeX = _leftSlots.Outer;
+                sizeY = _leftSlots.Bottom;
+            }
+            else
+            {
+                _leftSlots = _leftBase = null;
+                _slots = Rules.LayoutTop(widths, maxWidth, Overlap, spec.Locked);
+                _baseSlots = drawnIsBase ? _slots : Rules.LayoutTop(_baseWidths, maxWidth, Overlap, spec.Locked);
+                float right = 0;
+                foreach (var s in _slots) right = Math.Max(right, s.X + s.Width);
+                sizeX = right;
+                sizeY = Rules.RowCount(_slots) * _step + Overlap;
+            }
+            // 放上面：樞紐在左下角（貼著視窗上緣往上長）；放左邊：樞紐在右上角（貼著視窗左緣往左、從頂端往下長）。
+            // 根物件的錨點在視窗左上角、位置 0，所以兩種的本地座標原點都是視窗左上角，分頁照 RootAnchor 擺（PlaceView）
+            _rootRt.pivot = RootAnchor;
+            _rootRt.sizeDelta = new Vector2(sizeX, sizeY);
+            // 補圓角只用在放上面（舊樣式的左上角）；放左邊不補，實機有舊樣式的箱子時再看
+            if (_corner != null && _corner.gameObject.activeSelf == _left) _corner.gameObject.SetActive(!_left);
 
             for (int i = 0; i < _views.Count; i++)
             {
@@ -436,9 +484,10 @@ namespace ProbablyStolenWindowTabs
                 if (i >= n) { if (v.Go.activeSelf) v.Go.SetActive(false); ByGameObject.Remove(v.Id); continue; }
                 var s = _slots[_slotOfTab[i]];
                 bool active = i == spec.Active;
-                bool connect = active && s.Row == 0; // 只有貼著視窗那排的目前那頁接住標題列
-                PlaceView(v, s, connect);
-                Style(v, palette, active ? TabLook.Active : i == spec.Hover ? TabLook.Hover : TabLook.Inactive, connect, s.Row == 0);
+                // 只有貼著視窗那排（放左邊是那欄）的目前那頁接住標題列
+                bool connect = active && s.Row == 0;
+                PlaceView(v, _slotOfTab[i], connect);
+                Style(v, palette, active ? TabLook.Active : i == spec.Hover ? TabLook.Hover : TabLook.Inactive, connect, s.Row == 0, active && i == spec.Hover);
                 v.Group.alpha = i == spec.Dim ? 0.45f : 1f;
                 if (!v.Go.activeSelf) v.Go.SetActive(true);
                 ByGameObject[v.Id] = (this, i);
@@ -447,12 +496,12 @@ namespace ProbablyStolenWindowTabs
             {
                 if (spec.Locked)
                 {
-                    // 照「沒在看的分頁」畫、不接標題列；圖示在分頁裡面上下置中，不跟著拉長變形
+                    // 照「沒在看的分頁」畫、不接標題列；固定 19 寬，圖示在分頁裡面置中
                     var s = _slots[0];
-                    PlaceView(_chain, s, false);
+                    PlaceView(_chain, 0, false);
                     Style(_chain, palette, TabLook.Inactive, false, s.Row == 0);
                     _chain.Group.alpha = 1f;
-                    PlaceChainIcon(s.Width, palette);
+                    PlaceChainIcon(CellWidth(0), palette);
                     if (!_chain.Go.activeSelf) _chain.Go.SetActive(true);
                     ByGameObject[_chain.Id] = (this, ChainIndex);
                 }
@@ -462,7 +511,7 @@ namespace ProbablyStolenWindowTabs
                     ByGameObject.Remove(_chain.Id);
                 }
             }
-            // 目前那頁最後畫，蓋住左右鄰居的外框線；補圓角的那塊最先畫，最左邊那頁接住標題列時被它蓋住
+            // 目前那頁最後畫，蓋住左右（放左邊是上下）鄰居的外框線；補圓角的那塊最先畫，最左邊那頁接住標題列時被它蓋住
             if (spec.Active >= 0 && spec.Active < n) _views[spec.Active].Rt.SetAsLastSibling();
             if (_corner != null) _corner.rectTransform.SetAsFirstSibling();
 
@@ -472,13 +521,19 @@ namespace ProbablyStolenWindowTabs
                 if (show)
                 {
                     var s = _slots[_previewSlot];
-                    PlaceView(_preview, s, false);
-                    StylePreview(_preview, palette, s.Width, s.Row == 0);
+                    PlaceView(_preview, _previewSlot, false);
+                    StylePreview(_preview, palette, CellWidth(_previewSlot), s.Row == 0);
                     _preview.Rt.SetAsLastSibling();
                 }
                 if (_preview.Go.activeSelf != show) _preview.Go.SetActive(show);
             }
         }
+
+        /// <summary>根物件的樞紐，也是分頁擺位置的錨點：放上面是左下角、放左邊是右上角（兩種都是視窗左上角那一點）。</summary>
+        Vector2 RootAnchor => _left ? Vector2.one : Vector2.zero;
+
+        /// <summary>第 slot 格畫出來的寬度：放上面是排法給的寬度，放左邊是它那欄的寬（鏈條小分頁固定 19）。</summary>
+        float CellWidth(int slot) => _left && _leftSlots != null ? _leftSlots.CellWidth(slot) : _slots[slot].Width;
 
         /// <summary>舊樣式的標題字級（renderNodeTextPrefab 上的；找到一次就記著，prefab 不會變）。0＝還沒找到。</summary>
         static float _classicTitleSize;
@@ -502,8 +557,13 @@ namespace ProbablyStolenWindowTabs
             return _classicTitleSize;
         }
 
-        static string Signature(StripSpec s, float h, float fontSize, float maxWidth, TabPalette palette) =>
-            $"{string.Join("\u0001", s.Labels)}|{s.Active}|{s.PreviewAt}|{s.PreviewLabel}|{s.Hover}|{s.Dim}|{s.LiftedFrom}|{s.Locked}|{h:0.##}|{fontSize:0.##}|{maxWidth:0.#}|{palette.Name}";
+        /// <summary>
+        /// 內容、大小、配色的簽名（一樣就不重畫）。2.8.0 起含放左右（設定換了要重畫）與放左邊時的視窗高度（換欄的位置跟著變；
+        /// 放上面時用不到，記 0，視窗高度變了不必重畫）。maxWidth 放上面是視窗寬、放左邊是設定的上限：
+        /// 放左邊時換到寬度不同的視窗不重畫，改了設定才重畫。
+        /// </summary>
+        static string Signature(StripSpec s, float h, float fontSize, float maxWidth, float maxHeight, TabPalette palette) =>
+            $"{string.Join("\u0001", s.Labels)}|{s.Active}|{s.PreviewAt}|{s.PreviewLabel}|{s.Hover}|{s.Dim}|{s.LiftedFrom}|{s.Locked}|{h:0.##}|{fontSize:0.##}|{maxWidth:0.#}|{palette.Name}|{(s.Left ? "L" : "T")}|{(s.Left ? maxHeight : 0f):0.#}";
 
         float Measure(View v, TMP_FontAsset font, float fontSize, string label, float h)
         {
@@ -514,39 +574,70 @@ namespace ProbablyStolenWindowTabs
             return Mathf.Ceil(Math.Max(w, h * MinWidthFactor));
         }
 
-        void PlaceView(View v, Rules.Slot s, bool connect)
+        /// <summary>
+        /// 把分頁擺到第 slot 格。錨點是根物件的樞紐（視窗左上角，RootAnchor），分頁的樞紐在左下角，所以 anchoredPosition 就是分頁左下角
+        /// 離視窗左上角多遠。connect＝接住標題列：放上面往下多 2 單位，放左邊往右多 2 單位（蓋住視窗左緣的亮線）。
+        /// 放左邊時 Slot 的 X 是上緣離視窗頂端多遠、寬度看它那欄（Rules.LeftStrip）。
+        /// </summary>
+        void PlaceView(View v, int slot, bool connect)
         {
-            float y = s.Row * _step - (connect ? Connect : 0f);
-            float height = _h + (connect ? Connect : 0f);
-            v.Rt.anchorMin = v.Rt.anchorMax = Vector2.zero;
+            var s = _slots[slot];
+            float extra = connect ? Connect : 0f;
+            v.SideLeft = _left;
+            v.Rt.anchorMin = v.Rt.anchorMax = RootAnchor;
             v.Rt.pivot = Vector2.zero;
-            v.Rt.anchoredPosition = new Vector2(s.X, y);
-            v.Rt.sizeDelta = new Vector2(s.Width, height);
+            if (_left)
+            {
+                float w = _leftSlots.CellWidth(slot), right = _leftSlots.CellRight(slot);
+                v.Rt.anchoredPosition = new Vector2(-right - w, -s.X - _h);
+                v.Rt.sizeDelta = new Vector2(w + extra, _h);
+                return;
+            }
+            v.Rt.anchoredPosition = new Vector2(s.X, s.Row * _step - extra);
+            v.Rt.sizeDelta = new Vector2(s.Width, _h + extra);
         }
 
         /// <summary>
-        /// 一般的分頁（目前那頁、沒在看的、拖著物品停在上面的）。connect＝接住標題列（貼著視窗那排的目前那頁，往下多 2 單位）；
-        /// onWindow＝在貼著視窗那排。
+        /// 一般的分頁（目前那頁、沒在看的、拖著物品停在上面的）。connect＝接住標題列（貼著視窗那排的目前那頁，往下多 2 單位；
+        /// 放左邊時是貼著視窗那欄的目前那頁，往右多 2 單位）；onWindow＝在貼著視窗那排（那欄）。lit＝目前那頁同時是直接放進分頁的目標
+        /// （2.8.0 起）：形狀照目前那頁（接住標題列、左右亮暗邊），顏色照標亮。
+        /// 放左邊（v.SideLeft，2.8.0 起）的形狀另外畫（StyleBevelLeft、舊樣式的內縮換方向），名稱靠左。
         /// </summary>
-        static void Style(View v, TabPalette p, TabLook look, bool connect, bool onWindow)
+        static void Style(View v, TabPalette p, TabLook look, bool connect, bool onWindow, bool lit = false)
         {
+            var paint = lit ? TabLook.Hover : look; // 顏色用的樣子；形狀照 look
             v.Outline.color = p.Outline;
             v.Outline.enabled = true;
-            v.Text.color = look == TabLook.Active ? p.ActiveText : look == TabLook.Hover ? p.HoverText : p.InactiveText;
-            var fill = look == TabLook.Active ? p.ActiveFill : look == TabLook.Hover ? p.HoverFill : p.InactiveFill;
-            if (p.Bevel) StyleBevel(v, p, look, fill, connect, onWindow);
+            v.Text.color = paint == TabLook.Active ? p.ActiveText : paint == TabLook.Hover ? p.HoverText : p.InactiveText;
+            var fill = paint == TabLook.Active ? p.ActiveFill : paint == TabLook.Hover ? p.HoverFill : p.InactiveFill;
+            if (p.Bevel)
+            {
+                if (v.SideLeft) StyleBevelLeft(v, p, look, paint, fill, connect, onWindow);
+                else StyleBevel(v, p, look, paint, fill, connect, onWindow);
+            }
             else
             {
-                // 舊樣式（Demo 的畫法）：外框 → 邊 → 底，各往內縮 1；接住標題列的那頁沒有下緣的線
+                // 舊樣式（Demo 的畫法）：外框 → 邊 → 底，各往內縮 1；接住標題列的那頁沒有靠視窗那邊的線
+                // （放上面是下緣，放左邊是右緣）
                 Inset(v.Outline.rectTransform, 0f, 0f);
-                v.Edge.color = look == TabLook.Active ? p.ActiveEdge : look == TabLook.Hover ? p.HoverEdge : p.InactiveEdge;
+                v.Edge.color = paint == TabLook.Active ? p.ActiveEdge : paint == TabLook.Hover ? p.HoverEdge : p.InactiveEdge;
                 v.Edge.enabled = true;
                 v.Fill.color = fill;
-                Inset(v.Edge.rectTransform, 1f, connect ? 0f : 1f);
-                Inset(v.Fill.rectTransform, 2f, connect ? 0f : 2f);
+                if (v.SideLeft)
+                {
+                    SetInset(v.Edge.rectTransform, 1f, 1f, connect ? 0f : 1f, 1f);
+                    SetInset(v.Fill.rectTransform, 2f, 2f, connect ? 0f : 2f, 2f);
+                }
+                else
+                {
+                    Inset(v.Edge.rectTransform, 1f, connect ? 0f : 1f);
+                    Inset(v.Fill.rectTransform, 2f, connect ? 0f : 2f);
+                }
                 v.Top.enabled = v.Left.enabled = v.Right.enabled = false;
             }
-            LabelRect(v, connect ? Connect : 0f);
+            float extra = connect ? Connect : 0f;
+            if (v.SideLeft) LabelRect(v, 0f, extra);
+            else LabelRect(v, extra);
             if (v.Dashes != null)
                 foreach (var d in v.Dashes) d.gameObject.SetActive(false);
         }
@@ -560,7 +651,7 @@ namespace ProbablyStolenWindowTabs
         /// - 上面的排：下緣留 1 單位的外框，和下一排的上緣共用一條線（照左右相鄰共用外框線）。
         ///   不留的話，後畫的上排會用填色蓋掉下排的上緣，兩排之間沒有分隔線。
         /// </summary>
-        static void StyleBevel(View v, TabPalette p, TabLook look, Color fill, bool connect, bool onWindow)
+        static void StyleBevel(View v, TabPalette p, TabLook look, TabLook paint, Color fill, bool connect, bool onWindow)
         {
             float extra = connect ? Connect : 0f; // 往下接進標題列的那段（分頁本地座標的最下面 extra 單位）
             float bottom = onWindow ? 0f : 1f;    // 填色與左緣亮邊的下緣往內縮多少（接住標題列的一定在貼著視窗那排，是 0：填到最下面）
@@ -569,7 +660,7 @@ namespace ProbablyStolenWindowTabs
             v.Fill.color = fill;
             SetInset(v.Fill.rectTransform, 1f, bottom, 1f, 1f);
             // 最上面一排（外框下面那排）的亮邊
-            v.Top.color = look == TabLook.Active ? p.ActiveTop : look == TabLook.Hover ? p.HoverTop : p.InactiveTop;
+            v.Top.color = paint == TabLook.Active ? p.ActiveTop : paint == TabLook.Hover ? p.HoverTop : p.InactiveTop;
             v.Top.enabled = true;
             var top = v.Top.rectTransform;
             top.anchorMin = new Vector2(0f, 1f);
@@ -597,8 +688,52 @@ namespace ProbablyStolenWindowTabs
         }
 
         /// <summary>
+        /// 機器樣式放左邊（2.8.0 起，畫法照 draw_tab，connect="join"）：
+        /// 放上面的畫法轉過來，靠視窗那邊從下緣換成右緣。
+        /// - 上、下都有 1 單位的外框（上下相鄰的分頁共用一條線，目前那頁最後畫、蓋住鄰居的線）；最上面一排是亮邊。
+        /// - 貼著視窗那欄（onWindow）：右邊沒有外框，填色與亮邊直接到右緣、靠在視窗左緣的亮線上；外面的欄四邊都有外框
+        ///   （右邊和內側那欄共用一條線）。
+        /// - 目前那頁另外有左緣亮邊、下緣暗邊（放上面時的右緣暗邊轉過來）。
+        /// - 接住視窗（connect，只有貼著視窗那欄的目前那頁）：填色往右多 2 單位、蓋住視窗左緣的亮線（1 單位 #555555）與外框（#424242），
+        ///   接成一塊；上緣亮邊往右多 1 單位、接上視窗的亮線；上下的外框與下緣暗邊不往右（那 2 單位的最上、最下一列露出視窗本身）。
+        /// </summary>
+        static void StyleBevelLeft(View v, TabPalette p, TabLook look, TabLook paint, Color fill, bool connect, bool onWindow)
+        {
+            float extra = connect ? Connect : 0f; // 往右接進視窗的那段（分頁本地座標的最右邊 extra 單位）
+            float right = onWindow ? 0f : 1f;     // 不接住時，填色、亮邊、暗邊的右緣往內縮多少（貼著視窗那欄沒有右邊的外框）
+            v.Edge.enabled = false;
+            SetInset(v.Outline.rectTransform, 0f, 0f, extra, 0f);
+            v.Fill.color = fill;
+            SetInset(v.Fill.rectTransform, 1f, 1f, connect ? 0f : right, 1f);
+            v.Top.color = paint == TabLook.Active ? p.ActiveTop : paint == TabLook.Hover ? p.HoverTop : p.InactiveTop;
+            v.Top.enabled = true;
+            var top = v.Top.rectTransform;
+            top.anchorMin = new Vector2(0f, 1f);
+            top.anchorMax = Vector2.one;
+            top.offsetMin = new Vector2(1f, -2f);
+            top.offsetMax = new Vector2(-(connect ? extra - 1f : right), -1f); // 接住時到視窗的亮線為止（往右多 1）
+            bool active = look == TabLook.Active;
+            v.Left.enabled = v.Right.enabled = active;
+            if (!active) return;
+            // 左緣亮邊（x+1）從亮邊下面到下緣外框上面；下緣暗邊（y+1）從左緣亮邊右邊到分頁本身的右緣（不往右伸進視窗）
+            v.Left.color = p.ActiveLeft;
+            var left = v.Left.rectTransform;
+            left.anchorMin = Vector2.zero;
+            left.anchorMax = new Vector2(0f, 1f);
+            left.offsetMin = new Vector2(1f, 1f);
+            left.offsetMax = new Vector2(2f, -2f);
+            v.Right.color = p.ActiveRight; // 放左邊時當下緣的暗邊用（部件照放上面的名稱）
+            var dark = v.Right.rectTransform;
+            dark.anchorMin = Vector2.zero;
+            dark.anchorMax = new Vector2(1f, 0f);
+            dark.offsetMin = new Vector2(2f, 1f);
+            dark.offsetMax = new Vector2(-(extra + right), 2f);
+        }
+
+        /// <summary>
         /// 預告分頁：半透明的底、上左右三邊虛線、字和虛線同色（舊樣式是半透明的橘底與淡黃，機器樣式是半透明深灰與黃色）。
-        /// onWindow＝在貼著視窗那排。
+        /// onWindow＝在貼著視窗那排。width＝分頁的寬。
+        /// 放左邊（2.8.0 起）：上左下三邊虛線、靠視窗那邊（右邊）開口，名稱靠左；機器樣式在外面的欄時底色右緣內縮 1（和內側那欄共用外框線）。
         /// </summary>
         static void StylePreview(View v, TabPalette p, float width, bool onWindow)
         {
@@ -608,11 +743,16 @@ namespace ProbablyStolenWindowTabs
             v.Fill.color = p.PreviewFill;
             // 舊樣式的底鋪滿（虛線疊在上面）；機器樣式照示意圖只填虛線裡面。
             // 機器樣式在上面的排時底色下緣內縮 1：最下面那排和下一排的上緣共用一條外框線（StyleBevel 的「上面的排」），
-            // 半透明的底蓋上去分隔線會變淺
-            if (p.Bevel) SetInset(v.Fill.rectTransform, 1f, onWindow ? 0f : 1f, 1f, 1f);
+            // 半透明的底蓋上去分隔線會變淺。放左邊時是外面的欄右緣內縮 1
+            if (p.Bevel)
+            {
+                if (v.SideLeft) SetInset(v.Fill.rectTransform, 1f, 1f, onWindow ? 0f : 1f, 1f);
+                else SetInset(v.Fill.rectTransform, 1f, onWindow ? 0f : 1f, 1f, 1f);
+            }
             else Inset(v.Fill.rectTransform, 0f, 0f);
             v.Text.color = p.PreviewLine;
-            LabelRect(v, 0f);
+            if (v.SideLeft) LabelRect(v, 0f, 0f);
+            else LabelRect(v, 0f);
             v.Dashes ??= new List<Image>();
             const float dash = 2f, gap = 2f, thick = 1f;
             float height = v.Rt.sizeDelta.y;
@@ -626,18 +766,21 @@ namespace ProbablyStolenWindowTabs
                 return img;
             }
             for (float x = 0; x < width; x += dash + gap)
+            {
                 SetRect(Dash().rectTransform, x, height - thick, Math.Min(dash, width - x), thick);
+                if (v.SideLeft) SetRect(Dash().rectTransform, x, 0, Math.Min(dash, width - x), thick); // 下緣
+            }
             for (float y = 0; y < height; y += dash + gap)
             {
                 float len = Math.Min(dash, height - y);
                 SetRect(Dash().rectTransform, 0, y, thick, len);
-                SetRect(Dash().rectTransform, width - thick, y, thick, len);
+                if (!v.SideLeft) SetRect(Dash().rectTransform, width - thick, y, thick, len);
             }
             for (int i = k; i < v.Dashes.Count; i++) v.Dashes[i].gameObject.SetActive(false);
         }
 
         /// <summary>
-        /// 名稱框：左右留白、上下置中在分頁（不含往下接標題列的那段）；字在框裡左右置中（NewView 設的 Center），
+        /// 名稱框：左右留白、上下置中在分頁（不含往下接標題列的那段）；字在框裡左右置中（Center），
         /// 分頁被 Rules.Layout 拉長時名稱照樣在正中間。高度至少 1.6 倍字級，比分頁高也沒關係（只有字畫出來）：
         /// TMP 的截斷模式（Ellipsis）在框比字型的行高矮時會把整行藏起來，不是只加「…」（中文字型的行高約是字級的 1.45 倍）。
         /// </summary>
@@ -646,10 +789,35 @@ namespace ProbablyStolenWindowTabs
             var trt = v.Text.rectTransform;
             float tabH = v.Rt.sizeDelta.y - bottom;
             float h = Math.Max(tabH, v.Text.fontSize * 1.6f);
+            SetAlignment(v.Text, TextAlignmentOptions.Center);
             trt.anchorMin = trt.anchorMax = new Vector2(0f, 0f);
             trt.pivot = new Vector2(0f, 0.5f);
             trt.anchoredPosition = new Vector2(PadX, bottom + tabH / 2f);
             trt.sizeDelta = new Vector2(Math.Max(1f, v.Rt.sizeDelta.x - PadX * 2), h);
+        }
+
+        /// <summary>
+        /// 放左邊的名稱框（2.8.0 起）：字靠左，左邊留白照放上面置中時自然寬度的分頁那樣（外框 1＋留白 4，
+        /// Measure 的寬度是名稱加左右各 PadX＋1），同一欄的名字開頭對齊。right＝往右接進視窗的那段（不算在名稱的位置裡）。
+        /// 右邊留 PadX：自然寬度的名稱一定放得下，夾到上限（設定的左側分頁最寬）的才由 TMP 截成「…」。上下照放上面置中在整個分頁。
+        /// </summary>
+        static void LabelRect(View v, float bottom, float right)
+        {
+            var trt = v.Text.rectTransform;
+            float tabH = v.Rt.sizeDelta.y - bottom;
+            float h = Math.Max(tabH, v.Text.fontSize * 1.6f);
+            float padLeft = PadX + 1f;
+            SetAlignment(v.Text, TextAlignmentOptions.Left);
+            trt.anchorMin = trt.anchorMax = new Vector2(0f, 0f);
+            trt.pivot = new Vector2(0f, 0.5f);
+            trt.anchoredPosition = new Vector2(padLeft, bottom + tabH / 2f);
+            trt.sizeDelta = new Vector2(Math.Max(1f, v.Rt.sizeDelta.x - right - padLeft - PadX), h);
+        }
+
+        /// <summary>換了才設（分頁條換邊時跟著換，平常每次重畫都是同一個值）。</summary>
+        static void SetAlignment(TextMeshProUGUI t, TextAlignmentOptions a)
+        {
+            if (t.alignment != a) t.alignment = a;
         }
 
         static void SetRect(RectTransform rt, float x, float y, float w, float h)
@@ -762,8 +930,9 @@ namespace ProbablyStolenWindowTabs
         static int ChainIconHeight => Rules.ChainIcon.Length;
 
         /// <summary>
-        /// 鏈條的位置與顏色：左右置中（取整數，像素不糊；小分頁被多排拉長時也在正中間）、在分頁 15 單位高的內側（扣掉最上面那條外框）上下置中，
-        /// 照示意圖 lock_mockup4.py 的 ICON_Y（上面空 5、下面空 5）。
+        /// 鏈條的位置與顏色：左右置中（取整數，像素不糊）、在分頁 15 單位高的內側（扣掉最上面那條外框）上下置中，
+        /// 照示意圖 lock_mockup4.py 的 ICON_Y（上面空 5、下面空 5）。2.8.0 起小分頁固定 19 寬、不再被拉長；
+        /// 放左邊時上下都有外框，照 left_mockup.py 的 draw_chain_tab 算出來也是上面空 5（同一個位置）。
         /// </summary>
         void PlaceChainIcon(float width, TabPalette palette)
         {
@@ -858,19 +1027,40 @@ namespace ProbablyStolenWindowTabs
         /// <summary>滑鼠在不在分頁條的範圍裡（只看位置，不管有沒有被別的視窗擋住；擋住的判斷在 Tabs）。</summary>
         internal bool Contains(Vector2 screen) => Contains(screen, CameraOf(_rootRt));
 
-        /// <summary>同上，cam 是呼叫者找好的畫布相機（和視窗同一個畫布）。</summary>
-        internal bool Contains(Vector2 screen, Camera cam) =>
-            Visible && RectTransformUtility.RectangleContainsScreenPoint(_rootRt, screen, cam);
+        /// <summary>
+        /// 同上，cam 是呼叫者找好的畫布相機（和視窗同一個畫布）。放上面看根物件的矩形；放左邊照畫出來的排法逐欄判斷
+        /// （Rules.InStripAreaLeft，審查後改：根物件的矩形含短的最外欄下面那塊透明的空處）。
+        /// </summary>
+        internal bool Contains(Vector2 screen, Camera cam)
+        {
+            if (!Visible) return false;
+            if (!_left) return RectTransformUtility.RectangleContainsScreenPoint(_rootRt, screen, cam);
+            if (_leftSlots == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRt, screen, cam, out var local)) return false;
+            return Rules.InStripAreaLeft(_leftSlots, -local.x, -local.y);
+        }
 
         /// <summary>
         /// 滑鼠在不在「原本的排法」（_baseSlots）的範圍裡（Rules.InStripArea）。用畫出來的範圍會有回饋：被拖的那頁移到要放的位置、
         /// 或預告分頁擠進來後排數與寬度可能變（預告可能把最寬的那排拆開、整條變窄），滑鼠剛好在變動的那塊時，
         /// 「在分頁條上 → 畫法變了 → 不在上面 → 畫回來」每幀反覆。
-        /// own：拖分頁時自己的分頁條，多給固定的容忍範圍（上緣多一排、右緣到視窗寬）。
+        /// own：拖分頁時自己的分頁條，多給固定的容忍範圍（上緣多一排、右緣到視窗寬）。lifted：被拖那頁的編號。
+        /// 放左邊（2.8.0 起）：別組的照排法逐欄判斷（Rules.InStripAreaLeft）；自己的分頁條（Rules.InOwnStripAreaLeft）左緣多一欄（被拖那頁自己的寬）、
+        /// 下緣到視窗底、往視窗裡多標題列的高度（上下重排時游標滑進視窗一點點不會變成拆出來）。
         /// </summary>
-        internal bool ContainsBase(Vector2 screen, Camera cam, bool own)
+        internal bool ContainsBase(Vector2 screen, Camera cam, bool own, int lifted = 0)
         {
             if (!Visible || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRt, screen, cam, out var local)) return false;
+            if (_left)
+            {
+                // 放左邊：樞紐在右上角（視窗左上角），往左、往下是正的
+                if (_leftBase == null) return false;
+                if (!own) return Rules.InStripAreaLeft(_leftBase, -local.x, -local.y);
+                int k = lifted != 0 ? _baseIds.IndexOf(lifted) : -1;
+                // 被拖那頁的寬（排法裡夾到上限 _maxWidth 的那個，放左邊時是設定的左側分頁最寬）；找不到（照理不會）就用最外欄的寬
+                float dragged = k >= 0 && k < _baseWidths.Count ? Math.Min(_baseWidths[k], _maxWidth > 0 ? _maxWidth : _baseWidths[k])
+                    : _leftBase.Columns > 0 ? _leftBase.ColWidth[_leftBase.Columns - 1] : 0f;
+                return Rules.InOwnStripAreaLeft(_leftBase, _maxHeight, dragged, GameWindows.TitleBarHeight(Window), -local.x, -local.y);
+            }
             return Rules.InStripArea(_baseSlots, _step, Overlap, _maxWidth, own, local.x, local.y); // 樞紐在左下角：本地座標從左下量起
         }
 
@@ -879,15 +1069,24 @@ namespace ProbablyStolenWindowTabs
         /// - lifted＝0：拖到別的分頁條（預告分頁不算），回傳 Ids 的位置 0～Count（Rules.InsertIndex）。
         /// - lifted＝被拖那頁的編號：在自己的分頁條裡重排，回傳「拿掉它之後」的位置 0～Count−1（Rules.LiftedInsertIndex）。
         /// 鎖住時的鏈條小分頁（_lead）一起排、但不算位置：回傳的都是分頁的位置（2.6.0 起）。
+        /// 放左邊（2.8.0 起）換成哪一欄、哪個高度（Rules.InsertIndexLeft／LiftedInsertIndexLeft）。
         /// </summary>
         internal int InsertIndexAt(Vector2 screen, int lifted = 0)
         {
             if (Spec == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRt, screen, CameraOf(_rootRt), out var local))
                 return Spec?.Ids.Count ?? 0;
-            int row = (int)Math.Floor(local.y / _step);
             int k = lifted != 0 ? _baseIds.IndexOf(lifted) : -1;
-            if (k >= 0 && k + _lead < _baseWidths.Count)
-                return Rules.LiftedInsertIndex(_baseWidths, k + _lead, _maxWidth, Overlap, row, local.x, _lead);
+            bool locked = _lead > 0;
+            if (_left && _leftBase != null)
+            {
+                float u = -local.x, v = -local.y;
+                if (k >= 0 && k < _baseWidths.Count)
+                    return Rules.LiftedInsertIndexLeft(_baseWidths, k, locked, _h, Overlap, _maxHeight, _maxWidth, u, v);
+                return Rules.InsertIndexLeft(_leftBase, u, v);
+            }
+            int row = (int)Math.Floor(local.y / _step);
+            if (k >= 0 && k < _baseWidths.Count)
+                return Rules.LiftedInsertIndex(_baseWidths, k, _maxWidth, Overlap, row, local.x, locked);
             return Rules.InsertIndex(_baseSlots, row, local.x, _lead);
         }
 
@@ -898,6 +1097,7 @@ namespace ProbablyStolenWindowTabs
         /// insertAt 是算插入位置（InsertIndexAt）用的螢幕位置：只夾回分頁條、不內縮（Rules.ClampForInsert）。
         /// 用內縮過的點算的話，影子中心最左只到被拖那頁的半寬，寬的分頁永遠插不到第 0 個（審查發現：寬度 [鏈條 19, 30, 100] 拖 100 那頁）。
         /// 放開也照 insertAt 的位置重排。換算不了（分頁條沒在顯示）時兩個都照原本的位置。
+        /// 放左邊（2.8.0 起）照 Rules.ClampToStripLeft／ClampForInsertLeft，影子的半寬是它那欄的一半。
         /// </summary>
         internal Vector2 ClampToOwn(Vector2 screen, int lifted, out Vector2 insertAt)
         {
@@ -906,20 +1106,65 @@ namespace ProbablyStolenWindowTabs
             var cam = CameraOf(_rootRt);
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRt, screen, cam, out var local)) return screen;
             int k = _baseIds.IndexOf(lifted);
-            float halfW = k >= 0 && k + _lead < _baseSlots.Count ? _baseSlots[k + _lead].Width / 2f : 0f;
-            Rules.ClampToStrip(_baseSlots, _step, Overlap, halfW, _h / 2f, local.x, local.y, out var cx, out var cy);
-            Rules.ClampForInsert(_baseSlots, _step, local.x, local.y, out var ix, out var iy);
-            // 樞紐在左下角：本地座標從左下量起，TransformPoint 換回世界座標再換成螢幕位置
+            bool known = k >= 0 && k + _lead < _baseSlots.Count;
+            float cx, cy, ix, iy;
+            if (_left && _leftBase != null)
+            {
+                // 樞紐在右上角：u、v 是往左、往下多遠，換回本地座標要變號
+                float halfW = known ? _leftBase.CellWidth(k + _lead) / 2f : 0f;
+                Rules.ClampToStripLeft(_leftBase, halfW, _h / 2f, -local.x, -local.y, out var cu, out var cv);
+                Rules.ClampForInsertLeft(_leftBase, -local.x, -local.y, out var iu, out var iv);
+                cx = -cu;
+                cy = -cv;
+                ix = -iu;
+                iy = -iv;
+            }
+            else
+            {
+                float halfW = known ? _baseSlots[k + _lead].Width / 2f : 0f;
+                Rules.ClampToStrip(_baseSlots, _step, Overlap, halfW, _h / 2f, local.x, local.y, out cx, out cy);
+                Rules.ClampForInsert(_baseSlots, _step, local.x, local.y, out ix, out iy);
+            }
+            // 本地座標從樞紐量起（放上面是左下、放左邊是右上），TransformPoint 換回世界座標再換成螢幕位置
             insertAt = RectTransformUtility.WorldToScreenPoint(cam, _rootRt.TransformPoint(new Vector3(ix, iy, 0f)));
             return RectTransformUtility.WorldToScreenPoint(cam, _rootRt.TransformPoint(new Vector3(cx, cy, 0f)));
         }
 
+        /// <summary>上次推不動時視窗的位置與分頁條的大小、放哪一邊（null＝沒有推不動）。PushBlocked、MarkPushBlocked 用。</summary>
+        Vector2? _pushBlockedPos;
+        Vector2 _pushBlockedSize;
+        bool _pushBlockedLeft;
+
+        /// <summary>
+        /// 這條分頁條現在是不是「推不動」（審查後加）：視窗加分頁條比畫布還寬（高）時，往右（往下）推完遊戲的 FixBounds 又夾回原位，
+        /// 每幀推、每幀被夾回、除錯模式每幀寫一行 log。推不動時記下視窗的位置與分頁條的大小（MarkPushBlocked），
+        /// 之後視窗位置（差 0.5 以內算同一個）、分頁條大小、放哪一邊都沒變就不再推；有一個變了就清掉、再試一次。
+        /// </summary>
+        internal bool PushBlocked(Vector2 windowPos)
+        {
+            if (!_pushBlockedPos.HasValue) return false;
+            var size = _rootRt.sizeDelta;
+            if ((windowPos - _pushBlockedPos.Value).sqrMagnitude < 0.25f && Math.Abs(size.x - _pushBlockedSize.x) < 0.5f &&
+                Math.Abs(size.y - _pushBlockedSize.y) < 0.5f && _pushBlockedLeft == _left) return true;
+            _pushBlockedPos = null;
+            return false;
+        }
+
+        /// <summary>記下推不動（見 PushBlocked）：這時的視窗位置、分頁條的大小與放哪一邊。</summary>
+        internal void MarkPushBlocked(Vector2 windowPos)
+        {
+            _pushBlockedPos = windowPos;
+            _pushBlockedSize = _rootRt.sizeDelta;
+            _pushBlockedLeft = _left;
+        }
+
         /// <summary>
         /// 分頁條跑出畫面頂端多少（視窗的父物件的座標單位；沒跑出去是 0）：Claude 決定的細節，Tabs 照這個把視窗往下推。
+        /// 放左邊時分頁條從視窗頂端往下排、不會高過視窗頂端，一律 0（2.8.0 起）。
         /// </summary>
         internal float OverflowTop()
         {
-            if (!Visible) return 0f;
+            if (!Visible || _left) return 0f;
             var cam = CameraOf(_rootRt);
             var canvas = _rootRt.GetComponentInParent<Canvas>();
             var root = canvas != null ? canvas.rootCanvas : null;
@@ -934,6 +1179,29 @@ namespace ProbablyStolenWindowTabs
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, top, cam, out var a)) return 0f;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, new Vector2(top.x, limit), cam, out var b)) return 0f;
             return a.y - b.y;
+        }
+
+        /// <summary>
+        /// 放左邊時分頁條跑出畫面左邊多少（視窗的父物件的座標單位；沒跑出去、或放上面是 0）：照 OverflowTop 換方向，
+        /// Tabs 照這個把視窗往右推（2.8.0 起）。
+        /// </summary>
+        internal float OverflowLeft()
+        {
+            if (!Visible || !_left) return 0f;
+            var cam = CameraOf(_rootRt);
+            var canvas = _rootRt.GetComponentInParent<Canvas>();
+            var root = canvas != null ? canvas.rootCanvas : null;
+            float limit = root != null ? root.pixelRect.xMin : 0f;
+            var corners = GameWindows.Corners;
+            _rootRt.GetWorldCorners(corners);
+            var leftEdge = RectTransformUtility.WorldToScreenPoint(cam, corners[0]); // 左下角
+            if (leftEdge.x >= limit - 0.5f) return 0f;
+            var parentT = Window.rectTransform.parent;
+            var parent = parentT != null ? parentT.GetComponent<RectTransform>() : null;
+            if (parent == null) return 0f;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, leftEdge, cam, out var a)) return 0f;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, new Vector2(limit, leftEdge.y), cam, out var b)) return 0f;
+            return b.x - a.x;
         }
     }
 

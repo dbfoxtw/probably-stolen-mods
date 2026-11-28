@@ -5,3 +5,9 @@ cfg_prev,Pestaña anterior
 cfg_prev_tip,Tecla que cambia a la pestaña anterior del conjunto de pestañas bajo el puntero (antes de la primera viene la última); también funciona mientras arrastras objetos.\nEj.: Ctrl+Shift+Tab o el botón lateral del ratón Mouse4; vacío = sin usar
 cfg_fade,Transparencia al unir
 cfg_fade_tip,Al arrastrar una ventana por su barra de título sobre la barra de título o la barra de pestañas de otra ventana, la ventana arrastrada se vuelve transparente para que veas dónde quedarán sus pestañas.
+cfg_drop,Soltar objetos directamente en las pestañas
+cfg_drop_tip,Al arrastrar objetos, pasar sobre una pestaña ya no cambia a ella; al soltarlos sobre la pestaña, entran directamente en ella.\nPara cambiar de pestaña mientras arrastras, configura las teclas para cambiar de pestaña.
+cfg_side,Posición de la barra de pestañas
+cfg_side_tip,En qué lado de la ventana va la barra de pestañas.\nTop = encima de la ventana\nLeft = a la izquierda de la ventana
+cfg_maxw,Ancho máximo de pestaña a la izquierda
+cfg_maxw_tip,Cuánto puede ensancharse una pestaña cuando la barra de pestañas va a la izquierda. Los nombres más largos se cortan con «…». Arriba, las pestañas siguen en cambio el ancho de la ventana.

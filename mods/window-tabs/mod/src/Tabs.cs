@@ -12,6 +12,7 @@ namespace ProbablyStolenWindowTabs
     /// 2. 滑鼠：點分頁切頁、拖分頁重排／移到別組／拖出來、拖視窗到別的標題列合併、拖著物品停在分頁上切頁；
     ///    只有從自己的標題列開始拖的視窗才合併。右鍵點分頁切換鎖住整組（2.6.0 起，成員固定，
     ///    別的併不進來、組員拖不出去）。接著看切頁鍵：切滑鼠底下那組（Settings）；
+    ///    設定打開時（2.8.0 起）拖著物品停在分頁上不切頁、只標亮，放開就放進那頁（ItemDrop）；
     /// 3. 畫分頁條（TabStrip）。
     /// 沒有攔遊戲的任何方法：開關視窗都用遊戲自己的方法（GameWindows），判斷都看視窗清單與滑鼠位置。
     /// 分頁組記在 mod 自己的檔案（TabStore），不碰存檔。
@@ -117,6 +118,28 @@ namespace ProbablyStolenWindowTabs
         static Vector2 _hoverMouse;
         static PointerEventData _ped;
         static readonly List<RaycastResult> _hits = new List<RaycastResult>();
+
+        // 物品直接放進分頁（2.8.0 起）：開關打開時拖著物品每幀算一次（HoverForDrop），
+        // 放開那一幀（ReleaseDrop）用的是上一幀算好的：遊戲在 Update 處理放開時已經把拖曳的狀態清掉了。
+        // 拖一組時另外用放開那一幀的游標再確認一次（遊戲拖一組用這一幀的游標判斷，Rules.OnRelease）
+        /// <summary>上一幀游標底下、而且能放的分頁（0＝沒有）：放開時放進這頁（玩家看到標亮的那個）。</summary>
+        static int _dropTargetId;
+        /// <summary>上一幀游標底下的分頁（不管能不能放；0＝不在分頁上）與不能放的原因：放開時的除錯 log 用。</summary>
+        static int _dropOverId;
+        static string _dropWhy;
+        /// <summary>上一幀拖著的東西（ItemDrop.Capture）：拖一組或單一物品、單一物品拖著幾個、每個物品當時在哪裡與數量。</summary>
+        static bool _dropGroup;
+        static int _dropCount = -1;
+        static readonly List<ItemDrop.Entry> _dropItems = new List<ItemDrop.Entry>();
+        /// <summary>上一幀我們顯示了遊戲的提示框；我們沒顯示時不收，免得蓋掉遊戲自己的。</summary>
+        static bool _dropTooltipShown;
+        /// <summary>我們顯示的提示框是哪個箱子、哪個物品、拖著幾個：滑鼠沒動而且都沒變時不重算（Rules.KeepDropTooltip）。</summary>
+        static GameItem _tipBox, _tipItem;
+        static int _tipCount;
+        /// <summary>上一幀的游標位置：滑鼠動了的那一幀遊戲自己會重算提示框（Rules.HideDropTooltip、KeepDropTooltip）。</summary>
+        static Vector2 _dropMouse;
+        /// <summary>除錯 log：上一次記下的停留狀態（變了才記）。</summary>
+        static string _dropLogged;
 
         internal static void Init(TabStore store) => _store = store;
 
@@ -314,6 +337,8 @@ namespace ProbablyStolenWindowTabs
                 // 變透明也一樣（2.7.0 起）：以後有路離開 DragWindow 卻沒經過 EndDrag，也不會留下淡掉的視窗。
                 // 關窗只是把 GameObject 關掉，重開會沿用同一個視窗，留著就一直是淡的。沒在淡的時候 Restore 馬上回來
                 if (_mode != Mode.DragWindow) DragFade.Restore();
+                // 我們顯示的提示框（2.8.0 起）：不在拖物品了就不再記著（遊戲結束拖曳時自己會收；還在拖的話這裡收）
+                if (_mode != Mode.DragItem) ForgetDropTooltip();
             }
         }
 
@@ -420,7 +445,7 @@ namespace ProbablyStolenWindowTabs
             switch (_mode)
             {
                 case Mode.Idle:
-                    if (draggingItem) { _mode = Mode.DragItem; HoverWhileDraggingItem(r, mouse); break; }
+                    if (draggingItem) { _mode = Mode.DragItem; DragItemFrame(r, mouse); break; }
                     _hoverId = 0;
                     _hoverFrozen = false;
                     if (!down) break;
@@ -552,8 +577,14 @@ namespace ProbablyStolenWindowTabs
                     }
                     break;
                 case Mode.DragItem:
-                    if (!draggingItem) { _hoverId = 0; _hoverFrozen = false; _mode = Mode.Idle; break; }
-                    HoverWhileDraggingItem(r, mouse);
+                    if (!draggingItem)
+                    {
+                        // 拖曳結束了：開關打開、上一幀停在能放的分頁上、真的放開左鍵，就放進那頁（2.8.0 起）
+                        try { ReleaseDrop(r, held, mouse); }
+                        finally { _hoverId = 0; _hoverFrozen = false; _mode = Mode.Idle; }
+                        break;
+                    }
+                    DragItemFrame(r, mouse);
                     break;
                 case Mode.PressChain:
                     // 按在鏈條小分頁上：拖它什麼都不做，等放開
@@ -731,6 +762,7 @@ namespace ProbablyStolenWindowTabs
             _previewLabel = null;
             _previewWindow = null;
             DestroyGhost();
+            ClearDrop();
         }
 
         /// <summary>
@@ -959,7 +991,7 @@ namespace ProbablyStolenWindowTabs
                 // 只用畫出來的會每幀反覆。自己的分頁條另外有容忍範圍；別人的分頁條原本的範圍一定算，預告多出來的那塊也算
                 // （畫出來的範圍，Contains）：多出來的只造成遲滯（進去了就留著），不會來回
                 bool overStrip = strip != null && strip.Spec != null &&
-                    (self ? strip.ContainsBase(mouse, cam, true) : strip.ContainsBase(mouse, cam, false) || strip.Contains(mouse, cam));
+                    (self ? strip.ContainsBase(mouse, cam, true, _pressId) : strip.ContainsBase(mouse, cam, false) || strip.Contains(mouse, cam));
                 if (!overStrip)
                 {
                     // 拖曳中每幀對每個視窗都跑：先看整塊的範圍，在範圍裡才算標題列（標題列在範圍裡面）
@@ -1046,6 +1078,217 @@ namespace ProbablyStolenWindowTabs
         }
 
         /// <summary>
+        /// 拖著物品（單一或框選的一組）的每一幀：設定「物品直接放進分頁」打開時（2.8.0 起）只標亮能放的分頁、出提示框（HoverForDrop），
+        /// 關著時照舊停留切頁（HoverWhileDraggingItem），完全不變。設定每幀讀，按套用就生效。
+        /// </summary>
+        static void DragItemFrame(TabRecord r, Vector2 mouse)
+        {
+            if (DropSetting()) { HoverForDrop(r, mouse); return; }
+            ClearDrop();
+            HoverWhileDraggingItem(r, mouse);
+        }
+
+        /// <summary>
+        /// 物品直接放進分頁的設定（2.8.0 起）。讀設定出錯時當作關著（照舊停留切頁）、只記一次：不能讓例外一路丟到 Tick 的 catch（照 FadeSetting）。
+        /// </summary>
+        static bool DropSetting()
+        {
+            try { return Settings.DropIntoTabs; }
+            catch (Exception e)
+            {
+                LogOnce("讀物品直接放進分頁的設定", e);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 開關打開時拖著物品停在分頁上（2.8.0 起）：游標底下的分頁（RaycastTab，跳過拖曳中物品那幾層）能放才標亮（_hoverId，
+        /// 樣式照停留切頁時的標亮：變亮、字變黃），不計時、不切頁，停留切頁與「切過頁先凍住」都不管。能放的條件在 Rules.TabAcceptsDrop
+        /// （ItemDrop.Accepts）：鎖住整組不影響、目前那頁也算。拖單一物品而且能放時顯示遊戲的提示框；拖一組時只標亮。
+        /// 提示框只在需要時重算（Rules.KeepDropTooltip）：滑鼠沒動、箱子物品數量都和上一幀我們顯示時一樣就什麼都不叫，照遊戲只在滑鼠移動那幀算。
+        /// 每幀記下放開時要放的東西（ItemDrop.Capture），讀不到就不標亮、不放。切頁鍵照舊（HandleSwitchKeys），切完照游標底下換成的分頁判斷。
+        /// </summary>
+        static void HoverForDrop(TabRecord r, Vector2 mouse)
+        {
+            bool moved = mouse != _dropMouse;
+            _dropMouse = mouse;
+            _hoverFrozen = false;
+            int id = DropTabAt(mouse);
+            // 拖單一物品優先（兩個同時成立照理不會）；拖一組時 ItemMouseDragHandler 不算拖曳中
+            bool group = !GameWindows.DraggingItem();
+            _dropGroup = group;
+            bool accepts = false;
+            string why = null;
+            GameItem box = null;
+            if (id == 0) { _dropItems.Clear(); _dropCount = -1; }
+            else if (!ItemDrop.Capture(group, _dropItems, out _dropCount)) why = "讀不到拖著的東西";
+            else if (!Items().TryGetValue(id, out box)) why = "找不到那頁的物品";
+            else accepts = ItemDrop.Accepts(box, _dropItems, out why);
+            _dropOverId = id;
+            _dropWhy = why;
+            _dropTargetId = accepts ? id : 0;
+            _hoverId = _dropTargetId;
+            bool want = Rules.ShowDropTooltip(!group, accepts) && _dropItems.Count > 0;
+            var tipItem = want ? _dropItems[0].Item : null;
+            bool sameTip = want && ReferenceEquals(box, _tipBox) && ReferenceEquals(tipItem, _tipItem) && _dropCount == _tipCount;
+            // 上一幀我們顯示的那個還在畫面上（滑鼠沒動那幀遊戲不收）：什麼都不叫
+            bool show = Rules.KeepDropTooltip(_dropTooltipShown, want, moved, sameTip) || (want && ItemDrop.ShowTooltip(tipItem, box, mouse));
+            if (Rules.HideDropTooltip(_dropTooltipShown, show, moved)) ItemDrop.HideTooltip();
+            _dropTooltipShown = show;
+            _tipBox = show ? box : null;
+            _tipItem = show ? tipItem : null;
+            _tipCount = show ? _dropCount : -1;
+            if (WindowTabsMod.Debug)
+            {
+                // 分頁或狀態變了才記，不每幀洗版。分頁也要比：只比狀態時，從能放的分頁直接移到旁邊也能放的分頁不會記，
+                // log 寫停在 A、實際放進 B（2.8.0 第一次實測看到）
+                string now = id == 0 ? null : accepts ? $"能放（{(group ? $"拖一組 {_dropItems.Count} 件" : $"拖著 {_dropCount} 個")}）" : $"不能放（{why}）";
+                string key = now == null ? null : $"{id}|{now}";
+                if (key != _dropLogged)
+                {
+                    WindowTabsMod.DebugLog(now != null ? $"拖著物品停在分頁 {Name(id)} 上：{now}" : "拖著物品移出分頁");
+                    _dropLogged = key;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 拖著物品的拖曳結束那一幀（2.8.0 起）：遊戲在 Update 先處理放開（游標在我們的分頁上時它看不到物品也看不到格子，
+        /// 物品回到原處），我們在 LateUpdate 接著放。只有真的放開左鍵（Rules.OnRelease）、而且上一幀標亮的那頁能放時才放：
+        /// 拖單一物品放拖著的數量、拖一組每個各自放（ItemDrop.Place），放得下多少放多少。放進去以後不切頁，把那組開著的視窗拉到最上面；
+        /// 不另外給回饋（遊戲照常播放下的聲音）。開關關著、上一幀游標不在分頁上（遊戲自己的放下）時什麼都不做、不記 log。
+        /// 拖一組時另外要放開那一幀的游標（mouse）也還在那頁上：遊戲的 EndGroupDrag 用這一幀的游標重新射線，游標剛好移到格子或物品上時
+        /// 遊戲自己會動作（同一格子裡精確擺放不改 parentInventory、unitCount，DropSkip.MovedByGame 擋不住），我們就不放（Rules.OnRelease 的 MovedOff）。
+        /// 拖單一物品時遊戲用的是上一幀滑鼠移動時算好的目標，和我們一樣用上一幀的。
+        /// </summary>
+        static void ReleaseDrop(TabRecord r, bool held, Vector2 mouse)
+        {
+            int target = _dropTargetId, over = _dropOverId, count = _dropCount;
+            bool group = _dropGroup;
+            string why = _dropWhy;
+            var items = new List<ItemDrop.Entry>(_dropItems);
+            ClearDrop();
+            if (over == 0) return;
+            var g = r.Find(over);
+            // 除錯模式才組字串
+            bool debug = WindowTabsMod.Debug;
+            string tab = debug ? $"分頁 {Name(over)}{(g != null ? NumberText(g, over) : "")}" : null;
+            // 拖一組：放開那一幀游標底下的分頁（遊戲的影子在 Update 的 EndGroupDrag 已經收回原處，跳不跳過那幾層都一樣；照停著時一樣跳過）
+            int releaseTab = group ? DropTabAt(mouse) : 0;
+            switch (Rules.OnRelease(_wasHeld, held, Application.isFocused, target, group, releaseTab))
+            {
+                case Rules.DropRelease.LostFocus:
+                    if (debug) WindowTabsMod.DebugLog($"拖著物品停在{tab}上：遊戲失去焦點，不放進去");
+                    return;
+                case Rules.DropRelease.Cancelled:
+                    if (debug) WindowTabsMod.DebugLog($"拖著物品停在{tab}上：拖曳被取消（左鍵還按著），不放進去");
+                    return;
+                case Rules.DropRelease.NoTarget:
+                    if (debug) WindowTabsMod.DebugLog($"放開在{tab}上：不能放（{why ?? "?"}），物品留在原處");
+                    return;
+                case Rules.DropRelease.MovedOff:
+                    if (debug)
+                        WindowTabsMod.DebugLog($"放開一組物品時游標已經離開{tab}（現在{(releaseTab == 0 ? "不在分頁上" : $"在分頁 {Name(releaseTab)} 上")}）：" +
+                                               "遊戲照放開那一幀的游標處理，不放進去");
+                    return;
+            }
+            if (!Items().TryGetValue(target, out var box) || box == null)
+            {
+                if (debug) WindowTabsMod.DebugLog($"放開在{tab}上：找不到那頁的物品，不放");
+                return;
+            }
+            if (items.Count == 0 || (!group && count < 1))
+            {
+                if (debug) WindowTabsMod.DebugLog($"放開在{tab}上：讀不到拖著的東西或數量，不放");
+                return;
+            }
+            var res = ItemDrop.Place(box, items, group, count);
+            if (debug)
+            {
+                if (group)
+                    WindowTabsMod.DebugLog($"放開一組物品在{tab}上：放進去 {res.Placed} 個、{res.Left} 個放不下留在原處、{res.Skipped} 件不放（共 {items.Count} 件）");
+                else if (res.Why != Rules.DropSkip.None)
+                    WindowTabsMod.DebugLog($"放開物品在{tab}上：不放（{SkipText(res.Why)}）");
+                else
+                    WindowTabsMod.DebugLog($"放開物品在{tab}上：拖著 {count} 個，放進去 {res.Placed} 個、剩 {res.Left} 個留在原處");
+            }
+            if (res.Placed <= 0) return;
+            // 有東西放進去了：照「有動作時立刻重抓」重抓店裡的物品；不切頁，把那組開著的視窗拉到最上面（遊戲的倉庫分頁也是）
+            Items(true);
+            BringGroupToFront(g);
+        }
+
+        /// <summary>除錯 log 用：放開時某個物品為什麼不放。</summary>
+        static string SkipText(Rules.DropSkip s)
+        {
+            switch (s)
+            {
+                case Rules.DropSkip.Gone: return "物品不見了";
+                case Rules.DropSkip.MovedByGame: return "遊戲已經把它放到別處了";
+                case Rules.DropSkip.NotRemovable: return "拿不起來";
+                case Rules.DropSkip.IsTarget: return "就是那頁的箱子";
+                case Rules.DropSkip.AlreadyInside: return "本來就在那個箱子裡";
+                case Rules.DropSkip.DoesNotFit: return "放不進去";
+                case Rules.DropSkip.NoAmount: return "要放的數量小於 1";
+                case Rules.DropSkip.Failed: return "放的時候出錯，見上面的錯誤";
+                default: return s.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 拖著物品時游標底下的分頁編號（0＝不在分頁上；鏈條小分頁不算分頁）：射線跳過遊戲畫拖曳中物品那幾層（RaycastTab 的 skipDragged）。
+        /// 停著時（HoverForDrop）與拖一組放開那一幀（ReleaseDrop）用同一套，才比得出是不是同一頁。
+        /// </summary>
+        static int DropTabAt(Vector2 mouse)
+        {
+            var (strip, index) = RaycastTab(mouse, true);
+            bool onTab = strip != null && strip.Spec != null && index >= 0 && index < strip.Spec.Ids.Count;
+            return onTab ? strip.Spec.Ids[index] : 0;
+        }
+
+        /// <summary>把這組開著的那頁拉到最上面（放進去以後）。</summary>
+        static void BringGroupToFront(TabGroup g)
+        {
+            if (g == null) return;
+            try
+            {
+                foreach (var w in GameWindows.VisibleWindows())
+                    if (GameWindows.IsTabWindow(w) && g.Members.Contains(OwnerId(w))) w.ToFront(false);
+            }
+            catch (Exception e) { LogOnce("放進分頁後把視窗拉到最上面", e); }
+        }
+
+        /// <summary>
+        /// 清掉直接放進分頁的狀態（2.8.0 起）：開關關著、拖曳結束（ReleaseDrop、EndDrag 都叫）。我們顯示的提示框照 ForgetDropTooltip 收。
+        /// </summary>
+        static void ClearDrop()
+        {
+            ForgetDropTooltip();
+            _dropTargetId = 0;
+            _dropOverId = 0;
+            _dropWhy = null;
+            _dropGroup = false;
+            _dropCount = -1;
+            _dropItems.Clear();
+            _dropLogged = null;
+        }
+
+        /// <summary>
+        /// 不再記著我們顯示的提示框。遊戲結束拖單一物品的每條路都會 HideTooltip（EndDrag 最後收；OnEventReset 在拖著時經過 EndDrag(cancelled: true)；
+        /// AbortDrag 自己先收）；
+        /// 遊戲還在拖單一物品（我們這邊先結束了，例如不能動作了）才自己收，不然它會一直留到遊戲下一次重算。
+        /// </summary>
+        static void ForgetDropTooltip()
+        {
+            _tipBox = null;
+            _tipItem = null;
+            _tipCount = -1;
+            if (!_dropTooltipShown) return;
+            _dropTooltipShown = false;
+            if (GameWindows.DraggingItem()) ItemDrop.HideTooltip();
+        }
+
+        /// <summary>
         /// 拖著物品（單一或框選的一組）停在分頁上約半秒就切過去：停著的那個分頁先變亮（UpdateStrips 畫）。
         /// 不切到「正被拖的那個箱子」（拖一組時是組裡任何一個）：遊戲拖它時故意把它的視窗藏起來（不能把箱子放進自己裡面）。
         /// </summary>
@@ -1085,6 +1328,10 @@ namespace ProbablyStolenWindowTabs
             _hoverFrozen = true;
             _frozenId = Rules.UnknownTab;
             _hoverId = 0;
+            // 開關打開時（2.8.0 起）凍住不管，但切完頁分頁條會重排：這一幀算好的目標作廢，下一幀照游標底下換成的分頁重算。
+            // 這一幀剛好放開時除錯 log 寫的不放原因（不然會沿用上一個原因或寫「?」）
+            _dropTargetId = 0;
+            _dropWhy = "剛按了切頁鍵，分頁條重排了";
         }
 
         /// <summary>
@@ -1292,6 +1539,8 @@ namespace ProbablyStolenWindowTabs
         static void UpdateStrips(TabRecord r, Dictionary<int, PixelWindow> byId, Dictionary<int, GameItem> items)
         {
             var shown = new HashSet<PixelWindow>();
+            bool left = SideSetting(); // 分頁條放左邊（2.8.0 起）：每幀讀，按套用就生效、開著的分頁條當場換邊
+            float leftMax = LeftWidthSetting(); // 放左邊時一欄最寬（2.8.0 起）：同樣每幀讀，放上面時分頁條不看它
             foreach (var g in r.Groups)
             {
                 int visibleId = g.Members.FirstOrDefault(byId.ContainsKey);
@@ -1305,6 +1554,8 @@ namespace ProbablyStolenWindowTabs
                 spec.Labels = Rules.Labels(names, spec.Ids.Select((id, i) => g.NumberOf(id, names[i])).ToList());
                 spec.Active = spec.Ids.IndexOf(visibleId);
                 spec.Locked = g.Locked; // 鎖住時分頁條的第一格多一個鏈條小分頁
+                spec.Left = left;
+                spec.LeftMaxWidth = leftMax;
                 ApplyDragState(spec, w);
                 if (spec.Ids.Count < 2 && spec.PreviewAt < 0) continue; // 只剩一頁：不畫
                 ShowStrip(r, g, w, spec);
@@ -1319,6 +1570,8 @@ namespace ProbablyStolenWindowTabs
                 spec.Ids.Add(item != null ? item.uniqueId : 0);
                 spec.Labels.Add(item != null ? SafeName(item) : GameWindows.Title(w));
                 spec.Active = 0;
+                spec.Left = left;
+                spec.LeftMaxWidth = leftMax;
                 ApplyDragState(spec, w);
                 ShowStrip(r, null, w, spec);
                 shown.Add(w);
@@ -1361,7 +1614,9 @@ namespace ProbablyStolenWindowTabs
                 else spec.Dim = from;
             }
             if (_hoverId != 0) spec.Hover = spec.Ids.IndexOf(_hoverId);
-            if (spec.Hover == spec.Active) spec.Hover = -1;
+            // 停留切頁時目前那頁不標亮（切過去也不會怎樣）。直接放進分頁時目前那頁也收，能放就照樣標亮（拖一組時沒有提示框，不亮就看不出放開會放進去）；_hoverId 等於放進目標只會在直接放進分頁時（HoverForDrop），
+            // 開關關著時每幀 ClearDrop 把目標清成 0。分頁條畫成目前那頁的形狀、標亮的顏色（TabStrip.Style 的 lit）
+            if (spec.Hover == spec.Active && _hoverId != _dropTargetId) spec.Hover = -1;
         }
 
         static void ShowStrip(TabRecord r, TabGroup g, PixelWindow w, StripSpec spec)
@@ -1377,16 +1632,87 @@ namespace ProbablyStolenWindowTabs
                     if (WindowTabsMod.Debug) WindowTabsMod.DebugLog($"建分頁條：{TabStrip.Describe(w)}");
                 }
                 strip.Show(spec);
-                // 分頁條跑出畫面頂端時把視窗往下推（Claude 決定的細節）。拖曳中不推：會把目標推離滑鼠
+                // 分頁條跑出畫面頂端時把視窗往下推（Claude 決定的細節）；放左邊時跑出畫面左邊就往右推（2.8.0 起）。
+                // 拖曳中不推：會把目標推離滑鼠
                 if (_mode != Mode.Idle || spec.PreviewAt >= 0 || g == null) return;
+                // 推不動（遊戲的 FixBounds 夾回原位）而且之後視窗位置、分頁條大小都沒變：不再每幀 Place（審查後加，TabStrip.PushBlocked）
+                if (strip.PushBlocked(GameWindows.Position(w))) return;
+                bool stuck = false;
                 float over = strip.OverflowTop();
-                if (over <= 0.5f) return;
-                var p = GameWindows.Position(w);
-                GameWindows.Place(w, new Vector2(p.x, p.y - over));
-                SetGroupPos(g, GameWindows.Position(w));
-                WindowTabsMod.DebugLog($"分頁條跑出畫面頂端，視窗往下推 {over:0.#}");
+                if (over > 0.5f)
+                {
+                    var p = GameWindows.Position(w);
+                    GameWindows.Place(w, new Vector2(p.x, p.y - over));
+                    var q = GameWindows.Position(w);
+                    if (Math.Abs(q.y - p.y) < 0.5f) stuck = true; // 沒真的動：不記 log、不改這組的位置
+                    else
+                    {
+                        SetGroupPos(g, q);
+                        WindowTabsMod.DebugLog($"分頁條跑出畫面頂端，視窗往下推 {p.y - q.y:0.#}");
+                    }
+                }
+                float overLeft = strip.OverflowLeft();
+                if (overLeft > 0.5f)
+                {
+                    var p = GameWindows.Position(w);
+                    GameWindows.Place(w, new Vector2(p.x + overLeft, p.y));
+                    var q = GameWindows.Position(w);
+                    if (Math.Abs(q.x - p.x) < 0.5f) stuck = true;
+                    else
+                    {
+                        SetGroupPos(g, q);
+                        WindowTabsMod.DebugLog($"分頁條跑出畫面左邊，視窗往右推 {q.x - p.x:0.#}");
+                    }
+                }
+                if (stuck)
+                {
+                    strip.MarkPushBlocked(GameWindows.Position(w));
+                    WindowTabsMod.DebugLog("分頁條跑出畫面，但視窗推不動（視窗加分頁條比畫面還大），等視窗位置或分頁條大小變了再試");
+                }
             }
             catch (Exception e) { LogOnce("畫分頁條", e); }
+        }
+
+        /// <summary>上一次讀到的分頁條位置（除錯 log 只在換了的時候記；null＝還沒讀過）。</summary>
+        static bool? _sideRead;
+
+        /// <summary>
+        /// 分頁條放左邊（2.8.0 起，設定「分頁條位置」）：每幀讀，出錯時當作放上面、LogOnce（不讓例外中斷畫分頁條）。
+        /// 換了邊記一行除錯 log（第一次讀不記：Init 與進店鋪畫面的 log 已經寫了設定）。
+        /// </summary>
+        static bool SideSetting()
+        {
+            bool left;
+            try { left = Settings.StripOnLeft; }
+            catch (Exception e)
+            {
+                LogOnce("讀分頁條位置的設定", e);
+                left = false;
+            }
+            if (_sideRead.HasValue && _sideRead.Value != left) WindowTabsMod.DebugLog($"設定換了：分頁條改放{(left ? "左邊" : "上面")}");
+            _sideRead = left;
+            return left;
+        }
+
+        /// <summary>上一次讀到的左側分頁最寬（除錯 log 只在換了的時候記；null＝還沒讀過）。</summary>
+        static int? _leftWidthRead;
+
+        /// <summary>
+        /// 放左邊時一欄最寬（2.8.0 起，設定「左側分頁最寬」）：每幀讀，出錯時用預設、LogOnce（不讓例外中斷畫分頁條）。
+        /// 值換了記一行除錯 log（第一次讀不記：Init 與進店鋪畫面的 log 已經寫了設定）。
+        /// </summary>
+        static float LeftWidthSetting()
+        {
+            int width;
+            try { width = Settings.LeftTabMaxWidth; }
+            catch (Exception e)
+            {
+                LogOnce("讀左側分頁最寬的設定", e);
+                width = Rules.LeftWidthDefault;
+            }
+            if (_leftWidthRead.HasValue && _leftWidthRead.Value != width) WindowTabsMod.DebugLog($"設定換了：左側分頁最寬 {_leftWidthRead.Value} → {width}");
+            _leftWidthRead = width;
+            return width;
         }
 
         /// <summary>同一種錯誤只記一次（每幀都會跑，出錯時不要洗版），不同種的各記一次。DragFade 也用（2.7.0 起）。</summary>

@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.8.0（2026-11-28）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 新增「物品直接放進分頁」（預設關）：打開後，拖著物品（或框選的一組物品）停在分頁上只會變亮、不切頁，拖單一物品時遊戲的提示框會顯示放不放得下；放開就放進那一頁，放不下的留在原處。拖著時要切頁，用「下一個分頁」「上一個分頁」的按鍵。
+- 新增「分頁條位置」（Top／Left，預設 Top）：選 Left 時分頁沿著視窗左邊往下排，一欄放不下就往左多排幾欄；「左側分頁最寬」設定左邊的分頁最寬多少，名字更長的截成「…」。
+- 鎖住的組：鏈條小分頁固定在貼著標題列那排的最左邊，其他排從它右邊開始。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- New: Drop items straight into tabs (off by default). With it on, holding dragged items (or a box-selected group) over a tab lights the tab up instead of switching to it, and for a single item the game's tooltip shows whether it fits; release to put them into that tab. What doesn't fit stays where it was. To switch tabs while dragging, use the Next tab and Previous tab keys.
+- New: Tab strip position (Top or Left). With Left, the tabs stack down the left side of the window, adding columns when they don't fit; Left tab max width sets how wide a left tab can get.
+- Locked tab sets: the chain tab now stays at the left end of the row next to the title bar, and the other rows start to its right.
+
 ## v2.7.0（2026-11-24）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）

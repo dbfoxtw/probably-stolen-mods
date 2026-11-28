@@ -35,12 +35,18 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 - 切換：點分頁，位置不變。沒在看的分頁其實是關著的視窗，一整組只算一個視窗。
 - 重排：在分頁條裡拖分頁。拆開：把分頁拖到空的地方。移到別組：拖到別的視窗的標題列或分頁條上。
   只剩一頁時分頁條消失。
-- 鎖住整組：右鍵點任一個分頁就鎖住整組，分頁條最左邊會多一個鏈條小分頁；再右鍵點一次分頁就解鎖。
+- 鎖住整組：右鍵點任一個分頁就鎖住整組，分頁條貼著標題列那排的最左邊會多一個鏈條小分頁，
+  其他排從它右邊開始（分頁條放左邊時在貼著視窗那欄的最上面）；再右鍵點一次分頁就解鎖。
   別的視窗和分頁併不進鎖住的組；抓著鎖住的組的標題列拖，只會移動。組裡的分頁照樣可以重排，
   但不能拆出來，也不能移到別組。
 - 分頁寫物品的名稱（用藍色標籤印表機改過名字的就用改的名字），同一組裡同名的加編號（儲藏區 1、儲藏區 2），
   編號跟著箱子走。一排放不下就換行成好幾排。目前那頁和深灰的標題列接成一塊，其他頁比較暗。
 - 拖著物品（或框選的一組物品）停在分頁上約半秒就切到那頁（停著時字變黃）。
+- 物品直接放進分頁（設定打開時）：拖著物品停在分頁上只會變亮、不切頁（目前那頁也變亮），
+  拖單一物品時遊戲的提示框會說放不放得下；放開就放進那一頁，放得下多少放多少，剩下的留在原處。
+  放不進去的分頁不變亮。拖著時要切頁，用「下一個分頁」「上一個分頁」的按鍵。
+- 分頁條放左邊：設定「分頁條位置」選 Left，分頁從視窗頂端沿著左邊往下排，一欄放不下就往左多排一欄；
+  每欄的寬度照那欄最長的名字，最寬到「左側分頁最寬」，名字更長的截成「…」。
 - 按鍵切頁：在設定裡設好「下一個分頁」「上一個分頁」的鍵，按下去就切換滑鼠底下那組
   （拖著物品時也能按，拖著的箱子自己那頁跳過；打字時不動作）。
 - 視窗的 ×、ESC 關掉整組；在店裡雙擊組裡的箱子，整組在上次的位置打開，雙擊的那個是目前那頁。
@@ -52,10 +58,13 @@ ModData\dbfoxtw_window-tabs 資料夾（分頁組）。
 分頁條是這個 mod 加的，不是遊戲本身的介面；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有三個設定：
+在主選單的「Mods」（模組）畫面打開這個 mod 的設定，有六個設定：
+- 分頁條位置（預設 Top）：分頁條放在視窗上面（Top）或左邊（Left）。
+- 左側分頁最寬（滑桿）：分頁條放左邊時一個分頁最寬多少；放上面時不看這個。
 - 下一個分頁（預設空白，留空＝不使用）：把滑鼠底下那組切到下一頁，最後一頁之後回到第一頁。
 - 上一個分頁（預設空白，留空＝不使用）：切到上一頁，第一頁之前是最後一頁。
 - 合併時視窗變透明（預設開）：抓著標題列把視窗拖到另一個視窗的標題列或分頁條上時，被拖的視窗會變透明。
+- 物品直接放進分頁（預設關）：拖著物品停在分頁上不切頁，放開就放進那一頁。
 按鍵的寫法例如 Ctrl+Tab、Ctrl+Shift+Tab、F5；修飾鍵要完全一樣才算。
 滑鼠側鍵也可以，名稱照遊戲「按鍵綁定」的寫法：Mouse4、Mouse5（例如 Mouse4、Ctrl+Mouse5）。
 主要的鍵（Ctrl+Tab 的 Tab）如果在遊戲的「按鍵綁定」裡用了，按下去遊戲的那個功能也會動作，請換一個鍵。
@@ -137,13 +146,21 @@ Features
 - Reorder: drag a tab along the tab strip. Split off: drop a tab on an empty spot. Move: drop it on another
   window's title bar or tab strip. With one tab left, the tab strip disappears.
 - Lock a tab set: right-click any tab to lock the set; a small chain tab appears at the left end of the tab
-  strip. Right-click a tab again to unlock. Other windows and tabs can't join a locked set, and dragging it by
+  strip's row next to the title bar, and the other rows start to its right (with the tab strip on the left,
+  it's at the top of the column next to the window). Right-click a tab again to unlock. Other windows and tabs can't join a locked set, and dragging it by
   its title bar just moves it. Its tabs can still be reordered, but not split off or moved to another set.
 - Tabs show the item's name (or the name you gave it with the Blue Labeler), numbered when names repeat
   in a set (Storage Bay 1, Storage Bay 2); a number stays with its container. Tabs wrap into more rows.
   The current tab joins the dark gray title bar; the others are darker.
 - Hold a dragged item (or a box-selected group of items) over a tab for about half a second to switch to it
   (its text turns yellow).
+- Drop items straight into tabs (with the setting on): holding dragged items over a tab only lights it up,
+  without switching (the current tab lights up too), and for a single item the game's tooltip shows whether
+  it fits; release to put them into that tab. As much as fits goes in, and the rest stays where it was.
+  Tabs that can't take it don't light up. To switch tabs while dragging, use the Next tab and Previous tab keys.
+- Tab strip on the left: set Tab strip position to Left, and the tabs stack down the left side of the window
+  from its top, adding columns to the left when they don't fit. Each column is as wide as its longest name,
+  up to Left tab max width; longer names are cut off with "...".
 - Switch with keys: set Next tab and Previous tab keys in the settings and press them to switch the tab set
   under the mouse (also while dragging items, skipping the tab of the container you're dragging; not while typing).
 - The window's × or Esc closes the whole set; double-click one of its containers in your shop to open
@@ -159,13 +176,17 @@ The tab strips come from this mod, not the base game; please report problems to 
 developers.
 
 Settings
-Open this mod's settings on the Mods screen of the main menu. There are three settings:
+Open this mod's settings on the Mods screen of the main menu. There are six settings:
+- Tab strip position (Top by default): puts the tab strip above the window (Top) or to its left (Left).
+- Left tab max width (a slider): how wide a tab can get when the tab strip is on the left; not used on top.
 - Next tab (empty by default; empty = not used): switches the tab set under the mouse to the next tab;
   after the last tab comes the first.
 - Previous tab (empty by default; empty = not used): switches to the previous tab; before the first tab
   comes the last.
 - Fade window when merging (on by default): when you drag a window by its title bar over another window's
   title bar or tab strip, the dragged window fades.
+- Drop items straight into tabs (off by default): holding dragged items over a tab doesn't switch to it;
+  releasing puts them into that tab.
 Write keys like Ctrl+Tab, Ctrl+Shift+Tab or F5; modifiers must match exactly. Mouse side buttons work too,
 named as in the game's Key Binds: Mouse4 and Mouse5 (e.g. Mouse4, Ctrl+Mouse5). If the main key (the Tab in
 Ctrl+Tab) is also used in the game's Key Binds, that game action happens too; pick another key. If a key does

@@ -5,3 +5,9 @@ cfg_prev,Onglet précédent
 cfg_prev_tip,Touche pour passer à l'onglet précédent dans la fenêtre à onglets sous la souris (avant le premier vient le dernier) ; fonctionne aussi pendant que vous faites glisser des objets.\nEx. : Ctrl+Shift+Tab, ou le bouton latéral de la souris Mouse4 ; vide = désactivé
 cfg_fade,Transparence lors de la fusion
 cfg_fade_tip,Quand vous faites glisser une fenêtre par sa barre de titre au-dessus de la barre de titre ou de la barre d'onglets d'une autre fenêtre, la fenêtre déplacée devient transparente pour que vous voyiez où iront ses onglets.
+cfg_drop,Dépôt direct dans les onglets
+cfg_drop_tip,Pendant que vous faites glisser des objets, survoler un onglet ne fait plus passer à cet onglet ; les relâcher sur l'onglet les y place directement.\nPour changer d'onglet pendant le glissement, définissez les touches de changement d'onglet.
+cfg_side,Position de la barre d'onglets
+cfg_side_tip,De quel côté de la fenêtre se trouve la barre d'onglets.\nTop = au-dessus de la fenêtre\nLeft = à gauche de la fenêtre
+cfg_maxw,Largeur max. des onglets à gauche
+cfg_maxw_tip,Largeur maximale d'un onglet quand la barre d'onglets est à gauche. Les noms plus longs sont coupés avec « … ». En haut, les onglets suivent plutôt la largeur de la fenêtre.
