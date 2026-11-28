@@ -1,5 +1,21 @@
 # 版本紀錄（Changelog）
 
+## v2.6.0（2026-11-28）
+
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
+
+- 新增設定「關掉其他視窗」（預設開，和以前一樣：叫出時先關掉不在這組的視窗）。沒開時叫出一組只開這組，其他視窗留著；配「再按一次」的 Close if all open（全開就關），就是每組各自開關。
+- 按鍵欄寫了含逗號的鍵名（例如 Ctrl+A,B）時，改成當作沒填，並在 log 寫警告；以前會被當成別的鍵。
+- 對應遊戲版本改成 VERSION 100-REV13，也支援 beta 分支的 100-REV16。
+
+**English**
+
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
+
+- New setting "Close other windows" (on by default, as before: a recall first closes the windows that aren't in the group). Turned off, recalling a group only opens that group and leaves other windows open; with "Press again" on Close if all open, each group opens and closes on its own.
+- A key name with a comma (like Ctrl+A,B) is now treated as empty, with a warning in the log; before, it was read as a different key.
+- Supported game version is now VERSION 100-REV13 (also the 100-REV16 beta).
+
 ## v2.5.0（2026-11-16）
 
 對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）

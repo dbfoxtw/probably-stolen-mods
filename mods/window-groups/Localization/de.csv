@@ -16,11 +16,14 @@ skipped_both,{0}: {1} nicht gefunden, {2} nicht zu öffnen
 
 label_recall,Gruppe {0}: abrufen
 label_save,Gruppe {0}: speichern
-tip_recall,Taste, die Gruppe {0} abruft: schließt die übrigen Behälter- und Gerätefenster und öffnet dann die Fenster dieser Gruppe dort, wo sie gespeichert wurden.\nZ. B. Ctrl+3, F5; leer = nicht belegt
+tip_recall,Taste, die Gruppe {0} abruft: öffnet die Behälter- und Gerätefenster dieser Gruppe dort, wo sie gespeichert wurden.\nZ. B. Ctrl+3, F5; leer = nicht belegt
 tip_save,Taste, die die offenen Behälter- und Gerätefenster als Gruppe {0} speichert; ist keines offen, wird die Gruppe geleert.\nZ. B. Ctrl+Shift+3, Shift+F5; leer = nicht belegt
 
+close_others_label,Andere Fenster schließen
+close_others_tip,Schließt beim Abrufen einer Gruppe die Fenster, die nicht zu ihr gehören.\nIst dies ausgeschaltet, wird nur diese Gruppe geöffnet und andere Fenster bleiben offen.
+
 repeat_label,Erneut drücken
-repeat_tip,Was die Abruftaste einer Gruppe beim erneuten Drücken tut:\nRearrange = die Fenster jedes Mal zurücksetzen: geschlossene wieder öffnen, alle anderen schließen\nClose if all open = sind alle Fenster der Gruppe offen, die sich finden und öffnen lassen, werden sie geschlossen (andere Fenster bleiben offen); fehlt eines, wird wie gewohnt abgerufen\nClose if unmoved = nur schließen, wenn alle offen sind und keines seit dem letzten Abrufen der Gruppe verschoben wurde; wurde eines verschoben, werden sie zuerst zurückgesetzt und beim nächsten Drücken geschlossen
+repeat_tip,Was die Abruftaste einer Gruppe beim erneuten Drücken tut:\nRearrange = die Fenster jedes Mal zurücksetzen: geschlossene wieder öffnen\nClose if all open = sind alle Fenster der Gruppe offen, die sich finden und öffnen lassen, werden sie geschlossen (andere Fenster bleiben offen); fehlt eines, wird wie gewohnt abgerufen\nClose if unmoved = nur schließen, wenn alle offen sind und keines seit dem letzten Abrufen der Gruppe verschoben wurde; wurde eines verschoben, werden sie zuerst zurückgesetzt und beim nächsten Drücken geschlossen
 
 close_locked_label,Auch gesperrte schließen
 close_locked_tip,Funktioniert nur, wenn die Mod Close All Windows installiert ist.\nWenn erneutes Drücken der Abruftaste die Gruppe schließt, werden auch ihre gesperrten Fenster geschlossen; nur wenn „Erneut drücken“ auf Close if all open oder Close if unmoved steht.

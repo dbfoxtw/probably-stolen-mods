@@ -5,7 +5,7 @@ namespace ProbablyStolenWindowGroups
 {
     /// <summary>
     /// 不碰 Unity 的規則：群組數量、預設按鍵、遊戲也用的鍵、操作提示要不要讓開、叫出時關哪些、讀檔後丟哪些編號、多選與拖物品時能不能動作；
-    /// 2.3.0 起群組清單的按鍵、名字的整理、清單的列與位置。離線測試（mod\verify）直接測。
+    /// 2.3.0 起群組清單的按鍵、名字的整理、清單的列與位置；2.6.0 起按鍵名稱能不能交給 Enum.TryParse。離線測試（mod\verify）直接測。
     /// </summary>
     static class Rules
     {
@@ -106,6 +106,18 @@ namespace ProbablyStolenWindowGroups
         /// </summary>
         internal static bool ShouldCloseOnRecall(int ownerId, ISet<int> groupIds, ISet<int> locked) =>
             !(ownerId != 0 && groupIds.Contains(ownerId)) && !(ownerId != 0 && locked.Contains(ownerId));
+
+        /// <summary>
+        /// 按鍵名稱能不能交給 Enum.TryParse 去查 KeyCode（Settings.Resolve 的第一步；不碰 Unity，離線測試直接測）。不收的：
+        /// - 空字串。
+        /// - 數字或「-」開頭：Enum.TryParse 會把「12345」「-1」這種沒定義的數值也收下。
+        /// - 含逗號：Enum.TryParse 把「A,B」當成旗標的組合（97|98＝99＝KeyCode.C），Enum.IsDefined 也成立，
+        ///   玩家寫 A,B 會默默變成 C 鍵（照一鍵收水 2.7.0 的修法）。
+        /// 不收的由 Hotkey.Parse 當成寫錯的鍵，Keymap 不使用、log 警告。
+        /// 「+」開頭（Enum.TryParse 也會當數字）不用另外擋：Hotkey.Parse 用「+」切開，這種名稱到不了這裡。
+        /// </summary>
+        internal static bool IsParsableKeyName(string name) =>
+            !string.IsNullOrEmpty(name) && !char.IsDigit(name[0]) && name[0] != '-' && name.IndexOf(',') < 0;
 
         /// <summary>
         /// 讀檔後要丟掉的編號（照一鍵關窗 2026-10-13 審查發現的）：遊戲的物品編號計數器（PlayerStore.currentUniqueId，

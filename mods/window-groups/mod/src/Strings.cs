@@ -47,7 +47,14 @@ namespace ProbablyStolenWindowGroups
         public static string ConfigTip(int group, bool save) => save ? Loc.Get("tip_save", group) : Loc.Get("tip_recall", group);
 
         /// <summary>
-        /// 2.1.0 的三個設定的標籤與說明。標籤要短（使用者 2026-11-03 定「也關鎖住的」），細節放說明欄。
+        /// 2.6.0 的設定「關掉其他視窗」：排在設定視窗最上面。說明只講叫出時關不關別的視窗，
+        /// 不提一鍵關窗（鎖住的照舊不關；使用者定）。
+        /// </summary>
+        public static string CloseOthersLabel => Loc.Get("close_others_label");
+        public static string CloseOthersTip => Loc.Get("close_others_tip");
+        /// <summary>
+        /// 2.1.0 的三個設定的標籤與說明。「再按一次」的 Rearrange 那行 2.6.0 起不寫「關掉多開的」：
+        /// 「關掉其他視窗」關著時不關，改由那個設定的說明講。標籤要短（使用者 2026-11-03 定「也關鎖住的」），細節放說明欄。
         /// 「也關鎖住的」開頭先寫要有一鍵關窗 mod 才有作用（玩家不一定知道有這個 mod）。「也記儲物分頁」只寫 mod 做什麼：
         /// 遊戲本身的行為（沒記的組照上次關掉時的那一頁）不寫。「儲物標籤頁」照遊戲自己的叫法（儲藏區擴建套件的說明：
         /// 简中「储物标签页」、英文「storage tabs」；繁中 mod 譯成「儲物分頁」）。

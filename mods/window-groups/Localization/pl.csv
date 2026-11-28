@@ -13,10 +13,12 @@ skipped_locked,{0}: nie można otworzyć ({2})
 skipped_both,{0}: nie znaleziono ({1}), nie można otworzyć ({2})
 label_recall,Grupa {0}: przywołaj
 label_save,Grupa {0}: zapisz
-tip_recall,Klawisz, który przywołuje grupę {0}: zamyka pozostałe okna pojemników i maszyn, a potem otwiera okna tej grupy tam, gdzie zostały zapisane.\nNp. Ctrl+3, F5; puste = nieużywane
+tip_recall,Klawisz, który przywołuje grupę {0}: otwiera okna pojemników i maszyn z tej grupy tam, gdzie zostały zapisane.\nNp. Ctrl+3, F5; puste = nieużywane
 tip_save,Klawisz, który zapisuje otwarte okna pojemników i maszyn jako grupę {0}; gdy żadne nie jest otwarte, czyści grupę.\nNp. Ctrl+Shift+3, Shift+F5; puste = nieużywane
+close_others_label,Zamykaj inne okna
+close_others_tip,Przy przywołaniu grupy zamyka okna, które do niej nie należą.\nGdy ta opcja jest wyłączona, otwiera się tylko ta grupa, a inne okna zostają otwarte.
 repeat_label,Ponowne naciśnięcie
-repeat_tip,Co robi klawisz przywołania grupy, gdy naciśniesz go ponownie:\nRearrange = za każdym razem ustawia okna z powrotem: otwiera zamknięte, zamyka pozostałe\nClose if all open = jeśli wszystkie okna grupy, które da się znaleźć i otworzyć, są otwarte, zamyka je (inne okna zostają otwarte); jeśli brakuje któregoś, przywołuje grupę jak zwykle\nClose if unmoved = zamyka tylko wtedy, gdy wszystkie są otwarte i żadne nie zostało przesunięte od ostatniego przywołania grupy; jeśli któreś przesunięto, najpierw ustawia okna z powrotem, a zamyka przy następnym naciśnięciu
+repeat_tip,Co robi klawisz przywołania grupy, gdy naciśniesz go ponownie:\nRearrange = za każdym razem ustawia okna z powrotem: otwiera zamknięte\nClose if all open = jeśli wszystkie okna grupy, które da się znaleźć i otworzyć, są otwarte, zamyka je (inne okna zostają otwarte); jeśli brakuje któregoś, przywołuje grupę jak zwykle\nClose if unmoved = zamyka tylko wtedy, gdy wszystkie są otwarte i żadne nie zostało przesunięte od ostatniego przywołania grupy; jeśli któreś przesunięto, najpierw ustawia okna z powrotem, a zamyka przy następnym naciśnięciu
 close_locked_label,Zamykaj też zablokowane
 close_locked_tip,Działa tylko z zainstalowaną modyfikacją Close All Windows.\nGdy ponowne naciśnięcie klawisza przywołania zamyka grupę, zamyka też jej zablokowane okna; tylko gdy „Ponowne naciśnięcie” ma wartość Close if all open lub Close if unmoved.
 tabs_label,Zapamiętuj zakładki składziku

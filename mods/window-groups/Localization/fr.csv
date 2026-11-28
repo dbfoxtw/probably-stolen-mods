@@ -12,10 +12,12 @@ skipped_locked,{0} : {2} impossible(s) à ouvrir
 skipped_both,{0} : {1} introuvable(s), {2} impossible(s) à ouvrir
 label_recall,Groupe {0} : rappeler
 label_save,Groupe {0} : enregistrer
-tip_recall,Touche qui rappelle le groupe {0} : ferme les autres fenêtres de conteneurs et de machines, puis ouvre les fenêtres de ce groupe là où elles ont été enregistrées.\nEx. : Ctrl+3, F5 ; vide = désactivé
+tip_recall,Touche qui rappelle le groupe {0} : ouvre les fenêtres de conteneurs et de machines de ce groupe là où elles ont été enregistrées.\nEx. : Ctrl+3, F5 ; vide = désactivé
 tip_save,Touche qui enregistre dans le groupe {0} les fenêtres de conteneurs et de machines ouvertes ; si aucune n'est ouverte, elle vide le groupe.\nEx. : Ctrl+Shift+3, Shift+F5 ; vide = désactivé
+close_others_label,Fermer les autres fenêtres
+close_others_tip,Lors du rappel d'un groupe, ferme les fenêtres qui n'en font pas partie.\nQuand ce réglage est désactivé, seul ce groupe s'ouvre et les autres fenêtres restent ouvertes.
 repeat_label,Nouvel appui
-repeat_tip,Ce que fait la touche de rappel d'un groupe quand vous appuyez dessus à nouveau :\nRearrange = remettre les fenêtres en place à chaque fois : rouvrir celles qui sont fermées, fermer les autres\nClose if all open = si toutes les fenêtres du groupe qui peuvent être trouvées et ouvertes sont ouvertes, les fermer (les autres fenêtres restent ouvertes) ; s'il en manque une, rappeler comme d'habitude\nClose if unmoved = fermer seulement si elles sont toutes ouvertes et qu'aucune n'a été déplacée depuis le dernier rappel du groupe ; si l'une a bougé, les remettre d'abord en place et fermer à l'appui suivant
+repeat_tip,Ce que fait la touche de rappel d'un groupe quand vous appuyez dessus à nouveau :\nRearrange = remettre les fenêtres en place à chaque fois : rouvrir celles qui sont fermées\nClose if all open = si toutes les fenêtres du groupe qui peuvent être trouvées et ouvertes sont ouvertes, les fermer (les autres fenêtres restent ouvertes) ; s'il en manque une, rappeler comme d'habitude\nClose if unmoved = fermer seulement si elles sont toutes ouvertes et qu'aucune n'a été déplacée depuis le dernier rappel du groupe ; si l'une a bougé, les remettre d'abord en place et fermer à l'appui suivant
 close_locked_label,Fermer aussi les verrouillées
 close_locked_tip,Ne fonctionne qu'avec le mod Close All Windows installé.\nQuand un nouvel appui sur la touche de rappel ferme le groupe, ferme aussi ses fenêtres verrouillées ; seulement si « Nouvel appui » est sur Close if all open ou Close if unmoved.
 tabs_label,Mémoriser les onglets de rangement

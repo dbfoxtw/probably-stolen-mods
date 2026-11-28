@@ -9,7 +9,7 @@ namespace ProbablyStolenWindowGroups
     /// 儲存與叫出群組。群組記在 mod 自己的檔案（GroupStore），不碰存檔。
     /// 開視窗照遊戲雙擊的 OpenContentAction 的步驟，位置照遊戲記的同一種座標。
     /// 2.1.0 起：同一組再按一次照設定「再按一次」關掉這組、可以記內容分頁、
-    /// 叫出時在視窗上做記號給視窗分頁 mod 看。
+    /// 叫出時在視窗上做記號給視窗分頁 mod 看。2.6.0 起叫出時可以不關別的視窗（設定「關掉其他視窗」）。
     /// 2.3.0 起群組可以取名（群組清單）：名字跟著群組存在同一個檔，提示有名字時帶名字；清單的改名、刪除也走這裡。
     /// </summary>
     static class Groups
@@ -309,6 +309,7 @@ namespace ProbablyStolenWindowGroups
         /// 移到存的位置。已經開著的照樣移回去、拉到上面。找不到、打不開（上鎖）的跳過、留在群組裡，並提示；
         /// 一個都開不了時什麼都不動（不然等於全部關掉）。
         /// 2.1.0 起先看設定「再按一次」：全開就關／沒動才關的條件成立時改成關掉這組（CloseGroup），不叫出。
+        /// 2.6.0 起設定「關掉其他視窗」關著時不關不在這組的，其他照舊。
         /// 拖著物品時也可以叫出（拖到另一組的視窗裡放下）：正在被拖的箱子跳過，不開、不算進提示。
         /// </summary>
         internal static void Recall(int group)
@@ -376,26 +377,31 @@ namespace ProbablyStolenWindowGroups
                 log?.Add($"再按一次={mode}：{(state.Any(s => s.pos == null) ? "有沒開著的" : recorded == null ? "沒有上次叫出後的位置" : "有動過的")}，照常叫出");
             }
 
-            // 1. 關掉不在這組的（一鍵關窗鎖住的不關）
-            var groupIds = new HashSet<int>(found.Select(f => f.entry.Id));
-            var locked = CloseAllWindowsLocked(log);
+            // 1. 關掉不在這組的（一鍵關窗鎖住的不關）。設定「關掉其他視窗」關著時整段跳過：
+            //    其他視窗留著，也不用讀一鍵關窗的鎖（鎖只用來決定別的視窗關不關）
             int closedOthers = 0;
-            foreach (var w in GameWindows.VisibleWindows())
+            if (!Settings.CloseOthers) log?.Add("關掉其他視窗=False：不關不在這組的");
+            else
             {
-                if (!GameWindows.IsGroupWindow(w)) continue;
-                int id = GameWindows.OwnerItem(w).uniqueId;
-                if (!Rules.ShouldCloseOnRecall(id, groupIds, locked))
+                var groupIds = new HashSet<int>(found.Select(f => f.entry.Id));
+                var locked = CloseAllWindowsLocked(log);
+                foreach (var w in GameWindows.VisibleWindows())
                 {
-                    if (id != 0 && locked.Contains(id) && !groupIds.Contains(id)) log?.Add($"「{Title(w)}」#{id} 一鍵關窗鎖住，不關");
-                    continue;
+                    if (!GameWindows.IsGroupWindow(w)) continue;
+                    int id = GameWindows.OwnerItem(w).uniqueId;
+                    if (!Rules.ShouldCloseOnRecall(id, groupIds, locked))
+                    {
+                        if (id != 0 && locked.Contains(id) && !groupIds.Contains(id)) log?.Add($"「{Title(w)}」#{id} 一鍵關窗鎖住，不關");
+                        continue;
+                    }
+                    try
+                    {
+                        WindowsHandler.CloseWindow(w); // 和 ESC、一鍵關窗同一個關法
+                        closedOthers++;
+                        log?.Add($"關「{Title(w)}」#{id}");
+                    }
+                    catch (Exception ex) { WindowGroupsMod.Log.Warning($"關視窗「{Title(w)}」失敗：{ex.Message}"); }
                 }
-                try
-                {
-                    WindowsHandler.CloseWindow(w); // 和 ESC、一鍵關窗同一個關法
-                    closedOthers++;
-                    log?.Add($"關「{Title(w)}」#{id}");
-                }
-                catch (Exception ex) { WindowGroupsMod.Log.Warning($"關視窗「{Title(w)}」失敗：{ex.Message}"); }
             }
 
             // 2. 照上下順序開、擺好（後面的在上面）

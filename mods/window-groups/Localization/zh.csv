@@ -11,10 +11,12 @@ skipped_locked,{0}：{2} 个打不开
 skipped_both,{0}：{1} 个找不到、{2} 个打不开
 label_recall,窗口组 {0}：调出
 label_save,窗口组 {0}：保存
-tip_recall,调出窗口组 {0} 的按键：先关掉其他箱子、机器窗口，再把这一组的窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用
+tip_recall,调出窗口组 {0} 的按键：把这一组的箱子、机器窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用
 tip_save,把打开的箱子、机器窗口保存为窗口组 {0} 的按键；没有打开窗口时按下＝清空这一组。\n例如 Ctrl+Shift+3、Shift+F5；留空＝不使用
+close_others_label,关掉其他窗口
+close_others_tip,调出一组时，关掉不在这一组的窗口。\n这个设置关闭时，只开这一组，其他窗口留着。
 repeat_label,再按一次
-repeat_tip,再按一次同一组的调出键时：\nRearrange＝重新排好：每次都摆回原位，补开关掉的、关掉多开的\nClose if all open＝全开就关：这一组找得到、打得开的窗口都开着，就关掉这一组的窗口，其他窗口留着；少了任何一个就照常调出\nClose if unmoved＝没动才关：都开着、而且上次调出后都没移动过才关；动过就先摆回原位，再按一次才关
+repeat_tip,再按一次同一组的调出键时：\nRearrange＝重新排好：每次都摆回原位，补开关掉的\nClose if all open＝全开就关：这一组找得到、打得开的窗口都开着，就关掉这一组的窗口，其他窗口留着；少了任何一个就照常调出\nClose if unmoved＝没动才关：都开着、而且上次调出后都没移动过才关；动过就先摆回原位，再按一次才关
 close_locked_label,也关锁住的
 close_locked_tip,装了一键关窗 mod 时才有作用。\n再按一次关掉这一组时，锁住的窗口也关；只在“再按一次”选了 Close if all open 或 Close if unmoved 时。
 tabs_label,也记储物标签页

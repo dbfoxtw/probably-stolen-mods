@@ -41,12 +41,18 @@ skipped_both,{0}: {1} not found, {2} can't be opened
 # label_recall / label_save / tip_recall / tip_save: {0} = group number (1-20). The examples do not follow the group number on purpose.
 label_recall,Group {0}: recall
 label_save,Group {0}: save
-tip_recall,Key that recalls group {0}: closes the other container/machine windows, then opens this group's windows where they were saved.\nE.g. Ctrl+3, F5; empty = not used
+tip_recall,Key that recalls group {0}: opens this group's container/machine windows where they were saved.\nE.g. Ctrl+3, F5; empty = not used
 tip_save,Key that saves the open container/machine windows as group {0}; with none open, it clears the group.\nE.g. Ctrl+Shift+3, Shift+F5; empty = not used
+
+# "Close other windows" switch: the first setting in the window, above "Press again". The label sits to the left of the switch: keep it short.
+# The tooltip says what recalling does to the other windows, then (on its own line) what happens when the switch is off.
+# It is a TextMeshPro box of limited width: long lines wrap by themselves, so no extra \n is needed inside a sentence.
+close_others_label,Close other windows
+close_others_tip,When recalling a group, close the windows that aren't in it.\nWhen off, only this group opens and other windows stay open.
 
 # "Press again" dropdown: what pressing a group's recall key again does. One line per choice, choice names in English.
 repeat_label,Press again
-repeat_tip,What a group's recall key does when you press it again:\nRearrange = put the windows back every time: reopen the closed ones, close the others\nClose if all open = if every window of the group that can be found and opened is open, close them (other windows stay open); if any is missing, recall as usual\nClose if unmoved = close only if they are all open and none has moved since the group was last recalled; if one moved, put them back first and close on the next press
+repeat_tip,What a group's recall key does when you press it again:\nRearrange = put the windows back every time and reopen the closed ones\nClose if all open = if every window of the group that can be found and opened is open, close them (other windows stay open); if any is missing, recall as usual\nClose if unmoved = close only if they are all open and none has moved since the group was last recalled; if one moved, put them back first and close on the next press
 
 # "Close locked too" switch. The tooltip starts by saying it needs the Close All Windows mod; "Press again" is the label above (repeat_label).
 close_locked_label,Close locked too

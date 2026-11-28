@@ -31,6 +31,7 @@ namespace ProbablyStolenWindowGroups.Verify
         {
             Console.OutputEncoding = Encoding.UTF8;
             Hotkeys();
+            KeyNames();
             Keymaps();
             RulesTest();
             Locks();
@@ -48,6 +49,7 @@ namespace ProbablyStolenWindowGroups.Verify
             ListPlacement();
             ListEscape();
             ListAgainAndTips();
+            CloseOthersTexts();
             LocPickTest();
             LocFiles();
             Console.WriteLine($"離線測試：{_pass} 項通過、{_fail} 項失敗");
@@ -57,8 +59,8 @@ namespace ProbablyStolenWindowGroups.Verify
         // ── 按鍵 ──
 
         /// <summary>
-        /// 模擬 mod 裡的 Settings.Resolve（那邊用 Unity 的 KeyCode 列舉）：認得的 KeyCode 名稱（大小寫不拘）回傳正式的寫法，
-        /// 修飾鍵本身、滑鼠鍵、不存在的回傳 null。
+        /// 模擬 mod 裡的 Settings.Resolve（那邊用 Unity 的 KeyCode 列舉）：先過同一個 Rules.IsParsableKeyName（2.6.0 起，含逗號的不收），
+        /// 再查認得的 KeyCode 名稱（大小寫不拘）回傳正式的寫法；修飾鍵本身、滑鼠鍵、不存在的回傳 null。
         /// </summary>
         static readonly string[] KnownKeys = Enumerable.Range(0, 10).Select(i => "Alpha" + i)
             .Concat(Enumerable.Range(0, 10).Select(i => "Keypad" + i))
@@ -67,7 +69,42 @@ namespace ProbablyStolenWindowGroups.Verify
             .Concat(new[] { "Backspace", "BackQuote", "Insert", "Home", "PageUp", "Delete", "Escape", "Space", "KeypadEnter" })
             .ToArray();
 
-        static string Resolve(string name) => KnownKeys.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+        static string Resolve(string name) =>
+            Rules.IsParsableKeyName(name) ? KnownKeys.FirstOrDefault(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)) : null;
+
+        /// <summary>和 Unity 的 KeyCode 同一組值的幾個鍵（A＝97、B＝98、C＝99），證明 Enum.TryParse 會把「A,B」當成旗標的組合。</summary>
+        enum FakeKeyCode { A = 97, B = 98, C = 99 }
+
+        /// <summary>
+        /// 按鍵名稱能不能交給 Enum.TryParse（Rules.IsParsableKeyName，Settings.Resolve 的第一步；2.6.0 起擋含逗號的，照一鍵收水 2.7.0）。
+        /// </summary>
+        static void KeyNames()
+        {
+            // 擋的理由：Enum.TryParse 把逗號當旗標的分隔，A,B＝97|98＝99＝C，IsDefined 也成立
+            Check(Enum.TryParse("A,B", true, out FakeKeyCode flag) && flag == FakeKeyCode.C && Enum.IsDefined(typeof(FakeKeyCode), flag),
+                "Enum.TryParse 把 A,B 讀成 C（不擋的話玩家寫 A,B 會默默變成 C 鍵）");
+            foreach (var bad in new[] { "A,B", "A, B", ",", "", null, "1", "-1", "12345" })
+                Check(!Rules.IsParsableKeyName(bad), $"按鍵名稱「{bad ?? "null"}」不交給 Enum.TryParse");
+            foreach (var ok in new[] { "A", "F5", "Keypad1", "alpha3" })
+                Check(Rules.IsParsableKeyName(ok), $"按鍵名稱「{ok}」照常查");
+            // 走到 Hotkey.Parse 與 Keymap：當成寫錯的鍵，不使用、log 警告
+            Check(P("Ctrl+A,B", out var err) == null && err != null, "Ctrl+A,B：寫錯的鍵、給警告");
+            Check(P("A, B", out err) == null && err != null, "A, B：寫錯的鍵、給警告");
+            // 照 Settings.Resolve 真正的兩步（IsParsableKeyName → Enum.TryParse＋IsDefined），只把列舉換成 FakeKeyCode：
+            // 上面只比對 KnownKeys 的模擬本來就沒有「A,B」，拿掉檢查也照樣過；這裡拿掉 IsParsableKeyName 會變成 C、測試失敗（審查提的）
+            Check(FakeResolve("A,B") == null, "照 Settings.Resolve 的步驟：A,B 不收（不會變成 C）");
+            Check(FakeResolve("a") == "A", "照 Settings.Resolve 的步驟：A 照常收（大小寫不拘）");
+            Check(Hotkey.Parse("Ctrl+A,B", FakeResolve, out err) == null && err != null, "照 Settings.Resolve 的步驟：Ctrl+A,B 是寫錯的鍵");
+            var entries = Defaults().ToList();
+            entries[0] = ("Group1Recall", 1, false, "Ctrl+A,B");
+            var map = Keymap.Build(entries, Resolve, GameDefaults());
+            Check(!map.Bindings.Any(b => b.Entry == "Group1Recall") && map.Warnings.Any(w => w.Contains("Group1Recall") && w.Contains("A,B")),
+                "Keymap：Ctrl+A,B 不使用並警告（不會變成 Ctrl+C）");
+        }
+
+        /// <summary>Settings.Resolve 的前兩步，列舉換成 FakeKeyCode（KeyNames 用）。</summary>
+        static string FakeResolve(string name) =>
+            Rules.IsParsableKeyName(name) && Enum.TryParse(name, true, out FakeKeyCode k) && Enum.IsDefined(typeof(FakeKeyCode), k) ? k.ToString() : null;
 
         static Hotkey P(string s, out string error) => Hotkey.Parse(s, Resolve, out error);
 
@@ -893,9 +930,11 @@ namespace ProbablyStolenWindowGroups.Verify
             Eq(zht.ListAgainTip, "清單開著時再按一次群組清單的鍵：\nClose＝關掉清單\nMove to mouse＝不關，把清單移到滑鼠旁邊", "繁中：清單再按一次的說明（定稿）");
             Eq(en.ListAgainTip, "When the group list is open, pressing its key again:\nClose = close the list\nMove to mouse = keep it open and move it next to the mouse", "英文：清單再按一次的說明（定稿）");
             Eq(zhs.ListAgainTip, "列表打开时再按一次窗口组列表的按键：\nClose＝关掉列表\nMove to mouse＝不关，把列表移到鼠标旁边", "簡中：清單再按一次的說明（定稿）");
-            Eq(zht.ConfigTip(3, false), "叫出視窗群組 3 的按鍵：先關掉其他箱子、機器視窗，再把這組的視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "繁中：叫出的說明（{0} 套得進去、例子另起一行）");
+            // 2.6.0 起不寫「先關掉其他箱子、機器視窗」：設定「關掉其他視窗」關著時不關，改由那個設定的說明講
+            Eq(zht.ConfigTip(3, false), "叫出視窗群組 3 的按鍵：把這組的箱子、機器視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "繁中：叫出的說明（{0} 套得進去、例子另起一行）");
+            Eq(en.ConfigTip(3, false), "Key that recalls group 3: opens this group's container/machine windows where they were saved.\nE.g. Ctrl+3, F5; empty = not used", "英文：叫出的說明（2.6.0 起不寫關掉其他視窗）");
             Eq(en.ConfigTip(12, true), "Key that saves the open container/machine windows as group 12; with none open, it clears the group.\nE.g. Ctrl+Shift+3, Shift+F5; empty = not used", "英文：儲存的說明（{0} 套得進去）");
-            Eq(zhs.ConfigTip(7, false), "调出窗口组 7 的按键：先关掉其他箱子、机器窗口，再把这一组的窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "簡中：叫出的說明");
+            Eq(zhs.ConfigTip(7, false), "调出窗口组 7 的按键：把这一组的箱子、机器窗口打开在保存的位置。\n例如 Ctrl+3、F5；留空＝不使用", "簡中：叫出的說明（{0} 套得進去）");
             Eq(zht.CloseLockedTip, "有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。", "繁中：也關鎖住的（開頭寫要有一鍵關窗 mod）");
             Eq(en.CloseLockedTip, "Only works with the Close All Windows mod installed.\nWhen pressing the recall key again closes the group, also close its locked windows; only when \"Press again\" is Close if all open or Close if unmoved.", "英文：也關鎖住的");
             Eq(zht.TabsTip, "儲存群組時也記下每個視窗選的分頁，叫出時切回去（儲物分頁，以及有些機器視窗裡的分頁）。\n只對開著這個設定時儲存的群組有作用。", "繁中：也記儲物分頁（縮短）");
@@ -925,6 +964,44 @@ namespace ProbablyStolenWindowGroups.Verify
             }
             foreach (var txt in new[] { zht.ListAgainLabel, zht.ListAgainTip })
                 Check(!txt.Contains("窗口") && !txt.Contains("关") && !txt.Contains("开") && !txt.Contains("鼠标"), $"繁中清單再按一次的字沒有簡體字：{txt}");
+        }
+
+        /// <summary>
+        /// 2.6.0 的設定「關掉其他視窗」的三語系定稿；「再按一次」的 Rearrange 那行不再寫關掉多開的（開關關著時不對）。
+        /// 9 種語言都看：說明兩行、不提一鍵關窗（使用者定）、不寫預設。
+        /// </summary>
+        static void CloseOthersTexts()
+        {
+            var en = LangTexts.For(Lang.En);
+            var zht = LangTexts.For(Lang.ZhHant);
+            var zhs = LangTexts.For(Lang.ZhHans);
+            Eq(en.CloseOthersLabel, "Close other windows", "英文：Close other windows");
+            Eq(zhs.CloseOthersLabel, "关掉其他窗口", "簡中：关掉其他窗口");
+            Eq(zht.CloseOthersLabel, "關掉其他視窗", "繁中：關掉其他視窗");
+            Eq(en.CloseOthersTip, "When recalling a group, close the windows that aren't in it.\nWhen off, only this group opens and other windows stay open.", "英文：關掉其他視窗的說明（定稿）");
+            Eq(zhs.CloseOthersTip, "调出一组时，关掉不在这一组的窗口。\n这个设置关闭时，只开这一组，其他窗口留着。", "簡中：關掉其他視窗的說明（定稿）");
+            Eq(zht.CloseOthersTip, "叫出一組時，關掉不在這組的視窗。\n這個設定關掉時，只開這組，其他視窗留著。", "繁中：關掉其他視窗的說明（定稿）");
+            foreach (var txt in new[] { zht.CloseOthersLabel, zht.CloseOthersTip })
+                Check(!txt.Contains("窗口") && !txt.Contains("这") && !txt.Contains("关") && !txt.Contains("开") && !txt.Contains("设"), $"繁中關掉其他視窗的字沒有簡體字：{txt}");
+
+            string Rearrange(LangTexts st) => st.RepeatTip.Split('\n').FirstOrDefault(l => l.StartsWith(Rules.RepeatRearrange, StringComparison.Ordinal));
+            Eq(Rearrange(en), "Rearrange = put the windows back every time and reopen the closed ones", "英文：Rearrange 那行不寫關掉多開的");
+            Eq(Rearrange(zhs), "Rearrange＝重新排好：每次都摆回原位，补开关掉的", "簡中：Rearrange 那行不寫关掉多开的");
+            Eq(Rearrange(zht), "Rearrange＝重新排好：每次都擺回原位，補開關掉的", "繁中：Rearrange 那行不寫關掉多開的");
+
+            foreach (var lang in new[] { "en", "zh", "zh-Hant", "ja", "de", "ru", "fr", "es", "pl" })
+            {
+                var st = LangTexts.For(lang);
+                var label = st.CloseOthersLabel;
+                var tip = st.CloseOthersTip;
+                Check(!string.IsNullOrEmpty(label) && label != "close_others_label" && label.Length <= 26, $"{lang} 關掉其他視窗的標籤有字、夠短：{label}");
+                Eq(tip.Split('\n').Length, 2, $"{lang} 關掉其他視窗的說明兩行（做什麼＋關著時）");
+                Check(!tip.Contains("Close All Windows") && !tip.Contains("一鍵關窗") && !tip.Contains("一键关窗") && !tip.Contains("mod", StringComparison.OrdinalIgnoreCase),
+                    $"{lang} 關掉其他視窗的說明不提一鍵關窗：{tip}");
+                Check(!tip.Contains("預設") && !tip.Contains("默认") && !tip.Contains("default", StringComparison.OrdinalIgnoreCase), $"{lang} 關掉其他視窗的說明不寫預設");
+                Eq(st.RepeatTip.Split('\n').Length, 4, $"{lang}「再按一次」照舊四行");
+                Check(Rearrange(st) != null, $"{lang}「再按一次」照舊有 Rearrange 那行");
+            }
         }
 
         // ── 多語系（2.4.0） ──

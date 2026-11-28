@@ -16,11 +16,14 @@ skipped_both,{0}: {1} sin encontrar, {2} sin poder abrirse
 # Mod settings window
 label_recall,Grupo {0}: recuperar
 label_save,Grupo {0}: guardar
-tip_recall,Tecla que recupera el grupo {0}: cierra las demás ventanas de contenedores y máquinas y luego abre las ventanas de este grupo donde se guardaron.\nEj.: Ctrl+3, F5; vacío = sin usar
+tip_recall,Tecla que recupera el grupo {0}: abre las ventanas de contenedores y máquinas de este grupo donde se guardaron.\nEj.: Ctrl+3, F5; vacío = sin usar
 tip_save,Tecla que guarda como grupo {0} las ventanas de contenedores y máquinas abiertas; si no hay ninguna abierta, vacía el grupo.\nEj.: Ctrl+Shift+3, Shift+F5; vacío = sin usar
 
+close_others_label,Cerrar las demás ventanas
+close_others_tip,Al recuperar un grupo, cierra las ventanas que no están en él.\nCon esta opción desactivada, solo se abre este grupo y las demás ventanas siguen abiertas.
+
 repeat_label,Volver a pulsar
-repeat_tip,Qué hace la tecla de recuperar de un grupo al volver a pulsarla:\nRearrange = recoloca las ventanas cada vez: reabre las cerradas y cierra las demás\nClose if all open = si están abiertas todas las ventanas del grupo que se pueden encontrar y abrir, las cierra (las demás ventanas siguen abiertas); si falta alguna, recupera el grupo como siempre\nClose if unmoved = las cierra solo si están todas abiertas y ninguna se ha movido desde la última vez que se recuperó el grupo; si alguna se movió, primero las recoloca y las cierra al pulsar otra vez
+repeat_tip,Qué hace la tecla de recuperar de un grupo al volver a pulsarla:\nRearrange = recoloca las ventanas cada vez: reabre las cerradas\nClose if all open = si están abiertas todas las ventanas del grupo que se pueden encontrar y abrir, las cierra (las demás ventanas siguen abiertas); si falta alguna, recupera el grupo como siempre\nClose if unmoved = las cierra solo si están todas abiertas y ninguna se ha movido desde la última vez que se recuperó el grupo; si alguna se movió, primero las recoloca y las cierra al pulsar otra vez
 
 close_locked_label,Cerrar también las bloqueadas
 close_locked_tip,Solo funciona si está instalado el mod Close All Windows.\nCuando volver a pulsar la tecla de recuperar cierra el grupo, cierra también sus ventanas bloqueadas; solo si «Volver a pulsar» es Close if all open o Close if unmoved.

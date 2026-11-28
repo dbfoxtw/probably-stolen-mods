@@ -6,8 +6,9 @@ namespace ProbablyStolenWindowGroups
 {
     /// <summary>
     /// 設定：遊戲官方的 ModConfig（存檔資料夾的 ModConfigs\dbfoxtw.window-groups.json，
-    /// 主選單的模組管理畫面裡有這個 mod 的設定視窗）。最前面是 2.1.0 加的「再按一次」（下拉）、「也關鎖住的」「也記儲物標籤頁」（開關），
-    /// 2.3.0 加的「群組清單」（文字欄，預設 Ctrl+0），後面 20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
+    /// 主選單的模組管理畫面裡有這個 mod 的設定視窗）。最前面是 2.6.0 加的「關掉其他視窗」（開關），接著 2.1.0 加的「再按一次」（下拉）、
+    /// 「也關鎖住的」「也記儲物標籤頁」（開關），2.3.0 加的「群組清單」（文字欄，預設 Ctrl+0）與「清單再按一次」（下拉），
+    /// 後面 20 組各有「叫出」「儲存」兩個文字欄，共 40 個，留空＝不使用。
     /// 寫法和 Demo 的 MelonPreferences 一樣（Ctrl+3、F5、Ctrl+Shift+F1；Hotkey.Parse）。
     /// 不用遊戲「選項 → 按鍵綁定」（ModHelper.AddGameOptionKeyBind）：它只擷取單一個鍵，表達不了 Ctrl+1 這種組合。
     /// 記憶體裡的值每次被問時比對，玩家在設定視窗按套用就生效（不標 requiresRestart）。
@@ -43,7 +44,7 @@ namespace ProbablyStolenWindowGroups
         static List<Key> _keys = new List<Key>();
         static bool _built;
         static ConfigEntry<string> _repeat;
-        static ConfigEntry<bool> _closeLockedToo, _rememberTabs;
+        static ConfigEntry<bool> _closeOthers, _closeLockedToo, _rememberTabs;
         /// <summary>群組清單的鍵；和 40 個鍵一起讀成 Keymap（撞鍵檢查、工具箱與操作提示讓開都一樣）。</summary>
         static ConfigEntry<string> _listKey;
         /// <summary>上次讀成按鍵時群組清單的值（和現在的不同就重建）。</summary>
@@ -58,6 +59,11 @@ namespace ProbablyStolenWindowGroups
         internal static RepeatMode Repeat => Rules.ParseRepeat(_repeat != null ? _repeat.Value : Rules.RepeatDefault);
         /// <summary>清單開著時再按一次清單的鍵：關掉或移到滑鼠旁邊（預設關掉）。每次用到時才讀。</summary>
         internal static ListAgainMode ListAgain => Rules.ParseListAgain(_listAgain != null ? _listAgain.Value : Rules.ListAgainDefault);
+        /// <summary>
+        /// 叫出時關掉不在這組的視窗（預設開＝2.5.0 以前的行為）。關掉時叫出只開這組、
+        /// 其他視窗留著，配「再按一次」的全開就關就是每組各自開關（想同時開好幾組的玩家用）。每次叫出時才讀。
+        /// </summary>
+        internal static bool CloseOthers => _closeOthers == null || _closeOthers.Value;
         /// <summary>再按一次關掉時一鍵關窗鎖住的也關（預設開）。</summary>
         internal static bool CloseLockedToo => _closeLockedToo == null || _closeLockedToo.Value;
         /// <summary>
@@ -69,7 +75,9 @@ namespace ProbablyStolenWindowGroups
         internal static void Init()
         {
             var cfg = ModConfig.For(WindowGroupsMod.ModId);
+            // 2.6.0 的「關掉其他視窗」排在最上面：它決定叫出本身怎麼做，「再按一次」是在它之上的選項。
             // 2.1.0 新增的三個排在 40 個按鍵前面：按鍵在後面拉很長，放後面不好找。設定視窗照定義的順序排，存的值只看 key，換順序不影響
+            _closeOthers = cfg.Define("CloseOthers", true, Section, () => Strings.CloseOthersLabel, () => Strings.CloseOthersTip);
             _repeat = cfg.Define("RecallAgain", Rules.RepeatDefault, Section, () => Strings.RepeatLabel,
                 Rules.RepeatChoices, () => Strings.RepeatTip);
             _closeLockedToo = cfg.Define("CloseLockedToo", true, Section, () => Strings.CloseLockedLabel, () => Strings.CloseLockedTip);
@@ -150,11 +158,12 @@ namespace ProbablyStolenWindowGroups
 
         /// <summary>
         /// Unity 的 KeyCode 名稱 → 正式的名稱；不能用的回傳 null：不存在、數字開頭（Enum.TryParse 會把「12345」這種沒定義的值也收下）、
-        /// None、滑鼠鍵、搖桿鍵、修飾鍵本身（修飾鍵要寫在「+」前面）。
+        /// 含逗號（2.6.0 起；Enum.TryParse 當成旗標的組合，A,B 會變成 C）、None、滑鼠鍵、搖桿鍵、修飾鍵本身（修飾鍵要寫在「+」前面）。
+        /// 前面那段不碰 Unity 的檢查在 Rules.IsParsableKeyName（離線測試）。
         /// </summary>
         static string Resolve(string name)
         {
-            if (string.IsNullOrEmpty(name) || char.IsDigit(name[0]) || name[0] == '-') return null;
+            if (!Rules.IsParsableKeyName(name)) return null;
             if (!Enum.TryParse(name, true, out KeyCode k) || !Enum.IsDefined(typeof(KeyCode), k)) return null;
             if (k == KeyCode.None || (k >= KeyCode.Mouse0 && k <= KeyCode.Mouse6) || k >= KeyCode.JoystickButton0) return null;
             switch (k)
@@ -185,7 +194,7 @@ namespace ProbablyStolenWindowGroups
             return Rules.RecallKeyDisplays(bindings);
         }
 
-        /// <summary>2.1.0 加的三個設定，給 log 看。</summary>
-        internal static string DescribeOptions() => $"再按一次={Repeat}、也關鎖住的={CloseLockedToo}、也記儲物標籤頁={RememberTabs}、清單再按一次={ListAgain}";
+        /// <summary>按鍵以外的設定（2.1.0 的三個、2.3.0 的清單再按一次、2.6.0 的關掉其他視窗），給 log 看。</summary>
+        internal static string DescribeOptions() => $"關掉其他視窗={CloseOthers}、再按一次={Repeat}、也關鎖住的={CloseLockedToo}、也記儲物標籤頁={RememberTabs}、清單再按一次={ListAgain}";
     }
 }

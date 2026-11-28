@@ -3,7 +3,7 @@ Probably Stolen 視窗群組 mod（Window Groups） v{version}
 
 把店裡開著的箱子、機器視窗和它們的位置存成群組，之後按一個鍵就全部叫回來、排回原位；
 也可以打開群組清單，點名字叫出。最多 20 組。
-對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV14）
+對應遊戲版本：正式版 1.0（VERSION 100-REV13，也支援 beta 分支的 100-REV16）
 
 程式由 AI（Claude）撰寫，功能設計與實機測試由作者進行。如果有任何 bug 歡迎回報
 （https://www.nexusmods.com/probablystolen/mods/804?tab=bugs
@@ -31,9 +31,10 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
 - 儲存（預設 Ctrl+Shift+1～9）：把店裡現在開著的箱子、機器視窗存成那一組，記下位置與上下順序，
   畫面上方會出現「視窗群組 1 已儲存（5 個視窗）」。箱子、機器、背包，以及垃圾桶、檔案箱、
   卡帶播放器都算；日曆、平板、文件這類紙張面板不算。沒開任何箱子、機器視窗時按儲存＝清空那一組。
-- 叫出（預設 Ctrl+1～9）：先關掉不在這一組的箱子、機器視窗（和按 ESC 關的一樣，不動裡面的東西），
-  再把這一組的視窗開在存的位置、照存的上下順序。放在別的箱子裡的箱子直接打開。叫出成功時不跳提示。
-  拖著物品（或選好的一組物品）時按另一組的鍵：第 1 組關掉、第 2 組打開，直接放進去。
+- 叫出（預設 Ctrl+1～9）：把這一組的視窗開在存的位置、照存的上下順序。設定「關掉其他視窗」開著（預設）時，
+  先關掉不在這一組的箱子、機器視窗（和按 ESC 關的一樣，不動裡面的東西）；沒開時其他視窗留著。
+  放在別的箱子裡的箱子直接打開。叫出成功時不跳提示。
+  拖著物品（或選好的一組物品）時按另一組的鍵：第 2 組打開（開著時第 1 組關掉），直接放進去。
 - 同一組再按一次（設定「再按一次」，2.1.0 起預設全開就關）：
   全開就關（Close if all open）＝這組找得到、打得開的視窗都開著就關掉這組（多開的留著），少了任何一個就照常叫出；
   沒動才關（Close if unmoved）＝都開著、而且上次叫出後都沒移動過才關，動過就先排回原位；
@@ -54,7 +55,9 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
 畫面上的提示是這個 mod 加的，不是遊戲本身的訊息；有問題請回報給本 mod，不要回報給遊戲開發者。
 
 【設定】
-主選單的「Mods」（模組）畫面裡這個 mod 的設定。最上面三個是 2.1.0 加的：
+主選單的「Mods」（模組）畫面裡這個 mod 的設定。最上面一個是 2.6.0 加的：
+- 關掉其他視窗（CloseOthers，預設開）：叫出一組時先關掉不在這組的箱子、機器視窗；關掉時只開這組，其他視窗留著。
+接著三個是 2.1.0 加的：
 - 再按一次（RecallAgain，預設 Close if all open）：下拉選單三選一，選項是英文：
   Close if all open＝全開就關、Close if unmoved＝沒動才關、Rearrange＝重新排好（見【功能】）。
 - 也關鎖住的（CloseLockedToo，預設開）：再按一次關掉這組時，一鍵關窗鎖住的也關；關掉時鎖住的留著。
@@ -106,8 +109,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
             {"key": "Group11Save", "value": "Shift+F11"}
         ]
     }
-  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡；最上面五個設定（再按一次、也關鎖住的、
-  也記儲物分頁、群組清單、清單再按一次）也回到預設。遊戲開著時改這個檔沒有用
+  群組 12～20 回到預設（空白），開遊戲時 mod 會把它們補回檔案裡；最上面六個設定（關掉其他視窗、再按一次、
+  也關鎖住的、也記儲物分頁、群組清單、清單再按一次）也回到預設。遊戲開著時改這個檔沒有用
   （遊戲只在開遊戲時讀一次，之後按套用還會蓋掉）。格式寫壞了的話整份用預設值、檔案也會被蓋回預設，
   改之前可以先複製一份備份。要回到預設：在設定視窗按「恢復預設設定」。
 
@@ -121,7 +124,8 @@ ModConfigs\dbfoxtw.window-groups.json 與 ModData\dbfoxtw_window-groups 資料�
 - 已知限制：只記位置，不記視窗大小；視窗裡的分頁只有設定「也記儲物分頁」開著時存的才記
   （沒記的開在那個箱子上次關掉時的分頁；這個設定 2.5.0 起新裝的預設開，以前就裝了的照原本的設定）；
   「沒動才關」比的位置只記在記憶體裡，重開遊戲、讀檔後第一次按會先照常叫出；
-  遊戲最多同時開 25 個可移動的視窗，加上一鍵關窗鎖住的視窗超過時，群組裡最下面的那個會被遊戲關掉；
+  遊戲最多同時開 25 個可移動的視窗，超過時遊戲會關掉最舊的（「關掉其他視窗」開著時，加上一鍵關窗鎖住的
+  視窗超過時，群組裡最下面的那個會被關掉；沒開時其他開著的視窗也算進去）；
   拖著物品的途中把物品原本所在的視窗關掉再打開，拖著的物品圖案會消失、只剩選取的框，照樣放得下
   （遊戲的儲物協調器也是這樣）；
   群組清單：Esc 看的是誰最後被打開或點到（和遊戲一樣），不是畫面上誰在上面；固定模式中按 Esc 退出時，
@@ -146,7 +150,7 @@ Probably Stolen Window Groups mod v{version}
 
 Save the container and machine windows you have open, and where they are, as a group; press one key
 to bring them all back in place, or open the group list and click a name. Up to 20 groups.
-Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV14 beta)
+Supported game version: full release 1.0 (VERSION 100-REV13; also the 100-REV16 beta)
 
 The code was written by AI (Claude); the feature design and in-game testing were done by the author.
 Bug reports are welcome
@@ -181,11 +185,12 @@ Features
   with their positions and stacking order; "Window group 1 saved (5 windows)" appears at the top of the screen.
   Containers, machines, backpacks, the Trash Can, the Dossier and the Cassette Player count; paper panels
   (the calendar, tablet, documents) don't. Saving with no container or machine window open clears the group.
-- Recall (Ctrl+1-9 by default): closes the container and machine windows that aren't in the group (the same way
-  Esc does; contents untouched), then opens the group's windows where they were saved, stacked the same way.
+- Recall (Ctrl+1-9 by default): opens the group's windows where they were saved, stacked the same way.
+  With the setting "Close other windows" on (the default), it first closes the container and machine windows
+  that aren't in the group (the same way Esc does; contents untouched); with it off, other windows stay open.
   A box inside another box opens directly. A successful recall shows no message.
-  While dragging an item (or a selected group of items), press another group's key: group 1 closes,
-  group 2 opens, and you can drop them straight in.
+  While dragging an item (or a selected group of items), press another group's key: group 2 opens
+  (group 1 closes with "Close other windows" on), and you can drop them straight in.
 - Pressing the same group's key again (setting "Press again"; from 2.1.0 the default is Close if all open):
   Close if all open = if every window of the group that can be found and opened is open, close the group
   (other windows stay), otherwise recall as usual; Close if unmoved = close only if they're all open and none
@@ -215,7 +220,10 @@ The messages come from this mod, not the base game; please report problems to th
 not to the game developers.
 
 Settings
-This mod's settings on the Mods screen of the main menu. The three at the top were added in 2.1.0:
+This mod's settings on the Mods screen of the main menu. The one at the top was added in 2.6.0:
+- Close other windows (CloseOthers, default on): when recalling a group, first close the container and machine
+  windows that aren't in it; turned off, only the group opens and other windows stay open.
+The next three were added in 2.1.0:
 - Press again (RecallAgain, default Close if all open): Close if all open, Close if unmoved or Rearrange
   (see Features).
 - Close locked too (CloseLockedToo, default on): when pressing again closes the group, also close windows
@@ -274,8 +282,8 @@ in the save folder.
         ]
     }
   Groups 12-20 go back to the defaults (empty), and the mod writes them back into the file when the game starts;
-  the five settings at the top (Press again, Close locked too, Remember storage tabs, Group list,
-  List: press again) go back to their defaults too.
+  the six settings at the top (Close other windows, Press again, Close locked too, Remember storage tabs,
+  Group list, List: press again) go back to their defaults too.
   Editing the file while the game is running does nothing (the game reads it once at startup, and pressing
   Apply later overwrites it). If the file is broken, all the defaults are used and the file is overwritten
   with them; you may want to copy it first. To go back to the defaults, press Reset to Defaults.
@@ -292,8 +300,9 @@ Notes
   "Remember storage tabs" is on (otherwise a recalled window opens on the tab it was last closed on; since 2.5.0
   it's on by default for new installs, earlier installs keep their setting);
   the positions Close if unmoved compares with are only kept in memory, so after restarting or loading,
-  the first press recalls the group as usual; the game keeps at most 25 movable windows open, so with windows
-  kept open by Close All Windows' padlock, the bottom window of the group may be closed by the game;
+  the first press recalls the group as usual; the game keeps at most 25 movable windows open and closes the
+  oldest beyond that (with "Close other windows" on, windows kept open by Close All Windows' padlock can make
+  it close the bottom window of the group; with it off, every other open window counts too);
   if the window a dragged item came from is closed and reopened mid-drag, the dragged item's image
   disappears and only the selection highlight remains, but you can still drop it (the game's Storage
   Coordinator does the same); group list: Esc goes by which window was opened or clicked last (like the game),

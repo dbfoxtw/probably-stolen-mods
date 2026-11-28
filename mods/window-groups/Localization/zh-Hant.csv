@@ -11,10 +11,12 @@ skipped_locked,{0}：{2} 個打不開
 skipped_both,{0}：{1} 個找不到、{2} 個打不開
 label_recall,視窗群組 {0}：叫出
 label_save,視窗群組 {0}：儲存
-tip_recall,叫出視窗群組 {0} 的按鍵：先關掉其他箱子、機器視窗，再把這組的視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用
+tip_recall,叫出視窗群組 {0} 的按鍵：把這組的箱子、機器視窗開在存的位置。\n例如 Ctrl+3、F5；留空＝不使用
 tip_save,把開著的箱子、機器視窗存成視窗群組 {0} 的按鍵；沒開視窗時按＝清空這組。\n例如 Ctrl+Shift+3、Shift+F5；留空＝不使用
+close_others_label,關掉其他視窗
+close_others_tip,叫出一組時，關掉不在這組的視窗。\n這個設定關掉時，只開這組，其他視窗留著。
 repeat_label,再按一次
-repeat_tip,再按一次同一組的叫出鍵時：\nRearrange＝重新排好：每次都擺回原位，補開關掉的、關掉多開的\nClose if all open＝全開就關：這組找得到、打得開的視窗都開著，就關掉這組的視窗，其他視窗留著；少了任何一個就照常叫出\nClose if unmoved＝沒動才關：都開著、而且上次叫出後都沒移動過才關；動過就先擺回原位，再按一次才關
+repeat_tip,再按一次同一組的叫出鍵時：\nRearrange＝重新排好：每次都擺回原位，補開關掉的\nClose if all open＝全開就關：這組找得到、打得開的視窗都開著，就關掉這組的視窗，其他視窗留著；少了任何一個就照常叫出\nClose if unmoved＝沒動才關：都開著、而且上次叫出後都沒移動過才關；動過就先擺回原位，再按一次才關
 close_locked_label,也關鎖住的
 close_locked_tip,有裝一鍵關窗 mod 時才有作用。\n再按一次關掉這組時，鎖住的視窗也關；只在「再按一次」選了 Close if all open 或 Close if unmoved 時。
 tabs_label,也記儲物分頁
